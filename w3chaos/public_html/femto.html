@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <link href="powersupply.css" rel="stylesheet" type="text/css">
+         <script type="text/Javascript" src="webChaos/jquery.js"></script>
+       <script type="text/Javascript" src="webChaos/flot/jquery.flot.js"></script>
+        <script type="text/javascript" src="webChaos/chaos.js"></script>
+         <script type="text/javascript" src="webChaos/powersupply.js"></script>        
+
+        <script>
+            CULoad(null);
+        </script>
+        <body onload="setInterval(CUupdateInterface, 1500);">
+        <table>
+            <tr>
+                <td><b>Name</b></td>
+                <td><b>Voltage Phase1</b></td>
+                <td><b>Voltage Phase2</b></td>
+                <td><b>Current Phase1</b></td>
+                <td><b>Current Phase2</b></td>
+                <td><b>timestamp</b></td>
+                <td><b>Seconds</b></td>
+
+             </tr>
+            <tr>
+                <td><b id="name_0" class="PowersupplyIndicator">noname</b></td>
+                <td><b id="U1N_0" class="PowersupplyIndicator">0</b></td>
+                <td><b id="U2N_0" class="PowersupplyIndicator">0</b></td>
+                <td><b id="I1_0" class="PowersupplyIndicator">0</b></td>
+                <td><b id="I2_0" class="PowersupplyIndicator">0</b></td>
+                <td><b id="timestamp_0" class="PowersupplyIndicator">0</b></td>
+                <td><b id="seconds_0" class="PowersupplyIndicator">0</b></td>
+            </tr>
+                </table>
+    </body>
+</html>

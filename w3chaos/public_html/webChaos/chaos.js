@@ -12,8 +12,9 @@ function CU(name){
     this.initialized=0;
     this.timestamp=0;
     this.oldtimestamp=0;
+    this.seconds=0; // seconds of life of the interface
 
-    this.firsttimestamp=0;
+    this.firsttimestamp=0; // first time stamp of the interface
     console.log("creating CU:"+name);
 
     this.init=function (){
@@ -57,7 +58,7 @@ function CU(name){
     // this function should be overloaded by the class object
     // if not it contain exactly what is pushed
     this.processData=function (key,value){
-        console.log("ADDING:" + key + " :"+value);
+	//        console.log("ADDING:" + key + " :"+value);
         
         this[key]=value;
         
@@ -107,6 +108,7 @@ function CU(name){
                         }
                          my.oldtimestamp=my.timestamp;
 			my.timestamp = val;
+			my.seconds =this.oldtimestamp-val;
 		    } else {
 			//			console.log("call " + my.toString() + " process data :"+key+ " val:"+val);
                         my.processData(key,val);
@@ -143,7 +145,7 @@ function CULoad(classname){
           }
            if(vars[0]==="deinit"){
               console.log("deinitalizing "+cus_names[i]);
-              cu.deintCU();
+              cu.deinit();
           }
           if(vars[0]==="start"){
               console.log("start "+cus_names[i]);
@@ -170,9 +172,17 @@ function initializeCU(cunames){
 function CUupdateInterface(){
                 for(var i = 0;i<cus.length;i++){
                     cus[i].update();
-                    for (var key in cu[i]) {
-                         var cu=cu[i];
-                         document.getElementById("cu_"+i+"_"+key).innerHTML=cu[key];
+		    var cu=cus[i];
+                    for (var key in cu) {
+			var docelem = key +"_"+i;
+			if((typeof(cu[key]) !== 'function') && (typeof (cu[key]) !== 'object')){
+			    console.log("SETTING [" +typeof(cu[key])+"]" + docelem+ " to:"+cu[key]);
+			try {
+                        document.getElementById(docelem).innerHTML=cu[key];
+			} catch(e){
+			    console.log("document element:" +docelem+ " not present in page:"+e); 
+			}
+			}
                 }
             }
  }
