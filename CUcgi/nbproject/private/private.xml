@@ -12,5 +12,9 @@
         <group>
             <file>file:/home/dante/chaos_bundle_opensource/chaosframework/example/UIToolkitTest/CUcgi/main.cpp</file>
         </group>
+        <group name="CHAOS_WEB">
+            <file>file:/home/chaos/chaos_bundle_cnaf/webgui/CUcgi/CMakeLists.txt</file>
+            <file>file:/home/chaos/chaos_bundle_cnaf/webgui/CUcgi/main.cpp</file>
+        </group>
     </open-files>
 </project-private>

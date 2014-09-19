@@ -2,7 +2,7 @@ var maxarray=600;
 var cus=[];
            
 function PowerSupply(name){
-    CU.call(this);
+    CU.apply(this,arguments);
     this.state=0; //on, stdby
    
     this.points = new Array();
@@ -11,7 +11,7 @@ function PowerSupply(name){
     this.polarity=0;
     this.alarms=0;
     
-    
+    console.log("creating PowerSupply:"+name);
     
     this.setCurrent=function setCurrent(val){
         var curr = Number(val).toFixed(3);
@@ -40,11 +40,12 @@ function PowerSupply(name){
         this.sendCommand("rset","");
     }
     
-    this.processData=function (key,value){
-       
+    this.processData=function(key,value){
+	var my=this;
+	//	console.log("processing " + key + ":" + value); 
             if (key == "current") {
                             //var index = npoints%maxarray;
-			    var curr = Number(json[key]).toFixed(3);
+			    var curr = Number(value).toFixed(3);
 			   
                             my.points.push([(my.timestamp-my.firsttimestamp)/1000,curr]);
                             
@@ -55,13 +56,13 @@ function PowerSupply(name){
 			    my.current=curr;
                             system.log("current:"+my.current);
 			} else if(key == "polarity"){
-                            my.polarity=val;
+                            my.polarity=value;
 			} else if(key == "status_id"){
-                            my.state = val;
+                            my.state = value;
                      } else if(key=="current_sp"){
-                         my.current_sp = val;
+                         my.current_sp = value;
                      } else if(key=="alarm"){
-                         my.alarms = val;
+                         my.alarms = value;
                      } else {
                          ///
                      }

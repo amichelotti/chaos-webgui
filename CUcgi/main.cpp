@@ -30,7 +30,7 @@
 using namespace std;
 using namespace cgicc;     // Or reference as cgicc::Cgicc formData; below in object instantiation.
 	 
-#define DEVICE "simpower"
+
 #define MDS "mdsserver:5000"
 using namespace std;
 using namespace std;
@@ -96,8 +96,8 @@ int initChaosToolkit(const char* mds){
             if(controller) {
                 int err=0;
                     //activate the traking
-                //controller->setupTracking();
-                //controller->setRequestTimeWaith(timeout);
+                controller->setupTracking();
+                controller->setRequestTimeWaith(timeout);
                 //controller->initDevice();
                 controller->startDevice();
             }
@@ -181,16 +181,19 @@ int initChaosToolkit(const char* mds){
   }
   int fetchDataSet(DeviceController *ctrl,char*jsondest,int size){
       CDataWrapper* data;
+      strcpy(jsondest,"no data");
       if(ctrl){
           ctrl->fetchCurrentDeviceValue();
       } else {
           return -2;
       }
       data = ctrl->getCurrentData();
-      if(data==NULL)
-          return -3;
+      if(data==NULL){
+	cout<<"## cannot fetch"<<endl;
+	return -3;
+      }
       
-      strcpy(jsondest,data->getJSONString().c_str());
+      strncpy(jsondest,data->getJSONString().c_str(),size);
      
       return 0;
     }
@@ -200,7 +203,7 @@ int initChaosToolkit(const char* mds){
 
 int main(int argc, char** argv) {
     Cgicc form;
-    char result[2048];
+    char result[4096];
     DeviceController* dev=NULL;
     form_iterator init =form.getElement("InitID");
     form_iterator start =form.getElement("StartID");
@@ -220,14 +223,14 @@ int main(int argc, char** argv) {
          cout<<"do init "<<(**init).c_str()<<endl;
          dev =initDevice((**init).c_str(),1000);
      } else if(start!= form.getElements().end()) {
-         cout<<"do start "<<(**init).c_str()<<endl;
-         dev =startDevice((**init).c_str(),1000);
+         cout<<"do start "<<(**start).c_str()<<endl;
+         dev =startDevice((**start).c_str(),1000);
      } else if(stop!= form.getElements().end()) {
-         cout<<"do stop "<<(**init).c_str()<<endl;
-         dev =stopDevice((**init).c_str(),1000);
+         cout<<"do stop "<<(**stop).c_str()<<endl;
+         dev =stopDevice((**stop).c_str(),1000);
      } else if(deinit!= form.getElements().end()) {
-         cout<<"do deinit "<<(**init).c_str()<<endl;
-         dev =deinitDevice((**init).c_str(),1000);
+         cout<<"do deinit "<<(**deinit).c_str()<<endl;
+         dev =deinitDevice((**deinit).c_str(),1000);
      }else{
          if(device!=form.getElements().end()){
              dev = getDevice((**device).c_str());

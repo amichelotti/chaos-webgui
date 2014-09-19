@@ -14,6 +14,8 @@ function CU(name){
     this.oldtimestamp=0;
 
     this.firsttimestamp=0;
+    console.log("creating CU:"+name);
+
     this.init=function (){
         var request = new XMLHttpRequest();
         
@@ -45,31 +47,31 @@ function CU(name){
         request.send();        
         
        
-    }
+    };
     this.stop=function (){
         var request = new XMLHttpRequest();  
         request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name, true);
         request.send();                
        
-    }
+    };
     // this function should be overloaded by the class object
     // if not it contain exactly what is pushed
-    this.processData=function(key,value){
-        console.log("adding:" + key + " :"+value);
+    this.processData=function (key,value){
+        console.log("ADDING:" + key + " :"+value);
         
         this[key]=value;
         
-    }
-    this.sendCommand=function sendCommand(command, parm) {
+    };
+    this.sendCommand=function (command, parm) {
         var request = new XMLHttpRequest();
 
         console.log("device:" + this.name + " command:" + command + " param:" + parm);
         request.open("GET", "/cgi-bin/cu.cgi?dev=" + this.name + "&cmd=" + command + "&param=" + parm, true);
         request.send();
-    }
+    };
     
     
-    this.update=function update(){
+    this.update=function (){
        var request = new XMLHttpRequest();
        var my=this;
         request.open("GET", "/cgi-bin/cu.cgi?dev=" + this.name, true);
@@ -106,7 +108,8 @@ function CU(name){
                          my.oldtimestamp=my.timestamp;
 			my.timestamp = val;
 		    } else {
-                        this.processData(key,val);
+			//			console.log("call " + my.toString() + " process data :"+key+ " val:"+val);
+                        my.processData(key,val);
                     }
                 } catch(err) {
 		    // console.error(key + " does not exist:" + err);
@@ -122,7 +125,7 @@ function CULoad(classname){
      var query = window.location.search.substring(1);
      var vars = query.split("=");
      var cus_names=vars[1].split("&");
-     if(vars!=null && cus_names!=null){
+     if(vars==null || cus_names==null){
          alert("Please specify a valid powersupply in the URL ?<init|deinit|start|stop|run>=cu1_id&cu2_id");
          return;
      }
@@ -135,20 +138,20 @@ function CULoad(classname){
         }
           cus.push(cu);
           if(vars[0]==="init"){
-              console.log("initializing "+cun_names[i]);
+              console.log("initializing "+cus_names[i]);
               cu.init();
           }
            if(vars[0]==="deinit"){
-              console.log("deinitalizing "+cu_names[i]);
+              console.log("deinitalizing "+cus_names[i]);
               cu.deintCU();
           }
           if(vars[0]==="start"){
-              console.log("start "+cu_names[i]);
+              console.log("start "+cus_names[i]);
               cu.start();
           }
           
           if(vars[0]==="stop"){
-              console.log("stop "+cu_names[i]);
+              console.log("stop "+cus_names[i]);
               cu.stop();
           }
      }
