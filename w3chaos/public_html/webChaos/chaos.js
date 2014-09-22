@@ -108,7 +108,7 @@ function CU(name){
                         }
                          my.oldtimestamp=my.timestamp;
 			my.timestamp = val;
-			my.seconds =this.oldtimestamp-val;
+			my.seconds =(val - my.firsttimestamp)/1000.0;
 		    } else {
 			//			console.log("call " + my.toString() + " process data :"+key+ " val:"+val);
                         my.processData(key,val);
