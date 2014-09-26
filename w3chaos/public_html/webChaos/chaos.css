@@ -67,7 +67,7 @@ input[type=checkbox] {
 }
 
 
-.powersupply-graph-class {
+.chaos-graph-class {
 	width: 200px;
 	height: 100px;
 	font-size: 10px;
@@ -96,9 +96,12 @@ input.headerInput {
     background: #cccccc;
 }
 
-.controlInput {
-    background: #cccccc;
-    width: 50px;
+.Indicator {
+    color: red
+}
+
+.IndicatorUpdated {
+    color: green
 }
 
 div.spacer {
@@ -133,19 +136,6 @@ display.style {
     height: 40px;   
 }
 
-#set {
-    width: 100px;
-    height: 40px;   
-}
-
-#controlContainer {
-    height: 140px;
-}
-
-td.controllerTd {
-    vertical-align: top;
-    text-align: center;
-}
 
 button.polarity {
     width: 60px;

@@ -4,20 +4,108 @@
     <df root="." name="0">
       <df name="build">
       </df>
-      <df name="CMakeFiles">
-        <df name="CMakeTmp">
-          <df name="CMakeFiles">
-            <df name="cmTryCompileExec.dir">
-            </df>
+      <df name="cgicc-3.2.15">
+        <df name="cgicc">
+          <in>CgiDefs.h</in>
+          <in>CgiEnvironment.cpp</in>
+          <in>CgiEnvironment.h</in>
+          <in>CgiInput.cpp</in>
+          <in>CgiInput.h</in>
+          <in>CgiUtils.cpp</in>
+          <in>CgiUtils.h</in>
+          <in>Cgicc.cpp</in>
+          <in>Cgicc.h</in>
+          <in>FormEntry.cpp</in>
+          <in>FormEntry.h</in>
+          <in>FormFile.cpp</in>
+          <in>FormFile.h</in>
+          <in>HTMLAtomicElement.h</in>
+          <in>HTMLAttribute.cpp</in>
+          <in>HTMLAttribute.h</in>
+          <in>HTMLAttributeList.cpp</in>
+          <in>HTMLAttributeList.h</in>
+          <in>HTMLBooleanElement.h</in>
+          <in>HTMLClasses.h</in>
+          <in>HTMLDoctype.cpp</in>
+          <in>HTMLDoctype.h</in>
+          <in>HTMLElement.cpp</in>
+          <in>HTMLElement.h</in>
+          <in>HTMLElementList.cpp</in>
+          <in>HTMLElementList.h</in>
+          <in>HTTPContentHeader.cpp</in>
+          <in>HTTPContentHeader.h</in>
+          <in>HTTPCookie.cpp</in>
+          <in>HTTPCookie.h</in>
+          <in>HTTPHTMLHeader.cpp</in>
+          <in>HTTPHTMLHeader.h</in>
+          <in>HTTPHeader.cpp</in>
+          <in>HTTPHeader.h</in>
+          <in>HTTPPlainHeader.cpp</in>
+          <in>HTTPPlainHeader.h</in>
+          <in>HTTPRedirectHeader.cpp</in>
+          <in>HTTPRedirectHeader.h</in>
+          <in>HTTPResponseHeader.cpp</in>
+          <in>HTTPResponseHeader.h</in>
+          <in>HTTPStatusHeader.cpp</in>
+          <in>HTTPStatusHeader.h</in>
+          <in>HTTPXHTMLHeader.cpp</in>
+          <in>HTTPXHTMLHeader.h</in>
+          <in>MStreamable.cpp</in>
+          <in>MStreamable.h</in>
+          <in>XHTMLDoctype.cpp</in>
+          <in>XHTMLDoctype.h</in>
+          <in>XMLDeclaration.h</in>
+          <in>XMLPI.cpp</in>
+          <in>XMLPI.h</in>
+          <in>config.h</in>
+        </df>
+        <df name="contrib">
+          <in>FCgiIO.cpp</in>
+          <in>FCgiIO.h</in>
+          <in>fcgi-test.cpp</in>
+          <in>nph-hello.cpp</in>
+          <in>nph-login.cpp</in>
+        </df>
+        <df name="demo">
+          <in>cardgame.cpp</in>
+          <in>cookie.cpp</in>
+          <in>dns.cpp</in>
+          <in>styles.h</in>
+          <in>test.cpp</in>
+          <in>upload.cpp</in>
+        </df>
+        <df name="doc">
+          <df name="html">
           </df>
         </df>
-        <df name="CompilerIdC">
-          <in>CMakeCCompilerId.c</in>
+        <df name="example">
+          <df name="autom4te.cache">
+          </df>
+          <df name="m4">
+          </df>
+          <in>example.cpp</in>
         </df>
-        <df name="CompilerIdCXX">
-          <in>CMakeCXXCompilerId.cpp</in>
+        <df name="m4">
+        </df>
+        <df name="support">
+        </df>
+        <df name="win">
+        </df>
+      </df>
+      <df name="CMakeFiles">
+        <df name="2.8.12.2">
+          <df name="CompilerIdC">
+            <in>CMakeCCompilerId.c</in>
+          </df>
+          <df name="CompilerIdCXX">
+            <in>CMakeCXXCompilerId.cpp</in>
+          </df>
+        </df>
+        <df name="CMakeTmp">
         </df>
         <df name="cu.cgi.dir">
+        </df>
+        <df name="Progress">
         </df>
       </df>
       <in>main.cpp</in>

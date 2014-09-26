@@ -142,19 +142,18 @@ function CULoad(classname){
           if(vars[0]==="init"){
               console.log("initializing "+cus_names[i]);
               cu.init();
-          }
-           if(vars[0]==="deinit"){
+          } else if(vars[0]==="deinit"){
               console.log("deinitalizing "+cus_names[i]);
               cu.deinit();
-          }
-          if(vars[0]==="start"){
+          } else if(vars[0]==="start"){
               console.log("start "+cus_names[i]);
               cu.start();
-          }
-          
-          if(vars[0]==="stop"){
+          } else if(vars[0]==="stop"){
               console.log("stop "+cus_names[i]);
               cu.stop();
+          } else {
+              console.log("run "+cus_names[i]);
+              cu.run();
           }
      }
     
@@ -178,7 +177,16 @@ function CUupdateInterface(){
 			if((typeof(cu[key]) !== 'function') && (typeof (cu[key]) !== 'object')){
 			    console.log("SETTING [" +typeof(cu[key])+"]" + docelem+ " to:"+cu[key]);
 			try {
-                        document.getElementById(docelem).innerHTML=cu[key];
+                        var digits = document.getElementById(docelem).getAttribute("digits");
+                        if(digits!=null){
+                            document.getElementById(docelem).innerHTML=Number(cu[key]).toFixed(digits);
+                            document.getElementById(docelem).setAttribute("class","IndicatorUpdated");
+
+                        } else {
+                            document.getElementById(docelem).innerHTML=cu[key];
+                            document.getElementById(docelem).setAttribute("class","IndicatorUpdated");
+
+                        }
 			} catch(e){
 			    console.log("document element:" +docelem+ " not present in page:"+e); 
 			}

@@ -7,7 +7,7 @@ eliana
 -->
 <html>
     <head>
-        <link href="powersupply.css" rel="stylesheet" type="text/css">
+        <link href="webChaos/chaos.css" rel="stylesheet" type="text/css">
          <script type="text/Javascript" src="webChaos/jquery.js"></script>
        <script type="text/Javascript" src="webChaos/flot/jquery.flot.js"></script>
         <script type="text/javascript" src="webChaos/chaos.js"></script>
@@ -16,27 +16,38 @@ eliana
         <script>
             CULoad(null);
         </script>
-        <body onload="setInterval(CUupdateInterface, 1500);">
+        <body onload="setInterval(CUupdateInterface, 2000);">
         <table>
             <tr>
-                <td><b>Name</b></td>
+                <td><b>Name:</b></td>
+                <td><b id="name_0" class="Indicator">noname</b></td>
+            </tr>
+            <tr>
                 <td><b>Voltage Phase1</b></td>
+                <td><b id="U1N_0" digits="3" class="Indicator">0</b></td>
+            </tr>
+            <tr>
                 <td><b>Voltage Phase2</b></td>
+                <td><b id="U2N_0"  digits="3"  class="Indicator">0</b></td>
+            </tr>
+            <tr>
                 <td><b>Current Phase1</b></td>
+                <td><b id="I1_0"  digits="3"  class="Indicator">0</b></td>
+            </tr>
+            <tr>
                 <td><b>Current Phase2</b></td>
+                <td><b id="I2_0"  digits="3"  class="Indicator">0</b></td>
+            </tr>
+            <tr>
                 <td><b>timestamp</b></td>
+                <td><b id="timestamp_0" class="Indicator">0</b></td>
+            </tr>  
+            <tr>
                 <td><b>Seconds</b></td>
+                <td><b id="seconds_0"  digits="3"  class="Indicator">0</b></td>
 
              </tr>
-            <tr>
-                <td><b id="name_0" class="PowersupplyIndicator">noname</b></td>
-                <td><b id="U1N_0" class="PowersupplyIndicator">0</b></td>
-                <td><b id="U2N_0" class="PowersupplyIndicator">0</b></td>
-                <td><b id="I1_0" class="PowersupplyIndicator">0</b></td>
-                <td><b id="I2_0" class="PowersupplyIndicator">0</b></td>
-                <td><b id="timestamp_0" class="PowersupplyIndicator">0</b></td>
-                <td><b id="seconds_0" class="PowersupplyIndicator">0</b></td>
-            </tr>
+            
                 </table>
     </body>
 </html>

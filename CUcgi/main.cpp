@@ -246,6 +246,19 @@ int main(int argc, char** argv) {
     
    
     if(dev){
+        CUStateKey::ControlUnitState deviceState;
+        dev->getState(deviceState);
+        if(deviceState==CUStateKey::DEINIT){
+             cout<<"device is in deinit forcing to init and starting :"<<(**device).c_str()<<endl;
+            initDevice((**device).c_str(),1000);
+            startDevice((**device).c_str(),1000);
+        } else if(deviceState==CUStateKey::INIT){
+           cout<<"device is in init forcing to start :"<<(**device).c_str()<<endl;
+
+            startDevice((**start).c_str(),1000);
+        }
+        
+        
         if(!cmd.empty()){
             cout<<"do command " + cmd + " param="+parm.c_str()<<endl;
             sendCmd(dev,cmd,(char*)parm.c_str());

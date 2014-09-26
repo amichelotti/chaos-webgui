@@ -49,8 +49,6 @@
         </makeTool>
       </makefileType>
       <item path="main.cpp" ex="false" tool="1" flavor2="0">
-        <ccTool flags="0">
-        </ccTool>
       </item>
     </conf>
   </confs>
