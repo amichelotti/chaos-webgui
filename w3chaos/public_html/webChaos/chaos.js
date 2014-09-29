@@ -12,6 +12,7 @@ function CU(name){
     this.initialized=0;
     this.timestamp=0;
     this.oldtimestamp=0;
+    this.refresh = 0;
     this.seconds=0; // seconds of life of the interface
 
     this.firsttimestamp=0; // first time stamp of the interface
@@ -75,7 +76,7 @@ function CU(name){
     this.update=function (){
        var request = new XMLHttpRequest();
        var my=this;
-        request.open("GET", "/cgi-bin/cu.cgi?dev=" + this.name, true);
+        request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name, true);
         request.send();
         
         request.onreadystatechange = function() {
@@ -90,6 +91,10 @@ function CU(name){
 	    var json = JSON.parse(json_answer);
 	    } catch (err){
 		console.log("exception parsing " + json_answer);
+                  my.oldtimestamp=0;
+                  my.timestamp = 0;
+		  my.seconds =0;
+                  return;
 	    }
 	    Object.keys(json).forEach(function(key) {
 		try {
@@ -106,9 +111,11 @@ function CU(name){
 			if(my.firsttimestamp==0){
                             my.firsttimestamp=val;
                         }
-                         my.oldtimestamp=my.timestamp;
+                        my.oldtimestamp=my.timestamp;
 			my.timestamp = val;
 			my.seconds =(val - my.firsttimestamp)/1000.0;
+                        if(my.oldtimestamp!=0)
+                            my.refresh = (val - my.oldtimestamp)/1000.0;
 		    } else {
 			//			console.log("call " + my.toString() + " process data :"+key+ " val:"+val);
                         my.processData(key,val);
@@ -172,27 +179,35 @@ function CUupdateInterface(){
                 for(var i = 0;i<cus.length;i++){
                     cus[i].update();
 		    var cu=cus[i];
+                    var color="red";
+                    if(cu.refresh != 0){
+                        color = "green";
+                    }
+                    
                     for (var key in cu) {
 			var docelem = key +"_"+i;
 			if((typeof(cu[key]) !== 'function') && (typeof (cu[key]) !== 'object')){
 			    console.log("SETTING [" +typeof(cu[key])+"]" + docelem+ " to:"+cu[key]);
 			try {
+                       
                         var digits = document.getElementById(docelem).getAttribute("digits");
                         if(digits!=null){
                             document.getElementById(docelem).innerHTML=Number(cu[key]).toFixed(digits);
-                            document.getElementById(docelem).setAttribute("class","IndicatorUpdated");
+                          
 
                         } else {
                             document.getElementById(docelem).innerHTML=cu[key];
-                            document.getElementById(docelem).setAttribute("class","IndicatorUpdated");
 
                         }
+                        document.getElementById(docelem).style.color=color;
+                        
 			} catch(e){
 			    console.log("document element:" +docelem+ " not present in page:"+e); 
 			}
 			}
                 }
             }
+           
  }
 
  
