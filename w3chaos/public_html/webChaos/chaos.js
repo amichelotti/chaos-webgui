@@ -9,12 +9,16 @@ var npoints=0;
 
 function CU(name){
     this.name =name;
-    this.initialized=0;
+    var dostate="";
+    
     this.timestamp=0;
     this.oldtimestamp=0;
     this.refresh = 0;
     this.seconds=0; // seconds of life of the interface
-
+    this.dev_status="";
+    this.error_status="";
+    this.log_status="";
+    
     this.firsttimestamp=0; // first time stamp of the interface
     console.log("creating CU:"+name);
 
@@ -23,8 +27,8 @@ function CU(name){
         
         request.open("GET", "/cgi-bin/cu.cgi?InitId=" + this.name, true);
         request.send();        
-	this.initialized=1;
-        
+        dostate = "init";
+
         
     }
     
@@ -32,29 +36,31 @@ function CU(name){
         if(this.initialized==0){
             this.init();
         }
+        
         this.start();
+        dostate = "start";
     }
     this.deinit=function (){
         var request = new XMLHttpRequest();
         request.open("GET", "/cgi-bin/cu.cgi?DeInitId=" + this.name, true);
         request.send();        
-	this.initialized=0;
-        
+        dostate = "deinit";
         
     }
     this.start=function (){
         var request = new XMLHttpRequest();
         
         request.open("GET", "/cgi-bin/cu.cgi?StartId=" + this.name, true);
-        request.send();        
-        
+        request.send(); 
+        dostate = "start";
+
        
     };
     this.stop=function (){
         var request = new XMLHttpRequest();  
         request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name, true);
-        request.send();                
-       
+        request.send();
+        dostate = "stop";
     };
     // this function should be overloaded by the class object
     // if not it contain exactly what is pushed
@@ -72,18 +78,76 @@ function CU(name){
         request.send();
     };
     
-    
+    this.setSched=function (parm) {
+        var request = new XMLHttpRequest();
+
+        console.log("device:" + this.name + " set scheduling to:" + parm);
+        request.open("GET", "/cgi-bin/cu.cgi?dev=" + this.name + "&sched=" + parm, true);
+        request.send();
+    };
     this.update=function (){
        var request = new XMLHttpRequest();
        var my=this;
-        request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name, true);
+       request.timeout = 10000;
+      // console.log("updating "+my.name + " run:" +dorun)
+        if(dostate == my.dev_status  ){
+            dostate = "";
+            console.log("device "+my.name + " is in \""+my.dev_status+ " OK"); 
+
+            request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name, true);
+            
+        } else if(dostate!="") { 
+           console.log("device "+my.name + " is in \""+my.dev_status+ "\" I should go into \""+ dostate+"\""); 
+
+          if(dostate == "init") {
+            if(my.dev_status  == "start"){
+                request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name, true);
+            } else if(my.dev_status  == "stop"){
+                request.open("GET", "/cgi-bin/cu.cgi?DeinitId=" + this.name, true);
+            } else{
+                request.open("GET", "/cgi-bin/cu.cgi?InitId=" + this.name, true);
+            }
+          } else if(dostate == "start"){
+              if(my.dev_status  == "deinit"){
+                  request.open("GET", "/cgi-bin/cu.cgi?InitId=" + this.name, true);
+              } else {
+                 request.open("GET", "/cgi-bin/cu.cgi?StartId=" + this.name, true);
+              }
+          } else if(dostate == "stop"){
+               if(my.dev_status  == "start"){
+                    request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name, true);
+               } else {
+                                request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name, true);
+
+               } /*else if(my.dev_status  != "") {
+                   dostate ="";
+                   alert("cannot STOP device "+ this.name + " is in state:"+my.dev_status );
+               } else {
+                    request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name, true);
+               }*/
+          } else if(dostate == "deinit"){
+              if(my.dev_status  == "start"){
+                    request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name, true);
+               } else {
+                  request.open("GET", "/cgi-bin/cu.cgi?DeinitId=" + this.name, true);
+               }
+          } else {
+             request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name, true);
+
+          }
+         
+        } else {
+           request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name, true);
+
+        }
+        request.ontimeout = function () { alert("Timed out!!!"); }
+
         request.send();
-        
         request.onreadystatechange = function() {
-	if (request.readyState == 4) {
+	if (request.readyState == 4 && xmlHttp.status == 200) {
 	    var json_answer = request.responseText;
 	    
-	    console.log("answer ("+my.name+"):" + json_answer);
+	    console.log("answer dostate:" + dostate +" ("+my.name+"):\"" + json_answer+"\"");
 	    if (json_answer == "") {
 		return;
 	    }
@@ -91,9 +155,7 @@ function CU(name){
 	    var json = JSON.parse(json_answer);
 	    } catch (err){
 		console.log("exception parsing " + json_answer);
-                  my.oldtimestamp=0;
-                  my.timestamp = 0;
-		  my.seconds =0;
+                  
                   return;
 	    }
 	    Object.keys(json).forEach(function(key) {
@@ -120,6 +182,10 @@ function CU(name){
 			//			console.log("call " + my.toString() + " process data :"+key+ " val:"+val);
                         my.processData(key,val);
                     }
+                    
+                    if(my.error_status!=""){
+                        console.log("An internal error occurred on device \""+my.name+"\":\""+my.error_status+"\"");
+                    }
                 } catch(err) {
 		    // console.error(key + " does not exist:" + err);
 		}
@@ -141,9 +207,12 @@ function CULoad(classname){
      for (var i=0;i<cus_names.length;i++) {
           var cu;
           if(classname!=null){
+              console.log("Creating class:"+classname + " name: "+cus_names[i])
               cu  = new window[classname](cus_names[i]);
           } else {
               cu = new CU(cus_names[i]);
+            console.log("Creating Generic CU name: "+cus_names[i])
+
         }
           cus.push(cu);
           if(vars[0]==="init"){
@@ -179,15 +248,28 @@ function CUupdateInterface(){
                 for(var i = 0;i<cus.length;i++){
                     cus[i].update();
 		    var cu=cus[i];
-                    var color="red";
+                    var color="yellow";
+                    var tick="normal";
                     if(cu.refresh != 0){
-                        color = "green";
+                        tick = "bold";
+                    }
+                    if(cu.dev_status=="start"){
+                        color="green";
+                    } else if(cu.dev_status=="stop"){
+                        color="black";
+                    } else if(cu.dev_status=="init"){
+                        color="yellow";
+                    } else {
+                        color="red";
+                    }
+                    if(cu.error_status!=""){
+                        color="red";
                     }
                     
                     for (var key in cu) {
 			var docelem = key +"_"+i;
 			if((typeof(cu[key]) !== 'function') && (typeof (cu[key]) !== 'object')){
-			    console.log("SETTING [" +typeof(cu[key])+"]" + docelem+ " to:"+cu[key]);
+			  //  console.log("SETTING [" +typeof(cu[key])+"]" + docelem+ " to:"+cu[key]);
 			try {
                        
                         var digits = document.getElementById(docelem).getAttribute("digits");
@@ -200,9 +282,10 @@ function CUupdateInterface(){
 
                         }
                         document.getElementById(docelem).style.color=color;
+                        document.getElementById(docelem).style.fontWeight =tick;
                         
 			} catch(e){
-			    console.log("document element:" +docelem+ " not present in page:"+e); 
+			  //  console.log("document element:" +docelem+ " not present in page:"+e); 
 			}
 			}
                 }

@@ -54,16 +54,18 @@ struct dev_info_status{
         strcpy(dev_status,"init");
     } else if(deviceState == CUStateKey::START){
         strcpy(dev_status,"start");
+    } else if(deviceState == CUStateKey::STOP){
+          strcpy(dev_status,"stop");
     } else {
         strcpy(dev_status,"uknown");
     }
   }
-  void append_log(char*log){
-    snprintf(log_status,sizeof(log_status),"%s%s;",log_status,log);
+  void append_log(std::string log){
+    snprintf(log_status,sizeof(log_status),"%s%s;",log_status,log.c_str());
  
   }
-  void append_error(char*log){
-    snprintf(error_status,sizeof(error_status),"%s%s;",error_status,log);
+  void append_error(std::string log){
+    snprintf(error_status,sizeof(error_status),"%s%s;",error_status,log.c_str());
  
   }
   void insert_json(char*json){
@@ -190,7 +192,7 @@ int initChaosToolkit(const char* mds){
                 int err=0;
                     //activate the traking
                 //controller->setupTracking();
-                //controller->setRequestTimeWaith(timeout);
+                controller->setRequestTimeWaith(timeout);
                 //controller->initDevice();
                controller->deinitDevice();
             }
@@ -267,8 +269,9 @@ int main(int argc, char** argv) {
     form_iterator device =form.getElement("dev"); // dev=device_name, cmd:
     form_iterator command =form.getElement("cmd"); // dev=device_name, cmd:
     form_iterator param =form.getElement("param"); // dev=device_name, cmd:
+    form_iterator sched =form.getElement("sched");
 
-    std::string cmd,parm;
+    std::string cmd,parm,scheduling;
     const char *dev_name=NULL;
     dev_info_status dev_info;
     int update =0;
@@ -287,34 +290,34 @@ int main(int argc, char** argv) {
     
      if(init != form.getElements().end()) {
        dev_name = (**init).c_str();
-       dev_info.append_log("do init");
-       dev =initDevice(dev_name,1000);
+       dev_info.append_log("do init:" +(**init));
+       dev =initDevice(dev_name,1000000);
        if(dev<=0){
-            dev_info.append_error("cannot init device");
+            dev_info.append_error("cannot init device:" +(**init));
        }
      } else if(start!= form.getElements().end()) {
        dev_name = (**start).c_str();
-       dev_info.append_log("do start");
-         dev =startDevice(dev_name,1000);
+       dev_info.append_log("do start:"+(**start));
+         dev =startDevice(dev_name,1000000);
          if(dev<=0){
-            dev_info.append_error("cannot start device");
+            dev_info.append_error("cannot start device:"+(**start));
        }
 	 
      } else if(stop!= form.getElements().end()) {
        dev_name = (**stop).c_str();
-       dev_info.append_log("do stop");
-         dev =stopDevice(dev_name,1000);
+       dev_info.append_log("do stop:"+(**stop));
+       dev =stopDevice(dev_name,1000000);
          if(dev<=0){
-            dev_info.append_error("cannot stop device");
+            dev_info.append_error("cannot stop device:"+(**stop));
        }
      } else if(deinit!= form.getElements().end()) {
        dev_name =(**deinit).c_str();
-       dev_info.append_log("do deinit");
+       dev_info.append_log("do deinit:"+(**deinit));
 		
 
-       dev =deinitDevice(dev_name,1000);
+       dev =deinitDevice(dev_name,1000000);
        if(dev<=0){
-            dev_info.append_error("cannot deinit device");
+            dev_info.append_error("cannot deinit device:"+(**deinit));
        }
      } else if (status!=form.getElements().end()){
          dev_name = (**status).c_str();
@@ -325,38 +328,50 @@ int main(int argc, char** argv) {
          if(device!=form.getElements().end()){
 	   dev_name = (**device).c_str();
              dev = getDevice(dev_name);
-	     dev_info.append_log("do update");
+	     dev_info.append_log("do update:"+(**device));
              update=2;
          }
+         
          if(command!=form.getElements().end()){
              cmd = **command;
-	     dev_info.append_log("do command");
+	     dev_info.append_log("do command:"+cmd);
          }
          
          if(param!=form.getElements().end()){
              parm = **param;
+              dev_info.append_log(parm);
+         }
+         if(sched!=form.getElements().end()){
+             scheduling = **sched;
+             dev_info.append_log("do scheduling:"+scheduling);
          }
      }
     
    
     if(dev && dev_name){
         CUStateKey::ControlUnitState deviceState;
+        dev->setRequestTimeWaith(1000000);
         dev->getState(deviceState);
         if(update==2){
             if(deviceState==CUStateKey::DEINIT){
               //cout<<"device is in deinit forcing to init and starting :"<<dev_name<<endl;
 
                     dev_info.append_log("force init and start");
-                    initDevice(dev_name,1000);
-                    sleep(1);
-                    startDevice(dev_name,1000);
+                    initDevice(dev_name,100000);
+                   // sleep(1);
+                    //startDevice(dev_name,1000);
 
             } else if(deviceState==CUStateKey::INIT){
                dev_info.append_log("is in Init forcing to start");
-               startDevice(dev_name,1000);
+               startDevice(dev_name,100000);
             }
         }
         dev_info.status(deviceState);
+        if(!scheduling.empty()){
+            std::string l = "set scheduling delay" + scheduling;
+            dev_info.append_log(l.c_str());
+            dev->setScheduleDelay(atol((char*)scheduling.c_str()));
+        }
         if(!cmd.empty()){
           //  cout<<"do command " + cmd + " param="+parm.c_str()<<endl;
             sendCmd(dev,cmd,(char*)parm.c_str());

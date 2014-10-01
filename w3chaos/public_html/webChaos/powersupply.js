@@ -61,7 +61,7 @@ function PowerSupply(name){
                             my.state = value;
                      } else if(key=="current_sp"){
                          my.current_sp = value;
-                     } else if(key=="alarm"){
+                     } else if(key=="alarms"){
                          my.alarms = value;
                      } else {
                          ///
