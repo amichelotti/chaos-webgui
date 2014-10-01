@@ -144,7 +144,7 @@ function CU(name){
 
         request.send();
         request.onreadystatechange = function() {
-	if (request.readyState == 4 && xmlHttp.status == 200) {
+	if (request.readyState == 4 && request.status == 200) {
 	    var json_answer = request.responseText;
 	    
 	    console.log("answer dostate:" + dostate +" ("+my.name+"):\"" + json_answer+"\"");
