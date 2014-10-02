@@ -16,7 +16,7 @@ and open the template in the editor.
             CULoad("PowerSupply");
         </script>
         <body onload="setInterval(powerSupplyUpdateArrayInterface, 1500);">
-        <table>
+        <table id="table_powersupply_0">
             <tr>
                 <td colspan="5"><b>State</b></td>
                 <td colspan="2"><b>Current</b></td>
@@ -42,7 +42,12 @@ and open the template in the editor.
                 <td><input type="button" name="rstalarms" id="rstalarms_0" value="rstalarms" onclick="cus[0].powerSupplyClrAlarms();" /></td>
                 <td><b id="alarms_0" class="PowersupplyIndicator">0</b></td>
 		<td><div id="powersupply-graph_0" class="powersupply-graph-class"></div></td>";
-
+                <td>
+                    <table id="error_list_0">
+                    </table>
+                </td>
+            </tr>
+            <tr id="error_decoding_0">
             </tr>
                 </table>
     </body>
