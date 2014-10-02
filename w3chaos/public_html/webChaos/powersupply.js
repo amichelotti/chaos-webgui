@@ -40,50 +40,23 @@ function PowerSupply(name){
         this.sendCommand("rset","");
     }
     
-    this.processData=function(key,value){
+    this.processData=function(){
 	var my=this;
-	//	console.log("processing " + key + ":" + value); 
-            if (key == "current") {
-                            //var index = npoints%maxarray;
-			    var curr = Number(value).toFixed(3);
-			   
-                            my.points.push([(my.timestamp-my.firsttimestamp)/1000,curr]);
-                            
-                            npoints++;
-                            if(npoints>maxarray){
-                                my.points.pop();
-                            }
-			    my.current=curr;
-                            system.log("current:"+my.current);
-			} else if(key == "polarity"){
-                            my.polarity=value;
-			} else if(key == "status_id"){
-                            my.state = value;
-                     } else if(key=="current_sp"){
-                         my.current_sp = value;
-                     } else if(key=="alarms"){
-                         my.alarms = value;
-                     } else {
-                         ///
-                     }
-               
-	    
-	}
+         var curr = Number(my.current).toFixed(3);
+         my.points.push([(my.timestamp-my.firsttimestamp)/1000,curr]);
+        
+
     } 
- 
+    }
 
 
  
  function powerSupplyUpdateArrayInterface(){
+                CUupdateInterface();
                 for(var i = 0;i<cus.length;i++){
                     cus[i].update();
                     console.log("updating \""+cus[i].name + " current:"+cus[i].current + " polarity:"+cus[i].polarity);
-                    document.getElementById("readoutcurrent_"+i).innerHTML=cus[i].current;
-                    document.getElementById("spcurrent_"+i).innerHTML=cus[i].current_sp;
-                    document.getElementById("cuname_"+i).innerHTML=cus[i].name;
-                    document.getElementById("timestamp_"+i).innerHTML=Number((cus[i].timestamp -cus[i].firsttimestamp))*1.0/1000;
-                    document.getElementById("readoutalarms_"+i).innerHTML=cus[i].alarms;
-
+                    
                     if(cus[i].state&0x2){
                         document.getElementById("onstby_"+i).value="On";
                         document.getElementById("neg_"+i).disabled=true;
@@ -108,17 +81,11 @@ function PowerSupply(name){
                      if((cus[i].polarity==0)){
                        document.getElementById("open_"+i).className="active";
                     }
-                    if((cus[i].timestamp!=cus[i].oldtimestamp)){
-                        document.getElementById("cuname_"+i).style.color="green";
-                    } else {
-                        document.getElementById("cuname_"+i).style.color="red";
-                    }
+                    
                     if(cus[i].alarms!=0){
-                        document.getElementById("readoutalarms_"+i).style.color="red";
-                    } else {
-                         document.getElementById("readoutalarms_"+i).style.color="green";
-                    }
+                        document.getElementById("alarms_"+i).style.color="red";
+                    } 
                     $.plot("#powersupply-graph_"+i,[cus[i].points]);
                 }
             }
-    
+               

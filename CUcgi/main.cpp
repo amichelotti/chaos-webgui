@@ -30,6 +30,7 @@
 using namespace std;
 using namespace cgicc;     // Or reference as cgicc::Cgicc formData; below in object instantiation.
 	 
+#define TIMEOUT 20000
 
 #define MDS "mdsserver:5000"
 using namespace std;
@@ -260,6 +261,7 @@ int main(int argc, char** argv) {
     char result[4096];
     DeviceController* dev=NULL;
     *result = 0;
+    int doinit=0,dostart=0,dodeinit=0,dostop=0;
     form_iterator init =form.getElement("InitID");
     form_iterator start =form.getElement("StartID");
     form_iterator stop =form.getElement("StopID");
@@ -290,45 +292,31 @@ int main(int argc, char** argv) {
     
      if(init != form.getElements().end()) {
        dev_name = (**init).c_str();
+       
        dev_info.append_log("do init:" +(**init));
-       dev =initDevice(dev_name,1000000);
-       if(dev<=0){
-            dev_info.append_error("cannot init device:" +(**init));
-       }
+       doinit = 1;
+      
      } else if(start!= form.getElements().end()) {
        dev_name = (**start).c_str();
        dev_info.append_log("do start:"+(**start));
-         dev =startDevice(dev_name,1000000);
-         if(dev<=0){
-            dev_info.append_error("cannot start device:"+(**start));
-       }
-	 
+       dostart=1;
      } else if(stop!= form.getElements().end()) {
        dev_name = (**stop).c_str();
        dev_info.append_log("do stop:"+(**stop));
-       dev =stopDevice(dev_name,1000000);
-         if(dev<=0){
-            dev_info.append_error("cannot stop device:"+(**stop));
-       }
+       dostop =1;
      } else if(deinit!= form.getElements().end()) {
        dev_name =(**deinit).c_str();
        dev_info.append_log("do deinit:"+(**deinit));
-		
+       dodeinit=1;	
 
-       dev =deinitDevice(dev_name,1000000);
-       if(dev<=0){
-            dev_info.append_error("cannot deinit device:"+(**deinit));
-       }
      } else if (status!=form.getElements().end()){
          dev_name = (**status).c_str();
          dev_info.append_log("do update status");
          update =1;
-         dev = getDevice(dev_name);
      } else{
          if(device!=form.getElements().end()){
 	   dev_name = (**device).c_str();
-             dev = getDevice(dev_name);
-	     dev_info.append_log("do update:"+(**device));
+	   dev_info.append_log("do update:"+(**device));
              update=2;
          }
          
@@ -347,40 +335,97 @@ int main(int argc, char** argv) {
          }
      }
     
+    if(dev_name){
+        dev = HLDataApi::getInstance()->getControllerForDeviceID(dev_name);
+        if(dev==0){
+          dev_info.append_error("cannot find device:"+string(dev_name));
+          dev_info.insert_json(result);
+          cout<<result<<endl;
+          return 0;
+        }
+    }
    
     if(dev && dev_name){
         CUStateKey::ControlUnitState deviceState;
-        dev->setRequestTimeWaith(1000000);
-        dev->getState(deviceState);
+        int err;
+        dev->setRequestTimeWaith(TIMEOUT);
+        err=dev->getState(deviceState);
+        if(err == ErrorCode::EC_TIMEOUT){
+             dev_info.append_error("Timeout getting State "+string(dev_name));
+             dev_info.insert_json(result);
+             cout<<result<<endl;
+            return 0;
+        } 
+        dev_info.status(deviceState);
+
+        dev->setRequestTimeWaith(TIMEOUT);
+        dev->setupTracking();
+        if(doinit){
+            err = dev->initDevice();
+        }
+        
+        if(dostart){
+           
+            err = dev->startDevice();
+        }
+         if(dostop){
+            err = dev->stopDevice();
+        }
+        if(dodeinit){
+            err= dev->deinitDevice();
+        }
+        
+        if(err == ErrorCode::EC_TIMEOUT){
+            dev_info.append_error("Timeout  :"+string(dev_name));
+            dev_info.insert_json(result);
+            cout<<result<<endl;
+            return 0;
+        } else if(err !=0){
+             dev_info.append_error("Error in:"+string(dev_name));
+             dev_info.insert_json(result);
+             cout<<result<<endl;
+            return 0;
+        }
+        
+        
+        
+        
+        
         if(update==2){
             if(deviceState==CUStateKey::DEINIT){
-              //cout<<"device is in deinit forcing to init and starting :"<<dev_name<<endl;
-
-                    dev_info.append_log("force init and start");
-                    initDevice(dev_name,100000);
-                   // sleep(1);
-                    //startDevice(dev_name,1000);
-
-            } else if(deviceState==CUStateKey::INIT){
-               dev_info.append_log("is in Init forcing to start");
-               startDevice(dev_name,100000);
+                
+                if(dev->initDevice()!=0){
+                  dev_info.append_log("force init");
+                  dev_info.append_error("Error forcining init:"+string(dev_name));
+                  dev_info.insert_json(result);
+                  cout<<result<<endl;
+                  return 0;
+                }
+                
+                 
+            } 
+            if(dev->startDevice()!=0){
+                  dev_info.append_log("force start");
+                  dev_info.append_error("Error forcining start:"+string(dev_name));
+                  dev_info.insert_json(result);
+                  cout<<result<<endl;
+                  return 0;
+             }
             }
-        }
-        dev_info.status(deviceState);
-        if(!scheduling.empty()){
-            std::string l = "set scheduling delay" + scheduling;
-            dev_info.append_log(l.c_str());
-            dev->setScheduleDelay(atol((char*)scheduling.c_str()));
-        }
-        if(!cmd.empty()){
-          //  cout<<"do command " + cmd + " param="+parm.c_str()<<endl;
-            sendCmd(dev,cmd,(char*)parm.c_str());
-        }
-        if(fetchDataSet(dev,result,sizeof(result))<0){
-            dev_info.append_error("cannot fetch data");
-            
-        }
-       
+            if(!scheduling.empty()){
+                std::string l = "set scheduling delay" + scheduling;
+                dev_info.append_log(l.c_str());
+                dev->setScheduleDelay(atol((char*)scheduling.c_str()));
+            }
+            if(!cmd.empty()){
+              //  cout<<"do command " + cmd + " param="+parm.c_str()<<endl;
+                sendCmd(dev,cmd,(char*)parm.c_str());
+            }
+            if(fetchDataSet(dev,result,sizeof(result))<0){
+                dev_info.append_error("cannot fetch data");
+
+            }
+        
     }
     
     dev_info.insert_json(result);

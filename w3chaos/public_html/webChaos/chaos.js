@@ -9,7 +9,7 @@ var npoints=0;
 
 function CU(name){
     this.name =name;
-    var dostate="";
+    this.dostate="";
     
     this.timestamp=0;
     this.oldtimestamp=0;
@@ -27,7 +27,7 @@ function CU(name){
         
         request.open("GET", "/cgi-bin/cu.cgi?InitId=" + this.name, true);
         request.send();        
-        dostate = "init";
+        this.dostate = "init";
 
         
     }
@@ -38,13 +38,13 @@ function CU(name){
         }
         
         this.start();
-        dostate = "start";
+        this.dostate = "start";
     }
     this.deinit=function (){
         var request = new XMLHttpRequest();
         request.open("GET", "/cgi-bin/cu.cgi?DeInitId=" + this.name, true);
         request.send();        
-        dostate = "deinit";
+        this.dostate = "deinit";
         
     }
     this.start=function (){
@@ -52,7 +52,7 @@ function CU(name){
         
         request.open("GET", "/cgi-bin/cu.cgi?StartId=" + this.name, true);
         request.send(); 
-        dostate = "start";
+        this.dostate = "start";
 
        
     };
@@ -60,14 +60,12 @@ function CU(name){
         var request = new XMLHttpRequest();  
         request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name, true);
         request.send();
-        dostate = "stop";
+        this.dostate = "stop";
     };
     // this function should be overloaded by the class object
     // if not it contain exactly what is pushed
-    this.processData=function (key,value){
-	//        console.log("ADDING:" + key + " :"+value);
-        
-        this[key]=value;
+    this.processData=function (){
+	
         
     };
     this.sendCommand=function (command, parm) {
@@ -88,18 +86,18 @@ function CU(name){
     this.update=function (){
        var request = new XMLHttpRequest();
        var my=this;
-       request.timeout = 10000;
+       request.timeout =120000;
       // console.log("updating "+my.name + " run:" +dorun)
-        if(dostate == my.dev_status  ){
-            dostate = "";
+        if(my.dostate == my.dev_status  ){
+            my.dostate = "";
             console.log("device "+my.name + " is in \""+my.dev_status+ " OK"); 
 
             request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name, true);
             
-        } else if(dostate!="") { 
-           console.log("device "+my.name + " is in \""+my.dev_status+ "\" I should go into \""+ dostate+"\""); 
+        } else if(my.dostate!="") { 
+           console.log("device "+my.name + " is in \""+my.dev_status+ "\" I should go into \""+ my.dostate+"\""); 
 
-          if(dostate == "init") {
+          if(my.dostate == "init") {
             if(my.dev_status  == "start"){
                 request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name, true);
             } else if(my.dev_status  == "stop"){
@@ -107,25 +105,25 @@ function CU(name){
             } else{
                 request.open("GET", "/cgi-bin/cu.cgi?InitId=" + this.name, true);
             }
-          } else if(dostate == "start"){
+          } else if(my.dostate == "start"){
               if(my.dev_status  == "deinit"){
                   request.open("GET", "/cgi-bin/cu.cgi?InitId=" + this.name, true);
               } else {
                  request.open("GET", "/cgi-bin/cu.cgi?StartId=" + this.name, true);
               }
-          } else if(dostate == "stop"){
+          } else if(my.dostate == "stop"){
                if(my.dev_status  == "start"){
                     request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name, true);
                } else {
                                 request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name, true);
 
                } /*else if(my.dev_status  != "") {
-                   dostate ="";
+                   this.dostate ="";
                    alert("cannot STOP device "+ this.name + " is in state:"+my.dev_status );
                } else {
                     request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name, true);
                }*/
-          } else if(dostate == "deinit"){
+          } else if(my.dostate == "deinit"){
               if(my.dev_status  == "start"){
                     request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name, true);
                } else {
@@ -147,7 +145,7 @@ function CU(name){
 	if (request.readyState == 4 && request.status == 200) {
 	    var json_answer = request.responseText;
 	    
-	    console.log("answer dostate:" + dostate +" ("+my.name+"):\"" + json_answer+"\"");
+	    console.log("answer this.dostate:" + my.dostate +" ("+my.name+"):\"" + json_answer+"\"");
 	    if (json_answer == "") {
 		return;
 	    }
@@ -167,8 +165,9 @@ function CU(name){
 			}
 		    }
 		  //  console.log("processing:"+key+ " val:"+val);
-
-		    if (key == "cs|csv|timestamp") {
+                    if(key == "cs|csv|device_id"){
+                        my.name = val;
+                    } else if (key == "cs|csv|timestamp") {
 			
 			if(my.firsttimestamp==0){
                             my.firsttimestamp=val;
@@ -176,11 +175,12 @@ function CU(name){
                         my.oldtimestamp=my.timestamp;
 			my.timestamp = val;
 			my.seconds =(val - my.firsttimestamp)/1000.0;
-                        if(my.oldtimestamp!=0)
+                        if(my.oldtimestamp!=0){
                             my.refresh = (val - my.oldtimestamp)/1000.0;
+                        }
 		    } else {
 			//			console.log("call " + my.toString() + " process data :"+key+ " val:"+val);
-                        my.processData(key,val);
+                        my[key]=val;
                     }
                     
                     if(my.error_status!=""){
@@ -190,6 +190,7 @@ function CU(name){
 		    // console.error(key + " does not exist:" + err);
 		}
 	    });
+           my.processData();
 	}
     } 
 } 
