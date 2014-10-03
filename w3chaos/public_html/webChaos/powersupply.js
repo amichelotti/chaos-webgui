@@ -40,50 +40,55 @@ function PowerSupply(name){
         this.sendCommand("rset","");
     }
     
-    this.processData=function(key,value){
+    this.processData=function(){
 	var my=this;
-	//	console.log("processing " + key + ":" + value); 
-            if (key == "current") {
-                            //var index = npoints%maxarray;
-			    var curr = Number(value).toFixed(3);
-			   
-                            my.points.push([(my.timestamp-my.firsttimestamp)/1000,curr]);
-                            
-                            npoints++;
-                            if(npoints>maxarray){
-                                my.points.pop();
-                            }
-			    my.current=curr;
-                            system.log("current:"+my.current);
-			} else if(key == "polarity"){
-                            my.polarity=value;
-			} else if(key == "status_id"){
-                            my.state = value;
-                     } else if(key=="current_sp"){
-                         my.current_sp = value;
-                     } else if(key=="alarm"){
-                         my.alarms = value;
-                     } else {
-                         ///
-                     }
-               
-	    
-	}
+         var curr = Number(my.current).toFixed(3);
+         my.points.push([(my.timestamp-my.firsttimestamp)/1000,curr]);
+        
+
     } 
- 
+    }
 
 
- 
+ function decodeError(alarm, table){
+     table.innerHTML = "";
+     var rows=0;
+       for(var a=0;a<32;a++){
+           var bit = alarm & (1<<a);
+           var row,cell;
+           if(bit){
+               row = table.insertRow(rows++);
+               cell = row.insertCell(0);
+           }
+           if(bit&0x1){
+               cell.innerHTML = "1 fusibili area";
+           } else if(bit&0x2){
+               cell.innerHTML = "2 sovracorrente AC ";
+           } else if(bit&0x4){
+               cell.innerHTML ="3 fusibili IGBT";
+           } else if(bit&0x8){
+               cell.innerHTML ="4 sovra temperatura IGBT";
+           } else if(bit&0x10){
+               cell.innerHTML ="5 sovra corrente DCLINK";
+           } else if(bit&0x20){
+               cell.innerHTML = "6 AirFlow ";
+           } else if(bit&0x40){
+               cell.innerHTML ="7 ---- ";
+               
+           } else if(bit&0x80){
+               cell.innerHTML = "8 Sovra temperatura raddrizzatore ";
+           } else if(bit>0){
+               cell.innerHTML = a + " --- ";
+
+           }
+       } 
+ }
  function powerSupplyUpdateArrayInterface(){
+                CUupdateInterface();
                 for(var i = 0;i<cus.length;i++){
                     cus[i].update();
                     console.log("updating \""+cus[i].name + " current:"+cus[i].current + " polarity:"+cus[i].polarity);
-                    document.getElementById("readoutcurrent_"+i).innerHTML=cus[i].current;
-                    document.getElementById("spcurrent_"+i).innerHTML=cus[i].current_sp;
-                    document.getElementById("cuname_"+i).innerHTML=cus[i].name;
-                    document.getElementById("timestamp_"+i).innerHTML=Number((cus[i].timestamp -cus[i].firsttimestamp))*1.0/1000;
-                    document.getElementById("readoutalarms_"+i).innerHTML=cus[i].alarms;
-
+                    var table_error = document.getElementById("error_list_"+i);
                     if(cus[i].state&0x2){
                         document.getElementById("onstby_"+i).value="On";
                         document.getElementById("neg_"+i).disabled=true;
@@ -108,17 +113,17 @@ function PowerSupply(name){
                      if((cus[i].polarity==0)){
                        document.getElementById("open_"+i).className="active";
                     }
-                    if((cus[i].timestamp!=cus[i].oldtimestamp)){
-                        document.getElementById("cuname_"+i).style.color="green";
-                    } else {
-                        document.getElementById("cuname_"+i).style.color="red";
-                    }
+                    
                     if(cus[i].alarms!=0){
-                        document.getElementById("readoutalarms_"+i).style.color="red";
+                        var alarm=cus[i].alarms
+                       
+                        decodeError(alarm,table_error);
+                       
+                        
                     } else {
-                         document.getElementById("readoutalarms_"+i).style.color="green";
+                        table_error.innerHTML="";
                     }
                     $.plot("#powersupply-graph_"+i,[cus[i].points]);
                 }
             }
-    
+               

@@ -105,8 +105,6 @@
         </df>
         <df name="cu.cgi.dir">
         </df>
-        <df name="Progress">
-        </df>
       </df>
       <in>main.cpp</in>
     </df>

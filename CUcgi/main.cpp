@@ -30,6 +30,7 @@
 using namespace std;
 using namespace cgicc;     // Or reference as cgicc::Cgicc formData; below in object instantiation.
 	 
+#define TIMEOUT 20000
 
 #define MDS "mdsserver:5000"
 using namespace std;
@@ -41,6 +42,55 @@ using namespace boost;
  
  */
 
+struct dev_info_status{
+  char dev_status[256];
+  char error_status[256];
+  char log_status[256];
+  dev_info_status(){*dev_status=0;*error_status=0;*log_status=0;}
+
+  void status(CUStateKey::ControlUnitState deviceState){
+    if(deviceState==CUStateKey::DEINIT){
+      strcpy(dev_status,"deinit");
+    } else if(deviceState == CUStateKey::INIT){
+        strcpy(dev_status,"init");
+    } else if(deviceState == CUStateKey::START){
+        strcpy(dev_status,"start");
+    } else if(deviceState == CUStateKey::STOP){
+          strcpy(dev_status,"stop");
+    } else {
+        strcpy(dev_status,"uknown");
+    }
+  }
+  void append_log(std::string log){
+    snprintf(log_status,sizeof(log_status),"%s%s;",log_status,log.c_str());
+ 
+  }
+  void append_error(std::string log){
+    snprintf(error_status,sizeof(error_status),"%s%s;",error_status,log.c_str());
+ 
+  }
+  void insert_json(char*json){
+    int some_item=0;
+    int open_brace=0;
+    if(json==NULL) return;
+    if(*json==0){
+        sprintf(json,"{\"dev_status\":\"%s\",\"error_status\":\"%s\",\"log_status\":\"%s\"}",dev_status,error_status,log_status);
+	return;
+    }
+    while(*json!=0){
+        
+      if(*json=='{'){
+          char temp[4096];
+          strncpy(temp,json+1,4096);
+	sprintf(json,"{\"dev_status\":\"%s\",\"error_status\":\"%s\",\"log_status\":\"%s\",%s",dev_status,error_status,log_status,temp);
+	return;
+      } 
+        json++;
+    }
+  }
+};
+
+
 int initChaosToolkit(const char* mds){
     char tmpInitString[256];
     int err;
@@ -50,10 +100,10 @@ int initChaosToolkit(const char* mds){
       sprintf(tmpInitString, "metadata-server=%s\n", mds);
       err = initToolkit(tmpInitString);
       if (err != 0) {
-	DPRINT("Error initToolkit %d\n", err);
+	//DPRINT("Error initToolkit %d\n", err);
 	return 0;
       }
-      DPRINT("Toolkit initialised \"%s\"\n",tmpInitString);
+      //DPRINT("Toolkit initialised \"%s\"\n",tmpInitString);
       return 1;
        
 }
@@ -77,7 +127,7 @@ int initChaosToolkit(const char* mds){
                 controller->setRequestTimeWaith(timeout);
                 controller->initDevice();
                // controller->startDevice();
-            }
+            } 
         } catch (CException& e) {
             DPRINT("eccezione %s\n",e.what());
             err = e.errorCode;
@@ -143,7 +193,7 @@ int initChaosToolkit(const char* mds){
                 int err=0;
                     //activate the traking
                 //controller->setupTracking();
-                //controller->setRequestTimeWaith(timeout);
+                controller->setRequestTimeWaith(timeout);
                 //controller->initDevice();
                controller->deinitDevice();
             }
@@ -181,7 +231,7 @@ int initChaosToolkit(const char* mds){
   }
   int fetchDataSet(DeviceController *ctrl,char*jsondest,int size){
       CDataWrapper* data;
-      strcpy(jsondest,"no data");
+      try{
       if(ctrl){
           ctrl->fetchCurrentDeviceValue();
       } else {
@@ -189,10 +239,15 @@ int initChaosToolkit(const char* mds){
       }
       data = ctrl->getCurrentData();
       if(data==NULL){
-	cout<<"## cannot fetch"<<endl;
+	
 	return -3;
       }
-      
+      }
+       catch (CException& e) {
+            DPRINT("eccezione %s\n",e.what());
+
+            return -4;
+        }
       strncpy(jsondest,data->getJSONString().c_str(),size);
      
       return 0;
@@ -205,78 +260,177 @@ int main(int argc, char** argv) {
     Cgicc form;
     char result[4096];
     DeviceController* dev=NULL;
+    *result = 0;
+    int doinit=0,dostart=0,dodeinit=0,dostop=0;
     form_iterator init =form.getElement("InitID");
     form_iterator start =form.getElement("StartID");
     form_iterator stop =form.getElement("StopID");
     form_iterator deinit =form.getElement("DeInitID");
+    form_iterator status =form.getElement("status");
 
     form_iterator device =form.getElement("dev"); // dev=device_name, cmd:
     form_iterator command =form.getElement("cmd"); // dev=device_name, cmd:
     form_iterator param =form.getElement("param"); // dev=device_name, cmd:
+    form_iterator sched =form.getElement("sched");
 
-    std::string cmd,parm;
+    std::string cmd,parm,scheduling;
+    const char *dev_name=NULL;
+    dev_info_status dev_info;
+    int update =0;
+    
       // Send HTTP header
-    cout << "Content-Type: text/plain\n\n";
-        initChaosToolkit(MDS);
+    cout << cgicc::HTTPHTMLHeader() << endl;
+
+    //cout << "Content-Type: text/plain\n\nCharSet:UTF-8\n\n";
+    if(initChaosToolkit(MDS)<=0){
+        dev_info.append_error("cannot initialize toolkit");
+        dev_info.insert_json(result);
+        cout<<result<<endl;
+        return -1;
+     }
       // Set up the HTML document
+    
      if(init != form.getElements().end()) {
-         cout<<"do init "<<(**init).c_str()<<endl;
-         dev =initDevice((**init).c_str(),1000);
+       dev_name = (**init).c_str();
+       
+       dev_info.append_log("do init:" +(**init));
+       doinit = 1;
+      
      } else if(start!= form.getElements().end()) {
-         cout<<"do start "<<(**start).c_str()<<endl;
-         dev =startDevice((**start).c_str(),1000);
+       dev_name = (**start).c_str();
+       dev_info.append_log("do start:"+(**start));
+       dostart=1;
      } else if(stop!= form.getElements().end()) {
-         cout<<"do stop "<<(**stop).c_str()<<endl;
-         dev =stopDevice((**stop).c_str(),1000);
+       dev_name = (**stop).c_str();
+       dev_info.append_log("do stop:"+(**stop));
+       dostop =1;
      } else if(deinit!= form.getElements().end()) {
-         cout<<"do deinit "<<(**deinit).c_str()<<endl;
-         dev =deinitDevice((**deinit).c_str(),1000);
-     }else{
+       dev_name =(**deinit).c_str();
+       dev_info.append_log("do deinit:"+(**deinit));
+       dodeinit=1;	
+
+     } else if (status!=form.getElements().end()){
+         dev_name = (**status).c_str();
+         dev_info.append_log("do update status");
+         update =1;
+     } else{
          if(device!=form.getElements().end()){
-             dev = getDevice((**device).c_str());
+	   dev_name = (**device).c_str();
+	   dev_info.append_log("do update:"+(**device));
+             update=2;
          }
+         
          if(command!=form.getElements().end()){
              cmd = **command;
+	     dev_info.append_log("do command:"+cmd);
          }
          
          if(param!=form.getElements().end()){
              parm = **param;
+              dev_info.append_log(parm);
+         }
+         if(sched!=form.getElements().end()){
+             scheduling = **sched;
+             dev_info.append_log("do scheduling:"+scheduling);
          }
      }
     
+    if(dev_name){
+        dev = HLDataApi::getInstance()->getControllerForDeviceID(dev_name);
+        if(dev==0){
+          dev_info.append_error("cannot find device:"+string(dev_name));
+          dev_info.insert_json(result);
+          cout<<result<<endl;
+          return 0;
+        }
+    }
    
-    if(dev){
+    if(dev && dev_name){
         CUStateKey::ControlUnitState deviceState;
-        dev->getState(deviceState);
-        if(deviceState==CUStateKey::DEINIT){
-             cout<<"device is in deinit forcing to init and starting :"<<(**device).c_str()<<endl;
-            initDevice((**device).c_str(),1000);
-            startDevice((**device).c_str(),1000);
-        } else if(deviceState==CUStateKey::INIT){
-           cout<<"device is in init forcing to start :"<<(**device).c_str()<<endl;
+        int err;
+        dev->setRequestTimeWaith(TIMEOUT);
+        err=dev->getState(deviceState);
+        if(err == ErrorCode::EC_TIMEOUT){
+             dev_info.append_error("Timeout getting State "+string(dev_name));
+             dev_info.insert_json(result);
+             cout<<result<<endl;
+            return 0;
+        } 
+        dev_info.status(deviceState);
 
-            startDevice((**start).c_str(),1000);
+        dev->setRequestTimeWaith(TIMEOUT);
+        dev->setupTracking();
+        if(doinit){
+            err = dev->initDevice();
+        }
+        
+        if(dostart){
+           
+            err = dev->startDevice();
+        }
+         if(dostop){
+            err = dev->stopDevice();
+        }
+        if(dodeinit){
+            err= dev->deinitDevice();
+        }
+        
+        if(err == ErrorCode::EC_TIMEOUT){
+            dev_info.append_error("Timeout  :"+string(dev_name));
+            dev_info.insert_json(result);
+            cout<<result<<endl;
+            return 0;
+        } else if(err !=0){
+             dev_info.append_error("Error in:"+string(dev_name));
+             dev_info.insert_json(result);
+             cout<<result<<endl;
+            return 0;
         }
         
         
-        if(!cmd.empty()){
-            cout<<"do command " + cmd + " param="+parm.c_str()<<endl;
-            sendCmd(dev,cmd,(char*)parm.c_str());
-        }
-        fetchDataSet(dev,result,sizeof(result));
-        cout<<result<<endl;
+        
+        
+        
+        if(update==2){
+            if(deviceState==CUStateKey::DEINIT){
+                
+                if(dev->initDevice()!=0){
+                  dev_info.append_log("force init");
+                  dev_info.append_error("Error forcining init:"+string(dev_name));
+                  dev_info.insert_json(result);
+                  cout<<result<<endl;
+                  return 0;
+                }
+                
+                 
+            } 
+            if(dev->startDevice()!=0){
+                  dev_info.append_log("force start");
+                  dev_info.append_error("Error forcining start:"+string(dev_name));
+                  dev_info.insert_json(result);
+                  cout<<result<<endl;
+                  return 0;
+             }
+            }
+            if(!scheduling.empty()){
+                std::string l = "set scheduling delay" + scheduling;
+                dev_info.append_log(l.c_str());
+                dev->setScheduleDelay(atol((char*)scheduling.c_str()));
+            }
+            if(!cmd.empty()){
+              //  cout<<"do command " + cmd + " param="+parm.c_str()<<endl;
+                sendCmd(dev,cmd,(char*)parm.c_str());
+            }
+            if(fetchDataSet(dev,result,sizeof(result))<0){
+                dev_info.append_error("cannot fetch data");
+
+            }
+        
     }
     
-#if 0
-    cout<<"{";
-    for(int cnt=0;cnt<6;cnt++){
-        cout<<"\""<<dataset[cnt]<<"\":"<<(rand()*1.0/RAND_MAX)*200;
-        if(cnt<5)cout<<",";
-    }
-    cout<<"}"<<endl;
-#endif
-     // Close the HTML document
-  //    cout << body() << html();
+    dev_info.insert_json(result);
+    cout<<result<<endl;
+
     return 0;
 }
 
