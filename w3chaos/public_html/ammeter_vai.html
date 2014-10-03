@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    
+    <title>Page Title</title>
+    
+    <link rel="stylesheet" href="ammeter_vai.css" type="text/css" media="screen, projection" />
+    <link rel="stylesheet" href="reset.css" type="text/css" media="screen, projection" />
+    <script type="text/Javascript" src="webChaos/chaos.js"></script
+    <script type="text/Javascript" src="webChaos/jquery.js"></script>
+    <script type="text/Javascript" src="webChaos/flot/jquery.flot.js"></script>
+    <script type="text/Javascript" src="webChaos/powersupply.js"></script>
+    
+    <script>
+        CULoad(null);
+    </script>
+
+
+
+
+</head>
+
+
+<body onload="setInterval(CUupdateInterface, 2000);">
+
+    <script type= "text/javascript">
+        
+           initializeCU(["ammeter"]);
+            
+        
+        function openWin() {
+        
+            var myWindow;
+            myWindow = window.resizeBy(-630,-310);
+            document.getElementById("container").style.WebkitTransform = "scale(0.6,0.6)";
+            document.getElementById("container").style.height = "700px";
+            document.getElementById("container").style.marginLeft = "-240px";
+            document.getElementById("container").style.marginTop = "-120px";
+            document.getElementById("pulsante").style.visibility = "hidden";
+            document.getElementById("redirect").style.visibility = "visible";
+            myWindow.focus();
+    
+        }
+    
+    
+        function initialSizeWin() {
+
+        var newWindow;
+        newWindow = window.open("file:///Users/mac_gioscio/Desktop/NewFolder/ammeter_vai.html","");
+        newWindow.focus();
+
+        }
+        
+        
+      /*  function maxcharacters(area,max,id_campo) {
+            var conta = max-area.value.length;
+            if (id_campo!=null) {
+                document.getElementById(id_campo).innerHTML=conta;
+            }
+            
+            if (conta<0) {
+                area.value = area.value.substring(0,max);
+                if (id_campo!=null) {
+                    document.getElementById(id_campo).innerHTML = '0';
+                }
+            }
+            
+            
+        } */
+     
+
+    </script>
+
+
+    <div id= "container">
+        
+        <div id= "head_title">
+            AMMETER ROOM <label id="name_0"></label>
+            <!--textarea id="name_0" rows="1" cols="10"></textarea-->
+        </div>
+        
+        
+        <div id="sub_title">
+        MONITORING
+        </div>
+        
+        
+        <div id="contenuto">
+            <div id="parametro">PARAMETER</div>
+            <div id="valore">VALUE</div>
+            <div id="grafico">GRAPH</div>
+            <div id="stato">STATE</div>
+        </div>    
+            
+            
+        <table id="bla">
+            <tr>
+                <td id="param">Voltage Phase1</td>
+                <td id="inserisci"><textarea class="Indicator" id="U1N_0" rows="1" cols="10" digits="3">0</textarea></td>
+                    <!--textarea id="U1N_0" rows="1" cols="6"></textarea-->
+                <td id="chart">null</td>
+                <td id="stato"><input id=readoutalarms_0 type=button value="" disabled="disabled"/></td>
+            </tr>
+                    
+            <tr>
+                <td id="param">Current Phase1</td>
+                <td id="inserisci"><textarea class="Indicator" id="I1_0" rows="1" cols="10" digits="3">0</textarea><!--label id="I1_0"></label--></td>
+                <td id="chart">null</td>
+                <td id="stato"><input id=readoutalarms_0 type=button value="" disabled="disabled"/></td>
+            </tr>
+                    
+            <tr>
+                <td id="param">Total Power Factor</td>
+                <td id="inserisci"><textarea class="Indicator" id="PFS_0" rows="1" cols="10" digits="3">0</textarea></td>
+                <td id="chart">null</td>
+                <td id="stato"><input id=readoutalarms_0 type=button value="" disabled="disabled"/></td>
+            </tr>
+                    
+            <tr>
+                <td id="param">Total Power Active</td>
+                <td id="inserisci"><textarea class="Indicator" id="PS_0" rows="1" cols="10" digits="3">0</textarea></td>
+                <td id="chart">null</td>
+                <td id="stato"><input id=readoutalarms_0 type=button value="" disabled="disabled"/></td>
+            </tr>
+        </table>
+        
+        
+
+            
+        <button id="pulsante" onclick= "openWin()">Open in a smaller window</button>
+            
+        <button id="redirect" onclick= "initialSizeWin()">Espandi</button>
+        
+        <div id="info">
+           <p><b>TimeStamp</b></p> <textarea class="Indicator" id="timestamp_0" rows="1" cols="10" digits="3">0</textarea>
+            <p><b>Seconds</b></p><textarea class="Indicator" id="seconds_0" rows="1" cols="10" digits="3">0</textarea>
+        </div>
+
+       
+            
+    </div>
+          
+</body>
+</html>
