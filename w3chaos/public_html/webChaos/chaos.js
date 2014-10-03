@@ -5,7 +5,7 @@ var points = new Array();
 var onswitched=0;
 var maxarray=600;
 var npoints=0;
-
+var refreshInterval=0;
 
 function CU(name){
     this.name =name;
@@ -188,6 +188,9 @@ function CU(name){
                     
                     if(my.error_status!=""){
                         console.log("An internal error occurred on device \""+my.name+"\":\""+my.error_status+"\"");
+                        clearInterval(refreshInterval);
+                        alert(my.error_status);
+                      
                     }
                 } catch(err) {
 		    // console.error(key + " does not exist:" + err);
@@ -235,8 +238,10 @@ function CU(name){
             }catch(e) {
             }
         }
-        
-function CULoad(classname){
+function updateInterface(){
+    
+}
+function CULoad(classname,inter){
      var query = window.location.search.substring(1);
      var vars = query.split("=");
      var cus_names=vars[1].split("&");
@@ -249,11 +254,18 @@ function CULoad(classname){
           if(classname!=null){
               console.log("Creating class:"+classname + " name: "+cus_names[i])
               cu  = new window[classname](cus_names[i]);
+            //  var refreshFunc=classname + "Refresh";
+             // refreshInterval=setInterval(refreshFunc,inter);
+            refreshInterval=setInterval(updateInterface,inter);
+
+
           } else {
               cu = new CU(cus_names[i]);
-            console.log("Creating Generic CU name: "+cus_names[i])
-
+              console.log("Creating Generic CU name: "+cus_names[i]);
+              refreshInterval=setInterval(CUupdateInterface,inter);
         }
+         
+
           cus.push(cu);
           if(vars[0]==="init"){
               console.log("initializing "+cus_names[i]);

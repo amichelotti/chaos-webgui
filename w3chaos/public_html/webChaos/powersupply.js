@@ -83,7 +83,7 @@ function PowerSupply(name){
            }
        } 
  }
- function powerSupplyUpdateArrayInterface(){
+ function updateInterface(){
                 CUupdateInterface();
                 for(var i = 0;i<cus.length;i++){
                     cus[i].update();
