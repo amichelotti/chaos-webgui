@@ -21,11 +21,11 @@ function CU(name){
     
     this.firsttimestamp=0; // first time stamp of the interface
     console.log("creating CU:"+name);
-
+    this.updating=0;
     this.init=function (){
         var request = new XMLHttpRequest();
         
-        request.open("GET", "/cgi-bin/cu.cgi?InitId=" + this.name, true);
+        request.open("GET", "/cgi-bin/cu.cgi?InitId=" + this.name,true);
         request.send();        
         this.dostate = "init";
 
@@ -42,7 +42,7 @@ function CU(name){
     }
     this.deinit=function (){
         var request = new XMLHttpRequest();
-        request.open("GET", "/cgi-bin/cu.cgi?DeInitId=" + this.name, true);
+        request.open("GET", "/cgi-bin/cu.cgi?DeInitId=" + this.name,true);
         request.send();        
         this.dostate = "deinit";
         
@@ -50,7 +50,7 @@ function CU(name){
     this.start=function (){
         var request = new XMLHttpRequest();
         
-        request.open("GET", "/cgi-bin/cu.cgi?StartId=" + this.name, true);
+        request.open("GET", "/cgi-bin/cu.cgi?StartId=" + this.name,true);
         request.send(); 
         this.dostate = "start";
 
@@ -58,7 +58,7 @@ function CU(name){
     };
     this.stop=function (){
         var request = new XMLHttpRequest();  
-        request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name, true);
+        request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name,true);
         request.send();
         this.dostate = "stop";
     };
@@ -72,7 +72,7 @@ function CU(name){
         var request = new XMLHttpRequest();
 
         console.log("device:" + this.name + " command:" + command + " param:" + parm);
-        request.open("GET", "/cgi-bin/cu.cgi?dev=" + this.name + "&cmd=" + command + "&param=" + parm, true);
+        request.open("GET", "/cgi-bin/cu.cgi?dev=" + this.name + "&cmd=" + command + "&param=" + parm,true);
         request.send();
     };
     
@@ -80,74 +80,78 @@ function CU(name){
         var request = new XMLHttpRequest();
 
         console.log("device:" + this.name + " set scheduling to:" + parm);
-        request.open("GET", "/cgi-bin/cu.cgi?dev=" + this.name + "&sched=" + parm, true);
+        request.open("GET", "/cgi-bin/cu.cgi?dev=" + this.name + "&sched=" + parm,true);
         request.send();
     };
     this.update=function (){
        var request = new XMLHttpRequest();
        var my=this;
-       request.timeout =120000;
+       request.timeout =30000;
+       if(my.updating == 1)
+           return;
       // console.log("updating "+my.name + " run:" +dorun)
         if(my.dostate == my.dev_status  ){
             my.dostate = "";
             console.log("device "+my.name + " is in \""+my.dev_status+ " OK"); 
 
-            request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name, true);
+            request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name,true);
             
         } else if(my.dostate!="") { 
            console.log("device "+my.name + " is in \""+my.dev_status+ "\" I should go into \""+ my.dostate+"\""); 
 
           if(my.dostate == "init") {
             if(my.dev_status  == "start"){
-                request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name, true);
+                request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name,true);
             } else if(my.dev_status  == "stop"){
-                request.open("GET", "/cgi-bin/cu.cgi?DeinitId=" + this.name, true);
+                request.open("GET", "/cgi-bin/cu.cgi?DeinitId=" + this.name,true);
             } else{
-                request.open("GET", "/cgi-bin/cu.cgi?InitId=" + this.name, true);
+                request.open("GET", "/cgi-bin/cu.cgi?InitId=" + this.name,true);
             }
           } else if(my.dostate == "start"){
               if(my.dev_status  == "deinit"){
-                  request.open("GET", "/cgi-bin/cu.cgi?InitId=" + this.name, true);
+                  request.open("GET", "/cgi-bin/cu.cgi?InitId=" + this.name,true);
               } else {
-                 request.open("GET", "/cgi-bin/cu.cgi?StartId=" + this.name, true);
+                 request.open("GET", "/cgi-bin/cu.cgi?StartId=" + this.name,true);
               }
           } else if(my.dostate == "stop"){
                if(my.dev_status  == "start"){
-                    request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name, true);
+                    request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name,true);
                } else {
-                                request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name, true);
+                                request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name,true);
 
                } /*else if(my.dev_status  != "") {
                    this.dostate ="";
                    alert("cannot STOP device "+ this.name + " is in state:"+my.dev_status );
                } else {
-                    request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name, true);
+                    request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name,true);
                }*/
           } else if(my.dostate == "deinit"){
               if(my.dev_status  == "start"){
-                    request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name, true);
+                    request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name,true);
                } else {
-                  request.open("GET", "/cgi-bin/cu.cgi?DeinitId=" + this.name, true);
+                  request.open("GET", "/cgi-bin/cu.cgi?DeinitId=" + this.name,true);
                }
           } else {
-             request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name, true);
+             request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name,true);
 
           }
          
         } else {
-           request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name, true);
+           request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name,true);
 
         }
         request.ontimeout = function () { 
             //alert("Timed out!!!"); 
             console.log("TIMEOUT!!");
+            my.updating = 0;
         }
-
+        my.updating =1;
         request.send();
         request.onreadystatechange = function() {
 	if (request.readyState == 4 && request.status == 200) {
+ //       if(request.status==200) {{
 	    var json_answer = request.responseText;
-	    
+	    my.updating = 0;
 	    console.log("answer this.dostate:" + my.dostate +" ("+my.name+"):\"" + json_answer+"\"");
 	    if (json_answer == "") {
 		return;
@@ -186,12 +190,7 @@ function CU(name){
                         my[key]=val;
                     }
                     
-                    if(my.error_status!=""){
-                        console.log("An internal error occurred on device \""+my.name+"\":\""+my.error_status+"\"");
-                        clearInterval(refreshInterval);
-                        alert(my.error_status);
-                      
-                    }
+                    
                 } catch(err) {
 		    // console.error(key + " does not exist:" + err);
 		}
@@ -256,13 +255,13 @@ function CULoad(classname,inter){
               cu  = new window[classname](cus_names[i]);
             //  var refreshFunc=classname + "Refresh";
              // refreshInterval=setInterval(refreshFunc,inter);
-            refreshInterval=setInterval(updateInterface,inter);
+           
 
 
           } else {
               cu = new CU(cus_names[i]);
               console.log("Creating Generic CU name: "+cus_names[i]);
-              refreshInterval=setInterval(CUupdateInterface,inter);
+             
         }
          
 
@@ -284,6 +283,12 @@ function CULoad(classname,inter){
               cu.run();
           }
      }
+     if(classname!=null){
+          refreshInterval=setInterval(updateInterface,inter);
+     } else {
+          refreshInterval=setInterval(CUupdateInterface,inter);
+     }
+     
     
 }
 function initializeCU(cunames){
@@ -316,8 +321,11 @@ function CUupdateInterface(){
                     }
                     if(cu.error_status!=""){
                         color="red";
+                        console.log("An internal error occurred on device \""+cu.name+"\":\""+cu.error_status+"\"");
+                        clearInterval(refreshInterval);
+                        alert(cu.error_status);
                     }
-                    
+                  
                     for (var key in cu) {
 			var docelem = key +"_"+i;
 			if((typeof(cu[key]) !== 'function') && (typeof (cu[key]) !== 'object')){

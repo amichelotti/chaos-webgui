@@ -30,7 +30,7 @@
 using namespace std;
 using namespace cgicc;     // Or reference as cgicc::Cgicc formData; below in object instantiation.
 	 
-#define TIMEOUT 20000
+#define TIMEOUT 60000
 
 #define MDS "mdsserver:5000"
 using namespace std;
@@ -244,7 +244,7 @@ int initChaosToolkit(const char* mds){
       }
       }
        catch (CException& e) {
-            DPRINT("eccezione %s\n",e.what());
+           
 
             return -4;
         }
@@ -335,8 +335,26 @@ int main(int argc, char** argv) {
          }
      }
     
+    
     if(dev_name){
-        dev = HLDataApi::getInstance()->getControllerForDeviceID(dev_name);
+        try {
+            dev = HLDataApi::getInstance()->getControllerForDeviceID(dev_name,TIMEOUT);
+        }  catch (CException& e) {
+          //  cout<< "error:"<<e.errorCode<<endl;
+            if(e.errorCode==-2){
+                 dev_info.append_log(string(dev_name) + " maybe :" + e.errorMessage);
+                dev_info.insert_json(result);
+                cout<<result<<endl;
+                return 0;
+            }
+            /*if(e.errorCode==-3)*/{
+             dev_info.append_error("exception " +string(dev_name) + ":" + e.errorMessage);
+             dev_info.insert_json(result);
+             cout<<result<<endl;
+            return 0;
+            }
+        }
+
         if(dev==0){
           dev_info.append_error("cannot find device:"+string(dev_name));
           dev_info.insert_json(result);
@@ -344,6 +362,7 @@ int main(int argc, char** argv) {
           return 0;
         }
     }
+   
    
     if(dev && dev_name){
         CUStateKey::ControlUnitState deviceState;
@@ -421,10 +440,8 @@ int main(int argc, char** argv) {
               //  cout<<"do command " + cmd + " param="+parm.c_str()<<endl;
                 sendCmd(dev,cmd,(char*)parm.c_str());
             }
-            if(fetchDataSet(dev,result,sizeof(result))<0){
-                dev_info.append_error("cannot fetch data");
-
-            }
+            fetchDataSet(dev,result,sizeof(result));
+               
         
     }
     
