@@ -80,6 +80,9 @@
         <dependencyChecking>false</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
+      <flagsDictionary>
+        <element flagsID="0" commonFlags="-O2"/>
+      </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
       <makefileType>
@@ -87,7 +90,7 @@
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
           <buildCommand>${MAKE} -f Makefile</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
-          <executablePath></executablePath>
+          <executablePath>build/CUIserver</executablePath>
         </makeTool>
       </makefileType>
       <item path="CMakeFiles/2.8.12.2/CompilerIdC/CMakeCCompilerId.c"
@@ -103,8 +106,7 @@
       <folder path="0/src">
         <ccTool>
           <incDir>
-            <pElem>../..</pElem>
-            <pElem>../../chaosframework/usr/local/include</pElem>
+            <pElem>../../usr/local/include</pElem>
             <pElem>mongoose-cpp/mongoose</pElem>
             <pElem>mongoose-cpp</pElem>
             <pElem>.</pElem>
@@ -213,6 +215,8 @@
       <item path="src/ChaosController.cpp" ex="false" tool="1" flavor2="4">
       </item>
       <item path="src/main.cpp" ex="false" tool="1" flavor2="4">
+        <ccTool flags="0">
+        </ccTool>
       </item>
     </conf>
   </confs>

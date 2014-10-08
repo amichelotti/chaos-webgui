@@ -19,8 +19,6 @@
           <df name="src">
           </df>
         </df>
-        <df name="Progress">
-        </df>
       </df>
       <df name="mongoose-cpp">
         <df name="CMakeFiles">
@@ -143,13 +141,17 @@
       <runprofile version="9">
         <runcommandpicklist>
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" --metadata-server mdsserver:5000 --log-on-console --log-level debug</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}"</runcommand>
+        <runcommand>"${OUTPUT_PATH}" --metadata-server mdsserver:5000 --log-on-console --log-level debug</runcommand>
         <rundir>.</rundir>
         <buildfirst>false</buildfirst>
+        <console-type>2</console-type>
         <terminal-type>0</terminal-type>
         <remove-instrumentation>0</remove-instrumentation>
         <environment>
+          <variable name="LD_LIBRARY_PATH"
+                    value="/home/michelo/chaos_bundle/usr/local/lib"/>
         </environment>
       </runprofile>
     </conf>

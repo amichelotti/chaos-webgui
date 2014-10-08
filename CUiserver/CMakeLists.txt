@@ -38,14 +38,14 @@ if(NOT "${status}" STREQUAL 0)
 MESSAGE(FATAL_ERROR "${status}")
 ENDIF()
 execute_process(COMMAND make -C mongoose-cpp RESULT_VARIABLE status)
-ADD_DEFINITIONS(-g -O2 -Wall)
+ADD_DEFINITIONS(-g -O2 -Wall -DCHAOS)
 add_definitions(-DBOOST_ALL_DYN_LINK -DCHAOS -DDEBUG)
 
 
 SET(CUISERVER src/main.cpp src/ChaosController.cpp)
 
 
-INCLUDE_DIRECTORIES(../../ ${CHAOS_FRAMEWORK}/usr/local/include mongoose-cpp/mongoose mongoose-cpp)
+INCLUDE_DIRECTORIES(${CHAOS_FRAMEWORK}/usr/local/include mongoose-cpp/mongoose mongoose-cpp)
 LINK_DIRECTORIES(${CHAOS_FRAMEWORK}/usr/local/lib ${PROJECT_SOURCE_DIR}/mongoose-cpp)
 
 ADD_EXECUTABLE(CUIserver ${CUISERVER})

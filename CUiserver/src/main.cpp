@@ -15,7 +15,7 @@ using namespace Mongoose;
 using namespace chaos::ui;
 
 int main(int argc,char**argv)
-{
+{ 
     int server_port = 8080;     
     ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption("server_port", po::value<int>(&server_port)->default_value(8080), "The server port");
     ChaosUIToolkit::getInstance()->init(argc, argv);
@@ -23,8 +23,10 @@ int main(int argc,char**argv)
     ChaosController myController;
     cout<<"Opening "<<argv[0]<<" on port:"<<server_port<<endl;
     Server server(server_port);
+    server.setOption("Access-Control-Allow-Origin","*");
+   
     server.registerController(&myController);
-
+    
     server.start(); 
 
     while (1) {

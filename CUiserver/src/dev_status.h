@@ -8,10 +8,7 @@
 #ifndef DEV_STATUS_H
 #define	DEV_STATUS_H
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
-
+#include "common/debug/debug.h"
 #include <chaos/common/chaos_constants.h>
  using   namespace chaos;
 struct dev_info_status{
@@ -34,16 +31,17 @@ struct dev_info_status{
     }
   }
   void append_log(std::string log){
+    PRINT("%s",log.c_str());
     snprintf(log_status,sizeof(log_status),"%s%s;",log_status,log.c_str());
  
   }
   void append_error(std::string log){
+    DERR("%s",log.c_str());
     snprintf(error_status,sizeof(error_status),"%s%s;",error_status,log.c_str());
  
   }
   void insert_json(char*json){
-    int some_item=0;
-    int open_brace=0;
+    
     if(json==NULL) return;
     if(*json==0){
         sprintf(json,"{\"dev_status\":\"%s\",\"error_status\":\"%s\",\"log_status\":\"%s\"}",dev_status,error_status,log_status);
@@ -63,11 +61,6 @@ struct dev_info_status{
 };
 
 
-
-
-#ifdef	__cplusplus
-}
-#endif
 
 #endif	/* DEV_STATUS_H */
 
