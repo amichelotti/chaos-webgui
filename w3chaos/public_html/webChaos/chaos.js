@@ -6,6 +6,7 @@ var onswitched=0;
 var maxarray=600;
 var npoints=0;
 var refreshInterval=0;
+var request_prefix = "http://193.206.86.51:8080/CU?dev="; //"/cgi-bin/cu.cgi?"
 
 function CU(name){
     this.name =name;
@@ -25,7 +26,8 @@ function CU(name){
     this.init=function (){
         var request = new XMLHttpRequest();
         
-        request.open("GET", "/cgi-bin/cu.cgi?InitId=" + this.name,true);
+     //   request.open("GET", "/cgi-bin/cu.cgi?InitId=" + this.name,true);
+        request.open("GET", request_prefix + this.name + "&cmd=init",true);
         request.send();        
         this.dostate = "init";
 
@@ -42,7 +44,7 @@ function CU(name){
     }
     this.deinit=function (){
         var request = new XMLHttpRequest();
-        request.open("GET", "/cgi-bin/cu.cgi?DeInitId=" + this.name,true);
+        request.open("GET",  request_prefix + this.name + "&cmd=deinit",true);
         request.send();        
         this.dostate = "deinit";
         
@@ -50,7 +52,7 @@ function CU(name){
     this.start=function (){
         var request = new XMLHttpRequest();
         
-        request.open("GET", "/cgi-bin/cu.cgi?StartId=" + this.name,true);
+        request.open("GET",  request_prefix + this.name + "&cmd=start",true);
         request.send(); 
         this.dostate = "start";
 
@@ -58,7 +60,7 @@ function CU(name){
     };
     this.stop=function (){
         var request = new XMLHttpRequest();  
-        request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name,true);
+        request.open("GET",  request_prefix + this.name + "&cmd=stop",true);
         request.send();
         this.dostate = "stop";
     };
@@ -72,7 +74,7 @@ function CU(name){
         var request = new XMLHttpRequest();
 
         console.log("device:" + this.name + " command:" + command + " param:" + parm);
-        request.open("GET", "/cgi-bin/cu.cgi?dev=" + this.name + "&cmd=" + command + "&param=" + parm,true);
+        request.open("GET",  request_prefix + this.name + "&cmd="+ command + "&parm=" + parm,true);
         request.send();
     };
     
@@ -80,7 +82,7 @@ function CU(name){
         var request = new XMLHttpRequest();
 
         console.log("device:" + this.name + " set scheduling to:" + parm);
-        request.open("GET", "/cgi-bin/cu.cgi?dev=" + this.name + "&sched=" + parm,true);
+        request.open("GET", request_prefix + this.name + "&cmd=sched&parm=" + parm,true);
         request.send();
     };
     this.update=function (){
@@ -94,30 +96,37 @@ function CU(name){
             my.dostate = "";
             console.log("device "+my.name + " is in \""+my.dev_status+ " OK"); 
 
-            request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name,true);
+            request.open("GET", request_prefix + this.name + "&cmd=status",true);
             
         } else if(my.dostate!="") { 
            console.log("device "+my.name + " is in \""+my.dev_status+ "\" I should go into \""+ my.dostate+"\""); 
 
           if(my.dostate == "init") {
             if(my.dev_status  == "start"){
-                request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name,true);
+                request.open("GET", request_prefix + this.name + "&cmd=start",true);
             } else if(my.dev_status  == "stop"){
-                request.open("GET", "/cgi-bin/cu.cgi?DeinitId=" + this.name,true);
+                request.open("GET", request_prefix + this.name + "&cmd=deinit",true);
+
             } else{
-                request.open("GET", "/cgi-bin/cu.cgi?InitId=" + this.name,true);
+                request.open("GET", request_prefix + this.name + "&cmd=init",true);
+
+
             }
           } else if(my.dostate == "start"){
               if(my.dev_status  == "deinit"){
-                  request.open("GET", "/cgi-bin/cu.cgi?InitId=" + this.name,true);
+                 request.open("GET", request_prefix + this.name + "&cmd=init",true);
+
               } else {
-                 request.open("GET", "/cgi-bin/cu.cgi?StartId=" + this.name,true);
+                 request.open("GET", request_prefix + this.name + "&cmd=start",true);
+
               }
           } else if(my.dostate == "stop"){
                if(my.dev_status  == "start"){
-                    request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name,true);
+                  request.open("GET", request_prefix + this.name + "&cmd=stop",true);
+
                } else {
-                                request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name,true);
+                  request.open("GET", request_prefix + this.name + "&cmd=status",true);
+         
 
                } /*else if(my.dev_status  != "") {
                    this.dostate ="";
@@ -127,18 +136,20 @@ function CU(name){
                }*/
           } else if(my.dostate == "deinit"){
               if(my.dev_status  == "start"){
-                    request.open("GET", "/cgi-bin/cu.cgi?StopId=" + this.name,true);
+                  request.open("GET", request_prefix + this.name + "&cmd=stop",true);
+
                } else {
-                  request.open("GET", "/cgi-bin/cu.cgi?DeinitId=" + this.name,true);
+                  request.open("GET", request_prefix + this.name + "&cmd=deinit",true);
+
                }
           } else {
-             request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name,true);
+              
+            request.open("GET", request_prefix + this.name + "&cmd=status",true);
 
           }
          
         } else {
-           request.open("GET", "/cgi-bin/cu.cgi?status=" + this.name,true);
-
+            request.open("GET", request_prefix + this.name + "&cmd=status",true);
         }
         request.ontimeout = function () { 
             //alert("Timed out!!!"); 
@@ -171,6 +182,7 @@ function CU(name){
 			    val = val['$numberLong'];
 			}
 		    }
+                    
 		  //  console.log("processing:"+key+ " val:"+val);
                     if(key == "cs|csv|device_id"){
                         my.name = val;

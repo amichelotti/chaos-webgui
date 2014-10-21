@@ -43,6 +43,21 @@ int ChaosController::sendCmd(DeviceController *controller ,std::string cmd_alias
 
   return err;
 }
+
+void ChaosController::addDevice(std::string name,chaos::ui::DeviceController*d){
+     devs[name]=d;
+}
+
+void ChaosController::removeDevice(std::string name){
+      std::map<std::string,chaos::ui::DeviceController*>::iterator idevs;
+      idevs = devs.find(name);
+      if(idevs!=devs.end()){
+          HLDataApi::getInstance()->disposeDeviceControllerPtr(idevs->second);
+          
+          devs.erase(idevs);
+      }
+
+}
 int ChaosController::fetchDataSet(DeviceController *ctrl,char*jsondest,int size){
   CDataWrapper* data;
   try{
@@ -68,7 +83,7 @@ int ChaosController::fetchDataSet(DeviceController *ctrl,char*jsondest,int size)
   
 void ChaosController::handleCU(Request &request, StreamResponse &response){
   char result[4096];
-    
+  *result=0;  
   chaos::ui::DeviceController* controller = NULL;
   std::string devname,cmd,parm;
   dev_info_status status;
@@ -96,7 +111,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
 	response<<result;
 	return ;
       }
-      devs[devname]=controller;
+      addDevice(devname,controller);
       
     }
 
@@ -106,6 +121,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
     if(err == ErrorCode::EC_TIMEOUT){            
       
       status.append_error("Timeout getting State "+devname);
+      removeDevice(devname);
       status.insert_json(result);
       response<<result;
       return ;
@@ -137,6 +153,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
       status.append_error("Timeout  :"+devname);
       status.insert_json(result);
       response<<result;
+      removeDevice(devname);
       return ;
     } else if(err !=0){
       status.append_error("Error in:"+devname);

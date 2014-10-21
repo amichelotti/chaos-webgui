@@ -89,14 +89,16 @@ function PowerSupply(name){
                     cus[i].update();
                     console.log("updating \""+cus[i].name + " current:"+cus[i].current + " polarity:"+cus[i].polarity);
                     var table_error = document.getElementById("error_list_"+i);
-                    if(cus[i].state&0x2){
+                    if(cus[i].status_id&0x2){
                         document.getElementById("onstby_"+i).value="On";
+                        document.getElementById("onstby_"+i).style.fontWeight="bold";
                         document.getElementById("neg_"+i).disabled=true;
                         document.getElementById("pos_"+i).disabled=true;
                         document.getElementById("open_"+i).disabled=true;
-                    }
-                    if(cus[i].state&0x8){
+                    } 
+                    if(cus[i].status_id&0x8){
                         document.getElementById("onstby_"+i).value="StandBy";
+                        document.getElementById("onstby_"+i).style.fontWeight="normal";
                         document.getElementById("neg_"+i).disabled=false;
                         document.getElementById("pos_"+i).disabled=false;
                         document.getElementById("open_"+i).disabled=false;

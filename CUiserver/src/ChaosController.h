@@ -17,7 +17,7 @@ using namespace std;
 using namespace Mongoose;
 using namespace chaos::ui;
 using namespace chaos;
-#define MDS_TIMEOUT 10000
+#define MDS_TIMEOUT 60000
 class ChaosController : public WebController
 {
 private:
@@ -30,5 +30,8 @@ private:
         void handleCU(Request &request, StreamResponse &response);
         void setMDSTimeout(int timeo);
         void setup();
+        static void addDevice(std::string,chaos::ui::DeviceController*);
+        static void removeDevice(std::string);
+
 };
 

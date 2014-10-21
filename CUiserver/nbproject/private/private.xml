@@ -16,6 +16,11 @@
         </group>
         <group name="CHAOS">
             <file>file:/home/michelo/chaos_bundle/webgui/CUiserver/src/ChaosController.cpp</file>
+            <file>file:/home/michelo/chaos_bundle/webgui/CUiserver/src/ChaosController.h</file>
+            <file>file:/home/michelo/chaos_bundle/webgui/CUiserver/mongoose-cpp/mongoose/Server.cpp</file>
+            <file>file:/home/michelo/chaos_bundle/webgui/CUiserver/src/dev_status.h</file>
+            <file>file:/home/michelo/chaos_bundle/webgui/CUiserver/src/main.cpp</file>
+            <file>file:/home/michelo/chaos_bundle/webgui/CUiserver/mongoose-cpp/mongoose/Server.h</file>
         </group>
     </open-files>
 </project-private>

@@ -184,7 +184,6 @@ int initChaosToolkit(const char* mds){
   }
  
  DeviceController *deinitDevice(const char* name,int timeout){
-     int err;
    DeviceController *controller = NULL;
 
     try{
@@ -199,7 +198,6 @@ int initChaosToolkit(const char* mds){
             }
         } catch (CException& e) {
             DPRINT("eccezione %s\n",e.what());
-            err = e.errorCode;
             return 0;
         }
    
@@ -270,7 +268,7 @@ int main(int argc, char** argv) {
 
     form_iterator device =form.getElement("dev"); // dev=device_name, cmd:
     form_iterator command =form.getElement("cmd"); // dev=device_name, cmd:
-    form_iterator param =form.getElement("param"); // dev=device_name, cmd:
+    form_iterator param =form.getElement("parm"); // dev=device_name, cmd:
     form_iterator sched =form.getElement("sched");
 
     std::string cmd,parm,scheduling;
