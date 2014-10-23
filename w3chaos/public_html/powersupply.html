@@ -26,6 +26,7 @@ and open the template in the editor.
                 <td><b>Current SP</b></td>
                 <td><b>Current Readout</b></td>
                 <td><b>Seconds</b></td>
+                <td><b>Timestamp</b></td>
 
                 <td colspan="2"><b>Alarms</b></td>
              </tr>
@@ -38,13 +39,13 @@ and open the template in the editor.
                 <td><input type="button" name="open" id="open_0" value="open" onclick="cus[0].setPolarity(0);" /></td>
                 <td><input type="text" id="inputcurrent_0" name="currentSet" class="controlInput" value="0" /></td> 
                 <td><input type="button" id="setcurrent_0" value="set" onclick="cus[0].setCurrent(inputcurrent_0.value);" />
-                <td><b id="current_sp_0"  digits="3" class="PowersupplyIndicator">0</b></td>
-                <td><b id="current_0" digits="3" class="PowersupplyIndicator">0</b></td>
-                <td><b id="seconds_0" class="PowersupplyIndicator">0</b></td>
-
-                <td><input type="button" name="rstalarms" id="rstalarms_0" value="rstalarms" onclick="cus[0].powerSupplyClrAlarms();" /></td>
-                <td><b id="alarms_0" class="PowersupplyIndicator">0</b></td>
-		<td><div id="powersupply-graph_0" class="powersupply-graph-class"></div></td>
+                <td><b id="current_sp_0"  digits="3" title="current SP" class="PowersupplyIndicator">0</b></td>
+                <td><b id="current_0" digits="3" title="current read out" class="PowersupplyIndicator">0</b></td>
+                <td><b id="seconds_0" title="seconds since the UI started" class="PowersupplyIndicator">0</b></td>
+                <td><b id="data_0" title="Last Data Update" class="PowersupplyIndicator">0</b></td>
+                <td><input type="button" name="rstalarms" id="rstalarms_0" value="rstalarms" title="Reset alarms" onclick="cus[0].powerSupplyClrAlarms();" /></td>
+                <td><b id="alarms_0" title="current alarms mask" class="PowersupplyIndicator">0</b></td>
+		<td><div id="powersupply-graph_0" title="current vs seconds from the start of the UI" class="powersupply-graph-class"></div></td>
                 <td>
                     <table id="error_list_0">
                     </table>

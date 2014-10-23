@@ -10,7 +10,7 @@ function PowerSupply(name){
     this.current=0;
     this.polarity=0;
     this.alarms=0;
-    
+    this.data = new Date();
     console.log("creating PowerSupply:"+name);
     
     this.setCurrent=function setCurrent(val){
@@ -43,8 +43,12 @@ function PowerSupply(name){
     this.processData=function(){
 	var my=this;
          var curr = Number(my.current).toFixed(3);
+
+	my.data.setTime(my.timestamp);
+	
          my.points.push([(my.timestamp-my.firsttimestamp)/1000,curr]);
-        
+	//var str=my.data.getHours()+":" + my.data.getMinutes() + ":"+ my.data.getSeconds();
+        //my.points.push([str,curr]);
 
     } 
     }
@@ -87,21 +91,32 @@ function PowerSupply(name){
                 CUupdateInterface();
                 for(var i = 0;i<cus.length;i++){
                     cus[i].update();
-                    console.log("updating \""+cus[i].name + " current:"+cus[i].current + " polarity:"+cus[i].polarity);
+		    //                    console.log("updating \""+cus[i].name + " current:"+cus[i].current + " polarity:"+cus[i].polarity);
                     var table_error = document.getElementById("error_list_"+i);
+
                     if(cus[i].status_id&0x2){
                         document.getElementById("onstby_"+i).value="On";
+			document.getElementById("onstby_"+i).title="Press to switch in StandBy";
                         document.getElementById("onstby_"+i).style.fontWeight="bold";
                         document.getElementById("neg_"+i).disabled=true;
                         document.getElementById("pos_"+i).disabled=true;
                         document.getElementById("open_"+i).disabled=true;
+			document.getElementById("neg_"+i).title="Disabled, you must be in standby to change";
+			document.getElementById("pos_"+i).title="Disabled, you must be in standby to change";
+			document.getElementById("open_"+i).title="Disabled, you must be in standby to change";
+			document.getElementById("setcurrent_"+i).title="Set the current";
                     } 
                     if(cus[i].status_id&0x8){
                         document.getElementById("onstby_"+i).value="StandBy";
+			document.getElementById("onstby_"+i).title="Press to switch in ON";
                         document.getElementById("onstby_"+i).style.fontWeight="normal";
                         document.getElementById("neg_"+i).disabled=false;
                         document.getElementById("pos_"+i).disabled=false;
                         document.getElementById("open_"+i).disabled=false;
+			document.getElementById("neg_"+i).title="Press to change to Polarity to NEGATIVE";
+			document.getElementById("pos_"+i).title="Press to change to Polarity to POSITIVE";
+			document.getElementById("open_"+i).title="Press to change to OPEN";
+			document.getElementById("setcurrent_"+i).title="Set the current, will be applied in ON";
                     }
                     document.getElementById("open_"+i).className="";
                     document.getElementById("neg_"+i).className="";
@@ -125,7 +140,11 @@ function PowerSupply(name){
                     } else {
                         table_error.innerHTML="";
                     }
-                    $.plot("#powersupply-graph_"+i,[cus[i].points]);
+		    console.log("data:" + cus[i].data);
+		    $.plot("#powersupply-graph_"+i,[cus[i].points]);
+		    document.getElementById("data_"+i).innerHTML=cus[i].data;
+		     
+                    
                 }
             }
                
