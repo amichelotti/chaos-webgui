@@ -63,7 +63,10 @@ function PowerSupply(name){
            if(bit){
                row = table.insertRow(rows++);
                cell = row.insertCell(0);
+	       cell.innerHTML = "- "+ a + " alarm"
            }
+	   
+	   /*
            if(bit&0x1){
                cell.innerHTML = "1 fusibili area";
            } else if(bit&0x2){
@@ -85,6 +88,7 @@ function PowerSupply(name){
                cell.innerHTML = a + " --- ";
 
            }
+	   */
        } 
  }
  function updateInterface(){
@@ -135,8 +139,8 @@ function PowerSupply(name){
                         var alarm=cus[i].alarms
                        
                         decodeError(alarm,table_error);
-                       
-                        
+			
+			document.getElementById("alarms_"+i).style.color="red";
                     } else {
                         table_error.innerHTML="";
                     }

@@ -144,9 +144,9 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
     } else if(cmd =="sched" && !parm.empty()){
       status.append_log("sched device:"+devname);
       err=  controller->setScheduleDelay(atol((char*)parm.c_str()));
-    }else if(!parm.empty()){
-      status.append_log("send cmd:\""+cmd +"\" to device:"+devname);
-      err= sendCmd(controller,cmd,(char*)parm.c_str());
+    } else if(cmd !="status") {
+      status.append_log("send cmd:\""+cmd +"\" args: \""+ parm +"\" to device:"+devname);
+      err= sendCmd(controller,cmd,(char*)(parm.empty()?"":parm.c_str()));
     }
 
     if(err == ErrorCode::EC_TIMEOUT){
