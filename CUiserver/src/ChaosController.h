@@ -13,15 +13,28 @@
 #include <chaos/ui_toolkit/HighLevelApi/HLDataApi.h>
 #include <chaos/ui_toolkit/HighLevelApi/DeviceController.h>
 #include <map>
+#include "dev_status.h"
 using namespace std;
 using namespace Mongoose;
 using namespace chaos::ui;
 using namespace chaos;
-#define MDS_TIMEOUT 60000
+#define MDS_TIMEOUT 10000
+#define MDS_STEP_TIMEOUT 5000
+#define MDS_RETRY 3
+
+struct InfoDevice {
+  chaos::ui::DeviceController* dev;
+  std::string devname;
+  int timeouts;
+  int totTimeout;
+  int lastState;
+  int defaultTimeout;
+};
+
 class ChaosController : public WebController
 {
 private:
-    static std::map<std::string,chaos::ui::DeviceController*> devs; 
+    static std::map<std::string,InfoDevice*> devs; 
     int mds_timeout;
     int sendCmd(chaos::ui::DeviceController *controller ,std::string cmd_alias_str,char*param);
     int fetchDataSet(DeviceController *ctrl,char*jsondest,int size);
@@ -29,8 +42,9 @@ private:
         ChaosController(){mds_timeout = MDS_TIMEOUT;}
         void handleCU(Request &request, StreamResponse &response);
         void setMDSTimeout(int timeo);
+	int checkError(int err,InfoDevice*,dev_info_status&st);
         void setup();
-        static void addDevice(std::string,chaos::ui::DeviceController*);
+        static void addDevice(std::string,InfoDevice*);
         static void removeDevice(std::string);
 
 };

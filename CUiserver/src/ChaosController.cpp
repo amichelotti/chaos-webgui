@@ -9,13 +9,14 @@
 #include <mongoose/WebController.h>
 
 #include "ChaosController.h"
-#include "dev_status.h"
+
 #include "common/debug/debug.h"
+#include <sstream>
 using namespace std;
 using namespace Mongoose;
 using namespace chaos::ui;
 using namespace chaos;
-std::map<std::string,chaos::ui::DeviceController*> ChaosController::devs;
+std::map<std::string,InfoDevice*> ChaosController::devs;
 void ChaosController::setMDSTimeout(int timeo){
   mds_timeout = timeo;
 }
@@ -44,17 +45,18 @@ int ChaosController::sendCmd(DeviceController *controller ,std::string cmd_alias
   return err;
 }
 
-void ChaosController::addDevice(std::string name,chaos::ui::DeviceController*d){
+void ChaosController::addDevice(std::string name,InfoDevice*d){
      devs[name]=d;
 }
 
 void ChaosController::removeDevice(std::string name){
-      std::map<std::string,chaos::ui::DeviceController*>::iterator idevs;
+      std::map<std::string,InfoDevice*>::iterator idevs;
       idevs = devs.find(name);
       if(idevs!=devs.end()){
-          HLDataApi::getInstance()->disposeDeviceControllerPtr(idevs->second);
-          
-          devs.erase(idevs);
+	
+	HLDataApi::getInstance()->disposeDeviceControllerPtr(idevs->second->dev);
+	delete(idevs->second);
+	devs.erase(idevs);
       }
 
 }
@@ -80,10 +82,31 @@ int ChaosController::fetchDataSet(DeviceController *ctrl,char*jsondest,int size)
      
   return 0;
 }
-  
+
+
+int ChaosController::checkError(int err,InfoDevice*idev,dev_info_status&status){
+
+  if(err == ErrorCode::EC_TIMEOUT){
+    std::stringstream st;
+    idev->timeouts++;
+    idev->totTimeout++;
+    
+    st<<"Timeout getting State "+idev->devname+ " tot timeout:" <<idev->totTimeout<<" consecutive:"<< idev->timeouts<<" current timeout:"<<idev->defaultTimeout;
+    idev->defaultTimeout+=MDS_STEP_TIMEOUT;
+    status.append_log(st.str());
+    if(idev->timeouts> MDS_RETRY){
+      status.append_error("Timeout getting State "+idev->devname);
+      return 0;
+    }
+  } else if(err !=0){
+    status.append_error("Error in:"+idev->devname);
+  }
+  return err;
+}
 void ChaosController::handleCU(Request &request, StreamResponse &response){
   char result[4096];
   *result=0;  
+  InfoDevice *idev=NULL;
   chaos::ui::DeviceController* controller = NULL;
   std::string devname,cmd,parm;
   dev_info_status status;
@@ -96,7 +119,10 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
     int err;
 
     if(devs.count(devname)>0){
-      controller = devs[devname];
+      idev = devs[devname];
+      if(idev){
+	controller = idev->dev;
+      }
       status.append_log("retriving controller for:"+devname);
     } else {
       try {
@@ -111,23 +137,38 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
 	response<<result;
 	return ;
       }
-      addDevice(devname,controller);
+      idev = new InfoDevice();
+      if(idev!=NULL){
+	idev->dev = controller;
+	idev->timeouts= 0 ; 
+	idev->lastState = -1;
+	idev->totTimeout=0;
+	idev->defaultTimeout=mds_timeout;
+	idev->devname = devname;
+	addDevice(devname,idev);
+      } else {
+	status.append_error("cannot allocate new info controller for:"+devname);
+	status.insert_json(result);
+	response<<result;
+	return ;
+	
+      }
+      
       
     }
 
-    controller->setRequestTimeWaith(mds_timeout);
+    controller->setRequestTimeWaith(idev->defaultTimeout);
     err=controller->getState(deviceState);
-    
-    if(err == ErrorCode::EC_TIMEOUT){            
-      
-      status.append_error("Timeout getting State "+devname);
-      removeDevice(devname);
-      status.insert_json(result);
-      response<<result;
-      return ;
+    if(checkError(err,idev,status)){
+      	removeDevice(devname);
+	status.insert_json(result);
+	response<<result;
+	return;
     }
+
+    idev->timeouts= 0 ; 
     status.status(deviceState);
-    controller->setRequestTimeWaith(mds_timeout);
+    idev->lastState = deviceState;
     controller->setupTracking();
     if(cmd=="init"){
       status.append_log("init device:"+devname);
@@ -149,17 +190,12 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
       err= sendCmd(controller,cmd,(char*)(parm.empty()?"":parm.c_str()));
     }
 
-    if(err == ErrorCode::EC_TIMEOUT){
-      status.append_error("Timeout  :"+devname);
-      status.insert_json(result);
-      response<<result;
+
+    if(checkError(err,idev,status)){
       removeDevice(devname);
-      return ;
-    } else if(err !=0){
-      status.append_error("Error in:"+devname);
       status.insert_json(result);
       response<<result;
-      return ;
+      return;
     }
     fetchDataSet(controller,result,sizeof(result));
   }

@@ -52,7 +52,7 @@ struct dev_info_status{
       if(*json=='{'){
           char temp[4096];
           strncpy(temp,json+1,4096);
-	sprintf(json,"{\"dev_status\":\"%s\",\"error_status\":\"%s\",\"log_status\":\"%s\",%s",dev_status,error_status,log_status,temp);
+	  sprintf(json,"{\"dev_status\":\"%s\",\"error_status\":\"%s\",\"log_status\":\"%s\",%s",dev_status,error_status,log_status,temp);
 	return;
       } 
         json++;

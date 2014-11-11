@@ -1,4 +1,3 @@
-var maxarray=600;
 var cus=[];
            
 function PowerSupply(name){
@@ -10,9 +9,9 @@ function PowerSupply(name){
     this.current=0;
     this.polarity=0;
     this.alarms=0;
+    this.maxarray=60;
     this.data = new Date();
     console.log("creating PowerSupply:"+name);
-    
     this.setCurrent=function setCurrent(val){
         var curr = Number(val).toFixed(3);
        
@@ -46,7 +45,7 @@ function PowerSupply(name){
 
 	my.data.setTime(my.timestamp);
 	
-         my.points.push([(my.timestamp-my.firsttimestamp)/1000,curr]);
+        my.points[my.npoints++]=([(my.timestamp-my.firsttimestamp)/1000,curr]);
 	//var str=my.data.getHours()+":" + my.data.getMinutes() + ":"+ my.data.getSeconds();
         //my.points.push([str,curr]);
 
@@ -144,7 +143,24 @@ function PowerSupply(name){
                     } else {
                         table_error.innerHTML="";
                     }
-		    console.log("data:" + cus[i].data);
+		    //		    console.log("data:" + cus[i].data);
+		    var maxpoints = document.getElementById("powersupply-graph_"+i).getAttribute("maxpoints");
+		    if(maxpoints!=null){
+			cus[i].maxarray = maxpoints;
+		    }     
+
+		    if(cus[i].npoints>=cus[i].maxarray){
+			cus[i].npoints = 0;
+			
+			cus[i].points[cus[i].npoints++] = cus[i].points[cus[i].maxarray-1];
+			cus[i].points[cus[i].npoints++] = cus[i].points[cus[i].maxarray-2];
+
+			cus[i].points.length=cus[i].npoints;
+
+			//$("#powersupply-graph_"+i).empty();
+		    }
+
+		    
 		    $.plot("#powersupply-graph_"+i,[cus[i].points]);
 		    document.getElementById("data_"+i).innerHTML=cus[i].data;
 		     
