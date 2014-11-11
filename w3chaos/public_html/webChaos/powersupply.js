@@ -44,7 +44,8 @@ function PowerSupply(name){
          var curr = Number(my.current).toFixed(3);
 
 	my.data.setTime(my.timestamp);
-	
+	if(my.polarity<0)
+	    curr = -curr;
         my.points[my.npoints++]=([(my.timestamp-my.firsttimestamp)/1000,curr]);
 	//var str=my.data.getHours()+":" + my.data.getMinutes() + ":"+ my.data.getSeconds();
         //my.points.push([str,curr]);
