@@ -51,7 +51,7 @@ LINK_DIRECTORIES(${CHAOS_FRAMEWORK}/usr/local/lib ${PROJECT_SOURCE_DIR}/mongoose
 ADD_EXECUTABLE(CUIserver ${CUISERVER})
 
 
-TARGET_LINK_LIBRARIES(CUIserver ${PROJECT_SOURCE_DIR}/mongoose-cpp/lib_mongoose.a pthread common_test chaos_uitoolkit driver_powersupply chaos_common common_debug boost_program_options boost_system boost_thread boost_chrono boost_regex boost_log boost_log_setup boost_atomic memcached)
+TARGET_LINK_LIBRARIES(CUIserver mongoose pthread common_test chaos_uitoolkit driver_powersupply chaos_common common_debug boost_program_options boost_system boost_thread boost_chrono boost_regex boost_log boost_log_setup boost_atomic memcached)
 
 INSTALL_TARGETS(/bin CUIserver)
 
