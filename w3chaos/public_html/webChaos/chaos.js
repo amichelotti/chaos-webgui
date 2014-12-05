@@ -186,7 +186,7 @@ function CU(name){
 		  //  console.log("processing:"+key+ " val:"+val);
                     if(key == "cs|csv|device_id"){
                         my.name = val;
-                    } else if (key == "cs|csv|timestamp") {
+                    } else if (key == "dpck_ts") {
 			
 			if(my.firsttimestamp==0){
                             my.firsttimestamp=val;
