@@ -78,6 +78,14 @@ function CU(name){
         request.send();
     };
     
+    this.sendAttr=function (name, val) {
+        var request = new XMLHttpRequest();
+
+        console.log("device:" + this.name + " set attr:" + name + " param:" + val);
+        request.open("GET",  request_prefix + this.name + "&attr="+ command + "&parm=" + val,true);
+        request.send();
+    };
+    
     this.setSched=function (parm) {
         var request = new XMLHttpRequest();
 

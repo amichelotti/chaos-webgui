@@ -37,6 +37,7 @@ private:
     static std::map<std::string,InfoDevice*> devs; 
     int mds_timeout;
     int sendCmd(chaos::ui::DeviceController *controller ,std::string cmd_alias_str,char*param);
+    int sendAttr(DeviceController *controller ,std::string cmd_alias_str,char*param);
     int fetchDataSet(DeviceController *ctrl,char*jsondest,int size);
     public: 
         ChaosController(){mds_timeout = MDS_TIMEOUT;}

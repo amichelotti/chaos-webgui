@@ -20,6 +20,13 @@ std::map<std::string,InfoDevice*> ChaosController::devs;
 void ChaosController::setMDSTimeout(int timeo){
   mds_timeout = timeo;
 }
+
+int ChaosController::sendAttr(DeviceController *controller ,std::string cmd_alias_str,char*param){
+
+  int err = controller->setAttributeToValue(cmd_alias_str.c_str(), param, false);
+  return err;
+
+}
 int ChaosController::sendCmd(DeviceController *controller ,std::string cmd_alias_str,char*param){
   int err;
   uint64_t cmd_id_tmp;
@@ -44,6 +51,7 @@ int ChaosController::sendCmd(DeviceController *controller ,std::string cmd_alias
 
   return err;
 }
+
 
 void ChaosController::addDevice(std::string name,InfoDevice*d){
      devs[name]=d;
@@ -185,6 +193,9 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
     } else if(cmd =="sched" && !parm.empty()){
       status.append_log("sched device:"+devname);
       err=  controller->setScheduleDelay(atol((char*)parm.c_str()));
+    }else if(cmd =="attr") {
+      status.append_log("send attr:\""+cmd +"\" args: \""+ parm +"\" to device:"+devname);
+      err= sendAttr(controller,cmd,(char*)(parm.empty()?"":parm.c_str()));
     } else if(cmd !="status") {
       status.append_log("send cmd:\""+cmd +"\" args: \""+ parm +"\" to device:"+devname);
       err= sendCmd(controller,cmd,(char*)(parm.empty()?"":parm.c_str()));
