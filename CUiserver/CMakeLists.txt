@@ -23,22 +23,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build)
 
-if(NOT EXISTS "mongoose-cpp")
-MESSAGE(STATUS "MOGOOSE not present! getting...")
-execute_process(COMMAND git clone https://github.com/Gregwar/mongoose-cpp.git RESULT_VARIABLE status)
-if(NOT "${status}" STREQUAL 0)
-MESSAGE(FATAL_ERROR "${status}")
-ENDIF()
 
-
-ENDIF()
-
-execute_process(COMMAND cmake . WORKING_DIRECTORY mongoose-cpp RESULT_VARIABLE status)
-if(NOT "${status}" STREQUAL 0)
-MESSAGE(FATAL_ERROR "${status}")
-ENDIF()
-execute_process(COMMAND make -C mongoose-cpp RESULT_VARIABLE status)
-ADD_DEFINITIONS(-g -O2 -Wall -DCHAOS)
 add_definitions(-DBOOST_ALL_DYN_LINK -DCHAOS -DDEBUG)
 
 
