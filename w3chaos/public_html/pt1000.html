@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+eliana
+-->
+<html>
+    <head>
+        <link href="webChaos/chaos.css" rel="stylesheet" type="text/css">
+         <script type="text/Javascript" src="webChaos/jquery.js"></script>
+       <script type="text/Javascript" src="webChaos/flot/jquery.flot.js"></script>
+        <script type="text/javascript" src="webChaos/chaos.js"></script>
+         <script type="text/javascript" src="webChaos/powersupply.js"></script>        
+
+        <script>
+            CULoad(null);
+        </script>
+        <body onload="setInterval(CUupdateInterface, 2000);">
+        <table>
+            <tr>
+                <td><b>Name:</b></td>
+                <td><b id="name_0" class="Indicator">noname</b></td>
+            </tr>
+            <tr>
+                <td><b>TEMP0</b></td>
+                <td><b id="TEMP0_0" digits="3" class="Indicator">0</b></td>
+            </tr>
+            <tr>
+                <td><b>TEMP1</b></td>
+                <td><b id="TEMP1_0"  digits="3"  class="Indicator">0</b></td>
+            </tr>
+
+            <tr>
+                <td><b>timestamp</b></td>
+                <td><b id="timestamp_0" class="Indicator">0</b></td>
+            </tr>  
+            <tr>
+                <td><b>Seconds</b></td>
+                <td><b id="seconds_0"  digits="3"  class="Indicator">0</b></td>
+
+             </tr>
+             <tr>
+                <td><b>Refresh(s)</b></td>
+                <td><b id="refresh_0"  digits="3"  class="Indicator">0</b></td>
+
+             </tr>
+
+                </table>
+    </body>
+</html>
