@@ -1,3 +1,4 @@
+
 #ifdef _MSC_VER
 #include <windows.h>
 #else
@@ -29,6 +30,7 @@ struct InfoDevice {
   int totTimeout;
   int lastState;
   int defaultTimeout;
+  int wostate;// without state
 };
 
 class ChaosController : public WebController

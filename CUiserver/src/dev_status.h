@@ -31,7 +31,7 @@ struct dev_info_status{
     }
   }
   void append_log(std::string log){
-    PRINT("%s",log.c_str());
+    DPRINT("%s",log.c_str());
     snprintf(log_status,sizeof(log_status),"%s%s;",log_status,log.c_str());
  
   }

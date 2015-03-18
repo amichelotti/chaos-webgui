@@ -131,7 +131,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
       if(idev){
 	controller = idev->dev;
       }
-      status.append_log("retriving controller for:"+devname);
+      //      status.append_log("retriving controller for:"+devname);
     } else {
       try {
 	controller = HLDataApi::getInstance()->getControllerForDeviceID(devname, mds_timeout);
@@ -153,9 +153,29 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
 	idev->totTimeout=0;
 	idev->defaultTimeout=mds_timeout;
 	idev->devname = devname;
+	idev->wostate=0;
+	// try to get state
+	controller->setRequestTimeWaith(idev->defaultTimeout);
+	controller->setupTracking();
+	err=controller->getState(deviceState);
+	if(checkError(err,idev,status)){
+	  // try to fetch data
+	  if(fetchDataSet(controller,result,sizeof(result))>=0){
+	    // fetch ok
+	    idev->wostate=1;
+	    status.append_log("is http device:"+devname);
+	    status.status(CUStateKey::START);
+	    idev->lastState=CUStateKey::START;
+
+	    DPRINT("device %s is a http device",devname.c_str());
+	  }
+	}
+
+	DPRINT("caching device %s",devname.c_str());
 	addDevice(devname,idev);
       } else {
 	status.append_error("cannot allocate new info controller for:"+devname);
+	DERR("cannot allocate controller for %s",devname.c_str());
 	status.insert_json(result);
 	response<<result;
 	return ;
@@ -166,17 +186,30 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
     }
 
     controller->setRequestTimeWaith(idev->defaultTimeout);
-    err=controller->getState(deviceState);
-    if(checkError(err,idev,status)){
+    if(idev->wostate==0){
+      err=controller->getState(deviceState);
+      if(checkError(err,idev,status)){
+	DERR("error getting state %s, removing from cache...",devname.c_str());
       	removeDevice(devname);
 	status.insert_json(result);
 	response<<result;
 	return;
     }
+      
+      idev->timeouts= 0 ; 
+      status.status(deviceState);
+      idev->lastState = deviceState;
+    } else {
+      DPRINT("fetch dataset of %s (stateless)\n",devname.c_str());
+      err=0;
+      status.status(CUStateKey::START);
+      idev->lastState=CUStateKey::START;
+      fetchDataSet(controller,result,sizeof(result));
+      status.insert_json(result);
+      response<<result;
+      return;
+    }
 
-    idev->timeouts= 0 ; 
-    status.status(deviceState);
-    idev->lastState = deviceState;
     controller->setupTracking();
     if(cmd=="init"){
       status.append_log("init device:"+devname);
@@ -203,6 +236,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
 
 
     if(checkError(err,idev,status)){
+      DERR("error removing device from cache:%s",devname.c_str());
       removeDevice(devname);
       status.insert_json(result);
       response<<result;

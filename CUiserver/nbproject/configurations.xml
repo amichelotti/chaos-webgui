@@ -215,8 +215,6 @@
       <item path="src/ChaosController.cpp" ex="false" tool="1" flavor2="4">
       </item>
       <item path="src/main.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="0">
-        </ccTool>
       </item>
     </conf>
   </confs>

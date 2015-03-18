@@ -30,12 +30,6 @@
               <in>CMakeCXXCompilerId.cpp</in>
             </df>
           </df>
-          <df name="_mongoose.dir">
-            <df name="mongoose">
-            </df>
-          </df>
-          <df name="CMakeTmp">
-          </df>
         </df>
         <df name="docs">
         </df>
