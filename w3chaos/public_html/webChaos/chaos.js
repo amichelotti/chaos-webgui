@@ -7,6 +7,8 @@ var maxarray=600;
 var npoints=0;
 var refreshInterval=0;
 var request_prefix = "http://localhost:8081/CU?dev="; //"/cgi-bin/cu.cgi?"
+var internal_param=new Array();
+var excludeInterface=["oldtimestamp","dostate","firsttimestamp","dpck_device_id","dev_status","dpck_ds_type","updating"];
 
 function CU(name){
     this.name =name;
@@ -23,6 +25,13 @@ function CU(name){
     this.firsttimestamp=0; // first time stamp of the interface
     console.log("creating CU:"+name);
     this.updating=0;
+    var buildtable=0;
+    this.buildInterface = function (parm){
+        buildtable=parm;
+    }
+    this.isbuildInterface = function(){
+        return buildtable;
+    }
     this.init=function (){
         var request = new XMLHttpRequest();
         
@@ -311,6 +320,16 @@ function CULoad(classname,inter){
      
     
 }
+
+function CUBuildInterface(){
+ for(var i=0;i<cus.length;i++){
+     cus[i].buildInterface(1);
+      for (var key in cus[i]) {
+        internal_param.push(key);
+      }
+ }    
+}
+
 function initializeCU(cunames){
      for(var i=0;i<cunames.length;i++){
           var cu = new CU(cunames[i])
@@ -321,7 +340,69 @@ function initializeCU(cunames){
      }
  }
  
+ function toExclude(parm){
+     for(var x in excludeInterface){
+         if(parm==excludeInterface[x])
+             return 1;
+     }
+     return 0;
+ }
+ function isInternal(parm){
+     for(var x in internal_param){
+         if(parm==internal_param[x])
+             return 1;
+     }
+     return 0;
+ }
+ function chaos_create_table(obj,instancen){
+    var body=document.getElementsByTagName('body')[0];
+    var tbl=document.createElement('table');
+    var hr=document.createElement('hr');
+    body.appendChild(hr);
+    var h=document.createElement('h2');
+    var text=document.createTextNode(obj.name);
+    h.appendChild(text);
+    body.appendChild(h);
+    tbl.style.width='100%';
+    tbl.setAttribute('border','1');
+    tbl.setAttribute("id",obj.name + "_" +instancen);
+    var tbdy=document.createElement('tbody');
+    
+    
+    
+    tbdy.appendChild(hr);
+    for (var key in obj) {
+            if(toExclude(key))
+                continue;
+            
+            if((typeof(obj[key]) !== 'function') && (typeof (obj[key]) !== 'object')){
+                var tr=document.createElement('tr');
+                var td=document.createElement('td');
+                //var b=document.createElement('b');
+                text=document.createTextNode(key);
+                td.appendChild(text);
+                if(!isInternal(key)){
+                    td.style.fontStyle='bold';
+                    td.style.color='green';
+                    td.setAttribute('style', 'font-weight: bold; color: green; font-size:150%;');
+                }
+                tr.appendChild(td);
+                td=document.createElement('td');
+                td.setAttribute("id",key + "_"+instancen);
+                td.setAttribute("class","Indicator");
+                text=document.createTextNode(obj[key]);
+                td.appendChild(text);
+                tr.appendChild(td);
+                tbdy.appendChild(tr);
+            }
+    }
+    tbl.appendChild(tbdy);
+    body.appendChild(tbl);
+        
+ }
+ 
 function CUupdateInterface(){
+               
                 for(var i = 0;i<cus.length;i++){
                     cus[i].update();
 		    var cu=cus[i];
@@ -332,13 +413,22 @@ function CUupdateInterface(){
                     }
                     if(cu.dev_status=="start"){
                         color="green";
+                        if(cu.isbuildInterface()){
+                            chaos_create_table(cu,i);
+                            cu.buildInterface(0);
+                        }
                     } else if(cu.dev_status=="stop"){
                         color="black";
                     } else if(cu.dev_status=="init"){
                         color="yellow";
+                        if(cu.isbuildInterface()){
+                            chaos_create_table(cu,i);
+                            cu.buildInterface(0);
+                        }
                     } else {
                         color="red";
                     }
+                    
                     if(cu.error_status!=""){
                         color="red";
                         console.log("An internal error occurred on device \""+cu.name+"\":\""+cu.error_status+"\"");
