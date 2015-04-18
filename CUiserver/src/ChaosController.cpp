@@ -15,6 +15,7 @@
 using namespace std;
 using namespace Mongoose;
 using namespace chaos::ui;
+using namespace chaos::common::data;
 using namespace chaos;
 std::map<std::string,InfoDevice*> ChaosController::devs;
 void ChaosController::setMDSTimeout(int timeo){
@@ -31,7 +32,7 @@ int ChaosController::sendCmd(DeviceController *controller ,std::string cmd_alias
   int err;
   uint64_t cmd_id_tmp;
   std::auto_ptr<chaos::common::data::CDataWrapper> data_wrapper;
-      
+
   if(param) {
     data_wrapper.reset(new chaos::common::data::CDataWrapper());
     if(data_wrapper.get())
@@ -39,7 +40,7 @@ int ChaosController::sendCmd(DeviceController *controller ,std::string cmd_alias
     else
       return -1001;
   }
-			
+
   err = controller->submitSlowControlCommand(cmd_alias_str,
 					     static_cast<chaos::common::batch_command::SubmissionRuleType::SubmissionRule>(0),
 					     50,
@@ -61,7 +62,7 @@ void ChaosController::removeDevice(std::string name){
       std::map<std::string,InfoDevice*>::iterator idevs;
       idevs = devs.find(name);
       if(idevs!=devs.end()){
-	
+
 	HLDataApi::getInstance()->disposeDeviceControllerPtr(idevs->second->dev);
 	delete(idevs->second);
 	devs.erase(idevs);
@@ -78,7 +79,7 @@ int ChaosController::fetchDataSet(DeviceController *ctrl,char*jsondest,int size)
     }
     data = ctrl->getCurrentData();
     if(data==NULL){
-	
+
       return -3;
     }
   }
@@ -87,7 +88,7 @@ int ChaosController::fetchDataSet(DeviceController *ctrl,char*jsondest,int size)
     return -4;
   }
   strncpy(jsondest,data->getJSONString().c_str(),size);
-     
+
   return 0;
 }
 
@@ -98,7 +99,7 @@ int ChaosController::checkError(int err,InfoDevice*idev,dev_info_status&status){
     std::stringstream st;
     idev->timeouts++;
     idev->totTimeout++;
-    
+
     st<<"Timeout getting State "+idev->devname+ " tot timeout:" <<idev->totTimeout<<" consecutive:"<< idev->timeouts<<" current timeout:"<<idev->defaultTimeout;
     idev->defaultTimeout+=MDS_STEP_TIMEOUT;
     status.append_log(st.str());
@@ -113,7 +114,7 @@ int ChaosController::checkError(int err,InfoDevice*idev,dev_info_status&status){
 }
 void ChaosController::handleCU(Request &request, StreamResponse &response){
   char result[4096];
-  *result=0;  
+  *result=0;
   InfoDevice *idev=NULL;
   chaos::ui::DeviceController* controller = NULL;
   std::string devname,cmd,parm;
@@ -148,7 +149,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
       idev = new InfoDevice();
       if(idev!=NULL){
 	idev->dev = controller;
-	idev->timeouts= 0 ; 
+	idev->timeouts= 0 ;
 	idev->lastState = -1;
 	idev->totTimeout=0;
 	idev->defaultTimeout=mds_timeout;
@@ -179,10 +180,10 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
 	status.insert_json(result);
 	response<<result;
 	return ;
-	
+
       }
-      
-      
+
+
     }
 
     controller->setRequestTimeWaith(idev->defaultTimeout);
@@ -195,8 +196,8 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
 	response<<result;
 	return;
     }
-      
-      idev->timeouts= 0 ; 
+
+      idev->timeouts= 0 ;
       status.status(deviceState);
       idev->lastState = deviceState;
     } else {
@@ -214,7 +215,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
     if(cmd=="init"){
       status.append_log("init device:"+devname);
       err = controller->initDevice();
-    } else if(cmd =="start"){            
+    } else if(cmd =="start"){
       status.append_log("starting device:"+devname);
       err = controller->startDevice();
     } else if(cmd=="stop"){
@@ -252,5 +253,3 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
 void ChaosController::setup(){
   addRoute("GET", "/CU", ChaosController, handleCU);
 }
-
-
