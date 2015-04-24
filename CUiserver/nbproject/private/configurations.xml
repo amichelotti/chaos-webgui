@@ -31,17 +31,7 @@
             </df>
           </df>
         </df>
-        <df name="docs">
-        </df>
         <df name="examples">
-          <df name="c#">
-          </df>
-          <df name="html">
-          </df>
-          <df name="lua">
-          </df>
-          <df name="websocket_html_root">
-          </df>
           <in>chat.c</in>
           <in>hello.c</in>
           <in>helloworld.cpp</in>
@@ -56,39 +46,22 @@
         </df>
         <df name="mongoose">
           <in>Controller.cpp</in>
-          <in>Controller.h</in>
           <in>JsonController.cpp</in>
-          <in>JsonController.h</in>
           <in>JsonResponse.cpp</in>
-          <in>JsonResponse.h</in>
           <in>Mutex.cpp</in>
-          <in>Mutex.h</in>
           <in>Request.cpp</in>
-          <in>Request.h</in>
-          <in>RequestHandler.h</in>
           <in>Response.cpp</in>
-          <in>Response.h</in>
           <in>Server.cpp</in>
-          <in>Server.h</in>
           <in>Session.cpp</in>
-          <in>Session.h</in>
           <in>Sessions.cpp</in>
-          <in>Sessions.h</in>
           <in>StreamResponse.cpp</in>
-          <in>StreamResponse.h</in>
           <in>UploadFile.cpp</in>
-          <in>UploadFile.h</in>
           <in>Utils.cpp</in>
-          <in>Utils.h</in>
           <in>WebController.cpp</in>
-          <in>WebController.h</in>
           <in>WebSocket.cpp</in>
-          <in>WebSocket.h</in>
           <in>WebSockets.cpp</in>
-          <in>WebSockets.h</in>
         </df>
         <in>mongoose.c</in>
-        <in>mongoose.h</in>
       </df>
       <df name="src">
         <in>ChaosController.cpp</in>

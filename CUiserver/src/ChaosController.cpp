@@ -215,13 +215,17 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
     if(cmd=="init"){
       status.append_log("init device:"+devname);
       err = controller->initDevice();
+      idev->wostate=0;
     } else if(cmd =="start"){
+        idev->wostate=0;
       status.append_log("starting device:"+devname);
       err = controller->startDevice();
     } else if(cmd=="stop"){
+        idev->wostate=0;
       status.append_log("stopping device:"+devname);
       err = controller->stopDevice();
     } else if(cmd =="deinit"){
+        idev->wostate=0;
       status.append_log("deinit device:"+devname);
       err= controller->deinitDevice();
     } else if(cmd =="sched" && !parm.empty()){
@@ -233,6 +237,22 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
     } else if(cmd !="status") {
       status.append_log("send cmd:\""+cmd +"\" args: \""+ parm +"\" to device:"+devname);
       err= sendCmd(controller,cmd,(char*)(parm.empty()?"":parm.c_str()));
+    } else {
+           if(idev->wostate==0){
+               switch(deviceState){
+                   case CUStateKey::DEINIT:{
+                       LDBG_<<"Force "<<devname<<" in init from deinit";
+                       err = controller->initDevice();
+                       break;
+                   }
+                   case CUStateKey::INIT:{
+                        LDBG_<<"Force "<<devname<<" in start from init";
+
+                       err = controller->startDevice();
+                       break;
+                   }   
+               }
+           }
     }
 
 
