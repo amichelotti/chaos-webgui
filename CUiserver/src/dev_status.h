@@ -11,6 +11,10 @@
 #include "common/debug/debug.h"
 #include <chaos/common/chaos_constants.h>
  using   namespace chaos;
+ #define CUIServerLAPP_		LAPP_ << "[CUIServer] "
+#define CUIServerLDBG_		LDBG_ << "[CUIServer] "
+#define CUIServerLERR_		LERR_ << "[CUIServer] "
+
 struct dev_info_status{
   char dev_status[256];
   char error_status[256];
@@ -31,12 +35,12 @@ struct dev_info_status{
     }
   }
   void append_log(std::string log){
-    DPRINT("%s",log.c_str());
+      CUIServerLAPP_<<log;
     snprintf(log_status,sizeof(log_status),"%s%s;",log_status,log.c_str());
  
   }
   void append_error(std::string log){
-    DERR("%s",log.c_str());
+    CUIServerLERR_<<log;
     snprintf(error_status,sizeof(error_status),"%s%s;",error_status,log.c_str());
  
   }

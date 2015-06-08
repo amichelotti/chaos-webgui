@@ -19,10 +19,10 @@ using namespace std;
 using namespace Mongoose;
 using namespace chaos::ui;
 using namespace chaos;
-#define MDS_TIMEOUT 10000
-#define MDS_STEP_TIMEOUT 5000
+#define MDS_TIMEOUT 3000
+#define MDS_STEP_TIMEOUT 1000
 #define MDS_RETRY 3
-
+#define MAX_STRING 1024
 struct InfoDevice {
   chaos::ui::DeviceController* dev;
   std::string devname;
@@ -40,9 +40,11 @@ private:
     int mds_timeout;
     int sendCmd(chaos::ui::DeviceController *controller ,std::string cmd_alias_str,char*param);
     int sendAttr(DeviceController *controller ,std::string cmd_alias_str,char*param);
-    int fetchDataSet(DeviceController *ctrl,char*jsondest,int size);
+    CDataWrapper* fetchDataSet(DeviceController *ctrl);
+    char *jsondest;
+    int size_json;
     public: 
-        ChaosController(){mds_timeout = MDS_TIMEOUT;}
+        ChaosController();
         void handleCU(Request &request, StreamResponse &response);
         void setMDSTimeout(int timeo);
 	int checkError(int err,InfoDevice*,dev_info_status&st);

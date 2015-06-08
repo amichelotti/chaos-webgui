@@ -81,7 +81,7 @@
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <flagsDictionary>
-        <element flagsID="0" commonFlags="-O2 -O2"/>
+        <element flagsID="0" commonFlags="-O3 -O2 -O2"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
@@ -107,6 +107,7 @@
         <ccTool>
           <preprocessorList>
             <Elem>BOOST_ALL_DYN_LINK</Elem>
+            <Elem>CHAOS</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -211,6 +212,9 @@
             <pElem>../..</pElem>
             <pElem>../../../chaos-x86_64-dynamic-release/include</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>NDEBUG</Elem>
+          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/main.cpp" ex="false" tool="1" flavor2="4">
@@ -222,7 +226,6 @@
             <pElem>.</pElem>
           </incDir>
           <preprocessorList>
-            <Elem>CHAOS</Elem>
             <Elem>DEBUG</Elem>
           </preprocessorList>
         </ccTool>

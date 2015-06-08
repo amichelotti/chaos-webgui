@@ -18,6 +18,16 @@ using namespace chaos::ui;
 using namespace chaos::common::data;
 using namespace chaos;
 std::map<std::string,InfoDevice*> ChaosController::devs;
+ChaosController::ChaosController(){
+    mds_timeout = MDS_TIMEOUT;
+    jsondest=(char*)malloc(MAX_STRING);
+    size_json=MAX_STRING;
+    if(jsondest==NULL){
+        throw CException(-1,"cannot allocate resources","ChaosController()");
+    }
+     *jsondest=0;
+}
+
 void ChaosController::setMDSTimeout(int timeo){
   mds_timeout = timeo;
 }
@@ -69,27 +79,41 @@ void ChaosController::removeDevice(std::string name){
       }
 
 }
-int ChaosController::fetchDataSet(DeviceController *ctrl,char*jsondest,int size){
-  CDataWrapper* data;
+CDataWrapper* ChaosController::fetchDataSet(DeviceController *ctrl){
+  CDataWrapper* data=NULL;
   try{
     if(ctrl){
       ctrl->fetchCurrentDeviceValue();
     } else {
-      return -2;
+      return NULL;
     }
     data = ctrl->getCurrentData();
     if(data==NULL){
 
-      return -3;
+      return NULL;
     }
+    
+    if(data->getJSONString().size()+MAX_STRING>size_json){
+        jsondest=(char*)realloc(jsondest,data->getJSONString().size()+MAX_STRING);
+        if(jsondest==NULL){
+           throw CException(-1,"cannot allocate resources","fetching dataset");
+
+        }
+        size_json = data->getJSONString().size()+MAX_STRING;
+    }
+    strncpy(jsondest,data->getJSONString().c_str(),size_json);
+
+    
   }
   catch (CException& e) {
-
-    return -4;
+	DERR("Exception reading dataset:%s",e.what());
+     
+    return NULL;
   }
-  strncpy(jsondest,data->getJSONString().c_str(),size);
+  
+ 
 
-  return 0;
+  return data;
 }
 
 
@@ -113,8 +137,7 @@ int ChaosController::checkError(int err,InfoDevice*idev,dev_info_status&status){
   return err;
 }
 void ChaosController::handleCU(Request &request, StreamResponse &response){
-  char result[4096];
-  *result=0;
+  *jsondest=0;
   InfoDevice *idev=NULL;
   chaos::ui::DeviceController* controller = NULL;
   std::string devname,cmd,parm;
@@ -142,8 +165,8 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
       }
       if(controller==NULL){
 	status.append_error("cannot allocate new controller for:"+devname);
-	status.insert_json(result);
-	response<<result;
+	status.insert_json(jsondest);
+	response<<jsondest;
 	return ;
       }
       idev = new InfoDevice();
@@ -161,24 +184,25 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
 	err=controller->getState(deviceState);
 	if(checkError(err,idev,status)){
 	  // try to fetch data
-	  if(fetchDataSet(controller,result,sizeof(result))>=0){
+	  if((fetchDataSet(controller))!=0){
 	    // fetch ok
 	    idev->wostate=1;
+            
 	    status.append_log("is http device:"+devname);
 	    status.status(CUStateKey::START);
 	    idev->lastState=CUStateKey::START;
 
-	    DPRINT("device %s is a http device",devname.c_str());
+	    CUIServerLDBG_<<devname <<" is a http device";
 	  }
 	}
 
-	DPRINT("caching device %s",devname.c_str());
+	CUIServerLDBG_<<"caching device "<<devname;
 	addDevice(devname,idev);
       } else {
 	status.append_error("cannot allocate new info controller for:"+devname);
-	DERR("cannot allocate controller for %s",devname.c_str());
-	status.insert_json(result);
-	response<<result;
+	
+	status.insert_json(jsondest);
+	response<<jsondest;
 	return ;
 
       }
@@ -192,8 +216,8 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
       if(checkError(err,idev,status)){
 	DERR("error getting state %s, removing from cache...",devname.c_str());
       	removeDevice(devname);
-	status.insert_json(result);
-	response<<result;
+	status.insert_json(jsondest);
+	response<<jsondest;
 	return;
     }
 
@@ -205,9 +229,9 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
       err=0;
       status.status(CUStateKey::START);
       idev->lastState=CUStateKey::START;
-      fetchDataSet(controller,result,sizeof(result));
-      status.insert_json(result);
-      response<<result;
+      fetchDataSet(controller);
+      status.insert_json(jsondest);
+      response<<jsondest;
       return;
     }
 
@@ -218,6 +242,9 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
       idev->wostate=0;
     } else if(cmd =="start"){
         idev->wostate=0;
+        if(deviceState!=CUStateKey::INIT){
+            controller->initDevice();
+        }
       status.append_log("starting device:"+devname);
       err = controller->startDevice();
     } else if(cmd=="stop"){
@@ -259,14 +286,14 @@ void ChaosController::handleCU(Request &request, StreamResponse &response){
     if(checkError(err,idev,status)){
       DERR("error removing device from cache:%s",devname.c_str());
       removeDevice(devname);
-      status.insert_json(result);
-      response<<result;
+      status.insert_json(jsondest);
+      response<<jsondest;
       return;
     }
-    fetchDataSet(controller,result,sizeof(result));
+    fetchDataSet(controller);
   }
-  status.insert_json(result);
-  response<<result;
+  status.insert_json(jsondest);
+  response<<jsondest;
 
 }
 
