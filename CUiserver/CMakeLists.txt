@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 include($ENV{CHAOS_BUNDLE}/tools/project_template/CMakeChaos.txt)
 SET(CUISERVER src/main.cpp src/ChaosController.cpp)
-ADD_DEFINITIONS(-O2 )
+ADD_DEFINITIONS(-O2 -DDEBUG)
 ADD_EXECUTABLE(CUIserver ${CUISERVER})
 
 IF(BUILD_FORCE_STATIC)
