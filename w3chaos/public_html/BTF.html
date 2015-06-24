@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>BTF control</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <link rel="stylesheet" type="text/css" href="css/BTF.css" />
+</head>
+
+
+<body>
+
+    <div class="container">
+        <header class="title">
+            <h1>!CHAOS on BTF<span>Monitoring & Control</span></h1>	
+        </header>
+        
+        <div class="main">
+	    
+	    <div style="cursor: pointer;" onclick="window.open('http://chaost-monitor1.chaos.lnf.infn.it/ganglia/?r=hour&cs=&ce=&m=load_one&tab=v&vn=chaos&hide-hf=false')"; id="cds_mon">
+		<h3>CDS services monitoring</h3>
+	    </div>
+	    
+	    <div id="pw_lab" style="cursor:pointer;" onclick="window.open('http://chaost-labview1.chaos.lnf.infn.it:5802')">
+		<h3>Dipole & Quadrupole</h3>
+		<h4>by LabVIEW</h4>
+	    </div>
+	    
+	    <div id="pw_sim" style="cursor: pointer;" onclick="window.open('http://chaost-webui1.chaos.lnf.infn.it/BTF_pw_sim.php?dev=BTF_SIM/QUATB001&BTF_SIM/QUATB002&BTF_SIM/QUATB003&BTF_SIM/QUATB004&BTF_SIM/QUATB101&BTF_SIM/QUATB102&BTF_SIM/DHSTB001&BTF_SIM/DHSTB002')";>
+		<h3 class="write_sim">SIM_Dipole & SIM_Quadrupole</h3>
+		<h4 class="sub">by Web-UI</h4>
+	    </div>
+	    
+	    <div id="pw" style="cursor: pointer;" onclick="window.open('http://chaost-webui1.chaos.lnf.infn.it/BTF_pw.php?dev=BTF/QUATB001&BTF/QUATB002&BTF/QUATB003&BTF/QUATB004&BTF/QUATB101&BTF/QUATB102&BTF/DHSTB001&BTF/DHSTB002')";>
+		<h3 class="write_sim">Dipole & Quadrupole</h3>
+		<h4 class="sub">by Web-UI</h4>
+	    </div>
+	    
+	    <div id="vme" style="cursor: pointer;" onclick="window.open('http://chaost-webui1.chaos.lnf.infn.it/BTF_DAQ.php?dev=BTF/QDC0&BTF/QDC1&BTF/SCALER')";>
+		<h3>Data Acquisition</h3>
+		<h4>by Web-UI</h4>
+	    </div>
+            
+	 </div>
+
+    </div>
+
+</body>
+</html>
+
