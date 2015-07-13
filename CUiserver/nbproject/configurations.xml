@@ -81,7 +81,7 @@
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <flagsDictionary>
-        <element flagsID="0" commonFlags="-O3 -O2 -O2"/>
+        <element flagsID="0" commonFlags="-O2 -O2"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
@@ -105,9 +105,14 @@
       </item>
       <folder path="0/src">
         <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+            <pElem>../..</pElem>
+            <pElem>../../../chaos-x86_64-static-release/include</pElem>
+          </incDir>
           <preprocessorList>
-            <Elem>BOOST_ALL_DYN_LINK</Elem>
-            <Elem>CHAOS</Elem>
+            <Elem>CHAOS_STATIC</Elem>
+            <Elem>DEBUG=1</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -207,27 +212,10 @@
       </item>
       <item path="src/ChaosController.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
-          <incDir>
-            <pElem>.</pElem>
-            <pElem>../..</pElem>
-            <pElem>../../../chaos-x86_64-dynamic-release/include</pElem>
-          </incDir>
-          <preprocessorList>
-            <Elem>NDEBUG</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/main.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool>
-          <incDir>
-            <pElem>../../usr/local/include</pElem>
-            <pElem>mongoose-cpp/mongoose</pElem>
-            <pElem>mongoose-cpp</pElem>
-            <pElem>.</pElem>
-          </incDir>
-          <preprocessorList>
-            <Elem>DEBUG</Elem>
-          </preprocessorList>
+        <ccTool flags="0">
         </ccTool>
       </item>
     </conf>
