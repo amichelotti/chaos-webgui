@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   dev_status.h
  * Author: michelo
  *
@@ -10,8 +10,12 @@
 
 #include "common/debug/debug.h"
 #include <chaos/common/chaos_constants.h>
+#include <chaos/common/data/CDataWrapper.h>
+
 #define MAX_STRING 1024
 using namespace chaos;
+using namespace chaos::common::data;
+
 #define CUIServerLAPP_		LAPP_ << "[CUIServer] "
 #define CUIServerLDBG_		LDBG_ << "[CUIServer] "
 #define CUIServerLERR_		LERR_ << "[CUIServer] "
@@ -75,7 +79,7 @@ struct dev_info_status {
         }
         if (t) sprintf(t, ",\"dev_status\":\"%s\",\"error_status\":\"%s\",\"log_status\":\"%s\"}", dev_status, error_status, log_status);
     }
-    
+
     CDataWrapper * getData(){
          data_wrapper->addStringValue("dev_status",std::string(dev_status));
      data_wrapper->addStringValue("log_status",std::string(log_status));
@@ -88,4 +92,3 @@ struct dev_info_status {
 
 
 #endif	/* DEV_STATUS_H */
-

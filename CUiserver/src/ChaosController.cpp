@@ -16,13 +16,14 @@ using namespace std;
 using namespace Mongoose;
 using namespace chaos::ui;
 using namespace chaos::common::data;
+using namespace chaos::common::batch_command;
 using namespace chaos;
 std::map<std::string, InfoDevice*> ChaosController::devs;
 
 
 ChaosController::ChaosController() {
     mds_timeout = MDS_TIMEOUT;
-  
+
 }
 
 void ChaosController::setMDSTimeout(int timeo) {
@@ -41,14 +42,14 @@ int ChaosController::sendCmd(DeviceController *controller, std::string& cmd_alia
     uint64_t cmd_id_tmp;
     uint32_t schedule_delay = 0, prio = 50, mode = 0;
 
-    std::auto_ptr<chaos::common::data::CDataWrapper> data_wrapper;
+    std::auto_ptr<CDataWrapper> data_wrapper;
     std::string cmd_schedule, cmd_prio, cmd_mode;
     cmd_schedule = request.get("sched");
     cmd_prio = request.get("prio");
     cmd_mode = request.get("mode");
 
     if (param) {
-        data_wrapper.reset(new chaos::common::data::CDataWrapper());
+        data_wrapper.reset(new CDataWrapper());
         if (data_wrapper.get())
             data_wrapper->setSerializedJsonData(param);
         else
@@ -66,7 +67,7 @@ int ChaosController::sendCmd(DeviceController *controller, std::string& cmd_alia
     }
   //  LAPP_ << "command before:" << cmd_alias_str;
     err = controller->submitSlowControlCommand(cmd_alias_str,
-            (mode == 0) ? chaos_batch::SubmissionRuleType::SUBMIT_AND_Stack : chaos_batch::SubmissionRuleType::SUBMIT_AND_Kill,
+            (mode == 0) ? SubmissionRuleType::SUBMIT_AND_Stack : SubmissionRuleType::SUBMIT_AND_Kill,
             prio,
             cmd_id_tmp,
             0,
@@ -103,7 +104,7 @@ CDataWrapper* ChaosController::fetchDataSet(DeviceController *ctrl) {
     try {
         if (ctrl) {
             ctrl->fetchCurrentDeviceValue();
-            
+
         } else {
            CUIServerLERR_ << "Error fetching";
 
@@ -115,12 +116,12 @@ CDataWrapper* ChaosController::fetchDataSet(DeviceController *ctrl) {
 
             return NULL;
         }
-        
-       
-   
+
+
+
 
     } catch (CException& e) {
-        
+
         DERR("Exception reading dataset:%s", e.what());
 
         return NULL;
@@ -220,7 +221,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
                 addDevice(devname, idev);
             } else {
                 status.append_error("cannot allocate new info controller for:" + devname);
-                
+
                // status.insert_json(idev->out);
                 response << status.getData()->getJSONString();
                 return;
@@ -229,7 +230,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
 
 
         }
-        
+
         controller->setRequestTimeWaith(idev->defaultTimeout);
         if (idev->wostate == 0) {
             err = controller->getState(deviceState);
@@ -260,7 +261,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
             } else {
                 data = status.getData();
             }
-          
+
             //idev->update(data);
             response << status.getData()->getJSONString();
                return;
@@ -340,7 +341,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
             response << status.getData()->getJSONString();
             return;
         }
-        
+
         idev->lastReq= reqtime;
 
         if((data=fetchDataSet(controller))==NULL){
@@ -356,7 +357,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
 
    // status.insert_json(idev->out);
     //  LDBG_<<"device:"<<devname<<":\""<<jsondest<<"\"";
-   
+
     response << data->getJSONString();
 
 
