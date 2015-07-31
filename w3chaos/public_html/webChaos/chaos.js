@@ -8,7 +8,7 @@ var npoints=0;
 var refreshInterval=0;
 var request_prefix = "http://localhost:8081/CU?dev="; //"/cgi-bin/cu.cgi?"
 var internal_param=new Array();
-var excludeInterface=["oldtimestamp","dostate","firsttimestamp","dpck_device_id","dev_status","dpck_ds_type","updating"];
+var excludeInterface=["oldtimestamp","dostate","firsttimestamp","ndk_uid","dev_state","dpck_ds_type","ndk_heartbeat","updating"];
 
 function CU(name){
     this.name =name;
@@ -201,9 +201,9 @@ function CU(name){
 		    }
                     
 		  //  console.log("processing:"+key+ " val:"+val);
-                    if(key == "cs|csv|device_id"){
+                    if(key == "ndk_uid"){
                         my.name = val;
-                    } else if (key == "dpck_ts") {
+                    } else if (key == "ndk_heartbeat") {
 			
 			if(my.firsttimestamp==0){
                             my.firsttimestamp=val;
