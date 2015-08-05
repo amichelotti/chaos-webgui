@@ -353,6 +353,8 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
         }
     } else {
         status.append_error(" cmd or device not specified");
+        response<<status.getData()->getJSONString();
+        return;
     }
 
    // status.insert_json(idev->out);
