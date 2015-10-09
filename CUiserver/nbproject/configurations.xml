@@ -81,14 +81,14 @@
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <flagsDictionary>
-        <element flagsID="0" commonFlags="-O2 -O2"/>
+        <element flagsID="0" commonFlags="-O3 -O2 -O2"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
       <makefileType>
         <makeTool>
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
-          <buildCommand>${MAKE} -f Makefile</buildCommand>
+          <buildCommand>${MAKE} -f Makefile install</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
           <executablePath>build/CUIserver</executablePath>
         </makeTool>
@@ -108,11 +108,13 @@
           <incDir>
             <pElem>.</pElem>
             <pElem>../..</pElem>
-            <pElem>../../../chaos-x86_64-static-release/include</pElem>
+            <pElem>../../../chaos-x86_64-dynamic-release/include</pElem>
           </incDir>
           <preprocessorList>
-            <Elem>CHAOS_STATIC</Elem>
-            <Elem>DEBUG=1</Elem>
+            <Elem>BOOST_ALL_DYN_LINK</Elem>
+            <Elem>CHAOS</Elem>
+            <Elem>DEBUG</Elem>
+            <Elem>NDEBUG</Elem>
           </preprocessorList>
         </ccTool>
       </folder>

@@ -22,7 +22,7 @@ using namespace chaos;
 #define MDS_TIMEOUT 3000
 #define MDS_STEP_TIMEOUT 1000
 #define MDS_RETRY 3
-
+#define HEART_BEAT_MAX 60000000
 struct InfoDevice {
   chaos::ui::DeviceController* dev;
   std::string devname;
@@ -36,6 +36,7 @@ struct InfoDevice {
   uint64_t oldReq;
   uint64_t firstReq;
   uint64_t timestamp;
+  uint64_t htimestamp;
   
   InfoDevice(){lastReq=0;nextState=-1;timestamp=0;lastState=-1;firstReq=0;}
  ~InfoDevice(){}

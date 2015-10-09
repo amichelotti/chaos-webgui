@@ -190,6 +190,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
             }
             idev = new InfoDevice();
             if (idev != NULL) {
+                uint64_t ret;
                 idev->dev = controller;
                 idev->timeouts = 0;
                 idev->lastState = -1;
@@ -201,8 +202,8 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
                 // try to get state
                 controller->setRequestTimeWaith(idev->defaultTimeout);
                 controller->setupTracking();
-                err = controller->getState(deviceState);
-                if (checkError(err, idev, status)) {
+                ret = controller->getState(deviceState);
+                if (ret==0) {
                     // try to fetch data
                     if ((data=fetchDataSet(controller)) != 0) {
                         // fetch ok
@@ -214,8 +215,12 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
 
                         CUIServerLDBG_ << devname << " is a http device";
                     }
+                } else {
+                    idev->lastState = deviceState;
+                     idev->nextState = deviceState;
+                    status.status(deviceState);
                 }
-
+                idev->htimestamp = ret;
                 CUIServerLDBG_ << "caching device " << devname;
                 idev->firstReq=reqtime;
                 addDevice(devname, idev);
@@ -233,15 +238,22 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
 
         controller->setRequestTimeWaith(idev->defaultTimeout);
         if (idev->wostate == 0) {
-            err = controller->getState(deviceState);
-            if (checkError(err, idev, status)) {
+            uint64_t heart= controller->getState(deviceState);
+            if (heart==0){
                 status.append_error("error getting state for:"+devname);
                 removeDevice(devname);
                 //status.insert_json(idev->out);
                 response << status.getData()->getJSONString();
                 return;
             }
-
+            if((heart - idev->htimestamp)>HEART_BEAT_MAX){
+                status.append_error("device is dead, removing");
+                removeDevice(devname);
+                //status.insert_json(idev->out);
+                response << status.getData()->getJSONString();
+                return;
+            }
+            idev->htimestamp= heart;
             idev->timeouts = 0;
             status.status(deviceState);
             idev->lastState = deviceState;
@@ -305,6 +317,15 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
         } else if (cmd == "sched" && !parm.empty()) {
             status.append_log("sched device:" + devname);
             err = controller->setScheduleDelay(atol((char*) parm.c_str()));
+        } else if (cmd == "channel" && !parm.empty()) {
+            status.append_log("return channel :" + parm);
+            CDataWrapper*data=controller->fetchCurrentDatatasetFromDomain((chaos::ui::DatasetDomain)atoi((char*) parm.c_str()));
+            if(data){
+                 data->appendAllElement(*status.getData());
+                 response << data->getJSONString();
+                 return;
+            }
+            
         } else if (cmd == "attr") {
             status.append_log("send attr:\"" + cmd + "\" args: \"" + parm + "\" to device:" + devname);
             err = sendAttr(controller, cmd, (char*) (parm.empty() ? "" : parm.c_str()));
@@ -332,7 +353,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
         }
 
 
-        if (checkError(err, idev, status)) {
+   /*     if (checkError(err, idev, status)) {
 
             CUIServerLERR_<<"error removing device from cache:"<<devname;
             removeDevice(devname);
@@ -341,12 +362,15 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
             response << status.getData()->getJSONString();
             return;
         }
-
+*/
         idev->lastReq= reqtime;
 
         if((data=fetchDataSet(controller))==NULL){
            status.append_error(" error fetching dataset of:"+devname);
            data = status.getData();
+           status.append_log("removing from cache");
+
+           removeDevice(devname);
 
         } else {
             data->appendAllElement(*status.getData());

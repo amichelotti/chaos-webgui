@@ -19,6 +19,8 @@
         </group>
         <group name="CHAOS_BUNDLE_DEVELOPMENT">
             <file>file:/home/michelo/chaos_bundle_development/service/webgui/CUiserver/src/ChaosController.cpp</file>
+            <file>file:/home/michelo/chaos_bundle_development/service/webgui/CUiserver/src/ChaosController.h</file>
+            <file>file:/home/michelo/chaos_bundle_development/service/webgui/CUiserver/src/main.cpp</file>
         </group>
     </open-files>
 </project-private>

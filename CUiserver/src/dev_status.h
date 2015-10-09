@@ -16,9 +16,9 @@
 using namespace chaos;
 using namespace chaos::common::data;
 
-#define CUIServerLAPP_		LAPP_ << "[CUIServer] "
-#define CUIServerLDBG_		LDBG_ << "[CUIServer] "
-#define CUIServerLERR_		LERR_ << "[CUIServer] "
+#define CUIServerLAPP_		LAPP_ << "[CUIServer] " << __PRETTY_FUNCTION__
+#define CUIServerLDBG_		LDBG_ << "[CUIServer] "<< __PRETTY_FUNCTION__
+#define CUIServerLERR_		LERR_ << "[CUIServer] "<< __PRETTY_FUNCTION__
 
 struct dev_info_status {
     char dev_status[256];
@@ -41,6 +41,10 @@ struct dev_info_status {
             strcpy(dev_status, "start");
         } else if (deviceState == CUStateKey::STOP) {
             strcpy(dev_status, "stop");
+        } else if (deviceState == CUStateKey::FATAL_ERROR) {
+            strcpy(dev_status, "fatal error");
+        }  else if (deviceState == CUStateKey::RECOVERABLE_ERROR) {
+            strcpy(dev_status, "recoverable error");
         } else {
             strcpy(dev_status, "uknown");
         }
