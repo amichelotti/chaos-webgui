@@ -23,7 +23,9 @@ std::map<std::string, InfoDevice*> ChaosController::devs;
 
 ChaosController::ChaosController() {
     mds_timeout = MDS_TIMEOUT;
-
+    naccess=0;
+    tot_us =0;
+    refresh=0;
 }
 
 void ChaosController::setMDSTimeout(int timeo) {
@@ -77,7 +79,7 @@ int ChaosController::sendCmd(DeviceController *controller, std::string& cmd_alia
 
     std::stringstream ss;
 
-    ss << "command:\"" << cmd_alias_str << "\" params:\"" << param << "\" prio:" << prio << " schedule:" << schedule_delay << " mode:" << mode;
+    ss << "command:\"" << cmd_alias_str << "\" params:\"" << param << "\" prio:" << prio << " schedule:" << schedule_delay << " mode:" << mode << " error:"<<err;
     status.append_log(ss.str().c_str());
 //    LAPP_ << "command after:" << ss.str().c_str();
     return err;
@@ -91,8 +93,11 @@ void ChaosController::removeDevice(std::string name) {
     std::map<std::string, InfoDevice*>::iterator idevs;
     idevs = devs.find(name);
     if (idevs != devs.end()) {
-
-        HLDataApi::getInstance()->disposeDeviceControllerPtr(idevs->second->dev);
+        LDBG_ << "removing device :"<<idevs->second->devname;
+        if(idevs->second->dev)
+            delete(idevs->second->dev);
+        idevs->second->dev =0;
+        
         delete(idevs->second);
         devs.erase(idevs);
     }
@@ -152,6 +157,66 @@ int ChaosController::checkError(int err, InfoDevice*idev, dev_info_status&status
     return err;
 }
 
+uint64_t ChaosController::updateState(InfoDevice*idev,dev_info_status&status,CUStateKey::ControlUnitState&devstate){
+     uint64_t heart= idev->dev->getState(devstate);
+     if (heart==0){ 
+         status.append_error("cannot access to HB");
+        return 0;
+      }
+      if((heart - idev->htimestamp)>HEART_BEAT_MAX){
+          std::stringstream ss;
+          ss<<"device is dead "<< (heart - idev->htimestamp)<<" ms of inactivity, removing";
+            status.append_error(ss.str());
+            //status.insert_json(idev->out);
+          
+            return 0;
+        }
+        idev->htimestamp= heart;
+        status.status(devstate);
+
+        return heart;
+}
+#define CALC_EXEC_TIME \
+    tot_us +=(reqtime -boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds());\
+    if(naccess%500 ==0){\
+        refresh=tot_us/500;\
+        tot_us=0;\
+        LDBG_ << " Profiling: N accesses:"<<naccess<<" response time:"<<refresh<<" us";}
+
+CDataWrapper* ChaosController::normalizeToJson(CDataWrapper*src,std::map<std::string,int>& list){
+    if(list.empty())
+        return src;
+    std::vector<std::string> contained_key;
+    std::map<std::string,int>::iterator rkey;
+    src->getAllKey(contained_key);
+    data_out.reset();
+    for(std::vector<std::string>::iterator k=contained_key.begin();k!=contained_key.end();k++){
+        if((rkey=list.find(*k))!=list.end()){
+            if(rkey->second == DataType::SUB_TYPE_DOUBLE){
+               LDBG_ << " replace data key:"<<rkey->first;
+                int cnt;
+                double *data=(double*)src->getRawValuePtr(rkey->first);
+                int size=src->getValueSize(rkey->first);
+                int elems=size/sizeof(double);
+                for(cnt=0;cnt<elems;cnt++){
+                    data_out.appendDoubleToArray(data[cnt]);
+                }
+                data_out.finalizeArrayForKey(rkey->first);
+            
+            } else {
+               // LDBG_ << "adding not translated key:"<<*k<<" json:"<<src->getCSDataValue(*k)->getJSONString();
+                data_out.appendAllElement(*src->getCSDataValue(*k));
+                src->copyKeyTo(*k,data_out);
+            }
+        } else {
+            //LDBG_ << "adding normal key:"<<*k<<" json:"<<src->getCSDataValue(*k)->getJSONString();
+            src->copyKeyTo(*k,data_out);
+            
+        }
+    }
+    return &data_out;
+}
+
 void ChaosController::handleCU(Request &request, StreamResponse &response) {
     InfoDevice *idev = NULL;
     CDataWrapper*data = NULL;
@@ -163,6 +228,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
     parm = request.get("parm");
     uint64_t reqtime=boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds();
     response.setHeader("Access-Control-Allow-Origin", "*");
+    naccess++;
     //std::stringstream sl;
     //sl <<"dev:"<<devname<<" cmd:"<<cmd <<" parm:"<<parm<< " reqTime:" <<dec<<reqtime;
    // status.append_log(sl.str());
@@ -186,6 +252,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
             if (controller == NULL) {
                 status.append_error("cannot allocate new controller for:" + devname);
                 response << status.getData()->getJSONString();
+                CALC_EXEC_TIME;
                 return;
             }
             idev = new InfoDevice();
@@ -199,36 +266,33 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
                 idev->devname = devname;
                 idev->wostate = 0;
                 idev->nextState = -1;
+                idev->nReq=0;
+                idev->tot_req_time=0;
+               
                 // try to get state
                 controller->setRequestTimeWaith(idev->defaultTimeout);
                 controller->setupTracking();
                 ret = controller->getState(deviceState);
-                if (ret==0) {
-                    // try to fetch data
-                    if ((data=fetchDataSet(controller)) != 0) {
-                        // fetch ok
-                        idev->wostate = 1;
-
-                        status.append_log("is http device:" + devname);
-                        status.status(CUStateKey::START);
-                        idev->lastState = CUStateKey::START;
-
-                        CUIServerLDBG_ << devname << " is a http device";
-                    }
-                } else {
-                    idev->lastState = deviceState;
-                     idev->nextState = deviceState;
-                    status.status(deviceState);
-                }
+                idev->lastState = deviceState;
+                idev->nextState = deviceState;
+                status.status(deviceState);
                 idev->htimestamp = ret;
                 CUIServerLDBG_ << "caching device " << devname;
                 idev->firstReq=reqtime;
+                std::vector<chaos::common::data::RangeValueInfo> vi=controller->getDeviceValuesInfo();
+                for(std::vector<chaos::common::data::RangeValueInfo>::iterator i=vi.begin();i!=vi.end();i++){
+                    if((i->valueType==DataType::TYPE_BYTEARRAY) && (i->binType!=DataType::SUB_TYPE_NONE)){
+                        idev->binaryToTranslate.insert(std::make_pair(i->name,i->binType));
+                        CUIServerLDBG_ << i->name<<" is binary of type:"<<i->binType;
+                    }
+                }
                 addDevice(devname, idev);
             } else {
                 status.append_error("cannot allocate new info controller for:" + devname);
 
                // status.insert_json(idev->out);
                 response << status.getData()->getJSONString();
+                CALC_EXEC_TIME;
                 return;
 
             }
@@ -237,29 +301,27 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
         }
 
         controller->setRequestTimeWaith(idev->defaultTimeout);
+        
+        
         if (idev->wostate == 0) {
-            uint64_t heart= controller->getState(deviceState);
-            if (heart==0){
-                status.append_error("error getting state for:"+devname);
-                removeDevice(devname);
-                //status.insert_json(idev->out);
-                response << status.getData()->getJSONString();
-                return;
-            }
-            if((heart - idev->htimestamp)>HEART_BEAT_MAX){
-                status.append_error("device is dead, removing");
-                removeDevice(devname);
-                //status.insert_json(idev->out);
-                response << status.getData()->getJSONString();
-                return;
-            }
-            idev->htimestamp= heart;
-            idev->timeouts = 0;
-            status.status(deviceState);
-            idev->lastState = deviceState;
-
-            if ((idev->nextState > 0)&&(idev->lastState != idev->nextState)) {
-                LDBG_ << "%% warning current state:" << idev->lastState << " different from destination state:" << idev->nextState;
+            
+            if((reqtime - idev->last_access) > (idev->defaultTimeout*1000)){
+                uint64_t heart;
+                if((heart=updateState(idev,status,deviceState))==0){
+                    LERR_<<" ["<<idev->devname<<"] HB expired, removing device";
+                    removeDevice(idev->devname);
+                    response << status.getData()->getJSONString();
+                    CALC_EXEC_TIME;
+                    return;
+                }         
+                idev->timeouts = 0;
+                idev->lastState = deviceState;
+                LDBG_<<" ["<<idev->devname<<"] [nacc:"<<idev->nReq<<"] state:"<<deviceState<<" desired state:"<<idev->nextState<<"HB:"<<heart<<" LA:"<<(reqtime - idev->last_access) <<" us ago"<<" refresh rate:"<<idev->refresh<< " us, default timeout:"<<idev->defaultTimeout;
+                idev->last_access = reqtime;
+                 
+                if ((idev->nextState > 0)&&(idev->lastState != idev->nextState)) {
+                    LDBG_ << "%% warning current state:" << idev->lastState << " different from destination state:" << idev->nextState;
+                }
             }
         } else if (cmd == "status") {
             DPRINT("fetch dataset of %s (stateless)\n", devname.c_str());
@@ -276,79 +338,142 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
 
             //idev->update(data);
             response << status.getData()->getJSONString();
+            CALC_EXEC_TIME;
                return;
         }
 
-        controller->setupTracking();
         if (cmd == "init") {
-            status.append_log("init device:" + devname);
-            err = controller->initDevice();
             idev->wostate = 0;
-            idev->nextState = CUStateKey::INIT;
+
+           if(updateState(idev,status,deviceState)==0){
+                    removeDevice(idev->devname);
+                    response << status.getData()->getJSONString();
+                    CALC_EXEC_TIME;
+                    return;
+            }
+           if(deviceState!=CUStateKey::INIT){
+                status.append_log("init device:" + devname);
+                err = controller->initDevice();
+                if(err!=0){
+                    removeDevice(idev->devname);
+                    response << status.getData()->getJSONString();
+                    CALC_EXEC_TIME;
+                    return;
+                }
+                idev->nextState = CUStateKey::INIT;
+           } else {
+                status.append_log("device:" + devname+ " already initialized");
+           }
         } else if (cmd == "start") {
             idev->wostate = 0;
-            idev->nextState = CUStateKey::START;
-            if (deviceState != CUStateKey::INIT) {
-                controller->initDevice();
+             if(updateState(idev,status,deviceState)==0){
+                    removeDevice(idev->devname);
+                    response << status.getData()->getJSONString();
+                    CALC_EXEC_TIME
+                    return;
             }
-
-            if (idev->lastState != idev->nextState) {
-
-                err = controller->startDevice();
+            
+            if (deviceState != CUStateKey::START) {
                 status.append_log("starting device:" + devname);
+                err=controller->startDevice();
+                if(err!=0){
+                    removeDevice(idev->devname);
+                    response << status.getData()->getJSONString();
+                    CALC_EXEC_TIME;
+                    return;
+                }
+                 idev->nextState = CUStateKey::START;
+
             } else {
-                CUIServerLDBG_ << devname << " already in start err:" << err ;
+                status.append_log("device:" + devname+ " already started");
             }
+
 
         } else if (cmd == "stop") {
             idev->wostate = 0;
-            idev->nextState = CUStateKey::STOP;
-            if (idev->lastState != idev->nextState) {
+            if(updateState(idev,status,deviceState)==0){
+                    removeDevice(idev->devname);
+                    response << status.getData()->getJSONString();
+                    CALC_EXEC_TIME;
+                    return;
+            }
+            if (deviceState != CUStateKey::STOP) {
                 status.append_log("stopping device:" + devname);
-                err = controller->stopDevice();
+                err=controller->stopDevice();
+                if(err!=0){
+                    removeDevice(idev->devname);
+                    response << status.getData()->getJSONString();
+                    CALC_EXEC_TIME;
+                    return;
+                }
+                idev->nextState = CUStateKey::STOP;
+
+            } else {
+                status.append_log("device:" + devname+ " already stopped");
             }
         } else if (cmd == "deinit") {
             idev->wostate = 0;
-            idev->nextState = CUStateKey::DEINIT;
-            if (idev->lastState != idev->nextState) {
+            if(updateState(idev,status,deviceState)==0){
+                    removeDevice(idev->devname);
+                    response << status.getData()->getJSONString();
+                    CALC_EXEC_TIME;
+                    return;
+            }
+            if (deviceState != CUStateKey::DEINIT) {
                 status.append_log("deinit device:" + devname);
-                err = controller->deinitDevice();
+                err=controller->deinitDevice();
+                if(err!=0){
+                    status.append_error("error deinitializing:"+devname);
+                    removeDevice(idev->devname);
+                    response << status.getData()->getJSONString();
+                    CALC_EXEC_TIME;
+                    return;
+                }
+                idev->nextState = CUStateKey::DEINIT;
+
+            } else {
+                status.append_log("device:" + devname+ " already deinitialized");
             }
         } else if (cmd == "sched" && !parm.empty()) {
             status.append_log("sched device:" + devname);
             err = controller->setScheduleDelay(atol((char*) parm.c_str()));
+            if(err!=0){
+                status.append_error("error set scheduling:"+devname);
+                removeDevice(idev->devname);
+                response << status.getData()->getJSONString();
+                CALC_EXEC_TIME;
+                return;
+            }
         } else if (cmd == "channel" && !parm.empty()) {
-            status.append_log("return channel :" + parm);
+           // status.append_log("return channel :" + parm);
             CDataWrapper*data=controller->fetchCurrentDatatasetFromDomain((chaos::ui::DatasetDomain)atoi((char*) parm.c_str()));
             if(data){
                  data->appendAllElement(*status.getData());
                  response << data->getJSONString();
+                 CALC_EXEC_TIME;
                  return;
             }
             
         } else if (cmd == "attr") {
             status.append_log("send attr:\"" + cmd + "\" args: \"" + parm + "\" to device:" + devname);
             err = sendAttr(controller, cmd, (char*) (parm.empty() ? "" : parm.c_str()));
+            if(err!=0){
+                status.append_error("error setting attrbute:"+devname+"/"+parm);
+                removeDevice(idev->devname);
+                response << status.getData()->getJSONString();
+                CALC_EXEC_TIME;
+                return;
+            }
         } else if (cmd != "status") {
             status.append_log("send cmd:\"" + cmd + "\" args: \"" + parm + "\" to device:" + devname);
             err = sendCmd(controller, cmd, (char*) (parm.empty() ? "" : parm.c_str()), request, status);
-        } else {
-            if (idev->wostate == 0) {
-                switch (deviceState) {
-                    case CUStateKey::DEINIT:
-                    {
-                        LDBG_ << "Force " << devname << " in init from deinit";
-                        err = controller->initDevice();
-                        break;
-                    }
-                    case CUStateKey::INIT:
-                    {
-                        LDBG_ << "Force " << devname << " in start from init";
+             if(err!=0){
+                status.append_error("error sending command:"+cmd+" "+parm+ " to:"+devname);
 
-                        err = controller->startDevice();
-                        break;
-                    }
-                }
+                removeDevice(idev->devname);
+                response << status.getData()->getJSONString();
+                CALC_EXEC_TIME;
+                return;
             }
         }
 
@@ -363,29 +488,41 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
             return;
         }
 */
+        if(idev->lastReq>0)
+            idev->tot_req_time+=reqtime-idev->lastReq;
+        
         idev->lastReq= reqtime;
-
+        idev->nReq++;
+        if(idev->nReq%CALC_AVERAGE_REFRESH == 0){
+            idev->refresh = idev->tot_req_time/CALC_AVERAGE_REFRESH;
+            idev->tot_req_time=0;
+        }
+        
         if((data=fetchDataSet(controller))==NULL){
-           status.append_error(" error fetching dataset of:"+devname);
+           status.append_error("error fetching dataset of:"+devname);
            data = status.getData();
            status.append_log("removing from cache");
 
            removeDevice(devname);
 
         } else {
+            idev->timestamp = data->getInt64Value("dpck_ats");
             data->appendAllElement(*status.getData());
         }
     } else {
         status.append_error(" cmd or device not specified");
         response<<status.getData()->getJSONString();
+        CALC_EXEC_TIME;
         return;
     }
 
    // status.insert_json(idev->out);
     //  LDBG_<<"device:"<<devname<<":\""<<jsondest<<"\"";
-
-    response << data->getJSONString();
-
+    const char*json=normalizeToJson(data,idev->binaryToTranslate)->getJSONString().c_str();
+    LDBG_<<"device:"<<devname<<":\""<<json<<"\"";
+    response << json;
+    CALC_EXEC_TIME;
+    
 
 }
 

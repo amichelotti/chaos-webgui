@@ -81,7 +81,9 @@
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <flagsDictionary>
-        <element flagsID="0" commonFlags="-O3 -O2 -O2"/>
+        <element flagsID="0" commonFlags="-fPIC -fPIC -fPIC -fPIC -fPIC -O2 -O2"/>
+        <element flagsID="1"
+                 commonFlags="-fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -fPIC -O3 -O2 -O2"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
@@ -108,13 +110,10 @@
           <incDir>
             <pElem>.</pElem>
             <pElem>../..</pElem>
-            <pElem>../../../chaos-x86_64-dynamic-release/include</pElem>
           </incDir>
           <preprocessorList>
-            <Elem>BOOST_ALL_DYN_LINK</Elem>
             <Elem>CHAOS</Elem>
-            <Elem>DEBUG</Elem>
-            <Elem>NDEBUG</Elem>
+            <Elem>DEBUG=1</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -214,10 +213,20 @@
       </item>
       <item path="src/ChaosController.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
+          <incDir>
+            <pElem>../../../chaos-x86_64-dynamic-debug/include</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/main.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="0">
+        <ccTool flags="1">
+          <incDir>
+            <pElem>../../../chaos-x86_64-dynamic-release/include</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>DEBUG</Elem>
+            <Elem>NDEBUG</Elem>
+          </preprocessorList>
         </ccTool>
       </item>
     </conf>
