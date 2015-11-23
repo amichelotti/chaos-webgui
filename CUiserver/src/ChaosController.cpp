@@ -93,7 +93,7 @@ void ChaosController::removeDevice(std::string name) {
     std::map<std::string, InfoDevice*>::iterator idevs;
     idevs = devs.find(name);
     if (idevs != devs.end()) {
-        LDBG_ << "removing device :"<<idevs->second->devname;
+        CUIServerLDBG_ << "removing device :"<<idevs->second->devname;
         if(idevs->second->dev)
             delete(idevs->second->dev);
         idevs->second->dev =0;
@@ -181,7 +181,7 @@ uint64_t ChaosController::updateState(InfoDevice*idev,dev_info_status&status,CUS
     if(naccess%500 ==0){\
         refresh=tot_us/500;\
         tot_us=0;\
-        LDBG_ << " Profiling: N accesses:"<<naccess<<" response time:"<<refresh<<" us";}
+        CUIServerLDBG_ << " Profiling: N accesses:"<<naccess<<" response time:"<<refresh<<" us";}
 
 CDataWrapper* ChaosController::normalizeToJson(CDataWrapper*src,std::map<std::string,int>& list){
     if(list.empty())
@@ -193,7 +193,7 @@ CDataWrapper* ChaosController::normalizeToJson(CDataWrapper*src,std::map<std::st
     for(std::vector<std::string>::iterator k=contained_key.begin();k!=contained_key.end();k++){
         if((rkey=list.find(*k))!=list.end()){
             if(rkey->second == DataType::SUB_TYPE_DOUBLE){
-               LDBG_ << " replace data key:"<<rkey->first;
+               CUIServerLDBG_ << " replace data key:"<<rkey->first;
                 int cnt;
                 double *data=(double*)src->getRawValuePtr(rkey->first);
                 int size=src->getValueSize(rkey->first);
@@ -308,7 +308,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
             if((reqtime - idev->last_access) > (idev->defaultTimeout*1000)){
                 uint64_t heart;
                 if((heart=updateState(idev,status,deviceState))==0){
-                    LERR_<<" ["<<idev->devname<<"] HB expired, removing device";
+                    CUIServerLERR_<<" ["<<idev->devname<<"] HB expired, removing device";
                     removeDevice(idev->devname);
                     response << status.getData()->getJSONString();
                     CALC_EXEC_TIME;
@@ -316,11 +316,11 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
                 }         
                 idev->timeouts = 0;
                 idev->lastState = deviceState;
-                LDBG_<<" ["<<idev->devname<<"] [nacc:"<<idev->nReq<<"] state:"<<deviceState<<" desired state:"<<idev->nextState<<"HB:"<<heart<<" LA:"<<(reqtime - idev->last_access) <<" us ago"<<" refresh rate:"<<idev->refresh<< " us, default timeout:"<<idev->defaultTimeout;
+                CUIServerLDBG_<<" ["<<idev->devname<<"] [nacc:"<<idev->nReq<<"] state:"<<deviceState<<" desired state:"<<idev->nextState<<"HB:"<<heart<<" LA:"<<(reqtime - idev->last_access) <<" us ago"<<" refresh rate:"<<idev->refresh<< " us, default timeout:"<<idev->defaultTimeout;
                 idev->last_access = reqtime;
                  
                 if ((idev->nextState > 0)&&(idev->lastState != idev->nextState)) {
-                    LDBG_ << "%% warning current state:" << idev->lastState << " different from destination state:" << idev->nextState;
+                    CUIServerLDBG_ << "%% warning current state:" << idev->lastState << " different from destination state:" << idev->nextState;
                 }
             }
         } else if (cmd == "status") {
@@ -500,6 +500,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
         
         if((data=fetchDataSet(controller))==NULL){
            status.append_error("error fetching dataset of:"+devname);
+           
            data = status.getData();
            status.append_log("removing from cache");
 
@@ -507,6 +508,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
 
         } else {
             idev->timestamp = data->getInt64Value("dpck_ats");
+            status.status((CUStateKey::ControlUnitState)idev->lastState);
             data->appendAllElement(*status.getData());
         }
     } else {
@@ -518,9 +520,10 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
 
    // status.insert_json(idev->out);
     //  LDBG_<<"device:"<<devname<<":\""<<jsondest<<"\"";
-    const char*json=normalizeToJson(data,idev->binaryToTranslate)->getJSONString().c_str();
-    LDBG_<<"device:"<<devname<<":\""<<json<<"\"";
-    response << json;
+    const std::string& oout=normalizeToJson(data,idev->binaryToTranslate)->getJSONString();
+    //const char*json=normalizeToJson(data,idev->binaryToTranslate)->getJSONString().c_str();
+    CUIServerLDBG_<<"["<<devname<<"]: \""<<oout<<"\"";
+    response << oout;
     CALC_EXEC_TIME;
     
 

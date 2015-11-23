@@ -19,6 +19,8 @@
           <df name="src">
           </df>
         </df>
+        <df name="Progress">
+        </df>
       </df>
       <df name="mongoose-cpp">
         <df name="CMakeFiles">
@@ -96,6 +98,8 @@
         <gdb_interceptlist>
           <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
         </gdb_interceptlist>
+        <gdb_signals>
+        </gdb_signals>
         <gdb_options>
           <DebugOptions>
           </DebugOptions>
@@ -109,8 +113,11 @@
         <runcommandpicklist>
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" --metadata-server mdsserver:5000 --log-on-console --log-level debug</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" --metadata-server :5000 --log-on-console --log-level debug</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" --metadata-server 192.168.150.31:5000 --log-on-console --log-level debug</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" --metadata-server 192.168.150.31:5000 --log-on-console --server_port 8081 --log-level debug</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}" --metadata-server mdsserver:5000 --log-on-console --log-level debug</runcommand>
+        <runcommand>"${OUTPUT_PATH}" --metadata-server 192.168.150.31:5000 --log-on-console --server_port 8081 --log-level debug</runcommand>
         <rundir>.</rundir>
         <buildfirst>false</buildfirst>
         <console-type>2</console-type>
@@ -118,7 +125,7 @@
         <remove-instrumentation>0</remove-instrumentation>
         <environment>
           <variable name="LD_LIBRARY_PATH"
-                    value="/home/michelo/chaos_bundle/usr/local/lib"/>
+                    value="/home/michelo/chaos_bundle_development/chaos-x86_64-dynamic-release/lib"/>
         </environment>
       </runprofile>
     </conf>
