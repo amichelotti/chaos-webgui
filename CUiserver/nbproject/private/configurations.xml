@@ -13,14 +13,6 @@
             <in>CMakeCXXCompilerId.cpp</in>
           </df>
         </df>
-        <df name="CMakeTmp">
-        </df>
-        <df name="CUIserver.dir">
-          <df name="src">
-          </df>
-        </df>
-        <df name="Progress">
-        </df>
       </df>
       <df name="mongoose-cpp">
         <df name="CMakeFiles">
@@ -98,8 +90,6 @@
         <gdb_interceptlist>
           <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
         </gdb_interceptlist>
-        <gdb_signals>
-        </gdb_signals>
         <gdb_options>
           <DebugOptions>
           </DebugOptions>
