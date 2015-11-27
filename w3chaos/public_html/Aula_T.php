@@ -25,7 +25,7 @@
 
 <script>
     
-        CULoad(null,2500);
+        CULoad(null,3500);
 
 </script>
     
@@ -137,7 +137,7 @@
 
 		<fieldset class="plot" id="plot_t">
 		    <legend>Temperature_AVG</legend>		    
-		    <div id="flot-placeholder1" style="width:500px;height:200px"></div>
+		    <div id="flot-placeholder1" style="width:500px;height:200px;"></div>
 		</fieldset>
 		
 		<fieldset class="plot" id="plot_s">

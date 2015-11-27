@@ -6,7 +6,8 @@ var onswitched=0;
 var maxarray=600;
 var npoints=0;
 var refreshInterval=0;
-var request_prefix = "http://192.168.143.28:8081/CU?dev="; //"/cgi-bin/cu.cgi?"
+var request_prefix = "http://localhost:8081/CU?dev="; 
+
 var internal_param=new Array();
 var excludeInterface=["oldtimestamp","dostate","firsttimestamp","ndk_uid","dev_state","dpck_ds_type","dpck_ats","updating"];
 ///////

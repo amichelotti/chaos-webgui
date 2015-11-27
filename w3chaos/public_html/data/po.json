@@ -1,0 +1,20 @@
+ [ 
+            {
+                "cudk_ds_attr_name" : "current_sp",
+                "cudk_default_value" : "0",
+                "cudk_ds_max_range" : "100",
+                "cudk_ds_min_range" : "0"
+            }, 
+            {
+                "cudk_ds_attr_name" : "slope_down",
+                "cudk_default_value" : "1",
+                "cudk_ds_max_range" : "10",
+                "cudk_ds_min_range" : "1"
+            }, 
+            {
+                "cudk_ds_attr_name" : "slope_up",
+                "cudk_default_value" : "1",
+                "cudk_ds_max_range" : "10",
+                "cudk_ds_min_range" : "1"
+            }
+        ]

@@ -1,0 +1,9 @@
+{"sensors":[
+	{"label":"Sensor AX001", "value":"30.0"},
+	{"label":"Sensor AX002", "value":"30.4"},
+	{"label":"Sensor BX001", "value":"32.1"},
+	{"label":"Sensor BX002", "value":"32.3"},
+	{"label":"Sensor CX003", "value":"24.1"},
+	{"label":"Sensor DX001", "value":"34.7"},
+	{"label":"Sensor DX002", "value":"34.9"}
+]}

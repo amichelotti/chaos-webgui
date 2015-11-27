@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>BTF real_powersupply</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <link rel="stylesheet" type="text/css" href="css/BTF_pw.css" />
+    <script type="text/Javascript" src="webChaos/jquery.js"></script>
+    <script type="text/Javascript" src="webChaos/flot/jquery.flot.js"></script>
+    <script type="text/javascript" src="webChaos/chaos.js"></script>
+    <script type="text/javascript" src="webChaos/powersupply.js"></script>
+    
+   
+	<!--script type="text/javascript" src="webChaos/powersupply_btf.js"></script-->  
+
+</head>
+
+<script>
+    CULoad("PowerSupply",1500);
+</script>
+
+
+ 
+
+
+<!--script type="text/javascript">
+    function minmax(value, min, max) {
+	if(parseInt(value) < 0 || isNaN(value)) 
+	    return 0; 
+	else if(parseInt(value) > 100)
+	    return window.alert("sbagliato")
+	    //return 100; 
+	else return value;
+}
+</script-->
+
+    
+    <body>
+
+
+    <div class="container">
+        
+        <header class="title">
+            <h1>!CHAOS on BTF<span>Powersupply Control</span></h1>	
+        </header>
+        
+        <div class="main">
+            
+  
+            <fieldset class="dipoli">
+                <legend>Dipole</legend>
+                
+                <table class="table_parameter">
+                    <tr class="param">
+                        <td class="name"><b>Name</b></td>
+                        <td class= "state"><b>State (on-off)</b></td>
+                        <td class="polarity" colspan="3"><b>Polarity (+/-)</b></td>
+                        <td class="current" colspan="2"><b>Current</b></td>
+                        <td class="current_sp"><b>Current SP</b></td>
+                        <td class="current_r_o"><b>Current Readout</b></td>
+                        <td class="timestamp"><b>Timestamp</b></td>
+                        <td class="alarm" colspan="2"><b>Alarms</b></td>
+			<td class="plot"><b>Plot</b></td>
+		    </tr>
+		                
+                    <tr class="pw">
+			<td class="name_td"><b id="name_0" class="PowersupplyIndicator">noname</b></td>
+			<td class="state_td"><input type="button" name="on" id="onstby_0" value="On" onclick="cus[0].powerSupplyToggle(this.value);" /></td>
+			<td class="polarity_p"><input type="button" name="pos" id="pos_0" value="Pos" onclick="cus[0].setPolarity(1);" /></td>
+			<td class="polarity_l"><input type="button" name="neg" id="neg_0" value="Neg" onclick="cus[0].setPolarity(-1);" /></td>
+			<td class="open_td"><input type="button" name="open" id="open_0" value="open" onclick="cus[0].setPolarity(0);" /></td>
+			<!--td><input type="text" id="inputcurrent_0" name="currentSet" class="controlInput" value="0" /></td-->
+			<td class="current_td"><input type="text" id="inputcurrent_0" name="currentSet" class="controlInput" value="0"/>
+			<td class="current_set_td"><input type="button" id="setcurrent_0" value="set" onclick="cus[0].setCurrent(inputcurrent_0.value);" />
+			<td class="current_sp_td"><b id="current_sp_0"  digits="3" title="current SP" class="PowersupplyIndicator">0</b></td>
+			<td class="current_r_o_td"><b id="current_0" digits="3" title="current read out" class="PowersupplyIndicator">0</b></td>
+			<td class="timestamp_td"><b id="seconds_0" title="seconds since the UI started" class="PowersupplyIndicator">0</b></td>
+			<td class="alarm_m_td"><input type="button" name="rstalarms" id="rstalarms_0" value="rstalarms" title="Reset alarms" onclick="cus[0].powerSupplyClrAlarms();" /></td>
+			<td class="alarm_v_td"><b id="alarms_0" title="current alarms mask" class="PowersupplyIndicator">0</b></td>
+			<td class="plot_td"><div id="powersupply-graph_0" title="current vs seconds from the start of the UI" maxpoints="300" class="powersupply-graph-class"></div></td>
+			
+            </tr>
+
+		    
+		    <tr class="pw">
+			<td class="name_td"><b id="name_1" class="PowersupplyIndicator">noname</b></td>
+			<td class="state_td"><input type="button" name="on" id="onstby_1" value="On" onclick="cus[1].powerSupplyToggle(this.value);" /></td>
+			<td class="polarity_p"><input type="button" name="pos" id="pos_1" value="Pos" onclick="cus[1].setPolarity(1);" /></td>
+			<td class="polarity_l"><input type="button" name="neg" id="neg_1" value="Neg" onclick="cus[1].setPolarity(-1);" /></td>
+			<td class="open_td"><input type="button" name="open" id="open_1" value="open" onclick="cus[1].setPolarity(0);" /></td>
+			<!--td><input type="text" id="inputcurrent_0" name="currentSet" class="controlInput" value="0" /></td-->
+			<td class="current_td"><input type="text" id="inputcurrent_1" name="currentSet" class="controlInput" value="0"/>
+			<td class="current_set_td"><input type="button" id="setcurrent_1" value="set" onclick="cus[1].setCurrent(inputcurrent_1.value);" />
+			<td class="current_sp_td"><b id="current_sp_1"  digits="3" title="current SP" class="PowersupplyIndicator">0</b></td>
+			<td class="current_r_o_td"><b id="current_1" digits="3" title="current read out" class="PowersupplyIndicator">0</b></td>
+			<td class="timestamp_td"><b id="seconds_1" title="seconds since the UI started" class="PowersupplyIndicator">0</b></td>
+			<td class="alarm_m_td"><input type="button" name="rstalarms" id="rstalarms_1" value="rstalarms" title="Reset alarms" onclick="cus[1].powerSupplyClrAlarms();" /></td>
+			<td class="alarm_v_td"><b id="alarms_1" title="current alarms mask" class="PowersupplyIndicator">0</b></td>
+			<td class="plot_td"><div id="powersupply-graph_1" title="current vs seconds from the start of the UI" maxpoints="300" class="powersupply-graph-class"></div></td>
+			<!--td><table id="error_list_0"></table></td-->
+			       <!--td><b id="data_1" title="Last Data Update" class="PowersupplyIndicator">0</b></td>
+					<td>
+                    <table id="error_list_1">
+                    </table>
+                </td>
+            </tr>
+            <tr id="error_decoding_1"-->
+		    </tr>
+ 
+                </table>
+		
+		 <!--td><table id="error_list_0"></table></td-->
+            <!--/tr>
+            <tr id="error_decoding_0">
+            </tr>
+                </table-->
+         
+                
+            </fieldset>
+	    
+	    
+	    <fieldset class="quadrupoli">
+                <legend>Quadrupole</legend>
+                
+                <table class="table_parameter">
+                    <tr class="param">
+                        <td class="name"><b>Name</b></td>
+                        <td class= "state"><b>State (on-off)</b></td>
+                        <td class="polarity" colspan="3"><b>Polarity (+/-)</b></td>
+                        <td class="current" colspan="2"><b>Current</b></td>
+                        <td class="current_sp"><b>Current SP</b></td>
+                        <td class="current_r_o"><b>Current Readout</b></td>
+                        <td class="timestamp"><b>Timestamp</b></td>
+                        <td class="alarm" colspan="2"><b>Alarms</b></td>
+			<td class="plot"><b>Plot</b></td>
+		    </tr>
+				    
+		    <tr class="pw">
+			<td class="name_td"><b id="name_2" class="PowersupplyIndicator">noname</b></td>
+			<td class="state_td"><input type="button" name="on" id="onstby_2" value="On" onclick="cus[2].powerSupplyToggle(this.value);" /></td>
+			<td class="polarity_p"><input type="button" name="pos" id="pos_2" value="Pos" onclick="cus[2].setPolarity(1);" /></td>
+			<td class="polarity_l"><input type="button" name="neg" id="neg_2" value="Neg" onclick="cus[2].setPolarity(-1);" /></td>
+			<td class="open_td"><input type="button" name="open" id="open_2" value="open" onclick="cus[2].setPolarity(0);" /></td>
+			<!--td><input type="text" id="inputcurrent_0" name="currentSet" class="controlInput" value="0" /></td-->
+			<td class="current_td"><input type="text" id="inputcurrent_2" name="currentSet" class="controlInput" value="0"/>
+			<td class="current_set_td"><input type="button" id="setcurrent_2" value="set" onclick="cus[2].setCurrent(inputcurrent_2.value);" />
+			<td class="current_sp_td"><b id="current_sp_2"  digits="3" title="current SP" class="PowersupplyIndicator">0</b></td>
+			<td class="current_r_o_td"><b id="current_2" digits="3" title="current read out" class="PowersupplyIndicator">0</b></td>
+			<td class="timestamp_td"><b id="seconds_2" title="seconds since the UI started" class="PowersupplyIndicator">0</b></td>
+			<td class="alarm_m_td"><input type="button" name="rstalarms" id="rstalarms_2" value="rstalarms" title="Reset alarms" onclick="cus[2].powerSupplyClrAlarms();" /></td>
+			<td class="alarm_v_td"><b id="alarms_2" title="current alarms mask" class="PowersupplyIndicator">0</b></td>
+			<td class="plot_td"><div id="powersupply-graph_2" title="current vs seconds from the start of the UI" maxpoints="300" class="powersupply-graph-class"></div></td>
+			<!--td><table id="error_list_0"></table></td-->
+		    </tr>
+		    
+		    <tr class="pw">
+			<td class="name_td"><b id="name_3" class="PowersupplyIndicator">noname</b></td>
+			<td class="state_td"><input type="button" name="on" id="onstby_3" value="On" onclick="cus[3].powerSupplyToggle(this.value);" /></td>
+			<td class="polarity_p"><input type="button" name="pos" id="pos_3" value="Pos" onclick="cus[3].setPolarity(1);" /></td>
+			<td class="polarity_l"><input type="button" name="neg" id="neg_3" value="Neg" onclick="cus[3].setPolarity(-1);" /></td>
+			<td class="open_td"><input type="button" name="open" id="open_3" value="open" onclick="cus[3].setPolarity(0);" /></td>
+			<!--td><input type="text" id="inputcurrent_0" name="currentSet" class="controlInput" value="0" /></td-->
+			<td class="current_td"><input type="text" id="inputcurrent_3" name="currentSet" class="controlInput" value="0"/>
+			<td class="current_set_td"><input type="button" id="setcurrent_3" value="set" onclick="cus[3].setCurrent(inputcurrent_3.value);" />
+			<td class="current_sp_td"><b id="current_sp_3"  digits="3" title="current SP" class="PowersupplyIndicator">0</b></td>
+			<td class="current_r_o_td"><b id="current_3" digits="3" title="current read out" class="PowersupplyIndicator">0</b></td>
+			<td class="timestamp_td"><b id="seconds_3" title="seconds since the UI started" class="PowersupplyIndicator">0</b></td>
+			<td class="alarm_m_td"><input type="button" name="rstalarms" id="rstalarms_3" value="rstalarms" title="Reset alarms" onclick="cus[3].powerSupplyClrAlarms();" /></td>
+			<td class="alarm_v_td"><b id="alarms_3" title="current alarms mask" class="PowersupplyIndicator">0</b></td>
+			<td class="plot_td"><div id="powersupply-graph_3" title="current vs seconds from the start of the UI" maxpoints="300" class="powersupply-graph-class"></div></td>
+		    	<!--td><table id="error_list_0"></table></td-->
+		    </tr>
+		    
+		    <tr class="pw">
+			<td class="name_td"><b id="name_4" class="PowersupplyIndicator">noname</b></td>
+			<td class="state_td"><input type="button" name="on" id="onstby_4" value="On" onclick="cus[4].powerSupplyToggle(this.value);" /></td>
+			<td class="polarity_p"><input type="button" name="pos" id="pos_4" value="Pos" onclick="cus[4].setPolarity(1);" /></td>
+			<td class="polarity_l"><input type="button" name="neg" id="neg_4" value="Neg" onclick="cus[4].setPolarity(-1);" /></td>
+			<td class="open_td"><input type="button" name="open" id="open_4" value="open" onclick="cus[4].setPolarity(0);" /></td>
+			<!--td><input type="text" id="inputcurrent_0" name="currentSet" class="controlInput" value="0" /></td-->
+			<td class="current_td"><input type="text" id="inputcurrent_4" name="currentSet" class="controlInput" value="0"/>
+			<td class="current_set_td"><input type="button" id="setcurrent_4" value="set" onclick="cus[4].setCurrent(inputcurrent_4.value);" />
+			<td class="current_sp_td"><b id="current_sp_4"  digits="3" title="current SP" class="PowersupplyIndicator">0</b></td>
+			<td class="current_r_o_td"><b id="current_4" digits="3" title="current read out" class="PowersupplyIndicator">0</b></td>
+			<td class="timestamp_td"><b id="seconds_4" title="seconds since the UI started" class="PowersupplyIndicator">0</b></td>
+			<td class="alarm_m_td"><input type="button" name="rstalarms" id="rstalarms_4" value="rstalarms" title="Reset alarms" onclick="cus[4].powerSupplyClrAlarms();" /></td>
+			<td class="alarm_v_td"><b id="alarms_4" title="current alarms mask" class="PowersupplyIndicator">0</b></td>
+			<td class="plot_td"><div id="powersupply-graph_4" title="current vs seconds from the start of the UI" maxpoints="300" class="powersupply-graph-class"></div></td>
+		    	<!--td><table id="error_list_0"></table></td-->
+		    </tr>
+		    
+		    <tr class="pw">
+			<td class="name_td"><b id="name_5" class="PowersupplyIndicator">noname</b></td>
+			<td class="state_td"><input type="button" name="on" id="onstby_5" value="On" onclick="cus[5].powerSupplyToggle(this.value);" /></td>
+			<td class="polarity_p"><input type="button" name="pos" id="pos_5" value="Pos" onclick="cus[5].setPolarity(1);" /></td>
+			<td class="polarity_l"><input type="button" name="neg" id="neg_5" value="Neg" onclick="cus[5].setPolarity(-1);" /></td>
+			<td class="open_td"><input type="button" name="open" id="open_5" value="open" onclick="cus[5].setPolarity(0);" /></td>
+			<!--td><input type="text" id="inputcurrent_0" name="currentSet" class="controlInput" value="0" /></td-->
+			<td class="current_td"><input type="text" id="inputcurrent_5" name="currentSet" class="controlInput" value="0"/>
+			<td class="current_set_td"><input type="button" id="setcurrent_5" value="set" onclick="cus[5].setCurrent(inputcurrent_5.value);" />
+			<td class="current_sp_td"><b id="current_sp_5"  digits="3" title="current SP" class="PowersupplyIndicator">0</b></td>
+			<td class="current_r_o_td"><b id="current_5" digits="3" title="current read out" class="PowersupplyIndicator">0</b></td>
+			<td class="timestamp_td"><b id="seconds_5" title="seconds since the UI started" class="PowersupplyIndicator">0</b></td>
+			<td class="alarm_m_td"><input type="button" name="rstalarms" id="rstalarms_5" value="rstalarms" title="Reset alarms" onclick="cus[5].powerSupplyClrAlarms();" /></td>
+			<td class="alarm_v_td"><b id="alarms_5" title="current alarms mask" class="PowersupplyIndicator">0</b></td>
+			<td class="plot_td"><div id="powersupply-graph_5" title="current vs seconds from the start of the UI" maxpoints="300" class="powersupply-graph-class"></div></td>
+		    	<!--td><table id="error_list_0"></table></td-->
+		    </tr>
+		    
+		    
+		    <tr class="pw">
+			<td class="name_td"><b id="name_6" class="PowersupplyIndicator">noname</b></td>
+			<td class="state_td"><input type="button" name="on" id="onstby_6" value="On" onclick="cus[6].powerSupplyToggle(this.value);" /></td>
+			<td class="polarity_p"><input type="button" name="pos" id="pos_6" value="Pos" onclick="cus[6].setPolarity(1);" /></td>
+			<td class="polarity_l"><input type="button" name="neg" id="neg_6" value="Neg" onclick="cus[6].setPolarity(-1);" /></td>
+			<td class="open_td"><input type="button" name="open" id="open_6" value="open" onclick="cus[6].setPolarity(0);" /></td>
+			<!--td><input type="text" id="inputcurrent_0" name="currentSet" class="controlInput" value="0" /></td-->
+			<td class="current_td"><input type="text" id="inputcurrent_6" name="currentSet" class="controlInput" value="0"/>
+			<td class="current_set_td"><input type="button" id="setcurrent_6" value="set" onclick="cus[6].setCurrent(inputcurrent_6.value);" />
+			<td class="current_sp_td"><b id="current_sp_6"  digits="3" title="current SP" class="PowersupplyIndicator">0</b></td>
+			<td class="current_r_o_td"><b id="current_6" digits="3" title="current read out" class="PowersupplyIndicator">0</b></td>
+			<td class="timestamp_td"><b id="seconds_6" title="seconds since the UI started" class="PowersupplyIndicator">0</b></td>
+			<td class="alarm_m_td"><input type="button" name="rstalarms" id="rstalarms_6" value="rstalarms" title="Reset alarms" onclick="cus[6].powerSupplyClrAlarms();" /></td>
+			<td class="alarm_v_td"><b id="alarms_6" title="current alarms mask" class="PowersupplyIndicator">0</b></td>
+			<td class="plot_td"><div id="powersupply-graph_6" title="current vs seconds from the start of the UI" maxpoints="300" class="powersupply-graph-class"></div></td>
+		   	<!--td><table id="error_list_0"></table></td-->
+		    </tr>
+		    
+		    <tr class="pw">
+			<td class="name_td"><b id="name_7" class="PowersupplyIndicator">noname</b></td>
+			<td class="state_td"><input type="button" name="on" id="onstby_7" value="On" onclick="cus[7].powerSupplyToggle(this.value);" /></td>
+			<td class="polarity_p"><input type="button" name="pos" id="pos_7" value="Pos" onclick="cus[7].setPolarity(1);" /></td>
+			<td class="polarity_l"><input type="button" name="neg" id="neg_7" value="Neg" onclick="cus[7].setPolarity(-1);" /></td>
+			<td class="open_td"><input type="button" name="open" id="open_7" value="open" onclick="cus[7].setPolarity(0);" /></td>
+			<!--td><input type="text" id="inputcurrent_0" name="currentSet" class="controlInput" value="0" /></td-->
+			<td class="current_td"><input type="text" id="inputcurrent_7" name="currentSet" class="controlInput" value="0"/>
+			<td class="current_set_td"><input type="button" id="setcurrent_7" value="set" onclick="cus[7].setCurrent(inputcurrent_7.value);" />
+			<td class="current_sp_td"><b id="current_sp_7"  digits="3" title="current SP" class="PowersupplyIndicator">0</b></td>
+			<td class="current_r_o_td"><b id="current_7" digits="3" title="current read out" class="PowersupplyIndicator">0</b></td>
+			<td class="timestamp_td"><b id="seconds_7" title="seconds since the UI started" class="PowersupplyIndicator">0</b></td>
+			<td class="alarm_m_td"><input type="button" name="rstalarms" id="rstalarms_7" value="rstalarms" title="Reset alarms" onclick="cus[7].powerSupplyClrAlarms();" /></td>
+			<td class="alarm_v_td"><b id="alarms_7" title="current alarms mask" class="PowersupplyIndicator">0</b></td>
+			<td class="plot_td"><div id="powersupply-graph_7" title="current vs seconds from the start of the UI" maxpoints="300" class="powersupply-graph-class"></div></td>
+		    	<!--td><table id="error_list_0"></table></td-->
+		    </tr>
+ 
+ 
+ 
+
+                    </table>
+            
+                
+            </fieldset>
+	    
+	    
+	   
+            
+                
+            </div>
+            
+        </div>
+        
+   
+    
+        
+    </div>
+
+</body>
+</html>

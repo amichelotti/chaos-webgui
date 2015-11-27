@@ -1,0 +1,162 @@
+<html>
+<head>
+    <title>Libera control</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <link rel="stylesheet" type="text/css" href="css/libera02.css" />
+    <script type="text/Javascript" src="webChaos/jquery.js"></script>
+    <script type="text/Javascript" src="webChaos/flot/jquery.flot.js"></script>
+    <script type="text/javascript" src="webChaos/chaos.js"></script>
+    <script type="text/javascript" src="webChaos/libera_prova.js"></script>
+    <script type="text/javascript" src="webChaos/powersupply.js"></script>
+    <script type="text/javascript" src="webChaos/libera_state.js"></script>
+
+    
+    <script type="text/javascript" src="js_chart/js/lib/jquery-1.8.3.min.js"></script>
+    <script type="text/javascript" src="js_chart/js/flot/jquery.flot.min.js"></script>
+    <script type="text/javascript" src="js_chart/js/flot/jquery.flot.time.js"></script>
+    <script type="text/javascript" src="js_chart/js/flot/jshashtable-2.1.js"></script>
+    <script type="text/javascript" src="js_chart/js/flot/jquery.numberformatter-1.2.3.min.js"></script>
+
+    
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+
+
+    
+</head>
+
+<script>
+    CULoad("liberaDAQ",3500);	//"PowerSupply"
+</script>
+    
+    <body>
+
+
+    <div class="container">
+        
+    
+        
+        
+	<div class="top">timestamp<strong id="timestamp_0" digits="3" class="Indicator" style="color:green; font-weight: bold;
+			padding-left: 15px; padding-right: 15px;">0</strong>
+        </div>
+        
+        <header class="title">
+            <h1>!CHAOS on Libera<span>Monitoring and Control</span></h1>	
+        </header>
+	
+	
+	<div class="line">
+	    <table id="caratteristiche">
+                <tr class="probe">
+		    <td class="td_nome" class="Indicator" style="color:black; font-weight: bold;">Libera nome</td>
+		    <td class="value_probe"><span style="padding-left: 10px;">MT</span><b id="MT_2" digits="3" class="Indicator" style="color:green; font-weight: bold; padding-left: 40px;">0</b></td>
+		    <td class="value_probe"><span style="padding-left: 10px;">ST</span><b id="ST_2" digits="3" class="Indicator" style="color:green; font-weight: bold; padding-left: 40px;">0</b></td>
+	       
+	<td class="state" colspan="2"><label id="mode_state">Mode State</label><input class="Indicator" type="button" name="DD" id="DD_0" value="DataOnDemand" onclick="cus[0].powerSupplyDD(this.value);">
+	<input class="Indicator" type="button" name="SA" id="SA_0" value="SlowAcquisition" onclick="cus[0].powerSupplySA(this.value);">
+	<input type="button" name="enable" id="enable_0" value="Enable" onclick="cus[0].Enable(this.value);">
+	<input type="button" name="disable" id="disable_0" value="Disable" onclick="cus[0].Disable(this.value);">
+
+        </td>
+		</tr>
+	    </table>
+        </div>
+	
+    <div id="no_grafici">
+    
+    <table id="DD">
+	<tr class="tr_box">
+	    <td class="td_box">
+		<div class="box bg-1">
+	    <button id="DD_0" name="data" class="button button--antiman" value="DataON" onclick="cus[0].dataondemand(this.value)";/><span>DD</span></button>
+
+		</div>
+	    </td>
+    	    <td class="td_box">
+		<label id= "label_campioni" for="campioni_0">n&#176 campioni</label>
+		<input type="text" id="campioni_0" name="campioni" class="controlInput" value="0"></input>
+	    </td>    
+	    <td class="td_box">
+		<input type="button" id="trigger_0" name="trigger" class="controlInput" value="Trigger" onclick="cus[0].pushTrigger(1)";/>
+	    </td>
+	</tr>
+	
+	<tr class="tr_box">
+	    <td class="td_box">
+		<div class="box bg-1">
+	    <button id="SA_0" name="slow" class="button button--antiman" value="SlowAc" onclick="cus[0].slowacquisition(this.value)";/><span>SA</span></button>
+		</div>
+	    </td>
+    	    <td class="td_box">
+		<label id= "label_loop" for="campioni_0">n&#176 loop</label>
+		<input type="text" id="loop_0" name="loop" class="controlInput" value="0"></input>
+	    </td>    
+	</tr>
+    </table>
+    
+    
+      <table id="valori_DD">
+		<caption>Data on Demand</caption>
+                <tr class="tr_line">
+		    <td class="td_line"><b>VA</b></td>
+		    <td class="td_line"><b>VB</b></td> 
+		    <td class="td_line"><b>VC</b></td>
+		    <td class="td_line"><b>VD</b></td>
+		    <td class="td_line"><b>X</b></td>
+		    <td class="td_line"><b>Y</b></td>
+		</tr>
+		<tr class="tr_line">
+                    <td class="td_line"><b id="VA_0" class="Indicator" style="color:green; font-weight:bold;">0</b></td>
+                    <td class="td_line"><b id="VB_0" class="Indicator" style="color:green; font-weight:bold;">0</b></td>
+                    <td class="td_line"><b id="VC_0" class="Indicator" style="color:green; font-weight:bold;">0</b></td>
+		    <td class="td_line"><b id="VD_0" class="Indicator" style="color:green; font-weight:bold;">0</b></td>
+		    <td class="td_line"><b id="X_0" class="Indicator" style="color: green; font-weight: bold;">0</b></td>
+		    <td class="td_line"><b id="Y_0" class="Indicator" style="color: green; font-weight: bold;">0</b></td>
+
+		</tr>            
+            </table>
+	    
+	    <table id="valori_SA">
+		<caption>Slow Acquisition</caption>
+                <tr>
+		    <td class="td_line"><b>VA</b></td>
+		    <td class="td_line"><b>VB</b></td>
+		    <td class="td_line"><b>VC</b></td>
+		    <td class="td_line"><b>VD</b></td>
+		    <td class="td_line"><b>X</b></td>
+		    <td class="td_line"><b>Y</b></td>
+		</tr>
+		<tr>
+                    <td class="td_line"><b id="VA_0" class="Indicator" style="color:green; font-weight:bold;">0</b></td>
+                    <td class="td_line"><b id="VB_0" class="Indicator" style="color:green; font-weight:bold;">0</b></td>
+                    <td class="td_line"><b id="VC_0" class="Indicator" style="color:green; font-weight:bold;">0</b></td>
+		    <td class="td_line"><b id="VD_0" class="Indicator" style="color:green; font-weight:bold;">0</b></td>
+		    <td class="td_line"><b id="X_0" class="Indicator" style="color: green; font-weight: bold;">0</b></td>
+		    <td class="td_line"><b id="Y_0" class="Indicator" style="color: green; font-weight: bold;">0</b></td>
+
+		</tr>            
+            </table>
+
+       
+    </div>     
+ 
+	  <!--GRAFICI -->
+          <div id="grafici" align="right">
+            <fieldset class="plot" id="plot_t">
+                <legend>Data on Demand</legend>		    
+                    <div id="flot-placeholder1" style="width:800px;height:300px;"></div>
+	    </fieldset>
+            <fieldset class="plot" id="plot_2">
+                <legend>Slow Acquisition</legend>		    
+                    <div align="right" id="flot-placeholder2" style="width:700px;height:200px;"></div>
+	    </fieldset>
+          </div>
+          
+                   
+            <div id="block_status"><p id="STATUS_0" class="Indicator" style="color: green; font-weight: bold;"></p></div>
+        </div>
+
+    </body>
+</html>

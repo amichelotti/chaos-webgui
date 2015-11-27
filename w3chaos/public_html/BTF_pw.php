@@ -1,4 +1,3 @@
-
 <html>
 <head>
     <title>BTF real_powersupply</title>
@@ -13,25 +12,19 @@
     
 </head>
 
-
 <script>
     CULoad("PowerSupply",1500);
 </script>
     
     <body>
-
-
     <div class="container">
-        
+
         <header class="title">
             <h1>!CHAOS on BTF<span>Powersupply Control</span></h1>	
         </header>
         
         <div class="main">
-            
-  
-           
-	    
+
 	    <fieldset class="quadrupoli">
                 <legend>Quadrupole</legend>
                 
@@ -116,15 +109,10 @@
 			echo '</tr>';
 			
 		 ?>
-    
-   
-
                 </table>
                 
             </fieldset> 
-                
             </div>
-            
         </div>  
     </div>
 

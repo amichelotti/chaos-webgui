@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Unit Interface of my device</title>
+    
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        
+    <link rel="stylesheet" href="UI.css" type="text/css" media="screen, projection" />
+
+    
+    <script type="text/javascript" src="webChaos/chaos.js"></script>
+    <script type="text/javascript" src="webChaos/powersupply.js"></script>
+    
+    <script>
+        
+        CULoad(null, 5000);
+        
+    </script>
+
+
+</head>
+
+<body>
+
+  <div class= "container">
+    
+    <header>
+      <h1 id="name_0">NOME DEL DISPOSITIVO</h1>
+            <h2 id="site_device">LOCAZIONE DEL DISPOSITIVO</h2>            
+    </header>
+    
+    <div class="sub-content">
+          
+      <div class="sub-content1">
+        <table id="param_table">
+          
+                <tr>
+                  <td id="device_indicator">Out_1</td>
+                  <td id="device_indicator">Out_2</td>
+                  <td id="device_indicator">Out_3</td>
+                </tr>
+                
+                <tr>
+                  <td id="out1_0" digits="3">Value_1</td>
+                  <td id="out2_0" digits="3">Value_2</td>
+                  <td id="out3_0" digits="3">Value_3</td>
+
+                  
+                </tr>  
+            </table>
+            
+      </div>
+
+      
+        <div class="sub-content2">
+             
+          <table id="command_table">
+                
+            <tr>
+              
+                    <td id="device_indicator">Input Value</td>
+                    <td id="device_indicator">Command</td>
+            </tr>
+            
+                <tr>
+                  <td id="value_changed" digits="3"><input id="paramin" type="text"></td>
+                  <td id="button"><button id="button_set0" onclick="cus[0].sendCommand('fire','{parm1='+paramin.value+'}');"> Send Command</button></td>
+                </tr>
+                
+            <tr>
+              <td id="value_changed" digits="3"><input type="text"></td>
+              <td id="button"><button id="button_set1" onclick="alert(\"ciao1\");"> Send Command</button></td>
+            </tr>
+                
+                
+          </table>
+            
+            
+          
+        </div>
+        
+        </div>
+        
+        <footer>Created by me</footer>
+
+        
+    </div>
+        
+        
+
+
+</body>
+</html>
+
