@@ -193,7 +193,7 @@ CDataWrapper* ChaosController::normalizeToJson(CDataWrapper*src,std::map<std::st
     for(std::vector<std::string>::iterator k=contained_key.begin();k!=contained_key.end();k++){
         if((rkey=list.find(*k))!=list.end()){
             if(rkey->second == DataType::SUB_TYPE_DOUBLE){
-               CUIServerLDBG_ << " replace data key:"<<rkey->first;
+       //        CUIServerLDBG_ << " replace data key:"<<rkey->first;
                 int cnt;
                 double *data=(double*)src->getRawValuePtr(rkey->first);
                 int size=src->getValueSize(rkey->first);
@@ -203,6 +203,24 @@ CDataWrapper* ChaosController::normalizeToJson(CDataWrapper*src,std::map<std::st
                 }
                 data_out.finalizeArrayForKey(rkey->first);
             
+            } else if(rkey->second == DataType::SUB_TYPE_INT32){
+                 int cnt;
+                int32_t *data=(int32_t*)src->getRawValuePtr(rkey->first);
+                int size=src->getValueSize(rkey->first);
+                int elems=size/sizeof(int32_t);
+                for(cnt=0;cnt<elems;cnt++){
+                    data_out.appendInt32ToArray(data[cnt]);
+                }
+                data_out.finalizeArrayForKey(rkey->first);
+            } else if(rkey->second == DataType::SUB_TYPE_INT64){
+                 int cnt;
+                int64_t *data=(int64_t*)src->getRawValuePtr(rkey->first);
+                int size=src->getValueSize(rkey->first);
+                int elems=size/sizeof(int64_t);
+                for(cnt=0;cnt<elems;cnt++){
+                    data_out.appendInt64ToArray(data[cnt]);
+                }
+                data_out.finalizeArrayForKey(rkey->first);
             } else {
                // LDBG_ << "adding not translated key:"<<*k<<" json:"<<src->getCSDataValue(*k)->getJSONString();
                 data_out.appendAllElement(*src->getCSDataValue(*k));
@@ -316,7 +334,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
                 }         
                 idev->timeouts = 0;
                 idev->lastState = deviceState;
-                CUIServerLDBG_<<" ["<<idev->devname<<"] [nacc:"<<idev->nReq<<"] state:"<<deviceState<<" desired state:"<<idev->nextState<<"HB:"<<heart<<" LA:"<<(reqtime - idev->last_access) <<" us ago"<<" refresh rate:"<<idev->refresh<< " us, default timeout:"<<idev->defaultTimeout;
+                //CUIServerLDBG_<<" ["<<idev->devname<<"] [nacc:"<<idev->nReq<<"] state:"<<deviceState<<" desired state:"<<idev->nextState<<" HB:"<<heart<<" LA:"<<(reqtime - idev->last_access) <<" us ago"<<" refresh rate:"<<idev->refresh<< " us, default timeout:"<<idev->defaultTimeout;
                 idev->last_access = reqtime;
                  
                 if ((idev->nextState > 0)&&(idev->lastState != idev->nextState)) {
@@ -522,7 +540,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
     //  LDBG_<<"device:"<<devname<<":\""<<jsondest<<"\"";
     const std::string& oout=normalizeToJson(data,idev->binaryToTranslate)->getJSONString();
     //const char*json=normalizeToJson(data,idev->binaryToTranslate)->getJSONString().c_str();
-    CUIServerLDBG_<<"["<<devname<<"]: \""<<oout<<"\"";
+    //CUIServerLDBG_<<"["<<devname<<"]: \""<<oout<<"\"";
     response << oout;
     CALC_EXEC_TIME;
     

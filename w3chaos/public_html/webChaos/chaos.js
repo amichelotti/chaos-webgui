@@ -184,7 +184,7 @@ function CU(name){
  //       if(request.status==200) {{
 	    var json_answer = request.responseText;
 	    my.updating = 0;
-	    console.log("answer this.dostate:" + my.dostate +" ("+my.name+"):\"" + json_answer+"\"");
+	    console.log("answer this.dostate:" + my.dostate );
 	    if (json_answer == "") {
 		return;
 	    }
