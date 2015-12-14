@@ -8,7 +8,7 @@
 #ifndef DEV_STATUS_H
 #define	DEV_STATUS_H
 
-#include "common/debug/debug.h"
+#include <common/debug/core/debug.h>
 #include <chaos/common/chaos_constants.h>
 #include <chaos/common/data/CDataWrapper.h>
 

@@ -10,7 +10,7 @@
 
 #include "ChaosController.h"
 
-#include "common/debug/debug.h"
+#include <common/debug/core/debug.h>
 #include <sstream>
 using namespace std;
 using namespace Mongoose;
