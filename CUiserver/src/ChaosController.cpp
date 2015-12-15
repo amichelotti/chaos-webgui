@@ -78,8 +78,11 @@ int ChaosController::sendCmd(DeviceController *controller, std::string& cmd_alia
             data_wrapper.get());
 
     std::stringstream ss;
+      chaos::common::batch_command::CommandState command_state;
+    command_state.command_id=cmd_id_tmp;
 
-    ss << "command:\"" << cmd_alias_str << "\" params:\"" << param << "\" prio:" << prio << " schedule:" << schedule_delay << " mode:" << mode << " error:"<<err;
+    err+=controller->getCommandState(command_state);
+    ss << "command:\"" << cmd_alias_str << "\" params:\"" << param << "\" prio:" << prio << " schedule:" << schedule_delay << " mode:" << mode << " error:"<<err<< " fault code:"<<command_state.fault_description.code<<" fault desc:"<<command_state.fault_description.description;
     status.append_log(ss.str().c_str());
 //    LAPP_ << "command after:" << ss.str().c_str();
     return err;
