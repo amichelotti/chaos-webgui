@@ -8,7 +8,7 @@ var onswitched=0;
 var maxarray=600;
 var npoints=0;
 var refreshInterval=0;
-var request_prefix = "http://chaost-webui1.chaos.lnf.infn.it:8081/CU?dev="; //"/cgi-bin/cu.cgi?" //CHIAMATA WAN PROXY
+var request_prefix = "http://__template__webuiulr__:8081/CU?dev="; //"/cgi-bin/cu.cgi?" //CHIAMATA WAN PROXY
 var internal_param=new Array();
 var excludeInterface=["oldtimestamp","error_status","log_status","dostate","firsttimestamp","dpck_device_id","dev_status","dpck_ds_type","updating"];
 

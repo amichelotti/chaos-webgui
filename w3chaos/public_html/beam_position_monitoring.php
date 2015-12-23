@@ -35,7 +35,7 @@
         
         <header><h1>!CHAOS on Accumulator<span>BPMs Monitoring</span></h1></header>
 	
-	<button style="cursor: pointer;" onclick="window.open('http://chaost-webui1.chaos.lnf.infn.it/accumulator_tot.php?dev=ACCUMULATOR/BPM/BPMSYNC')";>Accumulator General View</button>
+	<button style="cursor: pointer;" onclick="window.open('http://__template__webuiulr__/accumulator_tot.php?dev=ACCUMULATOR/BPM/BPMSYNC')";>Accumulator General View</button>
 	
 		
 	    <?php

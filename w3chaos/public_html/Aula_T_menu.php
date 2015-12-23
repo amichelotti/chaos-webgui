@@ -43,9 +43,9 @@
 	<nav id="bt-menu" class="bt-menu">
 	    <a href="#" class="bt-menu-trigger"><span>Menu</span></a>
 		<ul>
-		    <li><a href="http://chaost-webui1.chaos.lnf.infn.it/Ed36.html">Home</a></li>
+		    <li><a href="http://__template__webuiulr__/Ed36.html">Home</a></li>
 		    <li><a href="#" id="ciccio" style="font-size: 9px;">About Aula Touschek</a></li>
-		    <li><a href="http://chaost-webui1.chaos.lnf.infn.it/Ed36.html">UTA</a></li>
+		    <li><a href="http://__template__webuiulr__/Ed36.html">UTA</a></li>
 		    <li><a href="#">History</a></li>
 		    <li><a href="#">Reporting</a></li>
 

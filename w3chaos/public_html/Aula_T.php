@@ -35,7 +35,7 @@
         
         <header class="title">
             <h1>!CHAOS in Aula Touschek<span>Monitoring environmental parameters</span>
-	    <!--img id="icon" onclick=window.open="('http://chaost-webui1.chaos.lnf.infn.it/Ed36.html','_self')"; src="css/icon-home.png" style="width:8%;"></h1-->
+	    <!--img id="icon" onclick=window.open="('http://__template__webuiulr__/Ed36.html','_self')"; src="css/icon-home.png" style="width:8%;"></h1-->
         </header>
         
 	<div class="main">
