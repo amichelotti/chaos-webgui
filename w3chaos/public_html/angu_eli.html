@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <script src="scripts/angular.min.js"></script>
+  <script src="scripts/jsonReader_eli.js"></script>
+      <!--script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script-->
+
+  <title>Temperature Monitor</title>
+</head>
+<body ng-app="jsonReader">
+  <div ng-controller="PowerSupply">
+      <ul>
+      <li ng-repeat="(key,value) in names">
+        Propriet: {{key}} <br/>
+        Valore: {{value}}
+      </li>
+      </ul>
+  </div>
+</body>
+</html>

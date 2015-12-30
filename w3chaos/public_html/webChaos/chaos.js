@@ -6,10 +6,14 @@ var onswitched=0;
 var maxarray=600;
 var npoints=0;
 var refreshInterval=0;
-var request_prefix = "http://localhost:8081/CU?dev="; //"/cgi-bin/cu.cgi?"
-var internal_param=new Array();
-var excludeInterface=["oldtimestamp","dostate","firsttimestamp","ndk_uid","dev_state","dpck_ds_type","ndk_heartbeat","updating"];
+var request_prefix = "http://localhost:8081/CU?dev="; 
 
+var internal_param=new Array();
+var excludeInterface=["oldtimestamp","dostate","firsttimestamp","ndk_uid","dev_state","dpck_ds_type","dpck_ats","updating"];
+///////
+
+var global_update_request=request_prefix;
+/////
 function CU(name){
     this.name =name;
     this.dostate="";
@@ -180,14 +184,14 @@ function CU(name){
  //       if(request.status==200) {{
 	    var json_answer = request.responseText;
 	    my.updating = 0;
-	    console.log("answer this.dostate:" + my.dostate +" ("+my.name+"):\"" + json_answer+"\"");
+	    console.log("answer this.dostate:" + my.dostate );
 	    if (json_answer == "") {
 		return;
 	    }
 	    try {
 	    var json = JSON.parse(json_answer);
 	    } catch (err){
-		console.log("exception parsing " + json_answer);
+		console.log("exception parsing \"" + json_answer + "\"");
                   
                   return;
 	    }
@@ -200,10 +204,10 @@ function CU(name){
 			}
 		    }
                     
-		  //  console.log("processing:"+key+ " val:"+val);
+		  // console.log("processing:"+key+ " val:"+val);
                     if(key == "ndk_uid"){
                         my.name = val;
-                    } else if (key == "ndk_heartbeat") {
+                    } else if (key == "dpck_ats") {
 			
 			if(my.firsttimestamp==0){
                             my.firsttimestamp=val;
@@ -215,7 +219,7 @@ function CU(name){
                             my.refresh = (val - my.oldtimestamp)/1000.0;
                         }
 		    } else {
-			//			console.log("call " + my.toString() + " process data :"+key+ " val:"+val);
+//			console.log("call " + my.toString() + " process data :"+key+ " val:"+val);
                         my[key]=val;
                     }
                     
@@ -277,6 +281,7 @@ function CULoad(classname,inter){
          alert("Please specify a valid powersupply in the URL ?<init|deinit|start|stop|run>=cu1_id&cu2_id");
          return;
      }
+     
      for (var i=0;i<cus_names.length;i++) {
           var cu;
           if(classname!=null){
@@ -293,7 +298,11 @@ function CULoad(classname,inter){
              
         }
          
-
+         if(i==0){
+           global_update_request=global_update_request+cus_names[i];
+         } else {
+           global_update_request=global_update_request+","+cus_names[i];
+        }
           cus.push(cu);
           if(vars[0]==="init"){
               console.log("initializing "+cus_names[i]);
@@ -312,6 +321,7 @@ function CULoad(classname,inter){
               cu.run();
           }
      }
+      global_update_request=global_update_request+"&cmd=status";
      if(classname!=null){
           refreshInterval=setInterval(updateInterface,inter);
      } else {
@@ -320,6 +330,74 @@ function CULoad(classname,inter){
      
     
 }
+
+function globalUpdateRequest(){
+     var request = new XMLHttpRequest();
+     request.timeout =30000;
+     request.open("GET", global_update_request,true);
+     
+        request.send();
+        request.onreadystatechange = function() {
+	if (request.readyState == 4 && request.status == 200) {
+ //       if(request.status==200) {{
+	    var json_answer = request.responseText;
+	    my.updating = 0;
+	    console.log("answer this.dostate:" + my.dostate );
+	    if (json_answer == "") {
+		return;
+	    }
+	    try {
+	    var json = JSON.parse(json_answer);
+	    } catch (err){
+		console.log("exception parsing \"" + json_answer + "\"");
+                  
+                  return;
+	    }
+	    Object.keys(json).forEach(function(key) {
+		try {
+		    var val = json[key];
+		    if (typeof(val) === 'object') {
+			if (val.hasOwnProperty('$numberLong')) {
+			    val = val['$numberLong'];
+			}
+		    }
+                    
+		  // console.log("processing:"+key+ " val:"+val);
+                    if(key == "ndk_uid"){
+                        my.name = val;
+                    } else if (key == "dpck_ats") {
+			
+			if(my.firsttimestamp==0){
+                            my.firsttimestamp=val;
+                        }
+                        my.oldtimestamp=my.timestamp;
+			my.timestamp = val;
+			my.seconds =(val - my.firsttimestamp)/1000.0;
+                        if(my.oldtimestamp!=0){
+                            my.refresh = (val - my.oldtimestamp)/1000.0;
+                        }
+		    } else {
+//			console.log("call " + my.toString() + " process data :"+key+ " val:"+val);
+                        my[key]=val;
+                    }
+                    
+                    
+                } catch(err) {
+		    // console.error(key + " does not exist:" + err);
+		}
+	    });
+           my.processData();
+	}
+    }
+     
+        request.ontimeout = function () { 
+            //alert("Timed out!!!"); 
+            console.log("TIMEOUT!!");
+
+        }
+      
+} 
+
 
 function CUBuildInterface(){
  for(var i=0;i<cus.length;i++){
@@ -374,8 +452,8 @@ function initializeCU(cunames){
     for (var key in obj) {
             if(toExclude(key))
                 continue;
-            
-            if((typeof(obj[key]) !== 'function') && (typeof (obj[key]) !== 'object')){
+
+            if((typeof(obj[key]) !== 'function') && ((typeof (obj[key]) !== 'object') || Array.isArray(obj[key]))){
                 var tr=document.createElement('tr');
                 var td=document.createElement('td');
                 //var b=document.createElement('b');
@@ -390,10 +468,15 @@ function initializeCU(cunames){
                 td=document.createElement('td');
                 td.setAttribute("id",key + "_"+instancen);
                 td.setAttribute("class","Indicator");
-                text=document.createTextNode(obj[key]);
+		if(Array.isArray(obj[key])){
+		    text=document.createTextNode("["+obj[key].length+"]");
+		} else {
+                    text=document.createTextNode(obj[key]);
+		}
                 td.appendChild(text);
                 tr.appendChild(td);
                 tbdy.appendChild(tr);
+	
             }
     }
     tbl.appendChild(tbdy);

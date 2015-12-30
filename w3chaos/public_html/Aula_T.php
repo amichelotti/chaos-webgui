@@ -25,7 +25,7 @@
 
 <script>
     
-        CULoad(null,2500);
+        CULoad(null,3500);
 
 </script>
     
@@ -35,7 +35,7 @@
         
         <header class="title">
             <h1>!CHAOS in Aula Touschek<span>Monitoring environmental parameters</span>
-	    <!--img id="icon" onclick=window.open="('http://chaost-webui1.chaos.lnf.infn.it/Ed36.html','_self')"; src="css/icon-home.png" style="width:8%;"></h1-->
+	    <!--img id="icon" onclick=window.open="('http://__template__webuiulr__/Ed36.html','_self')"; src="css/icon-home.png" style="width:8%;"></h1-->
         </header>
         
 	<div class="main">
@@ -137,7 +137,7 @@
 
 		<fieldset class="plot" id="plot_t">
 		    <legend>Temperature_AVG</legend>		    
-		    <div id="flot-placeholder1" style="width:500px;height:200px"></div>
+		    <div id="flot-placeholder1" style="width:500px;height:200px;"></div>
 		</fieldset>
 		
 		<fieldset class="plot" id="plot_s">

@@ -8,7 +8,7 @@
 #ifndef DEV_STATUS_H
 #define	DEV_STATUS_H
 
-#include "common/debug/debug.h"
+#include <common/debug/core/debug.h>
 #include <chaos/common/chaos_constants.h>
 #include <chaos/common/data/CDataWrapper.h>
 
@@ -16,20 +16,19 @@
 using namespace chaos;
 using namespace chaos::common::data;
 
-#define CUIServerLAPP_		LAPP_ << "[CUIServer] "
-#define CUIServerLDBG_		LDBG_ << "[CUIServer] "
-#define CUIServerLERR_		LERR_ << "[CUIServer] "
+#define CUIServerLAPP_		LAPP_ << "[CUIServer] " 
+#define CUIServerLDBG_		LDBG_ << "[CUIServer "<< __PRETTY_FUNCTION__<<" ]"
+#define CUIServerLERR_		LERR_ << "[CUIServer "<< __PRETTY_FUNCTION__<<" ]"
 
 struct dev_info_status {
     char dev_status[256];
     char error_status[256];
     char log_status[256];
-    std::auto_ptr<chaos::common::data::CDataWrapper> data_wrapper;
+    chaos::common::data::CDataWrapper data_wrapper;
     dev_info_status() {
         *dev_status = 0;
         *error_status = 0;
         *log_status = 0;
-        data_wrapper.reset(new chaos::common::data::CDataWrapper());
     }
 
     void status(CUStateKey::ControlUnitState deviceState) {
@@ -41,6 +40,10 @@ struct dev_info_status {
             strcpy(dev_status, "start");
         } else if (deviceState == CUStateKey::STOP) {
             strcpy(dev_status, "stop");
+        } else if (deviceState == CUStateKey::FATAL_ERROR) {
+            strcpy(dev_status, "fatal error");
+        }  else if (deviceState == CUStateKey::RECOVERABLE_ERROR) {
+            strcpy(dev_status, "recoverable error");
         } else {
             strcpy(dev_status, "uknown");
         }
@@ -58,34 +61,14 @@ struct dev_info_status {
 
     }
 
-    void insert_json(char*json) {
-        if (json == NULL) return;
-
-        if (*json == 0) {
-            sprintf(json, "{\"dev_status\":\"%s\",\"error_status\":\"%s\",\"log_status\":\"%s\"}", dev_status, error_status, log_status);
-            return;
-        }
-
-        char *t = strstr(json,",\"dev_status");
-        if(t==NULL){
-
-            while (*json != 0) {
-
-                if (*json == '}') {
-                    t = json;
-                }
-                json++;
-            }
-        }
-        if (t) sprintf(t, ",\"dev_status\":\"%s\",\"error_status\":\"%s\",\"log_status\":\"%s\"}", dev_status, error_status, log_status);
-    }
-
+    
     CDataWrapper * getData(){
-         data_wrapper->addStringValue("dev_status",std::string(dev_status));
-     data_wrapper->addStringValue("log_status",std::string(log_status));
-     data_wrapper->addStringValue("error_status",std::string(error_status));
+        data_wrapper.reset();
+         data_wrapper.addStringValue("dev_status",std::string(dev_status));
+     data_wrapper.addStringValue("log_status",std::string(log_status));
+     data_wrapper.addStringValue("error_status",std::string(error_status));
 
-        return data_wrapper.get();
+        return &data_wrapper;
     }
 };
 

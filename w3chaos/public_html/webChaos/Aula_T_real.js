@@ -1,7 +1,7 @@
 var dataTe = [];
 var datasetTe;
 var totalPointsTe = 100;
-var updateIntervalTe = 1000;
+var updateIntervalTe = 1500;
 var nowTe = new Date().getTime();
 
 function GetDataTe() {
@@ -121,7 +121,7 @@ $(document).ready(function () {
 var dataCO = [];
 var datasetCO;
 var totalPointsCO = 100;
-var updateIntervalCO = 1000;
+var updateIntervalCO = 1500;
 var nowCO = new Date().getTime();
 
 function GetDataCO() {
@@ -229,7 +229,7 @@ $(document).ready(function () {
 var dataHu = [];
 var datasetHu;
 var totalPointsHu = 100;
-var updateIntervalHu = 1000;
+var updateIntervalHu = 1500;
 var nowHu= new Date().getTime();
 
 function GetDataHu() {
@@ -348,7 +348,7 @@ $(document).ready(function () {
 var dataTs = [];
 var datasetTs;
 var totalPointsTs = 100;
-var updateIntervalTs = 1000;
+var updateIntervalTs = 1500;
 var nowTs= new Date().getTime();
 
 function GetDataTs() {

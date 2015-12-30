@@ -39,7 +39,7 @@
 
 
 <script>
-    CULoad("PowerSupply",1500);
+    CULoad("PowerSupply",1500);	// richiama la funzione di chaos.js, ma siccome è specificato il nome prende quella di powersupply.js
 </script>
     
     <body>
@@ -75,7 +75,7 @@
 
 		 <?php
 
-		    for ($trq = 0; $trq<6; $trq++) {
+		    for ($trq = 0; $trq<6; $trq++) { // gli elementi che devono essere monitorati/processati devono essere tutti esplicitati dall'id => nome+_+num
 			echo '<tr class="pw">';
 			echo '<td class="name_td"><b id="'.'name_'.$trq.'"class="PowersupplyIndicator">noname</b></td>';
 			echo '<td class="state_td_on"><input type="button" name="on" id="'.'on_'.$trq.'"value="On" onclick="'.'cus['.$trq.'].powerSupplyOn(this.value);"/></td>';

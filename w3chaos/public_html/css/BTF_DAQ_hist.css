@@ -1,0 +1,136 @@
+body {
+    font-family: 'Lato', Calibri, Arial, sans-serif;
+    background: #f9f9f9;
+    font-weight: 400;
+    font-size: 1em;
+    color: #333;
+    overflow: scroll;
+    overflow-x: hidden;
+}
+
+.container {
+	width: 100%;
+	position: relative;
+}
+
+.main,
+.container > header {
+	width: 98%;
+	margin: 0 auto;
+	padding: 0 1.875em 3.125em 1.875em;
+}
+
+.container > header {
+	padding: 0.4em;
+}
+
+.container > header h1 {
+	font-size: 3.2em;
+	line-height: 1.3;
+	margin: 0 auto;
+	font-weight: 700;
+	color: #333;
+	position: relative;
+        text-align: center;
+}
+
+.container > header h1 span {
+	display: block;
+	font-size: 50%;
+	font-weight: 300;
+        position: relative;
+        text-align: center;
+	color: #128680;
+        font-style: oblique;
+	margin-bottom: 35px;
+}
+
+fieldset {
+    border:1px solid black;
+    margin: auto;
+    margin-bottom: 30px;
+    float:left;
+    margin-left:20px;
+}
+
+.tmp {
+    
+    float: right;
+}
+
+.qdc0 {
+        width: 43%;
+}
+
+.qdc1, .scaler {
+    width:21%;
+}
+
+legend {
+    font-size: 20px;
+    font-stye: italic;   
+}
+
+.table_parameter {
+    width: 100%;
+    color: white;
+    text-align: center;
+    overflow-x: auto;
+    float:left;
+    margin: 0 auto;
+}
+
+
+.table_parameter tr.param {   
+    height: 36px;
+    border: 2px solid white;
+    background-color: #128680;
+}
+
+.table_parameter tr.vme {   
+    height: 26px;
+}
+
+.table_parameter tr.vme td {   
+    border: 1px solid #128680;
+    text-align: center;
+    color: #BA55D3;
+}
+
+.name, .name_td {
+    width: 70px;
+}
+
+.value, .value_td {
+    width:100px;
+}
+
+#placeholder_0 {
+    width:450px;
+    height: 250px;
+    margin-top:520px;
+    margin-left:90px;    
+}
+
+#placeholder_1 {
+    width:450px;
+    height: 250px;
+    margin-top:40px;
+    margin-left:88px;    
+}
+
+.bar rect {
+  fill: steelblue;
+  shape-rendering: crispEdges;
+}
+
+.bar text {
+  fill: #fff;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+

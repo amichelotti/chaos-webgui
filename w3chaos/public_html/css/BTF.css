@@ -1,0 +1,133 @@
+body {
+	font-family: 'Lato', Calibri, Arial, sans-serif;
+	background: #f9f9f9;
+	font-weight: 400;
+	font-size: 1em;
+	color: #333;
+	overflow: scroll;
+	overflow-x: hidden;
+}
+
+.container {
+	width: 100%;
+	position: relative;
+}
+
+.main{
+	width: 96%;
+	margin-left:10%;
+	margin-top:60px;
+}
+
+.container > header {
+	padding: 1.875em;
+}
+
+.container > header h1 {
+	font-size: 4.0em;
+	line-height: 1.3;
+	margin: 0 auto;
+	font-weight: 700;
+	color: #333;
+	position: relative;
+	text-align: center;
+}
+
+.container > header h1 span {
+	display: block;
+	font-size: 50%;
+	font-weight: 300;
+	position: relative;
+	text-align: center;
+	color: black;
+	font-style: oblique;
+
+}
+
+
+#pw_sim{
+	width: 26%;
+	height: 250px;
+	/*margin-right: 10px; */
+	float: left; 
+	background-color: #996699;
+	margin-top:20px;
+	margin-bottom:30px;
+
+
+}
+
+#cds_mon{
+	width: 40%;
+	height: 250px;
+	margin-right: 10px;
+	float: left; 
+	background-color: #339966;
+}
+
+#pw_lab {
+	width: 40%;
+	height: 250px;
+	float: left;
+	margin-left: 10px;
+	background-color: #FFCC66;
+}
+
+#pw{
+	width: 26%;
+	height: 250px;
+	margin-left: 20px; 
+	float: left; 
+	background-color: #996699;
+	margin-top:20px;
+	margin-bottom:30px;
+
+}
+
+#vme {
+	width: 26%;
+	height: 250px;
+	margin-left: 20px; 
+	float: left; 
+	background-color: #008080;
+	margin-top:20px;
+	margin-bottom:30px;
+}
+
+h3 {
+	color:white;
+	text-align: center;
+	font-size: 40px;
+	line-height: 125px;
+}
+
+h4 {
+	color:white;
+	text-align: center;
+	font-size: 24px;
+	margin-top: -75px;
+}
+
+.write_sim {
+	color:white;
+	text-align: center;
+	font-size: 23px;
+	line-height: 162px;
+}
+
+.sub{
+	font-size: 20px;
+}
+
+#write_small {
+	color: white;
+	text-align: center;
+	font-size: 23px;
+	line-height: 50px;
+}
+
+#sub_small{
+	font-size: 20px;
+	margin-top:2px;
+}
+

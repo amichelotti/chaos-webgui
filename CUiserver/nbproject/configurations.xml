@@ -81,14 +81,15 @@
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <flagsDictionary>
-        <element flagsID="0" commonFlags="-O2 -O2"/>
+        <element flagsID="0" commonFlags="-fPIC -fPIC -fPIC -O3 -O2 -O2"/>
+        <element flagsID="1" commonFlags="-fPIC -fPIC -fPIC -fPIC -fPIC -O2 -O2"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
       <makefileType>
         <makeTool>
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
-          <buildCommand>${MAKE} -f Makefile</buildCommand>
+          <buildCommand>${MAKE} -f Makefile install</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
           <executablePath>build/CUIserver</executablePath>
         </makeTool>
@@ -108,11 +109,10 @@
           <incDir>
             <pElem>.</pElem>
             <pElem>../..</pElem>
-            <pElem>../../../chaos-x86_64-static-release/include</pElem>
           </incDir>
           <preprocessorList>
-            <Elem>CHAOS_STATIC</Elem>
-            <Elem>DEBUG=1</Elem>
+            <Elem>CHAOS</Elem>
+            <Elem>DEBUG</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -212,10 +212,23 @@
       </item>
       <item path="src/ChaosController.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
+          <incDir>
+            <pElem>..</pElem>
+            <pElem>../../../chaos-x86_64-dynamic-release/include</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>NDEBUG</Elem>
+          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/main.cpp" ex="false" tool="1" flavor2="4">
-        <ccTool flags="0">
+        <ccTool flags="1">
+          <incDir>
+            <pElem>../../../chaos-x86_64-dynamic-debug/include</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>DEBUG=1</Elem>
+          </preprocessorList>
         </ccTool>
       </item>
     </conf>

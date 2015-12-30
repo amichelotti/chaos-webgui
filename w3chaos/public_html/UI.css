@@ -1,0 +1,137 @@
+* {
+	font-family: comics; 
+	padding: 0px;
+	margin: 0px;
+}
+
+div.container{
+	height:1280px;
+	width: 100%;
+	position: relative;
+}
+
+
+header{
+	margin: 20px;
+	padding: 20px 10px 10px 10px;
+	position: relative;
+	text-align: center; 
+        border: 3px solid black;       
+}
+
+
+h1{
+	font-size: 80px;
+	margin: 0 auto;
+	position: relative;
+	font-weight:500;
+	color: #128680;
+}
+
+
+h2 {
+    font-size: 30px;
+    font-weight: 200;
+    position: relative;
+    margin: 20px;
+    color: #7c8e8d;
+    font-style: italic;    
+}
+
+
+div.sub-content {
+    height: 1080px;
+    width: 90%;
+    margin: 0 auto;
+    position: relative;
+    margin-top: 70px;   
+}
+
+div.sub-content1 {
+    height: 300px;
+    width: 90%;
+    margin: 0 auto;
+    position: relative;
+    margin-top: 70px;   
+}
+
+
+div.sub-content2 {
+    height: 480px;
+    width: 90%;
+    margin: 0 auto;
+    position: relative;
+    margin-top: 70px;     
+}
+
+table#param_table {
+    margin-top: 20px;
+    height: 240px;
+    width: 96%;
+    margin: 0 auto;
+    border: 2px solid black;  
+    text-align: center;  
+}
+
+tr {
+	border: 1px solid black;
+	border-collapse: collapse;
+}
+
+
+td#out1_0, td#out2_0{
+
+    border: 1px solid black;
+    border-collapse: collapse;
+    font-size: 40px;
+    text-align: center;
+    
+} 
+
+
+td#value_changed {
+    font-size: 40px;
+    text-align: center;   
+}
+
+td#device_indicator {
+    font-size: 45px;
+    text-align: center;
+    color: #801286;
+    border: 1px solid black;
+    border-collapse: collapse;  
+}
+
+
+table#command_table {
+    margin-top: 80px;
+    height: 240px;
+    width: 96%;
+    margin: 0 auto;
+    border: 2px solid black;  
+    text-align: center;  
+}
+
+
+button#button_set{
+    height: 60px;
+    width: 150px;
+    cursor: pointer;
+    border-radius: 50px;
+    font-size: 18px;   
+}
+
+input {
+	height: 80px;
+	width:300px;
+	font-size: 24px;	
+}
+
+
+footer {
+    font-size: 20px;
+    font-weight: 100;
+    position: relative;
+    margin-left: 90%;
+    font-style: italic;   
+}
