@@ -16,6 +16,12 @@ function PowerSupply(name){
        
         this.sendCommand("sett", "{\"sett_cur\":" + curr + "}");
     }
+    this.setSlope=function setSlope(val,val1){
+        var curr = Number(val).toFixed(3);
+        var curr1 = Number(val1).toFixed(3);
+       
+        this.sendCommand("sslp", "{\"sslp_up\":" + curr + ",\"sslp_down\":"+curr1 +"}");
+    }
     this.setPolarity=function setPolarity(val){
         if(this.state&0x2){
 	            //if(this.state&0x2){
