@@ -6,13 +6,13 @@ var onswitched=0;
 var maxarray=600;
 var npoints=0;
 var refreshInterval=0;
-var request_prefix = "http://localhost:8081/CU?dev="; 
+var request_prefix = "http://chaost-webui1.chaos.lnf.infn.it:8081/CU?dev="; 
 
 var internal_param=new Array();
 var excludeInterface=["oldtimestamp","dostate","firsttimestamp","ndk_uid","dev_state","dpck_ds_type","dpck_ats","updating"];
 ///////
 
-var global_update_request=request_prefix;
+
 /////
 function CU(name){
     this.name =name;
@@ -184,7 +184,7 @@ function CU(name){
  //       if(request.status==200) {{
 	    var json_answer = request.responseText;
 	    my.updating = 0;
-	    console.log("answer this.dostate:" + my.dostate );
+	    console.log("answer this.dostate:" + my.dostate +" ("+my.name+"):\"" + json_answer+"\"");
 	    if (json_answer == "") {
 		return;
 	    }
@@ -281,7 +281,6 @@ function CULoad(classname,inter){
          alert("Please specify a valid powersupply in the URL ?<init|deinit|start|stop|run>=cu1_id&cu2_id");
          return;
      }
-     
      for (var i=0;i<cus_names.length;i++) {
           var cu;
           if(classname!=null){
@@ -298,11 +297,7 @@ function CULoad(classname,inter){
              
         }
          
-         if(i==0){
-           global_update_request=global_update_request+cus_names[i];
-         } else {
-           global_update_request=global_update_request+","+cus_names[i];
-        }
+
           cus.push(cu);
           if(vars[0]==="init"){
               console.log("initializing "+cus_names[i]);
@@ -321,7 +316,6 @@ function CULoad(classname,inter){
               cu.run();
           }
      }
-      global_update_request=global_update_request+"&cmd=status";
      if(classname!=null){
           refreshInterval=setInterval(updateInterface,inter);
      } else {
@@ -330,74 +324,6 @@ function CULoad(classname,inter){
      
     
 }
-
-function globalUpdateRequest(){
-     var request = new XMLHttpRequest();
-     request.timeout =30000;
-     request.open("GET", global_update_request,true);
-     
-        request.send();
-        request.onreadystatechange = function() {
-	if (request.readyState == 4 && request.status == 200) {
- //       if(request.status==200) {{
-	    var json_answer = request.responseText;
-	    my.updating = 0;
-	    console.log("answer this.dostate:" + my.dostate );
-	    if (json_answer == "") {
-		return;
-	    }
-	    try {
-	    var json = JSON.parse(json_answer);
-	    } catch (err){
-		console.log("exception parsing \"" + json_answer + "\"");
-                  
-                  return;
-	    }
-	    Object.keys(json).forEach(function(key) {
-		try {
-		    var val = json[key];
-		    if (typeof(val) === 'object') {
-			if (val.hasOwnProperty('$numberLong')) {
-			    val = val['$numberLong'];
-			}
-		    }
-                    
-		  // console.log("processing:"+key+ " val:"+val);
-                    if(key == "ndk_uid"){
-                        my.name = val;
-                    } else if (key == "dpck_ats") {
-			
-			if(my.firsttimestamp==0){
-                            my.firsttimestamp=val;
-                        }
-                        my.oldtimestamp=my.timestamp;
-			my.timestamp = val;
-			my.seconds =(val - my.firsttimestamp)/1000.0;
-                        if(my.oldtimestamp!=0){
-                            my.refresh = (val - my.oldtimestamp)/1000.0;
-                        }
-		    } else {
-//			console.log("call " + my.toString() + " process data :"+key+ " val:"+val);
-                        my[key]=val;
-                    }
-                    
-                    
-                } catch(err) {
-		    // console.error(key + " does not exist:" + err);
-		}
-	    });
-           my.processData();
-	}
-    }
-     
-        request.ontimeout = function () { 
-            //alert("Timed out!!!"); 
-            console.log("TIMEOUT!!");
-
-        }
-      
-} 
-
 
 function CUBuildInterface(){
  for(var i=0;i<cus.length;i++){
@@ -469,7 +395,11 @@ function initializeCU(cunames){
                 td.setAttribute("id",key + "_"+instancen);
                 td.setAttribute("class","Indicator");
 		if(Array.isArray(obj[key])){
-		    text=document.createTextNode("["+obj[key].length+"]");
+		   // text=document.createTextNode("["+obj[key].length+"]");
+		    text=document.createTextNode("["+obj[key]+"]");
+		    
+	       console.log("#########################:" + text);
+
 		} else {
                     text=document.createTextNode(obj[key]);
 		}
@@ -482,9 +412,9 @@ function initializeCU(cunames){
     tbl.appendChild(tbdy);
     body.appendChild(tbl);
         
- }
+ } 
  
-function CUupdateInterface(){
+/*function CUupdateInterface(){
                
                 for(var i = 0;i<cus.length;i++){
                     cus[i].update();
@@ -536,6 +466,79 @@ function CUupdateInterface(){
                         }
                         document.getElementById(docelem).style.color=color;
                         document.getElementById(docelem).style.fontWeight =tick;
+                        
+			} catch(e){
+			  //  console.log("document element:" +docelem+ " not present in page:"+e); 
+			}
+			}
+                }
+            }
+           
+ } */
+ 
+ 
+ function CUupdateInterface(){
+               
+                for(var i = 0;i<cus.length;i++){
+                    cus[i].update();
+		    var cu=cus[i];
+                    var color="yellow";
+                    var tick="normal";
+                    if(cu.refresh != 0){
+                        tick = "bold";
+                    }
+                    if(cu.dev_status=="start"){
+                        color="green";
+                        if(cu.isbuildInterface()){
+                            chaos_create_table(cu,i);
+                            cu.buildInterface(0);
+                        }
+                    } else if(cu.dev_status=="stop"){
+                        color="black";
+                    } else if(cu.dev_status=="init"){
+                        color="yellow";
+                        if(cu.isbuildInterface()){
+                            chaos_create_table(cu,i);
+                            cu.buildInterface(0);
+                        }
+                    } else {
+                        color="red";
+                    }
+                    
+                    if(cu.error_status!=""){
+                        color="red";
+                        console.log("An internal error occurred on device \""+cu.name+"\":\""+cu.error_status+"\"");
+                        clearInterval(refreshInterval);
+                        alert(cu.error_status);
+                    }
+                  
+                    for (var key in cu) {
+			var docelem = key +"_"+i;
+			if((typeof(cu[key]) !== 'function') && ((typeof (cu[key]) !== 'object') || Array.isArray(cu[key]))){
+			  
+		    
+
+			  //  console.log("SETTING [" +typeof(cu[key])+"]" + docelem+ " to:"+cu[key]);
+			try {
+                       
+                        var digits = document.getElementById(docelem).getAttribute("digits");
+		        var base = document.getElementById(docelem).getAttribute("base");
+			var number=cu[key];
+                        if(digits!=null){
+			    number=Number(cu[key]).toFixed(digits);			    
+                        } 
+
+			 if(base!=null){
+			     number=Number(cu[key]).toString(base);
+			 } 
+  			document.getElementById(docelem).innerHTML=number;
+                        document.getElementById(docelem).style.color=color;
+                        document.getElementById(docelem).style.fontWeight =tick;
+			if(Array.isArray(cu[key])){
+		   // text=document.createTextNode("["+obj[key].length+"]");
+		    text=document.createTextNode("["+cu[key]+"]");
+			}
+		    
                         
 			} catch(e){
 			  //  console.log("document element:" +docelem+ " not present in page:"+e); 

@@ -91,40 +91,85 @@ function PowerSupply(name){
            if(bit){
                row = table.insertRow(rows++);
                cell = row.insertCell(0);
-	       cell.innerHTML = "- "+ a + " alarm"
+	       cell.innerHTML = "- "+ decodeAlarm(bit)
            }
 	   
-	   /*
-           if(bit&0x1){
-               cell.innerHTML = "1 fusibili area";
-           } else if(bit&0x2){
-               cell.innerHTML = "2 sovracorrente AC ";
-           } else if(bit&0x4){
-               cell.innerHTML ="3 fusibili IGBT";
-           } else if(bit&0x8){
-               cell.innerHTML ="4 sovra temperatura IGBT";
-           } else if(bit&0x10){
-               cell.innerHTML ="5 sovra corrente DCLINK";
-           } else if(bit&0x20){
-               cell.innerHTML = "6 AirFlow ";
-           } else if(bit&0x40){
-               cell.innerHTML ="7 ---- ";
-               
-           } else if(bit&0x80){
-               cell.innerHTML = "8 Sovra temperatura raddrizzatore ";
-           } else if(bit>0){
-               cell.innerHTML = a + " --- ";
-
-           }
-	   */
        } 
  }
+
+function decodeAlarm(alarm){
+    var desc="";
+                       
+    //    decodeError(alarm,table_error);
+    switch (alarm){
+    case 1:
+	return "door open";
+    case 2:
+	return "over temperature";
+
+    case 0x4:
+	return "fuse fault";
+    case 0x8:
+	return "earth fault";
+    case 0x10:
+	return "over voltage";
+    case 0x20:
+	return "over current";
+    case 0x40:
+	return "communication failure";
+    case 0x80:
+	return "main unit fault";
+    case 0x100:
+	return "external interlock";
+    case 0x200:
+	return "set point card fault";
+    case 0x400:
+	return "cubicle fault";
+	
+    case 0x800:
+	return "DCCT OVT";
+    case 0x1000:
+	return "DCCT FAULT";
+    case 0x2000:
+	return "active filter fuse";
+    case 0x4000:
+	return "active filter fuse OVT";
+    case 0x8000:
+	return "diode OVT";
+    case 0x10000:
+	return "diode fault";
+    case 0x20000:
+	return "AC issue";
+    case 0x40000:
+	return "phase loss";
+    case 0x80000:
+	return "air flow";
+    case 0x100000:
+	return "transformer OVT";
+
+    case 0x200000:
+	return "snubber fuse";
+    case 0x400000:
+	return "SCR fuse";
+    case 0x800000:
+	return "SCR OVT";
+    case 0x1000000:
+	return "choke OVT";
+    case 0x2000000:
+	return "pass filter";
+    case 0x4000000:
+    default:
+	return "undefined";
+    }
+
+}
+
  function updateInterface(){
                 CUupdateInterface();
                 for(var i = 0;i<cus.length;i++){
                     cus[i].update();
 		    //                    console.log("updating \""+cus[i].name + " current:"+cus[i].current + " polarity:"+cus[i].polarity);
-                  //  var table_error = document.getElementById("error_list_"+i);
+                    var table_error = document.getElementById("error_list_"+i);
 
                     if(cus[i].status_id&0x2){
                 //     document.getElementById("onstby_"+i).value="On";
@@ -195,13 +240,11 @@ function PowerSupply(name){
 		    
                     
                     if(cus[i].alarms!=0){
-                        var alarm=cus[i].alarms
-                       
-                    //    decodeError(alarm,table_error);
-			
+                        var alarm=cus[i].alarms;
 			document.getElementById("alarms_"+i).style.color="red";
+			decodeError(alarm, table_error);
                     } else {
-                       // table_error.innerHTML="";
+                        table_error.innerHTML="";
                     }
 		    //		    console.log("data:" + cus[i].data);
 		    var maxpoints = document.getElementById("powersupply-graph_"+i).getAttribute("maxpoints");
