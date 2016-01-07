@@ -37,7 +37,7 @@
                         <td class="current_sp"><b>Current SP</b></td>
                         <td class="current_r_o"><b>Current Readout</b></td>
                         <td class="timestamp"><b>Timestamp</b></td>
-                        <td class="alarm" colspan="2"><b>Alarms</b></td>
+                        <td class="alarm" colspan="3"><b>Alarms (numeric, decode)</b></td>
 			<td class="plot"><b>Plot</b></td>
 		    </tr>
 				    
@@ -58,7 +58,8 @@
 			echo '<td class="current_r_o_td"><b id="'.'current_'.$trq.'" digits="3" title="current read out" class="PowersupplyIndicator">0</b></td>';
 			echo '<td class="timestamp_td"><b id="'.'seconds_'.$trq.'" title="seconds since the UI started" class="PowersupplyIndicator">0</b></td>';
 			echo '<td class="alarm_m_td"><input type="button" name="rstalarms" id="'.'rstalarms_'.$trq.'" value="rstalarms" title="Reset alarms" onclick="'.'cus['.$trq.'].powerSupplyClrAlarms();" /></td>';
-			echo '<td class="alarm_v_td"><b id="'.'alarms_'.$trq.'" title="current alarms mask" class="PowersupplyIndicator">0</b></td>';
+			echo '<td class="alarm_v_td"><b id="'.'alarms_'.$trq.'" title="current alarms mask" base="2" class="PowersupplyIndicator">0</b></td>';
+			echo '<td class="alarm_v_td"><table id="error_list_'.$trq.'"></table></td>';
 			echo '<td class="plot_td"><div id="' . 'powersupply-graph_' . $trq . '" title="current vs seconds from the start of the UI" maxpoints="300" class="powersupply-graph-class"></div></td>';
 			}
 			echo '</tr>';
@@ -81,7 +82,7 @@
                         <td class="current_sp"><b>Current SP</b></td>
                         <td class="current_r_o"><b>Current Readout</b></td>
                         <td class="timestamp"><b>Timestamp</b></td>
-                        <td class="alarm" colspan="2"><b>Alarms</b></td>
+                       <td class="alarm" colspan="3"><b>Alarms (numeric, decode)</b></td>
 			<td class="plot"><b>Plot</b></td>
 		    </tr>
 		                
@@ -102,7 +103,8 @@
 			echo '<td class="current_r_o_td"><b id="'.'current_'.$tr.'" digits="3" title="current read out" class="PowersupplyIndicator">0</b></td>';
 			echo '<td class="timestamp_td"><b id="'.'seconds_'.$tr.'" title="seconds since the UI started" class="PowersupplyIndicator">0</b></td>';
 			echo '<td class="alarm_m_td"><input type="button" name="rstalarms" id="'.'rstalarms_'.$tr.'" value="rstalarms" title="Reset alarms" onclick="'.'cus['.$tr.'].powerSupplyClrAlarms();" /></td>';
-			echo '<td class="alarm_v_td"><b id="'.'alarms_'.$tr.'" title="current alarms mask" class="PowersupplyIndicator">0</b></td>';
+			echo '<td class="alarm_v_td"><b id="'.'alarms_'.$tr.'" title="current alarms mask" base="2" class="PowersupplyIndicator">0</b></td>';
+			echo '<td class="alarm_v_td"><table id="error_list_'.$tr.'"></table></td>';
 			echo '<td class="plot_td"><div id="' . 'powersupply-graph_' . $tr . '" title="current vs seconds from the start of the UI" maxpoints="300" class="powersupply-graph-class"></div></td>';
 			}
 		    
@@ -125,7 +127,8 @@
                         <td class="current_sp"><b>Current SP</b></td>
                         <td class="current_r_o"><b>Current Readout</b></td>
                         <td class="timestamp"><b>Timestamp</b></td>
-                        <td class="alarm" colspan="2"><b>Alarms</b></td>
+                       <td class="alarm" colspan="3"><b>Alarms (numeric, decode)</b></td>
+
 			<td class="plot"><b>Plot</b></td>
 		    </tr>
 		                
@@ -146,7 +149,8 @@
 			echo '<td class="current_r_o_td"><b id="'.'current_'.$tr.'" digits="3" title="current read out" class="PowersupplyIndicator">0</b></td>';
 			echo '<td class="timestamp_td"><b id="'.'seconds_'.$tr.'" title="seconds since the UI started" class="PowersupplyIndicator">0</b></td>';
 			echo '<td class="alarm_m_td"><input type="button" name="rstalarms" id="'.'rstalarms_'.$tr.'" value="rstalarms" title="Reset alarms" onclick="'.'cus['.$tr.'].powerSupplyClrAlarms();" /></td>';
-			echo '<td class="alarm_v_td"><b id="'.'alarms_'.$tr.'" title="current alarms mask" class="PowersupplyIndicator">0</b></td>';
+			echo '<td class="alarm_v_td"><b id="'.'alarms_'.$tr.'" title="current alarms mask" base="2" class="PowersupplyIndicator">0</b></td>';
+			echo '<td class="alarm_v_td"><table id="error_list_'.$tr.'"></table></td>';
 			echo '<td class="plot_td"><div id="' . 'powersupply-graph_' . $tr . '" title="current vs seconds from the start of the UI" maxpoints="300" class="powersupply-graph-class"></div></td>';
 			}
 		    
