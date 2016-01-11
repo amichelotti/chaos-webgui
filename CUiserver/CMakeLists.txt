@@ -6,9 +6,9 @@ ADD_EXECUTABLE(CUIserver ${CUISERVER})
 
 IF(BUILD_FORCE_STATIC)
   SET(CMAKE_EXE_LINKER_FLAGS "-static -Wl,--whole-archive -lchaos_common -Wl,--no-whole-archive")
-TARGET_LINK_LIBRARIES(CUIserver mongoose chaos_uitoolkit common_debug ${FrameworkLib})
+TARGET_LINK_LIBRARIES(CUIserver mongoose chaos_uitoolkit chaos_metadata_service_client common_debug ${FrameworkLib})
 ELSE()
-TARGET_LINK_LIBRARIES(CUIserver mongoose chaos_uitoolkit chaos_common common_debug ${FrameworkLib})
+TARGET_LINK_LIBRARIES(CUIserver mongoose chaos_uitoolkit chaos_metadata_service_client chaos_common common_debug ${FrameworkLib})
 ENDIF()
 
 

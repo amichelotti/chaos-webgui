@@ -498,6 +498,26 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
                     CALC_EXEC_TIME;
                     return;
                 }
+            } else if (cmd == "recover") {
+                status.append_log("send recover from error:\"" + devname);
+                err = controller->recoverDeviceFromError();
+                if(err!=0){
+                    status.append_error("error recovering from error "+devname);
+                    removeDevice(idev->devname);
+                    response << status.getData()->getJSONString();
+                    CALC_EXEC_TIME;
+                    return;
+                }
+            } else if (cmd == "restore"  && !parm.empty()) {
+                status.append_log("send restore on \"" + devname+ "\" tag:\""+parm+"\"");
+                err = controller->restoreDeviceToTag(parm);
+                if(err!=0){
+                    status.append_error("error setting restoring:\""+devname+"\" with tag:\""+parm+"\"");
+                    removeDevice(idev->devname);
+                    response << status.getData()->getJSONString();
+                    CALC_EXEC_TIME;
+                    return;
+                }
             } else if (cmd != "status") {
                 status.append_log("send cmd:\"" + cmd + "\" args: \"" + parm + "\" to device:" + devname);
                 err = sendCmd(controller, cmd, (char*) (parm.empty() ? "" : parm.c_str()), request, status);
@@ -509,7 +529,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
                     CALC_EXEC_TIME;
                     return;
                 }
-            }
+            } 
 
 
        /*     if (checkError(err, idev, status)) {
