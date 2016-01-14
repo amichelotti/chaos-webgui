@@ -295,7 +295,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
                     idev->dev = controller;
                     idev->timeouts = 0;
                     idev->lastState = -1;
-                    idev->t/amotTimeout = 0;
+                    idev->totTimeout= 0;
                     idev->defaultTimeout = mds_timeout;
                     idev->devname = devname;
                     idev->wostate = 0;
