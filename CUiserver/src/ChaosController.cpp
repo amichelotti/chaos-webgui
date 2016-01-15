@@ -256,11 +256,13 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
     naccess++;
     std::vector<std::string>dev_v;
     boost::split(dev_v,dev_param,boost::is_any_of(","));
+ 
     //std::stringstream sl;
     //sl <<"dev:"<<devname<<" cmd:"<<cmd <<" parm:"<<parm<< " reqTime:" <<dec<<reqtime;
    // status.append_log(sl.str());
     std::stringstream answer_multi;
     if(dev_v.size()>1){
+        DPRINT("multi answer of %d cus",dev_v.size());
         answer_multi<<"{[";
     }
     for(std::vector<std::string>::iterator idevname=dev_v.begin();idevname!=dev_v.end();idevname++){
