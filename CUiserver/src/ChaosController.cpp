@@ -262,7 +262,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
    // status.append_log(sl.str());
     std::stringstream answer_multi;
     if(dev_v.size()>1){
-        DPRINT("multi answer of %d cus",dev_v.size());
+       
         answer_multi<<"{[";
     }
     for(std::vector<std::string>::iterator idevname=dev_v.begin();idevname!=dev_v.end();idevname++){
@@ -349,12 +349,27 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
                         response << status.getData()->getJSONString();
                         CALC_EXEC_TIME;
                         return;
-                    }         
+                    }  
+                    
                     idev->timeouts = 0;
                     idev->lastState = deviceState;
                     //CUIServerLDBG_<<" ["<<idev->devname<<"] [nacc:"<<idev->nReq<<"] state:"<<deviceState<<" desired state:"<<idev->nextState<<" HB:"<<heart<<" LA:"<<(reqtime - idev->last_access) <<" us ago"<<" refresh rate:"<<idev->refresh<< " us, default timeout:"<<idev->defaultTimeout;
                     idev->last_access = reqtime;
 
+                    if(deviceState==CUStateKey::RECOVERABLE_ERROR){
+                       CDataWrapper*data=controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainHealth);
+                       std::string ll;
+                       if(data->hasKey("nh_led")){
+                           ll=std::string("domain:")+data->getCStringValue("nh_led");
+                       }
+                       if(data->hasKey("nh_lem")){
+                           ll= ll +std::string(" msg:")+data->getCStringValue("nh_lem");
+                       }
+                       status.append_error(ll);
+                       response << status.getData()->getJSONString();
+                       CALC_EXEC_TIME;
+                        return;
+                    }
                     if ((idev->nextState > 0)&&(idev->lastState != idev->nextState)) {
                         CUIServerLDBG_ << "%% warning current state:" << idev->lastState << " different from destination state:" << idev->nextState;
                     }
