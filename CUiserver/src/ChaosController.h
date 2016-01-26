@@ -70,6 +70,8 @@ private:
         void setup();
         static void addDevice(std::string,InfoDevice*);
         static void removeDevice(std::string);
+        static void refreshDevice(std::string);
+
 
 };
 

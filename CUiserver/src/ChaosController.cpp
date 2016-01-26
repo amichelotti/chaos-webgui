@@ -108,7 +108,25 @@ void ChaosController::removeDevice(std::string name) {
     }
 
 }
+void ChaosController::refreshDevice(std::string name) {
+    std::map<std::string, InfoDevice*>::iterator idevs;
+    idevs = devs.find(name);
+    if (idevs != devs.end()) {
+        CUIServerLDBG_ << "refreshing device :"<<idevs->second->devname;
+    if(idevs->second->dev)
+          delete(idevs->second->dev);
+        idevs->second->dev=HLDataApi::getInstance()->getControllerForDeviceID(idevs->second->devname, idevs->second->defaultTimeout);
+         idevs->second->dev->setRequestTimeWaith(idevs->second->defaultTimeout);
+         idevs->second->dev->setupTracking();
+    
+    }
 
+}
+                    
+
+
+
+                    
 CDataWrapper* ChaosController::fetchDataSet(DeviceController *ctrl) {
     CDataWrapper* data = NULL;
     try {
@@ -539,9 +557,13 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
                 status.append_log("send cmd:\"" + cmd + "\" args: \"" + parm + "\" to device:" + devname);
                 err = sendCmd(controller, cmd, (char*) (parm.empty() ? "" : parm.c_str()), request, status);
                  if(err!=0){
-                    status.append_error("error sending command:"+cmd+" "+parm+ " to:"+devname);
+                    refreshDevice(idev->devname);
+                    err = sendCmd(idev->dev, cmd, (char*) (parm.empty() ? "" : parm.c_str()), request, status);
+                    if(err!=0){
+                        status.append_error("error sending command:"+cmd+" "+parm+ " to:"+devname);
+                        removeDevice(idev->devname);
+                    }
 
-                    removeDevice(idev->devname);
                     response << status.getData()->getJSONString();
                     CALC_EXEC_TIME;
                     return;
