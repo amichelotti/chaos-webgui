@@ -389,7 +389,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
                         return;
                     }
                     if ((idev->nextState > 0)&&(idev->lastState != idev->nextState)) {
-                        CUIServerLDBG_ << "%% warning current state:" << idev->lastState << " different from destination state:" << idev->nextState;
+                        CUIServerLDBG_ << "%% ["<<idev->devname<<" ] "<< "warning current state:" << idev->lastState << " different from destination state:" << idev->nextState;
                     }
                 }
             } else if (cmd == "status") {
