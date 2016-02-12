@@ -61,7 +61,7 @@ private:
     CDataWrapper* fetchDataSet(DeviceController *ctrl);
     CDataWrapper* normalizeToJson(CDataWrapper*src,std::map<std::string,int>& list);
     CDataWrapper data_out;
-    uint64_t updateState(InfoDevice*dev,dev_info_status&status,CUStateKey::ControlUnitState&devstate);
+    int64_t updateState(InfoDevice*dev,dev_info_status&status,CUStateKey::ControlUnitState&devstate);
     public: 
         ChaosController();
         void handleCU(Request &request, StreamResponse &response);

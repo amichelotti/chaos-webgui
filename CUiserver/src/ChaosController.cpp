@@ -180,11 +180,13 @@ int ChaosController::checkError(int err, InfoDevice*idev, dev_info_status&status
     return err;
 }
 
-uint64_t ChaosController::updateState(InfoDevice*idev,dev_info_status&status,CUStateKey::ControlUnitState&devstate){
+int64_t ChaosController::updateState(InfoDevice*idev,dev_info_status&status,CUStateKey::ControlUnitState&devstate){
      uint64_t heart= idev->dev->getState(devstate);
      if (heart==0){ 
-         status.append_error("cannot access to HB");
-        return 0;
+        //status.append_error("cannot access to HB");
+         idev->wostate=1;
+         devstate=CUStateKey::START;
+        return -1;
       }
       if((heart - idev->htimestamp)>HEART_BEAT_MAX){
           std::stringstream ss;
@@ -360,20 +362,23 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
             if (idev->wostate == 0) {
 
                 if((reqtime - idev->last_access) > (idev->defaultTimeout*1000)){
-                    uint64_t heart;
+                    int64_t heart;
                     if((heart=updateState(idev,status,deviceState))==0){
                         CUIServerLERR_<<" ["<<idev->devname<<"] HB expired, removing device";
                         removeDevice(idev->devname);
                         response << status.getData()->getJSONString();
                         CALC_EXEC_TIME;
                         return;
-                    }  
-                    
-                    idev->timeouts = 0;
-                    idev->lastState = deviceState;
-                    //CUIServerLDBG_<<" ["<<idev->devname<<"] [nacc:"<<idev->nReq<<"] state:"<<deviceState<<" desired state:"<<idev->nextState<<" HB:"<<heart<<" LA:"<<(reqtime - idev->last_access) <<" us ago"<<" refresh rate:"<<idev->refresh<< " us, default timeout:"<<idev->defaultTimeout;
-                    idev->last_access = reqtime;
+                    }  else if(heart<0){
+                        idev->wostate=1;
+                        idev->lastState=idev->nextState=CUStateKey::START;
+                    } else {
+                        idev->timeouts = 0;
+                        idev->lastState = deviceState;
+                        //CUIServerLDBG_<<" ["<<idev->devname<<"] [nacc:"<<idev->nReq<<"] state:"<<deviceState<<" desired state:"<<idev->nextState<<" HB:"<<heart<<" LA:"<<(reqtime - idev->last_access) <<" us ago"<<" refresh rate:"<<idev->refresh<< " us, default timeout:"<<idev->defaultTimeout;
 
+                    }
+                    idev->last_access = reqtime;
                     if(deviceState==CUStateKey::RECOVERABLE_ERROR){
                        CDataWrapper*data=controller->fetchCurrentDatatasetFromDomain(chaos::ui::DatasetDomainHealth);
                        std::string ll;
@@ -420,6 +425,7 @@ void ChaosController::handleCU(Request &request, StreamResponse &response) {
                         CALC_EXEC_TIME;
                         return;
                 }
+                
                if(deviceState!=CUStateKey::INIT){
                     status.append_log("init device:" + devname);
                     err = controller->initDevice();
