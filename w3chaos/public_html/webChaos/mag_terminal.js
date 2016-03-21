@@ -52,5 +52,6 @@ function updateInterface(){
                         document.getElementById("trigger_"+i).className="active";
                     }  */
 	}
+	}
 }
 		

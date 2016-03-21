@@ -16,9 +16,7 @@
 using namespace chaos;
 using namespace chaos::common::data;
 
-#define CUIServerLAPP_		LAPP_ << "[CUIServer] " 
-#define CUIServerLDBG_		LDBG_ << "[CUIServer "<< __PRETTY_FUNCTION__<<" ]"
-#define CUIServerLERR_		LERR_ << "[CUIServer "<< __PRETTY_FUNCTION__<<" ]"
+
 
 struct dev_info_status {
     char dev_status[256];

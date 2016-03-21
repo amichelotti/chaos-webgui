@@ -19,7 +19,7 @@
 */
 #include <mongoose/Server.h>
 #include <mongoose/WebController.h>
-#include "ChaosController.h"
+#include "ChaosWebController.h"
 using namespace std;
 using namespace Mongoose;
 using namespace chaos::ui;
@@ -32,7 +32,7 @@ int main(int argc,char**argv)
     ChaosUIToolkit::getInstance()->init(argc, argv);
    // ChaosMetadataServiceClient::getInstance()->init(argc, argv);
 
-    ChaosController myController;
+    ChaosWebController myController;
     cout<<"Opening "<<argv[0]<<" on port:"<<server_port<<endl;
     Server server(server_port);
     server.setOption("Access-Control-Allow-Origin","*");
