@@ -7,10 +7,20 @@ var maxarray=600;
 var npoints=0;
 var refreshInterval=0;
 var request_prefix = "http://localhost:8081/CU?dev="; 
-
 var internal_param=new Array();
 var excludeInterface=["oldtimestamp","dostate","firsttimestamp","ndk_uid","dev_state","dpck_ds_type","dpck_ats","updating"];
+var updateAll=false;
 ///////
+
+
+function sendAttr(vv) {
+	var request = new XMLHttpRequest();
+
+	console.log("device:" + this.id + " set attr:" + this.name + " param:" + this.value);
+	request.open("GET",  request_prefix + this.name + "&attr="+ this.id + "&parm=" + this.value,true);
+	request.send();
+
+};
 
 
 /////
@@ -29,12 +39,12 @@ function CU(name){
 	this.firsttimestamp=0; // first time stamp of the interface
 	console.log("creating CU:"+name);
 	this.updating=0;
-	var buildtable=0;
+	this.buildtable=0;
 	this.buildInterface = function (parm){
 		buildtable=parm;
 	}
 	this.isbuildInterface = function(){
-		return buildtable;
+		return this.buildtable;
 	}
 	this.init=function (){
 		var request = new XMLHttpRequest();
@@ -91,11 +101,11 @@ function CU(name){
 		request.send();
 	};
 
-	this.sendAttr=function (name, val) {
+	this.sendAttr=function (vv) {
 		var request = new XMLHttpRequest();
 
-		console.log("device:" + this.name + " set attr:" + name + " param:" + val);
-		request.open("GET",  request_prefix + this.name + "&attr="+ command + "&parm=" + val,true);
+		console.log("device:" + this.name + " set attr:" + vv.currentTarget.name + " param:" + vv.currentTarget.value);
+		request.open("GET",  request_prefix + this.name + "&attr="+ vv.currentTarget.name + "&parm=" + vv.currentTarget.value,true);
 		request.send();
 	};
 
@@ -106,25 +116,7 @@ function CU(name){
 		request.open("GET", request_prefix + this.name + "&cmd=sched&parm=" + parm,true);
 		request.send();
 	};
-	this.UpdateDataset=function(){
-		console.log("Update All dataset");
-		request.open("GET", request_prefix + this.name + "&cmd=channel&parm=-1",false);
-		request.send();
-		request.onreadystatechange = function() {
-			if (request.readyState == 4 && request.status == 200) {
-				var json_answer = request.responseText;
-				my.updating = 0;
-			//	console.log("answer :\""+ json_answer+"\"");
-				if (json_answer == "") {
-					return ;
-				}
-				
-				injectJson();
-				return;
-			}
-		}
-		return ;
-	};
+	
 	this.injectJson=function(json_answer){
 		var my=this;
 		try {
@@ -133,13 +125,34 @@ function CU(name){
 			console.log("exception parsing \"" + json_answer + "\"");
 			return;
 		}
+		var input=json.input;
+		var output=json.output;
+		for(var kk in output){
+			if(kk== "dpck_ats"){
+				json.output["timestamp"]=output[kk].$numberLong;
+				json["timestamp"]=output[kk].$numberLong;
+			}else if(output[kk] === 'object'){
+				if(output[kk].name == "$numberLong"){
+					json.output[kk]=output[kk].$numberLong;
+				}
+			}
+		}
+		for(var kk in input){
+			if(kk== "dpck_ats"){
+				json.input["timestamp"]=input[kk].$numberLong;
+			} else if(input[kk] === 'object'){
+				if(input[kk].name == "$numberLong"){
+					json.input[kk]=input[kk].$numberLong;
+				}
+			}
+		}
+		
 		Object.keys(json).forEach(function(key) {
 			try {
 				var val = json[key];
-
-
+							
+				
 				if (key == "timestamp") {
-
 					if(my.firsttimestamp==0){
 						my.firsttimestamp=val;
 					}
@@ -150,7 +163,7 @@ function CU(name){
 						my.refresh = (val - my.oldtimestamp)/1000.0;
 					}
 				} else {
-//					console.log("call " + my.toString() + " process data :"+key+ " val:"+val);
+					//console.log("call " + my.toString() + " process data :"+key+ " val:"+val);
 					my[key]=val;
 				}
 
@@ -161,6 +174,28 @@ function CU(name){
 		});
 		my.processData();
 	}
+	this.UpdateDataset=function(){
+		var request = new XMLHttpRequest();
+		var my=this;
+
+		console.log("Update All dataset");
+		request.open("GET", request_prefix + this.name + "&cmd=channel&parm=-1",true);
+		request.send();
+		request.onreadystatechange = function() {
+			if (request.readyState == 4 && request.status == 200) {
+				var json_answer = request.responseText;
+			//	console.log("answer :\""+ json_answer+"\"");
+				if (json_answer == "") {
+					return ;
+				}
+				
+				my.injectJson(json_answer);
+				
+				return;
+			}
+		}
+		return ;
+	};
 	this.update=function (){
 		var request = new XMLHttpRequest();
 		var my=this;
@@ -174,8 +209,11 @@ function CU(name){
 		} else if(my.dostate == my.dev_status  ){
 			my.dostate = "";
 			console.log("device "+my.name + " is in \""+my.dev_status+ " OK"); 
-
-			request.open("GET", request_prefix + this.name + "&cmd=status",true);
+			if(updateAll){
+				request.open("GET", request_prefix + this.name + "&cmd=channel&parm=-1",true);
+			} else {
+				request.open("GET", request_prefix + this.name + "&cmd=status",true);
+			}
 
 		} else if(my.dostate!="") { 
 			console.log("device "+my.name + " is in \""+my.dev_status+ "\" I should go into \""+ my.dostate+"\""); 
@@ -203,7 +241,11 @@ function CU(name){
 					request.open("GET", request_prefix + this.name + "&cmd=stop",true);
 
 				} else {
-					request.open("GET", request_prefix + this.name + "&cmd=status",true);
+					if(updateAll){
+						request.open("GET", request_prefix + this.name + "&cmd=channel&parm=-1",true);
+					} else {
+						request.open("GET", request_prefix + this.name + "&cmd=status",true);
+					}
 
 
 				} /*else if(my.dev_status  != "") {
@@ -227,7 +269,11 @@ function CU(name){
 			}
 
 		} else {
-			request.open("GET", request_prefix + this.name + "&cmd=status",true);
+			if(updateAll){
+				request.open("GET", request_prefix + this.name + "&cmd=channel&parm=-1",true);
+			} else {
+				request.open("GET", request_prefix + this.name + "&cmd=status",true);
+			}
 		}
 		request.ontimeout = function () { 
 			//alert("Timed out!!!"); 
@@ -245,11 +291,11 @@ function CU(name){
 				if (json_answer == "") {
 					return;
 				}
-				injectJson(json_answer);
+				my.injectJson(json_answer);
 			}
 		};  
 	}
-
+}
 	function addRow(tableID) {
 
 		var table = document.getElementById(tableID);
@@ -343,9 +389,10 @@ function CU(name){
 	}
 
 	function CUBuildInterface(){
+		updateAll=true;
 		for(var i=0;i<cus.length;i++){
-			cus[i].updateDataSet();
-			chaos_create_table(cui[i],i);
+			cus[i].buildtable=1;
+			cus[i].UpdateDataset();
 			for (var key in cus[i]) {
 				internal_param.push(key);
 			}
@@ -377,9 +424,10 @@ function CU(name){
 		return 0;
 	}
 	function chaos_create_table(obj,instancen){
-		console.log("create table for "+obj.name + " instance "+istancen);
+		console.log("create table for "+obj.name + " instance "+instancen);
 
-		var body=document.getElementsByTagName('body')[0];
+		//var body=document.getElementsByTagName('body');
+		var body=document.body;
 		var tbl=document.createElement('table');
 		var hr=document.createElement('hr');
 		body.appendChild(hr);
@@ -394,7 +442,7 @@ function CU(name){
 
 
 		tbdy.appendChild(hr);
-
+		obj.buildtable=1;
 		var input=obj.input;
 		var output=obj.output;
 
@@ -402,23 +450,28 @@ function CU(name){
 			if(toExclude(key))
 				continue;
 
+			console.log("creating output \""+key+"\" val="+output[key]);
 
-
+			
 			if((typeof(output[key]) !== 'function') && ((typeof (output[key]) !== 'object') || Array.isArray(output[key]))){
 				var tr=document.createElement('tr');
 				var td=document.createElement('td');
 				//var b=document.createElement('b');
-				text=document.createTextNode(key);
+				
+				var text=document.createTextNode(key);
+				text.class="Indicator-ok";
 				td.appendChild(text);
-				if(!isInternal(key)){
+				td.setAttribute('class',"Indicator-ok");
+				
+			/*	if(!isInternal(key)){
 					td.style.fontStyle='bold';
 					td.style.color='green';
 					td.setAttribute('style', 'font-weight: bold; color: green; font-size:150%;');
-				}
+				}*/
 				tr.appendChild(td);
 				td=document.createElement('td');
 				td.setAttribute("id",key + "_"+instancen);
-				td.setAttribute("class","Indicator");
+				td.setAttribute("class","Indicator-ok");
 				if(Array.isArray(output[key])){
 					// text=document.createTextNode("["+obj[key].length+"]");
 					text=document.createTextNode("["+output[key]+"]");
@@ -438,28 +491,31 @@ function CU(name){
 			if(toExclude(key))
 				continue;
 
+			console.log("creating input \""+key+"\" val="+input[key]);
 
 
 			if((typeof(input[key]) !== 'function') && ((typeof (input[key]) !== 'object') || Array.isArray(input[key]))){
 				var tr=document.createElement('tr');
 				var td=document.createElement('td');
 				//var b=document.createElement('b');
-				text=document.createTextNode(key);
+				var text=document.createTextNode(key);
+				text.class="Control-ok";
 				td.appendChild(text);
-				if(!isInternal(key)){
+				td.setAttribute('class',"Control-ok");
+				/*if(!isInternal(key)){
 					td.style.fontStyle='bold';
 					td.style.color='green';
 					td.setAttribute('style', 'font-weight: bold; color: green; font-size:150%;');
-				}
+				}*/
 				tr.appendChild(td);
 				// input
 				td=document.createElement('td');
 				var ctrl=document.createElement("input");
 				ctrl.id=key + "_input_"+instancen;
-				ctrl.class="Control";
-				ctrl.onchange=function(){
-					sendAttr(obj.name,key,this.value);
-				}
+				ctrl.setAttribute('class',"Control-ok");
+				ctrl.name=key;
+				//ctrl.addEventListener("change",sendAttr);
+				ctrl.onchange=function(){obj.sendAttr(event);}
 				td.appendChild(ctrl);
 
 				tr.appendChild(td);
@@ -467,7 +523,7 @@ function CU(name){
 				// readout 
 				td=document.createElement('td');
 				td.setAttribute("id",key + "_readout_"+instancen);
-				td.setAttribute("class","Indicator");
+				td.class="Indicator-ok";
 				if(Array.isArray(output[key])){
 					// text=document.createTextNode("["+obj[key].length+"]");
 					text=document.createTextNode("["+input[key]+"]");
@@ -479,7 +535,6 @@ function CU(name){
 				}
 				td.appendChild(text);
 				tr.appendChild(td);
-				
 				tbdy.appendChild(tr);
 
 			}
@@ -494,6 +549,10 @@ function CU(name){
 	function CUupdateInterface(){
 
 		for(var i = 0;i<cus.length;i++){
+			if(cus[i].buildtable==1){
+				chaos_create_table(cus[i],i);
+				cus[i].buildtable=0;
+			}
 			cus[i].update();
 			var cu=cus[i];
 			var color="yellow";
@@ -503,18 +562,12 @@ function CU(name){
 			}
 			if(cu.dev_status=="start"){
 				color="green";
-				if(cu.isbuildInterface()){
-					chaos_create_table(cu,i);
-					cu.buildInterface(0);
-				}
+				
 			} else if(cu.dev_status=="stop"){
 				color="black";
 			} else if(cu.dev_status=="init"){
 				color="yellow";
-				if(cu.isbuildInterface()){
-					chaos_create_table(cu,i);
-					cu.buildInterface(0);
-				}
+				
 			} else {
 				color="red";
 			}
@@ -540,20 +593,54 @@ function CU(name){
 
 						var digits = document.getElementById(docelem).getAttribute("digits");
 						var base = document.getElementById(docelem).getAttribute("base");
-						var number=cu[key];
+						var number=output[key];
 						if(digits!=null){
-							number=Number(cu[key]).toFixed(digits);			    
+							number=Number(output[key]).toFixed(digits);			    
 						} 
 
 						if(base!=null){
-							number=Number(cu[key]).toString(base);
+							number=Number(output[key]).toString(base);
 						} 
 						document.getElementById(docelem).innerHTML=number;
 						document.getElementById(docelem).style.color=color;
 						document.getElementById(docelem).style.fontWeight =tick;
 						if(Array.isArray(cu[key])){
 							// text=document.createTextNode("["+obj[key].length+"]");
-							text=document.createTextNode("["+cu[key]+"]");
+							text=document.createTextNode("["+output[key]+"]");
+						}
+
+
+					} catch(e){
+						//  console.log("document element:" +docelem+ " not present in page:"+e); 
+					}
+				}
+			}
+			
+			for (var key in input) {
+				var docelem = key +"_readout_"+i;
+				if((typeof(input[key]) !== 'function') && ((typeof (input[key]) !== 'object') || Array.isArray(input[key]))){
+
+
+
+					//  console.log("SETTING [" +typeof(cu[key])+"]" + docelem+ " to:"+cu[key]);
+					try {
+
+						var digits = document.getElementById(docelem).getAttribute("digits");
+						var base = document.getElementById(docelem).getAttribute("base");
+						var number=input[key];
+						if(digits!=null){
+							number=Number(input[key]).toFixed(digits);			    
+						} 
+
+						if(base!=null){
+							number=Number(input[key]).toString(base);
+						} 
+						document.getElementById(docelem).innerHTML=number;
+						document.getElementById(docelem).style.color=color;
+						document.getElementById(docelem).style.fontWeight =tick;
+						if(Array.isArray(cu[key])){
+							// text=document.createTextNode("["+obj[key].length+"]");
+							text=document.createTextNode("["+input[key]+"]");
 						}
 
 
@@ -564,5 +651,5 @@ function CU(name){
 			}
 		}
 	}
-}
+
 
