@@ -506,7 +506,7 @@ function CU(name){
 		ctrl.setAttribute('class',"Control-ok");
 		ctrl.name="sched";
 		//ctrl.addEventListener("change",sendAttr);
-		ctrl.onchange=function(){obj.sendEvent(event);}
+		ctrl.onkeyup=function(){if(event.which==13)obj.sendEvent(event);}
 		td.appendChild(ctrl);
 
 		tr.appendChild(td);
@@ -585,7 +585,7 @@ function CU(name){
 				ctrl.setAttribute('class',"Control-ok");
 				ctrl.name=key;
 				//ctrl.addEventListener("change",sendAttr);
-				ctrl.onchange=function(){obj.sendAttr(event);}
+				ctrl.onkeyup=function(){if (event.which==13)obj.sendAttr(event);}
 				td.appendChild(ctrl);
 
 				tr.appendChild(td);
@@ -659,22 +659,28 @@ function CU(name){
 				var docelem = key +"_"+i;
 				if((typeof(output[key]) !== 'function') && ((typeof (output[key]) !== 'object') || Array.isArray(output[key]))){
 
-
-
+					var number=output[key];
+					var sout;
 					//  console.log("SETTING [" +typeof(cu[key])+"]" + docelem+ " to:"+cu[key]);
 					try {
+						if(key==="timestamp"){
+							var d=new Date(output[key]/1000);
+							sout=output[key] + "("+d.toLocaleString()+")";
+						} else {
+							var digits = document.getElementById(docelem).getAttribute("digits");
+							var base = document.getElementById(docelem).getAttribute("base");
+							
+							if(digits!=null){
+								number=Number(output[key]).toFixed(digits);			    
+							} 
 
-						var digits = document.getElementById(docelem).getAttribute("digits");
-						var base = document.getElementById(docelem).getAttribute("base");
-						var number=output[key];
-						if(digits!=null){
-							number=Number(output[key]).toFixed(digits);			    
-						} 
-
-						if(base!=null){
-							number=Number(output[key]).toString(base);
-						} 
-						document.getElementById(docelem).innerHTML=number;
+							if(base!=null){
+								number=Number(output[key]).toString(base);
+							} 
+							sout=number + "(0x"+Number(output[key]).toString(16)+")";
+						}
+						
+						document.getElementById(docelem).innerHTML=sout;
 						document.getElementById(docelem).style.color=color;
 						document.getElementById(docelem).style.fontWeight =tick;
 						if(Array.isArray(cu[key])){
@@ -701,14 +707,26 @@ function CU(name){
 						var digits = document.getElementById(docelem).getAttribute("digits");
 						var base = document.getElementById(docelem).getAttribute("base");
 						var number=input[key];
-						if(digits!=null){
-							number=Number(input[key]).toFixed(digits);			    
-						} 
+						var sout;
+						if(key==="timestamp"){
+							var d=new Date(Number(input[key]));
+							sout=input[key] + "("+d.toLocaleString()+")";
+						} else {
+							var digits = document.getElementById(docelem).getAttribute("digits");
+							var base = document.getElementById(docelem).getAttribute("base");
+							
+							if(digits!=null){
+								number=Number(input[key]).toFixed(digits);			    
+							} 
 
-						if(base!=null){
-							number=Number(input[key]).toString(base);
-						} 
-						document.getElementById(docelem).innerHTML=number;
+							if(base!=null){
+								number=Number(input[key]).toString(base);
+							} 
+							sout=number + "(0x"+Number(input[key]).toString(16)+")";
+						}
+						
+						
+						document.getElementById(docelem).innerHTML=sout;
 						document.getElementById(docelem).style.color=color;
 						document.getElementById(docelem).style.fontWeight =tick;
 						if(Array.isArray(cu[key])){
