@@ -8,19 +8,10 @@ var npoints=0;
 var refreshInterval=0;
 var request_prefix = "http://localhost:8081/CU?dev="; 
 var internal_param=new Array();
-var excludeInterface=["oldtimestamp","dostate","firsttimestamp","ndk_uid","dev_state","dpck_ds_type","dpck_ats","updating"];
+var excludeInterface=["oldtimestamp","dostate","firsttimestamp","ndk_uid","dpck_ds_type","dpck_ats","updating"];
 var updateAll=false;
 ///////
 
-
-function sendAttr(vv) {
-	var request = new XMLHttpRequest();
-
-	console.log("device:" + this.id + " set attr:" + this.name + " param:" + this.value);
-	request.open("GET",  request_prefix + this.name + "&attr="+ this.id + "&parm=" + this.value,true);
-	request.send();
-
-};
 
 
 /////
@@ -105,10 +96,20 @@ function CU(name){
 		var request = new XMLHttpRequest();
 
 		console.log("device:" + this.name + " set attr:" + vv.currentTarget.name + " param:" + vv.currentTarget.value);
-		request.open("GET",  request_prefix + this.name + "&attr="+ vv.currentTarget.name + "&parm=" + vv.currentTarget.value,true);
+		request.open("GET",  request_prefix + this.name + "&cmd=attr" + "&parm={\""+ vv.currentTarget.name+"\": \"" + vv.currentTarget.value+"\"}",true);
 		request.send();
 	};
+	this.sendEvent=function (vv) {
+		var request = new XMLHttpRequest();
 
+		console.log("device:" + this.name + " event:" + vv.currentTarget.name + " param:" + vv.currentTarget.value);
+		request.open("GET",  request_prefix + this.name + "&cmd=" + vv.currentTarget.name + "&parm="+vv.currentTarget.value,true);
+		request.send();
+	};
+	
+	this.onFocus=function (vv) {
+
+	};
 	this.setSched=function (parm) {
 		var request = new XMLHttpRequest();
 
@@ -429,20 +430,89 @@ function CU(name){
 		//var body=document.getElementsByTagName('body');
 		var body=document.body;
 		var tbl=document.createElement('table');
-		var hr=document.createElement('hr');
-		body.appendChild(hr);
-		var h=document.createElement('h2');
-		var text=document.createTextNode(obj.name);
-		h.appendChild(text);
-		body.appendChild(h);
-		tbl.style.width='100%';
+		//var hr=document.createElement('hr');
+	//	body.appendChild(hr);
+		
+		
+		tbl.style.width='auto';
 		tbl.setAttribute('border','1');
 		tbl.setAttribute("id",obj.name + "_" +instancen);
 		var tbdy=document.createElement('tbody');
 
-
-		tbdy.appendChild(hr);
+		
+		//tbdy.appendChild(hr);
 		obj.buildtable=1;
+		// name and status
+		var tr=document.createElement('tr');
+		var td=document.createElement('td');
+		var h=document.createElement('h2');
+		var text=document.createTextNode(obj.name);
+		h.appendChild(text);
+		td.appendChild(h);
+		tr.appendChild(td);
+		td=document.createElement('td');
+		var div=document.createElement('div');
+		//div.setAttribute("class","Indicator-ok");
+		div.appendChild(document.createTextNode("status:"));
+		
+		td.appendChild(div);
+		div=document.createElement('div');
+		div.setAttribute("id","dev_status" + "_"+instancen);
+		div.setAttribute("class","Indicator-ok");
+		div.appendChild(document.createTextNode(obj.dev_state));
+		
+		
+		td.appendChild(div);
+		tr.appendChild(td);
+		//error
+		td=document.createElement('td');
+		 div=document.createElement('div');
+		 div.appendChild(document.createTextNode("error:"));
+			td.appendChild(div);
+		div=document.createElement('div');
+		div.setAttribute("id","error_status" + "_"+instancen);
+		div.setAttribute("class","Indicator-ok");
+		div.appendChild(document.createTextNode(obj.error_status));
+		td.appendChild(div);
+		
+		tr.appendChild(td);
+		tbdy.appendChild(tr);
+		// init,stop,deinit,start,clrexception
+		tr=document.createElement('tr');
+		cu_ctrl=["start","stop","recover","init","deinit"];		
+		td=document.createElement('td');
+
+		for(var b in cu_ctrl ){
+
+			var ctrl=document.createElement("button");
+			ctrl.id=cu_ctrl[b]+"_input_"+instancen;
+			ctrl.setAttribute('class',"Control-ok");
+			ctrl.name=cu_ctrl[b];
+			ctrl.type='button';
+			ctrl.appendChild(document.createTextNode(cu_ctrl[b]));
+		
+		//ctrl.addEventListener("change",sendAttr);
+			ctrl.onclick=function(){obj.sendEvent(event);}
+			ctrl.onfocus=function(){obj.onFocus(event);}
+			td.appendChild(ctrl);
+		}
+		tr.appendChild(td);
+
+		td=document.createElement('td');
+		td.appendChild(document.createTextNode("sched:"));
+		tr.appendChild(td);
+		ctrl=document.createElement("input");
+		ctrl.id=obj.name + "_sched_input_"+instancen;
+		ctrl.setAttribute('class',"Control-ok");
+		ctrl.name="sched";
+		//ctrl.addEventListener("change",sendAttr);
+		ctrl.onchange=function(){obj.sendEvent(event);}
+		td.appendChild(ctrl);
+
+		tr.appendChild(td);
+		
+		tbdy.appendChild(tr);
+		
 		var input=obj.input;
 		var output=obj.output;
 
@@ -581,6 +651,9 @@ function CU(name){
 
 			var input=cu.input;
 			var output=cu.output;
+			
+			document.getElementById("dev_status_"+i).innerHTML=cu.dev_status;
+			document.getElementById("error_status_"+i).innerHTML=cu.error_status;
 
 			for (var key in output) {
 				var docelem = key +"_"+i;
