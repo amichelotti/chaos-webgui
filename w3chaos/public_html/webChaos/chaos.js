@@ -31,6 +31,7 @@ function CU(name){
 	console.log("creating CU:"+name);
 	this.updating=0;
 	this.buildtable=0;
+	this.multibase=0;
 	this.buildInterface = function (parm){
 		buildtable=parm;
 	}
@@ -129,23 +130,21 @@ function CU(name){
 		var input=json.input;
 		var output=json.output;
 		for(var kk in output){
-			if(kk== "dpck_ats"){
-				json.output["timestamp"]=output[kk].$numberLong;
-				json["timestamp"]=output[kk].$numberLong;
-			}else if(output[kk] === 'object'){
-				if(output[kk].name == "$numberLong"){
-					json.output[kk]=output[kk].$numberLong;
-				}
-			}
+		    if(kk== "dpck_ats"){
+			json.output["timestamp"]=output[kk].$numberLong;
+			json["timestamp"]=output[kk].$numberLong;
+		    } else if(output[kk].hasOwnProperty("$numberLong" )){
+			json.output[kk]=output[kk].$numberLong;
+		    }
+		    
 		}
 		for(var kk in input){
-			if(kk== "dpck_ats"){
-				json.input["timestamp"]=input[kk].$numberLong;
-			} else if(input[kk] === 'object'){
-				if(input[kk].name == "$numberLong"){
-					json.input[kk]=input[kk].$numberLong;
-				}
-			}
+		    if(kk== "dpck_ats"){
+			json.input["timestamp"]=input[kk].$numberLong;
+		    } else if(input[kk].hasOwnProperty("$numberLong" )){
+			json.input[kk]=input[kk].$numberLong;
+		    }
+		    
 		}
 		
 		Object.keys(json).forEach(function(key) {
@@ -392,7 +391,8 @@ function CU(name){
 	function CUBuildInterface(){
 		updateAll=true;
 		for(var i=0;i<cus.length;i++){
-			cus[i].buildtable=1;
+		    cus[i].buildtable=1;
+		    cus[i].multibase=1;
 			cus[i].UpdateDataset();
 			for (var key in cus[i]) {
 				internal_param.push(key);
@@ -519,7 +519,10 @@ function CU(name){
 		for (var key in output) {
 			if(toExclude(key))
 				continue;
-
+		        
+		    if(output[key].hasOwnProperty("$numberLong" )){
+			output[key]=output[key].$numberLong;
+		    }
 			console.log("creating output \""+key+"\" val="+output[key]);
 
 			
@@ -561,6 +564,9 @@ function CU(name){
 			if(toExclude(key))
 				continue;
 
+		    if(input[key].hasOwnProperty("$numberLong" )){
+			input[key]=input[key].$numberLong;
+		    }
 			console.log("creating input \""+key+"\" val="+input[key]);
 
 
@@ -652,9 +658,12 @@ function CU(name){
 			var input=cu.input;
 			var output=cu.output;
 			
+		    if(document.getElementById("dev_status_"+i)!=null){
 			document.getElementById("dev_status_"+i).innerHTML=cu.dev_status;
+		    }
+		    if(document.getElementById("error_status_"+i)!=null){
 			document.getElementById("error_status_"+i).innerHTML=cu.error_status;
-
+		    }
 			for (var key in output) {
 				var docelem = key +"_"+i;
 				if((typeof(output[key]) !== 'function') && ((typeof (output[key]) !== 'object') || Array.isArray(output[key]))){
@@ -664,8 +673,12 @@ function CU(name){
 					//  console.log("SETTING [" +typeof(cu[key])+"]" + docelem+ " to:"+cu[key]);
 					try {
 						if(key==="timestamp"){
-							var d=new Date(output[key]/1000);
+						    if(cu.multibase){
+							var d=new Date(Number(output[key]));
 							sout=output[key] + "("+d.toLocaleString()+")";
+						    } else {
+							sout=output[key];
+						    }
 						} else {
 							var digits = document.getElementById(docelem).getAttribute("digits");
 							var base = document.getElementById(docelem).getAttribute("base");
@@ -677,7 +690,11 @@ function CU(name){
 							if(base!=null){
 								number=Number(output[key]).toString(base);
 							} 
+						    if(cu.multibase){
 							sout=number + "(0x"+Number(output[key]).toString(16)+")";
+						    } else {
+							sout=number;
+						    }
 						}
 						
 						document.getElementById(docelem).innerHTML=sout;
@@ -709,8 +726,12 @@ function CU(name){
 						var number=input[key];
 						var sout;
 						if(key==="timestamp"){
+						    if(cu.multibase){
 							var d=new Date(Number(input[key]));
 							sout=input[key] + "("+d.toLocaleString()+")";
+						    } else {
+							sout=input[key];
+						    }
 						} else {
 							var digits = document.getElementById(docelem).getAttribute("digits");
 							var base = document.getElementById(docelem).getAttribute("base");
@@ -722,7 +743,11 @@ function CU(name){
 							if(base!=null){
 								number=Number(input[key]).toString(base);
 							} 
+						    if(cu.multibase){
 							sout=number + "(0x"+Number(input[key]).toString(16)+")";
+						    } else {
+							sout=number;
+						    }
 						}
 						
 						
