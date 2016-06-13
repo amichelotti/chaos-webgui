@@ -54,11 +54,9 @@ var datasetY = [];
 var updateInterval = 500;
 
 
-var label_ele;
-var label_pos;
 
 var linac_st = 0;
-var fileLoad;
+
 
     function GetData() {
      //   $.get("http://" + location.host + ":8081/CU?dev=ACCUMULATOR/BPM/BPMSYNC&cmd=status", function(datavalue, textStatus) {

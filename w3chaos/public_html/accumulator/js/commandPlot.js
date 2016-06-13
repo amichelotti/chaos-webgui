@@ -159,7 +159,7 @@ function Search() {
 	var  list = JSON.parse(dataset);
 	 $("#table-list").empty();
 	for (var i = 0; i < list.keys.length; i ++) {
-	  $("#table-list").append('<tr><td id="nome_ds_save_' + [i]+'">' + list.keys[i].key + '</td><td>'+list.keys[i].ts +'</td></tr>');
+	  $("#table-list").append('<tr><td id="nome_ds_save_' + [i]+'">' + list.keys[i].key + '</td><td id="nome_ts_save_' + [i]+'">' +list.keys[i].ts +'</td></tr>');
 	}
     });
 }
@@ -175,6 +175,8 @@ $(document).on("click", "#table-list tr", function(e) {
       //  num_row = num_row - 1;  // per far partire il conteggio da 1 e non da 0
         // prendo il valore del nome del file del datset
         name_file_ds = $("#nome_ds_save_" + num_row).text();
+        name_file_ts = $("#nome_ts_save_" + num_row).text();
+
     }
 });
 

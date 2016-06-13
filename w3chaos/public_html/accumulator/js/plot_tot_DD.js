@@ -72,13 +72,12 @@ var label_ele;
 var label_pos;
 
 var linac_st = 0;
-var fileLoad;
 
     function GetData() {
-        $.get("http://" + location.host + ":8081/CU?dev=ACCUMULATOR/BPM/BPMSYNC&cmd=status", function(datavalue, textStatus) {
-            var data_json = datavalue.replace(/\$numberLong/g, 'numberLong');
-            data_json = data_json.replace(/\//g, '');
-            var obj_json = JSON.parse(data_json);
+   //     $.get("http://" + location.host + ":8081/CU?dev=ACCUMULATOR/BPM/BPMSYNC&cmd=status", function(datavalue, textStatus) {
+   //         var data_json = datavalue.replace(/\$numberLong/g, 'numberLong');
+    //        data_json = data_json.replace(/\//g, '');
+     //       var obj_json = JSON.parse(data_json);
 	    
 	    linac_st = 0;
 	    
@@ -121,69 +120,10 @@ var fileLoad;
 	    datasetY = [{label:"noise",data: globalDataYE, color: "#00FF00"}];	
 
 
-	});
+//	});
     }
     
-    	/*$(function(){ */
-	 /*   $('.btn-load').click(function(){
-		fileLoad = $("#nameToLoad").val();
-		
-		if (fileLoad == '') {
-		    fileLoad = name_file_ds;
-		}
-		
-		$.get("http://"+ location.host + ":8081/CU?dev=ACCUMULATOR/BPM/BPMSYNC&cmd=load&parm=" + fileLoad, function(dataLoadJs, textStatus) {
-		
-		    var dataLoad = dataLoadJs.replace(/\$numberLong/g, 'numberLong');
-		    dataLoad = dataLoad.replace(/\//g, '');
-		    
-		    try {
-			var objDataLoad = JSON.parse(dataLoad);
-			var linac_load = objDataLoad.output.STATUSlinac_mode;
-			
-			switch(linac_load) {
-			    
-			    case -1:
-				$("#file-up-el").html(fileLoad);
-				label_ele = fileLoad;
-				//$("#choices-load-labelX").html(label_ele);
-				
-				LoadDataXE = [[2.8,objDataLoad.output.BPBA1001X_ACQ[0]],[5.2,objDataLoad.output.BPSA1001X_ACQ[0]],[6.6,objDataLoad.output.BPBA1002X_ACQ[0]],
-					    [9.7,objDataLoad.output.BPBA2001X_ACQ[0]],[11,objDataLoad.output.BPSA2001X_ACQ[0]],[13.5,objDataLoad.output.BPBA2002X_ACQ[0]],
-					    [17.7,objDataLoad.output.BPSA3001X_ACQ[0]],[19,objDataLoad.output.BPBA3001X_ACQ[0]],[22.9,objDataLoad.output.BPBA3002X_ACQ[0]],
-					    [26,objDataLoad.output.BPBA4001X_ACQ[0]],[29.8,objDataLoad.output.BPBA4002X_ACQ[0]],[31.1,objDataLoad.output.BPSA4001X_ACQ[0]]];
-			
-				LoadDataYE = [[2.8,objDataLoad.output.BPBA1001Y_ACQ[0]],[5.2,objDataLoad.output.BPSA1001Y_ACQ[0]],[6.6,objDataLoad.output.BPBA1002Y_ACQ[0]],
-					    [9.7,objDataLoad.output.BPBA2001Y_ACQ[0]],[11,objDataLoad.output.BPSA2001Y_ACQ[0]],[13.5,objDataLoad.output.BPBA2002Y_ACQ[0]],
-					    [17.7,objDataLoad.output.BPSA3001Y_ACQ[0]],[19,objDataLoad.output.BPBA3001Y_ACQ[0]],[22.9,objDataLoad.output.BPBA3002Y_ACQ[0]],
-					    [26,objDataLoad.output.BPBA4001Y_ACQ[0]],[29.8,objDataLoad.output.BPBA4002Y_ACQ[0]],[31.1,objDataLoad.output.BPSA4001Y_ACQ[0]]];
-
-			    break;
-			
-			    case 1:
-				$("#file-up-pos").html(fileLoad);
-				label_pos = fileLoad;
-				//$("#choices-load-labelX").html(label_pos);
-
-				LoadDataXP = [[2.8,objDataLoad.output.BPBA2002X_ACQ[0]],[5.2,objDataLoad.output.BPSA2001X_ACQ[0]],[6.6,objDataLoad.output.BPBA2001X_ACQ[0]],
-					    [9.7,objDataLoad.output.BPBA1002X_ACQ[0]],[11,objDataLoad.output.BPSA1001X_ACQ[0]],[13.5,objDataLoad.output.BPBA1001X_ACQ[0]],
-					    [17.7,objDataLoad.output.BPSA4001X_ACQ[0]],[19,objDataLoad.output.BPBA4002X_ACQ[0]],[22.9,objDataLoad.output.BPBA4001X_ACQ[0]],
-					    [26,objDataLoad.output.BPBA3002X_ACQ[0]],[29.8,objDataLoad.output.BPBA3001X_ACQ[0]],[31.1,objDataLoad.output.BPSA3001X_ACQ[0]]];
-			    
-				LoadDataYP = [[2.8,objDataLoad.output.BPBA2002Y_ACQ[0]],[5.2,objDataLoad.output.BPSA2001Y_ACQ[0]],[6.6,objDataLoad.output.BPBA2001Y_ACQ[0]],
-					    [9.7,objDataLoad.output.BPBA1002Y_ACQ[0]],[11,objDataLoad.output.BPSA1001Y_ACQ[0]],[13.5,objDataLoad.output.BPBA1001Y_ACQ[0]],
-					    [17.7,objDataLoad.output.BPSA4001Y_ACQ[0]],[19,objDataLoad.output.BPBA4002Y_ACQ[0]],[22.9,objDataLoad.output.BPBA4001Y_ACQ[0]],
-					    [26,objDataLoad.output.BPBA3002Y_ACQ[0]],[29.8,objDataLoad.output.BPBA3001Y_ACQ[0]],[31.1,objDataLoad.output.BPSA3001Y_ACQ[0]]];
-			    
-			    break;
-			}
-		    }  catch(e) {
-			    console.log("errore parsing" + e.message);
-			    alert(""+fileLoad+" file does not exist")
-			}
-		});
-	    });*/
-	//});
+    
 	
     var optionsP = {
 	series: {
