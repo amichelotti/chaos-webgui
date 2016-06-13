@@ -68,9 +68,6 @@ var LoadDataYE = [];
 var LoadDataXP = [];
 var LoadDataYP = [];
 
-var label_ele;
-var label_pos;
-
 var linac_st = 0;
 
     function GetData() {
