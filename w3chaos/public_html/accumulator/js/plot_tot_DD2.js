@@ -1,19 +1,14 @@
 
 function builPlotTotDD(){
-    	
+    
+    //if ($('#multi_plot').length){
+	
     if ($('#plot_accumulator_x').length){
 
-	
-	/*$("#plot_accumulator_x").append('<fieldset class="plot col s12 m12 l12">' 
-				    + '<legend>Data X</legend><div class="col s11 m11 l11"><div id="chart_tot_x" style="width:100%; height:300px;"></div></div>'
-				    +'<div class="col s1 m1 l1" style="margin-top:2%;"><input type="checkbox" id="choices-load" class="filled-in"/><label for="choices-load" id="choices-load-labelX">dataset</label>'
-				    +'<input type="checkbox" id="choices-diff" class="filled-in"/><label for="choices-diff" id="choices-diff-labelX">diff</label></div>' 
-				    +'</fieldset>') */
 	
 	$("#plot_accumulator_x").append('<fieldset class="plot col s11 m12 l12">' 
 				    + '<legend>Data X</legend><div id="chart_tot_x" style="width:98%; height:300px;"></div>' 
 				    +'</fieldset>')
-
 	
 	$("#plot_accumulator_y").append('<fieldset class="plot col s11 m12 l12">' 
 				    + '<legend>Data Y</legend><div id="chart_tot_y" style="width:98%; height:300px;"></div>' 
@@ -47,7 +42,7 @@ function builPlotTotDD(){
 
 
 
-function plotTotDD(chart,plotdataset) {
+function plotTotDD(plot,plotdataset) {
         
 var globalDataXP = [];
 var globalDataYP = [];
@@ -57,9 +52,6 @@ var datasetXP = [];
 var datasetYP = [];
 var datasetXE = [];
 var datasetYE = [];
-var datasetX = [];
-var datasetY = [];
-
 
 var updateInterval = 500;
 
@@ -71,7 +63,7 @@ var LoadDataYP = [];
 var label_ele;
 var label_pos;
 
-var linac_st = 0;
+var dafne_st = 0;
 var fileLoad;
 
     function GetData() {
@@ -80,10 +72,10 @@ var fileLoad;
             data_json = data_json.replace(/\//g, '');
             var obj_json = JSON.parse(data_json);
 	    
-	    linac_st = 0;
+	    dafne_st = 0;
 	    
-	    linac_st = obj_json.STATUSlinac_mode;
-	    // console.log("dafne get data " + linac_st );
+	 dafne_st = obj_json.STATUSdafne_status;
+	// console.log("dafne get data " + dafne_st );
 	    
 	    globalDataXP = [];
 	    globalDataYP = [];
@@ -115,17 +107,13 @@ var fileLoad;
 	    datasetYP = [{label:"currentDataY e+",data: globalDataYP, color: "#b30000"}];
 	    
 	    datasetXE = [{label:"currentDataX e-", data: globalDataXE, color: "#0062FF" }];
-	    datasetYE = [{label:"currentDataY e-",data: globalDataYE, color: "#0062FF"}];
-	    
-	    datasetX = [{label:"noise", data: globalDataXE, color: "#00FF00" }];
-	    datasetY = [{label:"noise",data: globalDataYE, color: "#00FF00"}];	
-
+	    datasetYE = [{label:"currentDataY e-",data: globalDataYE, color: "#0062FF"}];	
 
 	});
     }
     
     	/*$(function(){ */
-	 /*   $('.btn-load').click(function(){
+	    $('.btn-load').click(function(){
 		fileLoad = $("#nameToLoad").val();
 		
 		if (fileLoad == '') {
@@ -139,52 +127,52 @@ var fileLoad;
 		    
 		    try {
 			var objDataLoad = JSON.parse(dataLoad);
-			var linac_load = objDataLoad.output.STATUSlinac_mode;
 			
-			switch(linac_load) {
+			if (objDataLoad.output.STATUSdafne_status == 2) {
+			    $("#file-up-el").html(fileLoad);
+			    label_ele = fileLoad;
 			    
-			    case -1:
-				$("#file-up-el").html(fileLoad);
-				label_ele = fileLoad;
-				//$("#choices-load-labelX").html(label_ele);
-				
-				LoadDataXE = [[2.8,objDataLoad.output.BPBA1001X_ACQ[0]],[5.2,objDataLoad.output.BPSA1001X_ACQ[0]],[6.6,objDataLoad.output.BPBA1002X_ACQ[0]],
-					    [9.7,objDataLoad.output.BPBA2001X_ACQ[0]],[11,objDataLoad.output.BPSA2001X_ACQ[0]],[13.5,objDataLoad.output.BPBA2002X_ACQ[0]],
-					    [17.7,objDataLoad.output.BPSA3001X_ACQ[0]],[19,objDataLoad.output.BPBA3001X_ACQ[0]],[22.9,objDataLoad.output.BPBA3002X_ACQ[0]],
-					    [26,objDataLoad.output.BPBA4001X_ACQ[0]],[29.8,objDataLoad.output.BPBA4002X_ACQ[0]],[31.1,objDataLoad.output.BPSA4001X_ACQ[0]]];
+			//LoadDataXE = [];
+			//LoadDataYE = [];
+			LoadDataXE = [[2.8,objDataLoad.output.BPBA1001X_ACQ[0]],[5.2,objDataLoad.output.BPSA1001X_ACQ[0]],[6.6,objDataLoad.output.BPBA1002X_ACQ[0]],
+				      [9.7,objDataLoad.output.BPBA2001X_ACQ[0]],[11,objDataLoad.output.BPSA2001X_ACQ[0]],[13.5,objDataLoad.output.BPBA2002X_ACQ[0]],
+				      [17.7,objDataLoad.output.BPSA3001X_ACQ[0]],[19,objDataLoad.output.BPBA3001X_ACQ[0]],[22.9,objDataLoad.output.BPBA3002X_ACQ[0]],
+				      [26,objDataLoad.output.BPBA4001X_ACQ[0]],[29.8,objDataLoad.output.BPBA4002X_ACQ[0]],[31.1,objDataLoad.output.BPSA4001X_ACQ[0]]];
 			
-				LoadDataYE = [[2.8,objDataLoad.output.BPBA1001Y_ACQ[0]],[5.2,objDataLoad.output.BPSA1001Y_ACQ[0]],[6.6,objDataLoad.output.BPBA1002Y_ACQ[0]],
-					    [9.7,objDataLoad.output.BPBA2001Y_ACQ[0]],[11,objDataLoad.output.BPSA2001Y_ACQ[0]],[13.5,objDataLoad.output.BPBA2002Y_ACQ[0]],
-					    [17.7,objDataLoad.output.BPSA3001Y_ACQ[0]],[19,objDataLoad.output.BPBA3001Y_ACQ[0]],[22.9,objDataLoad.output.BPBA3002Y_ACQ[0]],
-					    [26,objDataLoad.output.BPBA4001Y_ACQ[0]],[29.8,objDataLoad.output.BPBA4002Y_ACQ[0]],[31.1,objDataLoad.output.BPSA4001Y_ACQ[0]]];
-
-			    break;
-			
-			    case 1:
-				$("#file-up-pos").html(fileLoad);
-				label_pos = fileLoad;
-				//$("#choices-load-labelX").html(label_pos);
-
-				LoadDataXP = [[2.8,objDataLoad.output.BPBA2002X_ACQ[0]],[5.2,objDataLoad.output.BPSA2001X_ACQ[0]],[6.6,objDataLoad.output.BPBA2001X_ACQ[0]],
-					    [9.7,objDataLoad.output.BPBA1002X_ACQ[0]],[11,objDataLoad.output.BPSA1001X_ACQ[0]],[13.5,objDataLoad.output.BPBA1001X_ACQ[0]],
-					    [17.7,objDataLoad.output.BPSA4001X_ACQ[0]],[19,objDataLoad.output.BPBA4002X_ACQ[0]],[22.9,objDataLoad.output.BPBA4001X_ACQ[0]],
-					    [26,objDataLoad.output.BPBA3002X_ACQ[0]],[29.8,objDataLoad.output.BPBA3001X_ACQ[0]],[31.1,objDataLoad.output.BPSA3001X_ACQ[0]]];
+			LoadDataYE = [[2.8,objDataLoad.output.BPBA1001Y_ACQ[0]],[5.2,objDataLoad.output.BPSA1001Y_ACQ[0]],[6.6,objDataLoad.output.BPBA1002Y_ACQ[0]],
+				      [9.7,objDataLoad.output.BPBA2001Y_ACQ[0]],[11,objDataLoad.output.BPSA2001Y_ACQ[0]],[13.5,objDataLoad.output.BPBA2002Y_ACQ[0]],
+				      [17.7,objDataLoad.output.BPSA3001Y_ACQ[0]],[19,objDataLoad.output.BPBA3001Y_ACQ[0]],[22.9,objDataLoad.output.BPBA3002Y_ACQ[0]],
+				      [26,objDataLoad.output.BPBA4001Y_ACQ[0]],[29.8,objDataLoad.output.BPBA4002Y_ACQ[0]],[31.1,objDataLoad.output.BPSA4001Y_ACQ[0]]];
+    
+			} if (objDataLoad.output.STATUSdafne_status == 1) {
+			     $("#file-up-pos").html(fileLoad);
+			     label_pos = fileLoad;
+			    //LoadDataXP = [];
+			    //LoadDataYP = [];
+			    LoadDataXP = [[2.8,objDataLoad.output.BPBA2002X_ACQ[0]],[5.2,objDataLoad.output.BPSA2001X_ACQ[0]],[6.6,objDataLoad.output.BPBA2001X_ACQ[0]],
+					  [9.7,objDataLoad.output.BPBA1002X_ACQ[0]],[11,objDataLoad.output.BPSA1001X_ACQ[0]],[13.5,objDataLoad.output.BPBA1001X_ACQ[0]],
+					  [17.7,objDataLoad.output.BPSA4001X_ACQ[0]],[19,objDataLoad.output.BPBA4002X_ACQ[0]],[22.9,objDataLoad.output.BPBA4001X_ACQ[0]],
+					  [26,objDataLoad.output.BPBA3002X_ACQ[0]],[29.8,objDataLoad.output.BPBA3001X_ACQ[0]],[31.1,objDataLoad.output.BPSA3001X_ACQ[0]]];
 			    
-				LoadDataYP = [[2.8,objDataLoad.output.BPBA2002Y_ACQ[0]],[5.2,objDataLoad.output.BPSA2001Y_ACQ[0]],[6.6,objDataLoad.output.BPBA2001Y_ACQ[0]],
-					    [9.7,objDataLoad.output.BPBA1002Y_ACQ[0]],[11,objDataLoad.output.BPSA1001Y_ACQ[0]],[13.5,objDataLoad.output.BPBA1001Y_ACQ[0]],
-					    [17.7,objDataLoad.output.BPSA4001Y_ACQ[0]],[19,objDataLoad.output.BPBA4002Y_ACQ[0]],[22.9,objDataLoad.output.BPBA4001Y_ACQ[0]],
-					    [26,objDataLoad.output.BPBA3002Y_ACQ[0]],[29.8,objDataLoad.output.BPBA3001Y_ACQ[0]],[31.1,objDataLoad.output.BPSA3001Y_ACQ[0]]];
-			    
-			    break;
+			    LoadDataYP = [[2.8,objDataLoad.output.BPBA2002Y_ACQ[0]],[5.2,objDataLoad.output.BPSA2001Y_ACQ[0]],[6.6,objDataLoad.output.BPBA2001Y_ACQ[0]],
+					  [9.7,objDataLoad.output.BPBA1002Y_ACQ[0]],[11,objDataLoad.output.BPSA1001Y_ACQ[0]],[13.5,objDataLoad.output.BPBA1001Y_ACQ[0]],
+					  [17.7,objDataLoad.output.BPSA4001Y_ACQ[0]],[19,objDataLoad.output.BPBA4002Y_ACQ[0]],[22.9,objDataLoad.output.BPBA4001Y_ACQ[0]],
+					  [26,objDataLoad.output.BPBA3002Y_ACQ[0]],[29.8,objDataLoad.output.BPBA3001Y_ACQ[0]],[31.1,objDataLoad.output.BPSA3001Y_ACQ[0]]];
 			}
+		
 		    }  catch(e) {
 			    console.log("errore parsing" + e.message);
-			    alert(""+fileLoad+" file does not exist")
+			    alert("the uploaded file does not exist")
 			}
+		     //   console.log("elettroni " + LoadDataXE);
+		 //   console.log("positroni " + LoadDataXP);
 		});
-	    });*/
+	    });
 	//});
 	
+    
+	
+    
     var optionsP = {
 	series: {
 	    lines: {
@@ -267,74 +255,97 @@ var fileLoad;
 	},
     };
     
+
+    
     function update() {
         GetData();
 	
-	switch (linac_st) {
-	    case -1:
-		if (plotdataset == "plotDataX") {
-		    if (LoadDataXE.length) {
-			datasetXE.push({label: label_ele, data: LoadDataXE});
-			var diffXE= []; 
-			for(var i = 0; i< LoadDataXE.length; i++) {
-			    diffXE.push( [LoadDataXE[i][0], LoadDataXE[i][1] - globalDataXE[i][1]]);	
-			}
-			datasetXE.push({label: "difference", data: diffXE});
+	if (dafne_st == 2) {
+	    if (plotdataset == "plotDataX") {
+		if (LoadDataXE.length) {
+		    
+		    datasetXE.push({label: label_ele, data: LoadDataXE});
+		   /* var diffXE= []; 
+		    for(var i = 0; i< LoadDataXE.length; i++) {
+			diffXE.push( [LoadDataXE[i][0], LoadDataXE[i][1] - globalDataXE[i][1]]);	
 		    }
-		    $.plot($(chart), datasetXE, optionsE);
+		datasetXE.push({label: "difference", data: diffXE});*/
 		}
+		console.log("data ele " + LoadDataXE);
+		$.plot($(plot), datasetXE, optionsE)
+	    }
 	
-		if (plotdataset == "plotDataY") {
-		    if (LoadDataYE.length) {
-			datasetYE.push({label:label_ele, data: LoadDataYE});
-			var diffYE= []; 
-			for(var i = 0; i< LoadDataYE.length; i++) {
-			    diffYE.push( [LoadDataYE[i][0], LoadDataYE[i][1] - globalDataYE[i][1]]);	
-			}
-			datasetYE.push({label: "difference", data: diffYE}); 
+	    if (plotdataset == "plotDataY") {
+		if (LoadDataYE.length) {
+		    datasetYE.push({label:label_ele, data: LoadDataYE});
+		  /*  var diffYE= []; 
+		    for(var i = 0; i< LoadDataYE.length; i++) {
+			diffYE.push( [LoadDataYE[i][0], LoadDataYE[i][1] - globalDataYE[i][1]]);	
 		    }
-		    $.plot($(chart), datasetYE, optionsE)
+		    datasetYE.push({label: "difference", data: diffYE}); */
 		}
-		break;
-	
-	    case 1:
-		if (plotdataset == "plotDataX") {
-		    if (LoadDataXP.length) {
-			datasetXP.push({label: label_pos, data: LoadDataXP});
-			var diffXP= []; 
-			for(var i = 0; i< LoadDataXP.length; i++) {
-			    diffXP.push( [LoadDataXP[i][0], LoadDataXP[i][1] - globalDataXP[i][1]]);	
-			}
-			datasetXP.push({label: "difference", data: diffXP}); 
-		    }
-		    $.plot($(chart), datasetXP, optionsP);
-		}
-	
-		if (plotdataset == "plotDataY") {
-		    if (LoadDataYP.length) {
-			datasetYP.push({label: label_pos, data: LoadDataYP});
-			var diffYP= []; 
-			for(var i = 0; i< LoadDataYP.length; i++) {
-			    diffYP.push( [LoadDataYP[i][0], LoadDataYP[i][1] - globalDataYP[i][1]]);	
-			}
-			datasetYP.push({label: "difference", data: diffYP}); 
-		    }
-		    $.plot($(chart), datasetYP, optionsP)
-		}
-		break;
-	    
-	    default:
-		if (plotdataset == "plotDataX") {	
-		    $.plot($(chart), datasetX, optionsE);
-		}
-		if (plotdataset == "plotDataY") {	
-		    $.plot($(chart), datasetY, optionsE)
-		}
-	
+		$.plot($(plot), datasetYE, optionsE)
+	    }    
 	}
 	
+	if (dafne_st == 1) {
+	    if (plotdataset == "plotDataX") {
+		if (LoadDataXP.length) {
+		    datasetXP.push({label: label_pos, data: LoadDataXP});
+		  /*  var diffXP= []; 
+		    for(var i = 0; i< LoadDataXP.length; i++) {
+			diffXP.push( [LoadDataXP[i][0], LoadDataXP[i][1] - globalDataXP[i][1]]);	
+		    }
+		datasetXP.push({label: "difference", data: diffXP}); */
+		}
+	   	console.log("data pos " + LoadDataXP);
+		$.plot($(plot), datasetXP, optionsP)
+	    }
+	
+	    if (plotdataset == "plotDataY") {
+		if (LoadDataYP.length) {
+		    datasetYP.push({label: label_pos, data: LoadDataYP});
+		  /*  var diffYP= []; 
+		    for(var i = 0; i< LoadDataYP.length; i++) {
+			diffYP.push( [LoadDataYP[i][0], LoadDataYP[i][1] - globalDataYP[i][1]]);	
+		    }
+		datasetYP.push({label: "difference", data: diffYP}); */
+		}
+		$.plot($(plot), datasetYP, optionsP)
+	    }
+	}
+
+	// STATO NO INIEJCTION DA CORREGGERE
+	if (dafne_st == 0) {
+	    if (plotdataset == "plotDataX") {
+		if (LoadDataXE.length) {
+		    datasetXE.push({label: label_ele, data: LoadDataXE});
+		  /*  var diffXE= []; 
+		    for(var i = 0; i< LoadDataXE.length; i++) {
+			diffXE.push( [LoadDataXE[i][0], LoadDataXE[i][1] - globalDataXE[i][1]]);	
+		    }
+		datasetXE.push({label: "difference", data: diffXE}); */
+		}
+		console.log("data ele " + LoadDataXE);
+		$.plot($(plot), datasetXE, optionsE)
+	    }
+	
+	    if (plotdataset == "plotDataY") {
+		if (LoadDataYE.length) {
+		    datasetYE.push({label: label_ele, data: LoadDataYE});
+		  /*  var diffYE= []; 
+		    for(var i = 0; i< LoadDataYE.length; i++) {
+			diffYE.push( [LoadDataYE[i][0], LoadDataYE[i][1] - globalDataYE[i][1]]);	
+		    }
+		datasetYE.push({label: "difference", data: diffYE}); */
+		}
+		$.plot($(plot), datasetYE, optionsE)
+	    }
+	}
+
 	timeout_plot(update, updateInterval);
-    } 
+
+    }
     update(); 
 }
 

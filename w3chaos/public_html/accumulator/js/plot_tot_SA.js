@@ -1,38 +1,40 @@
 
 function builPlotTotSA(){
-    
+    	
+    if ($('#plot_accumulator_x').length){
 
-    
-    if(plotSAdone==0){
-    	$(".box-accumulator").append('<div id="plot_accumulator_x"></div>'); 
-    	
-    	$("#plot_accumulator_x").append('<fieldset class="plot col s11 m12 l12">' 
-    				    + '<legend>Data X</legend><div id="chart_tot_x" style="width:98%; height:300px;"></div>' 
-    				    +'</fieldset>')
-    	
-    	$(".box-accumulator").append('<div id="plot_accumulator_y"></div>');
-    	
-    	$("#plot_accumulator_y").append('<fieldset class="plot col s11 m12 l12">' 
-    				    + '<legend>Data Y</legend><div id="chart_tot_y" style="width:98%; height:300px;"></div>' 
-    				    +'</fieldset>');
-
-/*
-        if ($('#plot_accumulator_x').length){
-
-    	
-    	$("#plot_accumulator_x").append('<fieldset class="plot col s11 m12 l12">' 
-    				    + '<legend>Data X</legend><div id="chart_tot_x" style="width:98%; height:300px;"></div>' 
-    				    +'</fieldset>');
-    	
-    	$("#plot_accumulator_y").append('<fieldset class="plot col s11 m12 l12">' 
-    				    + '<legend>Data Y</legend><div id="chart_tot_y" style="width:98%; height:300px;"></div>' 
-    				    +'</fieldset>');
-        }
-        */
-        plotSAdone++;
-    }
+	
+	$("#plot_accumulator_x").append('<fieldset class="plot col s11 m12 l12">' 
+				    + '<legend>Data X</legend><div id="chart_tot_x" style="width:98%; height:300px;"></div>' 
+				    +'</fieldset>')
+	
+	$("#plot_accumulator_y").append('<fieldset class="plot col s11 m12 l12">' 
+				    + '<legend>Data Y</legend><div id="chart_tot_y" style="width:98%; height:300px;"></div>' 
+				    +'</fieldset>')
+   
+       
     plotTotSA("#chart_tot_x","plotDataX");
     plotTotSA("#chart_tot_y","plotDataY"); 
+
+ 
+    } else {
+	
+	$(".box-accumulator").append('<div id="plot_accumulator_x"></div>'); 
+	
+	$("#plot_accumulator_x").append('<fieldset class="plot col s11 m12 l12">' 
+				    + '<legend>Data X</legend><div id="chart_tot_x" style="width:98%; height:300px;"></div>' 
+				    +'</fieldset>')
+	
+	$(".box-accumulator").append('<div id="plot_accumulator_y"></div>');
+	
+	$("#plot_accumulator_y").append('<fieldset class="plot col s11 m12 l12">' 
+				    + '<legend>Data Y</legend><div id="chart_tot_y" style="width:98%; height:300px;"></div>' 
+				    +'</fieldset>')
+
+   
+    plotTotSA("#chart_tot_x","plotDataX");
+    plotTotSA("#chart_tot_y","plotDataY"); 
+    } 
 }  
 
 
@@ -46,18 +48,31 @@ var datasetXP = [];
 var datasetYP = [];
 var datasetXE = [];
 var datasetYE = [];
+var datasetX = [];
+var datasetY = [];
 
-var updateInterval = 1000;
+var updateInterval = 500;
 
-var LoadDataXE = [];
-var LoadDataYE = [];
-var LoadDataXP = [];
-var LoadDataYP = [];
 
-var dafne_st = 0;
+var label_ele;
+var label_pos;
+
+var linac_st = 0;
 var fileLoad;
 
-  
+    function GetData() {
+     //   $.get("http://" + location.host + ":8081/CU?dev=ACCUMULATOR/BPM/BPMSYNC&cmd=status", function(datavalue, textStatus) {
+     //       var data_json = datavalue.replace(/\$numberLong/g, 'numberLong');
+     //       data_json = data_json.replace(/\//g, '');
+     //       var obj_json = JSON.parse(data_json);
+
+	    linac_st = obj_json.STATUSlinac_mode;
+	    
+	    globalDataXP = [];
+	    globalDataYP = [];
+	    globalDataXE = [];
+	    globalDataYE = [];    
+	    	    
 	    globalDataXP = [[2.8,obj_json.BPBA2002X],[5.2,obj_json.BPSA2001X],[6.6,obj_json.BPBA2001X],
 			  [9.7,obj_json.BPBA1002X],[11,obj_json.BPSA1001X],[13.5,obj_json.BPBA1001X],
 			  [17.7,obj_json.BPSA4001X],[19,obj_json.BPBA4002X],[22.9,obj_json.BPBA4001X],
@@ -84,12 +99,15 @@ var fileLoad;
 	    datasetXE = [{label:"currentDataX e-", data: globalDataXE, color: "#0062FF" }];
 	    datasetYE = [{label:"currentDataY e-",data: globalDataYE, color: "#0062FF"}];
 	    
-	    //console.log("global dataPX " + globalDataXP + "global data PY" + globalDataYP );
-	    //console.log("global dataEX " + globalDataXE + "global data EY" + globalDataYE );
-
-
+	    datasetX = [{label:"noise",data: globalDataXE, color: "#00FF00"}];
+	    datasetY = [{label:"noise",data: globalDataYE, color: "#00FF00"}];
+   
+	//});
 	
+    }
     
+    
+    	
 
     
     var optionsP = {
@@ -175,122 +193,71 @@ var fileLoad;
     };
     
     function update() {
-      //  GetData();
-	if (dafne_st == 2) {
+        GetData();
+	
+	switch (linac_st) {
+	    case -1:  //ELETTRONI
+		if (plotdataset == "plotDataX") {
+		    if (LoadDataXE.length) {
+		        datasetXE.push({label: label_ele, data: LoadDataXE});
+		        var diffXE= []; 
+		        for(var i = 0; i< LoadDataXE.length; i++) {
+			    diffXE.push( [LoadDataXE[i][0], LoadDataXE[i][1] - globalDataXE[i][1]]);	
+			}
+			datasetXE.push({label: "difference", data: diffXE});
+		    }
+		    $.plot($(plot), datasetXE, optionsE)
+		}
+		
+	    	if (plotdataset == "plotDataY") {
+		    if (LoadDataYE.length) {
+		        datasetYE.push({label: label_ele, data: LoadDataYE});
+		        var diffYE= []; 
+		        for(var i = 0; i< LoadDataYE.length; i++) {
+			    diffYE.push( [LoadDataYE[i][0], LoadDataYE[i][1] - globalDataYE[i][1]]);	
+		        }
+			datasetYE.push({label: "difference", data: diffYE});
+		    }
+		    $.plot($(plot), datasetYE, optionsE)
+		}
+		break;
+		
+	    case 1: //POSITRONI
+		if (plotdataset == "plotDataX") {
+		    if (LoadDataXP.length) {
+			datasetXP.push({label: label_pos, data: LoadDataXP});
+			var diffXP= []; 
+			for(var i = 0; i< LoadDataXP.length; i++) {
+			    diffXP.push( [LoadDataXP[i][0], LoadDataXP[i][1] - globalDataXP[i][1]]);	
+			}
+			datasetXP.push({label: "difference", data: diffXP});
+		    }
+		    $.plot($(plot), datasetXP, optionsP)
+		}
+		
+		if (plotdataset == "plotDataY") {
+		    if (LoadDataYP.length) {
+			datasetYP.push({label: label_pos, data: LoadDataYP});
+			var diffYP= []; 
+			for(var i = 0; i< LoadDataYP.length; i++) {
+			    diffYP.push( [LoadDataYP[i][0], LoadDataYP[i][1] - globalDataYP[i][1]]);	
+			}
+			datasetYP.push({label: "difference", data: diffYP});
+		    }
+		    $.plot($(plot), datasetYP, optionsP)
+		}
+		break;
+		
+	    default:
+		if (plotdataset == "plotDataX") {	   
+		    $.plot($(plot), datasetX, optionsE)
+		}
+		if (plotdataset == "plotDataY") {
+		    $.plot($(plot), datasetY, optionsE)
+		}
 
-	    if (plotdataset == "plotDataX") {
-	   
-		if (LoadDataXE.length) {
-		
-		    datasetXE.push({label: fileLoad, data: LoadDataXE});
-		
-		    var diffXE= []; 
-		    for(var i = 0; i< LoadDataXE.length; i++) {
-			diffXE.push( [LoadDataXE[i][0], LoadDataXE[i][1] - globalDataXE[i][1]]);	
-		    }
-		datasetXE.push({label: "difference", data: diffXE});
-		
-		}
-	   
-	    $.plot($(plot), datasetXE, optionsE)
-	    }
-	
-	    if (plotdataset == "plotDataY") {
-	   
-		if (LoadDataYE.length) {
-		
-		    datasetYE.push({label: fileLoad, data: LoadDataYE});
-		
-		    var diffYE= []; 
-		    for(var i = 0; i< LoadDataYE.length; i++) {
-			diffYE.push( [LoadDataYE[i][0], LoadDataYE[i][1] - globalDataYE[i][1]]);	
-		    }
-		datasetYE.push({label: "difference", data: diffYE});
-		
-		}
-	   
-	    $.plot($(plot), datasetYE, optionsE)
-	    }
-	    
-	}
-	
-	
-	if (dafne_st == 1) {
-
-	    if (plotdataset == "plotDataX") {
-	   
-		if (LoadDataXP.length) {
-		
-		    datasetXP.push({label: fileLoad, data: LoadDataXP});
-		
-		    var diffXP= []; 
-		    for(var i = 0; i< LoadDataXP.length; i++) {
-			diffXP.push( [LoadDataXP[i][0], LoadDataXP[i][1] - globalDataXP[i][1]]);	
-		    }
-		datasetXP.push({label: "difference", data: diffXP});
-		
-		}
-	   
-	   $.plot($(plot), datasetXP, optionsP)
-	    }
-	
-	    if (plotdataset == "plotDataY") {
-	   
-		if (LoadDataYP.length) {
-		
-		    datasetYP.push({label: fileLoad, data: LoadDataYP});
-		
-		    var diffYP= []; 
-		    for(var i = 0; i< LoadDataYP.length; i++) {
-			diffYP.push( [LoadDataYP[i][0], LoadDataYP[i][1] - globalDataYP[i][1]]);	
-		    }
-		datasetYP.push({label: "difference", data: diffYP});
-		
-		}
-	   
-	    $.plot($(plot), datasetYP, optionsP)
-	    }
-	    
 	}
 
-	// STATO NO INIEJCTION DA CORREGGERE
-	if (dafne_st == 0) {
-
-	    if (plotdataset == "plotDataX") {
-	   
-		if (LoadDataXE.length) {
-		
-		    datasetXE.push({label: fileLoad, data: LoadDataXE});
-		
-		    var diffXE= []; 
-		    for(var i = 0; i< LoadDataXE.length; i++) {
-			diffXE.push( [LoadDataXE[i][0], LoadDataXE[i][1] - globalDataXE[i][1]]);	
-		    }
-		datasetXE.push({label: "difference", data: diffXE});
-		
-		}
-	   
-	    $.plot($(plot), datasetXE, optionsE)
-	    }
-	
-	    if (plotdataset == "plotDataY") {
-	   
-		if (LoadDataYE.length) {
-		
-		    datasetYE.push({label: fileLoad, data: LoadDataYE});
-		
-		    var diffYE= []; 
-		    for(var i = 0; i< LoadDataYE.length; i++) {
-			diffYE.push( [LoadDataYE[i][0], LoadDataYE[i][1] - globalDataYE[i][1]]);	
-		    }
-		datasetYE.push({label: "difference", data: diffYE});
-		
-		}
-	   
-	    $.plot($(plot), datasetYE, optionsE)
-	    }
-	    
-	}
 	timeout_plot(update, updateInterval);
     }
     update(); 

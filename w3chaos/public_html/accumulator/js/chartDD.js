@@ -1,4 +1,10 @@
 
+    var nome_bpmX = ["BPBA1001X_ACQ","BPBA1002X_ACQ","BPBA2001X_ACQ","BPBA2002X_ACQ","BPBA3001X_ACQ","BPBA3002X_ACQ","BPBA4001X_ACQ","BPBA4002X_ACQ","BPSA1001X_ACQ","BPSA2001X_ACQ", 
+			    "BPSA3001X_ACQ","BPSA4001X_ACQ"];
+	    
+    var nome_bpmY = ["BPBA1001Y_ACQ","BPBA1002Y_ACQ","BPBA2001Y_ACQ","BPBA2002Y_ACQ","BPBA3001Y_ACQ","BPBA3002Y_ACQ","BPBA4001Y_ACQ","BPBA4002Y_ACQ","BPSA1001Y_ACQ","BPSA2001Y_ACQ", 
+			    "BPSA3001Y_ACQ","BPSA4001Y_ACQ"];
+	    
 function buildBoxPlotDD(title){    
     
     var array_bpm = ["BPBA1001","BPBA1002","BPBA2001","BPBA2002","BPBA3001","BPBA3002","BPBA4001","BPBA4002","BPSA1001","BPSA2001", 
@@ -93,12 +99,12 @@ function plotDD() {
     }
     
     function GetData() {
-        $.get("http://" + location.host + ":8081/CU?dev=ACCUMULATOR/BPM/BPMSYNC&cmd=status", function(datavalue, textStatus) {
+   /*    $.get("http://" + location.host + ":8081/CU?dev=ACCUMULATOR/BPM/BPMSYNC&cmd=status", function(datavalue, textStatus) {
 	    
 	    var data_json = datavalue.replace(/\$numberLong/g, 'numberLong');
             data_json = data_json.replace(/\//g, '');
             var obj_json = JSON.parse(data_json);
-	    
+	  
 	    var arrayX = array_sample;
 	    var nome_bpmX = ["BPBA1001X_ACQ","BPBA1002X_ACQ","BPBA2001X_ACQ","BPBA2002X_ACQ","BPBA3001X_ACQ","BPBA3002X_ACQ","BPBA4001X_ACQ","BPBA4002X_ACQ","BPSA1001X_ACQ","BPSA2001X_ACQ", 
 			    "BPSA3001X_ACQ","BPSA4001X_ACQ"];
@@ -124,7 +130,24 @@ function plotDD() {
 		setY[i] = [{label: "position-y", data: globalDataY[i], color: "#00FF00"}];
 	    }
 	    		
-	});
+	});*/
+    	 for (var i = 0; i< globalDataX.length; i ++) {
+    			globalDataX[i] = [];
+    			globalDataY[i] = [];
+    		    }	
+    			
+    		    for (var j= 0; j < nome_bpmX.length; j ++ ) {
+    			for ( var k = 0; k< arrayX.length; k++ ) {
+    			    globalDataX[j].push([arrayX[k],obj_json[nome_bpmX[j]][k]]);
+    			    globalDataY[j].push([arrayX[k],obj_json[nome_bpmY[j]][k]]);
+    			}
+    		    }
+    			
+    		    for ( var i = 0; i< nome_bpmX.length; i++) {
+    			setX[i] = [{label: "position-x", data: globalDataX[i], color: "#00FF00"}];
+    			setY[i] = [{label: "position-y", data: globalDataY[i], color: "#00FF00"}];
+    		    }
+    	
     }
     
     var options = {

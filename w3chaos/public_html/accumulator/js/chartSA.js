@@ -1,3 +1,11 @@
+     var array_bpm_nome = ["BPBA1001X","BPBA1002X","BPBA2001X","BPBA2002X","BPBA3001X","BPBA3002X","BPBA4001X","BPBA4002X","BPSA1001X","BPSA2001X", 
+                                    "BPSA3001X","BPSA4001X"];
+                  
+                  var array_bpm_nomeY = ["BPBA1001Y","BPBA1002Y","BPBA2001Y","BPBA2002Y","BPBA3001Y","BPBA3002Y","BPBA4001Y","BPBA4002Y","BPSA1001Y","BPSA2001Y", 
+                                    "BPSA3001Y","BPSA4001Y"];
+                  
+                  var nome_bpmSum = ["BPBA1001SUM","BPBA1002SUM","BPBA2001SUM","BPBA2002SUM","BPBA3001SUM","BPBA3002SUM","BPBA4001SUM","BPBA4002SUM","BPSA1001SUM","BPSA2001SUM", 
+                                    "BPSA3001SUM","BPSA4001SUM"];
 
 function buildBoxPlotSA(title){
     
@@ -100,7 +108,7 @@ function plotSA() {
     
 
       function GetData() {
-            $.get("http://" + location.host + ":8081/CU?dev=ACCUMULATOR/BPM/BPMSYNC&cmd=status", function(datavalue, textStatus) {
+     /*       $.get("http://" + location.host + ":8081/CU?dev=ACCUMULATOR/BPM/BPMSYNC&cmd=status", function(datavalue, textStatus) {
                   var data_json = datavalue.replace(/\$numberLong/g, 'numberLong');
                   data_json = data_json.replace(/\//g, '');
                   var obj_json = JSON.parse(data_json);
@@ -137,6 +145,27 @@ function plotSA() {
                   }
             
             });
+            */
+    	  for (var i=0; i<12; i++){
+              globalDataX[i].shift();
+              while(globalDataX[i].length <totalPoints){
+                    globalDataX[i].push([nowX[i] += updateInterval, obj_json[array_bpm_nome[i]]]);
+              }          
+        }
+        
+        for (var i=0; i<12; i++){
+              globalDataY[i].shift();
+              while(globalDataY[i].length <totalPoints){
+                    globalDataY[i].push([nowY[i] += updateInterval, obj_json[array_bpm_nomeY[i]]]);
+              }          
+        }
+        
+        for (var i=0; i<12; i++){
+              globalDataSum[i].shift();
+              while(globalDataSum[i].length <totalPoints){
+                    globalDataSum[i].push([nowSum[i] += updateInterval, obj_json[nome_bpmSum[i]]]);
+              }          
+        }
       }
               
         

@@ -107,6 +107,26 @@ i.material-icons {
     margin: 0 12px;    
 }
 
+.material-icons.red {
+    color: #CC0000;
+}
+
+.red {
+  background-color:#;
+}
+
+.material-icons.blu{
+    color: #0000CC;
+}
+
+.chip i.material-icons {
+    padding-left: 0;
+}
+
+.material-icons.md-22{
+    font-size: 22px;
+}
+
 
 @media only screen and (max-device-width: 1100px) {
 		.col.s4.m4.l4.switch {
