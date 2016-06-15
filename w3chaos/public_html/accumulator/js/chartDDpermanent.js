@@ -1,6 +1,8 @@
 
 function buildBoxPlotDDreal(title){
     
+    var input_sample = $("#SAMPLES").text();
+
     if ($('#multi_plot').length){
 
 	$("#multi_plot").append('<div class="row"><div class="col s12 m12 l12"><h3 class="plot_title">------  ' + title+ '  -----</h3></div></div>');
@@ -14,8 +16,6 @@ function buildBoxPlotDDreal(title){
 					+'</fieldset></div></div></div>');
 	}
    
-    var input_sample = $("#SAMPLES").text();
-
    setX(input_sample);
     
     plotDD();
@@ -35,18 +35,10 @@ function buildBoxPlotDDreal(title){
 					+ '<legend>Y [mm]</legend><div id="plotY'+[i]+'" style="width:98%; height:260px;"></div>' 
 					+'</fieldset></div></div></div>');
 	}
-   
-	if (title == 'Data on Demand') {
-	    input_sample = $("#sampleDD_0").val();
-	} else {
-	    input_sample = $("#sampleTR_0").val();
-	}
     
 	setX(input_sample);
 	plotDD();
-    
     } 
-    
 } 
 
 
@@ -79,13 +71,12 @@ function plotDD() {
     
 
     function GetData() {
-        $.get("http://" + location.host + ":8081/CU?dev=ACCUMULATOR/BPM/BPMSYNC&cmd=status", function(datavalue, textStatus) {
+       /* $.get("http://" + location.host + ":8081/CU?dev=ACCUMULATOR/BPM/BPMSYNC&cmd=status", function(datavalue, textStatus) {
             var data_json = datavalue.replace(/\$numberLong/g, 'numberLong');
             data_json = data_json.replace(/\//g, '');
-            var obj_json = JSON.parse(data_json);
+            var obj_json = JSON.parse(data_json); */
 	    
 	    var arrayX = array_sample;
-	    
 	    
 	    for (var i = 0; i< val.length; i ++) {
 		globalDataX[i] = [];
@@ -112,7 +103,7 @@ function plotDD() {
 		setX[i] = [{label: "position-x", data: globalDataX[i], color: "#00FF00"}];
 		setY[i] = [{label: "position-y", data: globalDataY[i], color: "#00FF00"}];
 	    }
-	});
+	//});
 	
     }
     
@@ -150,7 +141,7 @@ function plotDD() {
 	    $.plot($("#plotX" + i), setX[i], options)
 	    $.plot($("#plotY" + i), setY[i], options)
 	}
-	timeout_plot(update, updateInterval);
+	timeout_plot_bpm(update, updateInterval);
     }
     
     update(); 

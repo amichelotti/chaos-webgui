@@ -3,7 +3,7 @@ var dafne;
 var linac;
 var obj_json;
 var name_file_ds;
-var name_file_ts;
+//var name_file_ts;
 var name_file;
 var label_ele;
 var label_pos;
@@ -97,22 +97,17 @@ function current_ACQ() {
 function buildPlots(){
     if ($("#MODE").text() == "PermanentDD" || $("#MODE").text() == "PermanentDD+Trigg" || $("#MODE").text() == "Permanent" ) {
 	builPlotTotDD();
-	//buildBoxPlotDDreal("Permanent Data on Demand");
     }
     if ($("#MODE").text() == "DataOnDemand") {
 	builPlotTotDD();
-	//buildBoxPlotDDreal("Data on Demand");
     }
     
     if ($("#MODE").text() == "PermanentSA") {
 	builPlotTotSA();
-	//buildBoxPlotSA('Permanent Slow Acquisition');
     }
     
     else if ($("#MODE").text() == "SlowAcquisition") {
-	builPlotTotSA();
-	//buildBoxPlotSA('Slow Acquisition');
-	
+	builPlotTotSA();	
     }
 }
 
@@ -122,21 +117,26 @@ $(function(){
 		fileLoad = $("#nameToLoad").val();
 
 		if (fileLoad == '') {
-			fileLoad='{"key": "' +name_file_ds + '","ts":"'+name_file_ts+'"}';
-			//  fileLoad = name_file_ds;
-			name_file= name_file_ds + " " + name_file_ts;
+			//fileLoad='{"key": "' +name_file_ds + '","ts":"'+name_file_ts+'"}';
+			  name_file = name_file_ds;
+			//name_file= name_file_ds + " " + name_file_ts;
 		} else {
 			name_file = fileLoad;
 		}
 
-		$.get("http://"+ location.host + ":8081/CU?dev=ACCUMULATOR/BPM/BPMSYNC&cmd=load&parm=" + fileLoad, function(dataLoadJs, textStatus) {
+		$.get("http://"+ location.host + ":8081/CU?dev=ACCUMULATOR/BPM/BPMSYNC&cmd=load&parm=" + name_file, function(dataLoadJs, textStatus) {
 
 			var dataLoad = dataLoadJs.replace(/\$numberLong/g, 'numberLong');
 			dataLoad = dataLoad.replace(/\//g, '');
+			
+			$("input.check-plotX").attr("disabled", false);
+			$("input.check-plotY").attr("disabled", false);
 
 			try {
-				var objCU = JSON.parse(dataLoad);
-				var objDataLoad=objCU.keys[0].data;
+				//var objCU = JSON.parse(dataLoad);
+								var objDataLoad = JSON.parse(dataLoad);
+
+				//var objDataLoad=objCU.keys[0].data;
 				var linac_load = objDataLoad.output.STATUSlinac_mode;
 
 				switch(linac_load) {
