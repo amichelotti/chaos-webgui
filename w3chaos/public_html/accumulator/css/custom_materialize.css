@@ -38,6 +38,10 @@ input[type=text]{
     margin-top: 22px;
 }
 
+i.waves-effect.waves-light.btn-show.btn.waves-input-wrapper{
+    margin-top:8px;
+}
+
 .switch label input[type=checkbox]:checked + .lever {
   background-color: #b787af;
 }
@@ -127,6 +131,9 @@ i.material-icons {
     font-size: 22px;
 }
 
+[type="checkbox"] + label {
+    width: 100%;
+}
 
 @media only screen and (max-device-width: 1100px) {
 		.col.s4.m4.l4.switch {

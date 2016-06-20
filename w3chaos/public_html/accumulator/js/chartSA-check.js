@@ -83,10 +83,10 @@ function plotSA() {
     
 
       function GetData() {
-      /*      $.get("http://" + location.host + ":8081/CU?dev=ACCUMULATOR/BPM/BPMSYNC&cmd=status", function(datavalue, textStatus) {
+          /*  $.get("http://" + location.host + ":8081/CU?dev=ACCUMULATOR/BPM/BPMSYNC&cmd=status", function(datavalue, textStatus) {
                   var data_json = datavalue.replace(/\$numberLong/g, 'numberLong');
                   data_json = data_json.replace(/\//g, '');
-                  var obj_json = JSON.parse(data_json);
+                  var obj_json = JSON.parse(data_json); */
                   
                   var array_bpm_nomeX = [];
                   var array_bpm_nomeY = [];
@@ -120,39 +120,7 @@ function plotSA() {
                         }          
                   }
                         
-            });*/
-    	  
-    	   var array_bpm_nomeX = [];
-           var array_bpm_nomeY = [];
-           var array_bpm_Sum = [];
-           
-            for (var i = 0; i<val.length; i ++) {
-                 array_bpm_nomeX.push(val[i]+"X");
-                 array_bpm_nomeY.push(val[i]+"Y");
-                 array_bpm_Sum.push(val[i]+"SUM");
-           }
-
-                 
-           for (var i=0; i<val.length; i++){
-                 globalDataX[i].shift();
-                 while(globalDataX[i].length <totalPoints){
-                       globalDataX[i].push([nowX[i] += updateInterval, obj_json[array_bpm_nomeX[i]]]);
-                 }          
-           }
-           
-           for (var i=0; i<val.length; i++){
-                 globalDataY[i].shift();
-                 while(globalDataY[i].length <totalPoints){
-                       globalDataY[i].push([nowY[i] += updateInterval, obj_json[array_bpm_nomeY[i]]]);
-                 }          
-           }
-           
-           for (var i=0; i<val.length; i++){
-                 globalDataSum[i].shift();
-                 while(globalDataSum[i].length <totalPoints){
-                       globalDataSum[i].push([nowSum[i] += updateInterval, obj_json[array_bpm_Sum[i]]]);
-                 }          
-           }
+           // });
       }
               
         
@@ -213,7 +181,7 @@ function plotSA() {
                   $.plot($("#plotSum"+i), setSum[i], options)
             }
         //setTimeout(update, updateInterval);
-      timeout_plot(update, updateInterval);
+      timeout_plot_bpm(update, updateInterval);
       }
       
       update(); 

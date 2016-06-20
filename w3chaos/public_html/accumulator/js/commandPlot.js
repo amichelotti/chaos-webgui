@@ -53,29 +53,45 @@ $(document).ready(function () {
     });
 });
 
+$(function(){
+    $('#ALL').on('change', function(){
+        if($(this).is(':checked')) {
+	   $('#check-bpm input:checkbox').prop('checked', false);    
+	}
+    });
+});
+
+$(function(){
+    $('#check-bpm input:checkbox').on('change', function(){
+        if($(this).is(':checked')) {
+	   $('#ALL').prop('checked', false);    
+	}
+    });
+});
+
+
 
 var val = [];
  $(function(){
       $('#show_value').click(function(){
 	$("#multi_plot").remove();
+	clear_timeout_bpm()
          val = [];
         $(':checkbox:checked').each(function(i){
-	    
+
 	    if ($(':checkbox:checked').attr("id") == "ALL") {
-		
 		val = ["BPBA1001","BPBA1002","BPBA2001","BPBA2002","BPBA3001","BPBA3002","BPBA4001","BPBA4002","BPSA1001","BPSA2001", 
-			"BPSA3001","BPSA4001"];
-			
+			"BPSA3001","BPSA4001"];	
 	    } else {
 	    val[i] = $(this).attr("id");
+	    		$("input.one#ALL").attr("disabled", true);
 	    }
-        });
+		
+	});
 	
 	if ($("#MODE").text() == "DataOnDemand") {
-		//buildBoxPlotDD("Data on Demand");
 	    buildBoxPlotDDreal("Data on Demand");
-
-	    }
+	    } 
 	    
 	if ($("#MODE").text() == "SlowAcquisition") {
 		buildBoxPlotSA("Slow Acquisition");
@@ -141,42 +157,38 @@ function permanentSA(){
 
 function SaveData(nm){
     
-    if (linac == -1 || linac == 1) {
+    if (dafne == 1 || dafne == 2) {
 	$.get("http://" + location.host + ":8081/CU?dev=ACCUMULATOR/BPM/BPMSYNC&cmd=save&parm=" + nm );
-
-    } else  {
-	alert("You can't save. Error Linac mode:" + linac );
-    }
-    
+    } else if (dafne == 0) {
+	alert("You can't save. Error DAFNE status");
+    }   
 }
 
 
 function Search() {
-    
     $('.modal-trigger').leanModal();
-	
 	$.get("http://" + location.host + ":8081/CU?dev=ACCUMULATOR/BPM/BPMSYNC&cmd=list", function(dataset, textStatus) {
-	var  list = JSON.parse(dataset);
-	 $("#table-list").empty();
-	for (var i = 0; i < list.keys.length; i ++) {
-	  $("#table-list").append('<tr><td id="nome_ds_save_' + [i]+'">' + list.keys[i].key + '</td><td id="nome_ts_save_' + [i]+'">' +list.keys[i].ts +'</td></tr>');
-	}
-    });
+	    var  list = JSON.parse(dataset);
+	    for (var i = 0; i < list.keys.length; i ++) {
+		$("#table-list").append('<tr><td id="nome_ds_save_' + [i]+'">' + list.keys[i].key + '</td><td>'+list.keys[i].ts +'</td></tr>');
+		//$("#table-list").append('<tr><td id="nome_ds_save_' + [i]+'">' + list.keys[i].key + '</td><td id="nome_ts_save_' + [i]+'">' +list.keys[i].ts +'</td></tr>');
+	    }
+	});
 }
 
 
-
+//var name_file_ds;
 $(document).on("click", "#table-list tr", function(e) {
     var selected = $(this).hasClass("row_selected");
     $("#table-list tr").removeClass("row_selected");
     if (!selected) {
         $(this).addClass("row_selected");
         num_row = this.rowIndex;
-      //  num_row = num_row - 1;  // per far partire il conteggio da 1 e non da 0
-        // prendo il valore del nome del file del datset
-        name_file_ds = $("#nome_ds_save_" + num_row).text();
-        name_file_ts = $("#nome_ts_save_" + num_row).text();
+	num_row = num_row -1;
 
+        name_file_ds = $("#nome_ds_save_" + num_row).text();
+	console.log("load ### " + name_file_ds);
+	//name_file_ts = $("#nome_ts_save_" + num_row).text();
     }
 });
 
@@ -184,15 +196,28 @@ $(document).on("click", "#table-list tr", function(e) {
 function reset_all() {
     	
     if ($('#plot_accumulator_x').length){
+	$("#nameToLoad").val('');
 
+	$('#file-up-pos').contents().filter(function(){
+	    return this.nodeType === 3;
+	}).remove();
 	
+	$('#file-up-el').contents().filter(function(){
+	    return this.nodeType === 3;
+	}).remove();
+	
+	LoadDataXE = 0;
+	LoadDataYE = 0;
+	LoadDataXP = 0;
+	LoadDataYP = 0;
+
 	$("#multi_plot").remove();
 	$("#plot_accumulator_x").remove();
 	$("#plot_accumulator_y").remove();
 	
 	clear_timeout();
     }    
-}
+} 
 
 
 var timeouts = [];
@@ -200,12 +225,23 @@ function timeout_plot(update, updateInterval) {
     timeouts.push(setTimeout(update, updateInterval));
 }
 
+var timeouts_bpm = [];
+function timeout_plot_bpm(update, updateInterval) {
+    timeouts_bpm.push(setTimeout(update, updateInterval));
+}
+
 function clear_timeout() {
     for (var i = 0; i < timeouts.length; i++) {
 	clearTimeout(timeouts[i]);
     }
-//quick reset of the timer array you just cleared
     timeouts = [];
+}
+
+function clear_timeout_bpm() {
+    for (var i = 0; i < timeouts_bpm.length; i++) {
+	clearTimeout(timeouts_bpm[i]);
+    }
+    timeouts_bpm = [];
 }
 
 
