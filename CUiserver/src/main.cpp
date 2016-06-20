@@ -36,7 +36,7 @@ int main(int argc,char**argv)
     cout<<"Opening "<<argv[0]<<" on port:"<<server_port<<endl;
     Server server(server_port);
     server.setOption("Access-Control-Allow-Origin","*");
-   
+
     server.registerController(&myController);
     
     server.start(); 

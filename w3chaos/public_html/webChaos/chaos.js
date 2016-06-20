@@ -6,10 +6,12 @@ var onswitched=0;
 var maxarray=600;
 var npoints=0;
 var refreshInterval=0;
-var request_prefix = "http://localhost:8081/CU?dev="; 
+//var request_prefix = "http://chaosdev-webui1.chaos.lnf.infn.it:8081/CU?dev="; 
+var request_prefix = "http://" + location.host + ":8081/CU?dev="; 
 var internal_param=new Array();
 var excludeInterface=["oldtimestamp","dostate","firsttimestamp","ndk_uid","dpck_ds_type","dpck_ats","updating"];
 var updateAll=false;
+var defaultDigits=3;
 ///////
 
 
@@ -670,6 +672,7 @@ function CU(name){
 
 					var number=output[key];
 					var sout;
+				    var isInt=(number===parseInt(number,10));
 					//  console.log("SETTING [" +typeof(cu[key])+"]" + docelem+ " to:"+cu[key]);
 					try {
 						if(key==="timestamp"){
@@ -684,14 +687,20 @@ function CU(name){
 							var base = document.getElementById(docelem).getAttribute("base");
 							
 							if(digits!=null){
-								number=Number(output[key]).toFixed(digits);			    
-							} 
+							    number=Number(output[key]).toFixed(digits);			    
+							} else if(isInt==false){
+							    number=Number(output[key]).toFixed(defaultDigits);			    
+							}
 
 							if(base!=null){
 								number=Number(output[key]).toString(base);
 							} 
 						    if(cu.multibase){
-							sout=number + "(0x"+Number(output[key]).toString(16)+")";
+							if(isInt){
+							    sout=number + "(0x"+Number(output[key]).toString(16)+")";
+							}  else {
+							    sout=number;
+							}
 						    } else {
 							sout=number;
 						    }
@@ -724,7 +733,8 @@ function CU(name){
 						var digits = document.getElementById(docelem).getAttribute("digits");
 						var base = document.getElementById(docelem).getAttribute("base");
 						var number=input[key];
-						var sout;
+					    var sout;
+					    var isInt=(number===parseInt(number,10));
 						if(key==="timestamp"){
 						    if(cu.multibase){
 							var d=new Date(Number(input[key]));
@@ -737,14 +747,20 @@ function CU(name){
 							var base = document.getElementById(docelem).getAttribute("base");
 							
 							if(digits!=null){
-								number=Number(input[key]).toFixed(digits);			    
-							} 
+							    number=Number(input[key]).toFixed(digits);			    
+							}  else if(isInt==false) {
+							    number=Number(input[key]).toFixed(defaultDigits);			    
+							}
 
-							if(base!=null){
-								number=Number(input[key]).toString(base);
-							} 
+						    if(base!=null){
+							number=Number(input[key]).toString(base);
+						    } 
 						    if(cu.multibase){
-							sout=number + "(0x"+Number(input[key]).toString(16)+")";
+							if(isInt){
+							    sout=number + "(0x"+Number(input[key]).toString(16)+")";
+							} else {
+							    sout=number;
+							}
 						    } else {
 							sout=number;
 						    }

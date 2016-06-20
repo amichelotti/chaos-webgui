@@ -61,7 +61,7 @@ var datasetX = [];
 var datasetY = [];
 
 
-var updateInterval = 500;
+var updateInterval = frequency;
 
 var LoadDataXE = [];
 var LoadDataYE = [];
