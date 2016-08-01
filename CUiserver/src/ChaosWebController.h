@@ -10,7 +10,7 @@
 #include <mongoose/WebController.h>
 
 #include <map>
-#include <driver/misc/ChaosController.h>
+#include <driver/misc/core/ChaosController.h>
 using namespace std;
 using namespace Mongoose;
 using namespace chaos::ui;
