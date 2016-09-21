@@ -43,14 +43,14 @@ void ChaosWebController::addDevice(std::string name, ::driver::misc::ChaosContro
 }
 
 
-                    
+
 
 #define CALC_EXEC_TIME \
-    tot_us +=(reqtime -boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds());\
-    if(naccess%500 ==0){\
-        refresh=tot_us/500;\
-        tot_us=0;\
-        CUIServerLDBG_ << " Profiling: N accesses:"<<naccess<<" response time:"<<refresh<<" us";}
+tot_us +=(reqtime -boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds());\
+if(naccess%500 ==0){\
+refresh=tot_us/500;\
+tot_us=0;\
+CUIServerLDBG_ << " Profiling: N accesses:"<<naccess<<" response time:"<<refresh<<" us";}
 
 
 void ChaosWebController::handleCU(Request &request, StreamResponse &response) {
@@ -58,7 +58,6 @@ void ChaosWebController::handleCU(Request &request, StreamResponse &response) {
     
     ::driver::misc::ChaosController* controller = NULL;
     std::string cmd, parm,dev_param;
-    std::string&devname =dev_param;
     dev_param = request.get("dev");
     cmd = request.get("cmd");
     parm = request.get("parm");
@@ -70,60 +69,58 @@ void ChaosWebController::handleCU(Request &request, StreamResponse &response) {
     naccess++;
     std::vector<std::string>dev_v;
     boost::split(dev_v,dev_param,boost::is_any_of(","));
- 
+    
     std::stringstream answer_multi;
     if(dev_v.size()>1){
-       
         answer_multi<<"{[";
     }
+    
     for(std::vector<std::string>::iterator idevname=dev_v.begin();idevname!=dev_v.end();idevname++){
-        devname=*idevname;
         std::string ret;
-        if (!devname.empty() && !cmd.empty()) {
-            CUStateKey::ControlUnitState deviceState;
-            int err;
-
-            if (devs.count(devname) > 0) {
-                controller = devs[devname];
-
+        if (!(*idevname).empty() && !cmd.empty()) {
+            
+            if (devs.count(*idevname) > 0) {
+                controller = devs[*idevname];
+                
             } else {
                 controller = new ::driver::misc::ChaosController();
                 if (controller == NULL) {
-                        response << "{}";
-                        CALC_EXEC_TIME;
-                        return;
+                    response << "{}";
+                    CALC_EXEC_TIME;
+                    return;
                 }
-                if(controller->init(devname,DEFAULT_TIMEOUT_FOR_CONTROLLER)!=0){
-                	response << controller->getJsonState();
-                	CALC_EXEC_TIME;
-                	return;
+                if(controller->init(*idevname,DEFAULT_TIMEOUT_FOR_CONTROLLER)!=0){
+                    response << controller->getJsonState();
+                    CALC_EXEC_TIME;
+                    return;
                 }
-                addDevice(devname,controller);
+                addDevice(*idevname,controller);
             }
-
+            
             if(controller->get(cmd,(char*)parm.c_str(),0,atoi(cmd_prio.c_str()),atoi(cmd_schedule.c_str()),atoi(cmd_mode.c_str()),0,ret)!=::driver::misc::ChaosController::CHAOS_DEV_OK){
-            	CUIServerLERR_<<"An error occurred during get:"<<controller->getJsonState();
+                CUIServerLERR_<<"An error occurred during get:"<<controller->getJsonState();
             }
-
-
-
-        if(dev_v.size()==1){
-        	response << ret;
-        	CALC_EXEC_TIME;
-        	return;
-        } else {
-            if((idevname+1) == dev_v.end()){
-                answer_multi<<ret<<"]}";
-            }else {
-                answer_multi<<ret<<",";
+            
+            
+            
+            if(dev_v.size()==1){
+                response << ret;
+                CALC_EXEC_TIME;
+                return;
+            } else {
+                if((idevname+1) == dev_v.end()){
+                    answer_multi<<ret<<"]}";
+                }else {
+                    answer_multi<<ret<<",";
+                }
             }
         }
     }
     //CUIServerLDBG_<<"["<<devname<<"]: \""<<oout<<"\"";
     response << answer_multi.str();
     CALC_EXEC_TIME;
-    }
-
+    
+    
 }
 
 void ChaosWebController::setup() {
