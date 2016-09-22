@@ -72,7 +72,7 @@ void ChaosWebController::handleCU(Request &request, StreamResponse &response) {
     
     std::stringstream answer_multi;
     if(dev_v.size()>1){
-        answer_multi<<"{[";
+        answer_multi<<"[";
     }
     
     for(std::vector<std::string>::iterator idevname=dev_v.begin();idevname!=dev_v.end();idevname++){
@@ -109,7 +109,7 @@ void ChaosWebController::handleCU(Request &request, StreamResponse &response) {
                 return;
             } else {
                 if((idevname+1) == dev_v.end()){
-                    answer_multi<<ret<<"]}";
+                    answer_multi<<ret<<"]";
                 }else {
                     answer_multi<<ret<<",";
                 }
