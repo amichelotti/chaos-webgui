@@ -65,7 +65,7 @@ function updateInterface(){
 		    
 		    $.plot("#powersupply-graph_"+i,[cus[i].points]);
 	
-	
+    }
 		  
 }
 

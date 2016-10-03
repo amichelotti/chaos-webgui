@@ -6,7 +6,7 @@ and open the template in the editor.
 -->
 <html>
     <head>
-        <link href="webChaos/powersupply.css" rel="stylesheet" type="text/css">
+        <link href="webChaos/webchaos.css" rel="stylesheet" type="text/css">
          <script type="text/Javascript" src="webChaos/jquery.js"></script>
        <script type="text/Javascript" src="webChaos/flot/jquery.flot.js"></script>
         <script type="text/javascript" src="webChaos/chaos.js"></script>
@@ -15,7 +15,11 @@ and open the template in the editor.
         <script>
             CULoad(null,1500);
             // construct table interface for the specified CUs
-            CUBuildInterface();
+             onload = function() {
+                 CUBuildInterface();
+ 	 }
+
+    
         </script>
         <body>
         
