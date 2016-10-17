@@ -551,7 +551,7 @@ function CU(name){
 					// text=document.createTextNode("["+obj[key].length+"]");
 					text=document.createTextNode("["+output[key]+"]");
 
-					console.log("#########################:" + text);
+					console.log("#########################:" + output[key]);
 
 				} else {
 					text=document.createTextNode(output[key]);
@@ -668,7 +668,8 @@ function CU(name){
 		    }
 			for (var key in output) {
 				var docelem = key +"_"+i;
-				if((typeof(output[key]) !== 'function') && ((typeof (output[key]) !== 'object') || Array.isArray(output[key]))){
+			        var isarray=Array.isArray(output[key])
+				if((typeof(output[key]) !== 'function') && ((typeof (output[key]) !== 'object') || isarray )){
 
 					var number=output[key];
 					var sout;
@@ -688,7 +689,7 @@ function CU(name){
 							
 							if(digits!=null){
 							    number=Number(output[key]).toFixed(digits);			    
-							} else if(isInt==false){
+							} else if((isInt==false) && !isarray){
 							    number=Number(output[key]).toFixed(defaultDigits);			    
 							}
 
@@ -723,7 +724,8 @@ function CU(name){
 			
 			for (var key in input) {
 				var docelem = key +"_readout_"+i;
-				if((typeof(input[key]) !== 'function') && ((typeof (input[key]) !== 'object') || Array.isArray(input[key]))){
+			        var isarray=Array.isArray(input[key])
+				if((typeof(input[key]) !== 'function') && ((typeof (input[key]) !== 'object') || isarray)){
 
 
 
@@ -748,7 +750,7 @@ function CU(name){
 							
 							if(digits!=null){
 							    number=Number(input[key]).toFixed(digits);			    
-							}  else if(isInt==false) {
+							}  else if((isInt==false)&&(!isarray)) {
 							    number=Number(input[key]).toFixed(defaultDigits);			    
 							}
 
