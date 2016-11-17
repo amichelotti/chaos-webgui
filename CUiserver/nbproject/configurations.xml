@@ -257,12 +257,11 @@
           </preprocessorList>
         </ccTool>
       </item>
-      <item path="src/ChaosWebController.cpp" ex="false" tool="1" flavor2="0">
+      <item path="src/ChaosWebController.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="1">
           <incDir>
             <pElem>../../../chaosframework</pElem>
             <pElem>..</pElem>
-            <pElem>../../..</pElem>
             <pElem>../..</pElem>
             <pElem>../../../chaosframework/chaos-distrib-x86_64-Linux/include</pElem>
             <pElem>.</pElem>
@@ -274,7 +273,6 @@
           <incDir>
             <pElem>../../../chaosframework</pElem>
             <pElem>..</pElem>
-            <pElem>../../..</pElem>
             <pElem>../..</pElem>
             <pElem>../../../chaosframework/chaos-distrib-x86_64-Linux/include</pElem>
             <pElem>.</pElem>

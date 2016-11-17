@@ -108,6 +108,20 @@ function CU(name) {
         console.log("device:" + this.name + " event:" + vv.currentTarget.name + " param:" + vv.currentTarget.value);
         request.open("GET", request_prefix + this.name + "&cmd=" + vv.currentTarget.name + "&parm=" + vv.currentTarget.value, true);
         request.send();
+        request.onreadystatechange = function () {
+            if (request.readyState == 4 && request.status == 200) {
+                var json_answer = request.responseText;
+                //	console.log("answer :\""+ json_answer+"\"");
+                if (json_answer == "") {
+                    return;
+                }
+
+                my.injectJson(json_answer);
+
+                return;
+            }
+        }
+
     };
 
     this.onFocus = function (vv) {
@@ -427,7 +441,7 @@ function isInternal(parm) {
     return 0;
 }
 
-function build_indicator(indicator_name, output, instancen, tbdy) {
+function build_indicator(indicator_name, obj,output, instancen, tbdy) {
 
     var hdr = document.createElement('tr');
     var td = document.createElement('td');
@@ -436,6 +450,7 @@ function build_indicator(indicator_name, output, instancen, tbdy) {
     td.appendChild(text);
     hdr.appendChild(td);
     var td = document.createElement('td');
+
     td.setAttribute("class", "Indicator-header");
     var text = document.createTextNode("### Value ###");
     td.appendChild(text);
@@ -490,7 +505,7 @@ function build_indicator(indicator_name, output, instancen, tbdy) {
 
 }
 
-function build_control(control_name, input, instancen, tbdy) {
+function build_control(control_name,obj, input, instancen, tbdy) {
     var tr = document.createElement('tr');
     var td = document.createElement('td');
     var text = document.createTextNode("###" + control_name + "###");
@@ -537,7 +552,15 @@ function build_control(control_name, input, instancen, tbdy) {
             tr.appendChild(td);
             // input
             td = document.createElement('td');
-            var ctrl = document.createElement("input");
+            var ctrl;
+            if(typeof(input[key])==="boolean"){
+               // ctrl=document.createElement("button");
+              ctrl=document.createElement("input");
+
+
+            } else {
+                ctrl=document.createElement("input");
+            }
             ctrl.id = key + "_input_"+control_name+"_" + instancen;
             ctrl.setAttribute('class', "Control-ok");
             ctrl.name = key;
@@ -572,6 +595,113 @@ function build_control(control_name, input, instancen, tbdy) {
 
 }
 
+function add_ctrl_entry(ctrl_name,obj,utd,instancen){
+    if(ctrl_name == ""){
+        var d=document.createElement('div');
+        d.id="empty"
+        utd.appendChild(d)
+        return;
+    }
+    var tbl = document.createElement('table');
+    tbl.style.width = 'auto';
+    tbl.setAttribute('border', '1');
+    tbl.setAttribute("id", ctrl_name + "_table_" + instancen);
+    var tbdy = document.createElement('tbody');
+// f
+    var tr= document.createElement('tr');
+    var td= document.createElement('td');
+
+    td.appendChild(document.createTextNode(ctrl_name+":"));
+    tr.appendChild(td);
+    
+     td= document.createElement('td');
+    ctrl = document.createElement("input");
+    ctrl.id = obj.name + "_"+ctrl_name+"_input_" + instancen;
+    ctrl.setAttribute('class', "Control-ok");
+    ctrl.name = ctrl_name;
+    //ctrl.addEventListener("change",sendAttr);
+    ctrl.onkeyup = function () {
+        if (event.which == 13)
+            obj.sendEvent(event);
+    }
+    td.appendChild(ctrl);
+    tr.appendChild(td);
+    tbdy.appendChild(tr);
+    utd.appendChild(tbdy);
+}
+function add_ctrl_button(ctrl_name,obj,td,instancen){
+    var ctrl;
+    if(ctrl_name === ""){
+        ctrl = document.createElement('div');
+        ctrl.id ="fill"
+    } else {
+        ctrl=document.createElement("button");
+        ctrl.id = ctrl_name + "_input_" + instancen;
+        ctrl.setAttribute('class', "Control-ok");
+        ctrl.name = ctrl_name;
+        ctrl.type = 'button';
+        ctrl.appendChild(document.createTextNode(ctrl_name));
+
+        //ctrl.addEventListener("change",sendAttr);
+        ctrl.onclick = function () {
+            obj.sendEvent(event);
+        }
+        ctrl.onfocus = function () {
+            obj.onFocus(event);
+        }
+    }
+        td.appendChild(ctrl);
+}
+
+function chaos_control_table(obj,instancen,utd){
+    var tbl = document.createElement('table');
+    tbl.style.width = 'auto';
+    tbl.setAttribute('border', '1');
+    tbl.setAttribute("id", obj.name + "_" + instancen);
+    var tbdy = document.createElement('tbody');
+// first line and column
+    tr = document.createElement('tr');
+    
+    cu_ctrl = ["start", "stop","init", "deinit", "recover","list"];
+    var td,tr;
+    var i=0;
+    tr = document.createElement('tr');
+
+    for (var b in cu_ctrl) {
+        td = document.createElement('td');
+
+        add_ctrl_button(cu_ctrl[b],obj,td,instancen);
+        
+        i++;
+        tr.appendChild(td);
+        tbdy.appendChild(tr);
+
+        if((i%2) == 0){
+           tr = document.createElement('tr');
+        }
+
+    }
+   // tr.appendChild(td);
+    tbdy.appendChild(tr);
+    cu_ctrl = ["sched", "save", "restore", "load", "delete",""];
+    for (var b in cu_ctrl) {
+        td = document.createElement('td');
+
+        add_ctrl_entry(cu_ctrl[b],obj,td,instancen);
+        
+        i++;
+        tr.appendChild(td);
+        tbdy.appendChild(tr);
+
+        if((i%2) == 0){
+           tr = document.createElement('tr');
+        }
+
+    }
+    tbdy.appendChild(tr);
+    utd.appendChild(tbdy);
+    
+}
 function chaos_create_table(obj, instancen) {
     console.log("create table for " + obj.name + " instance " + instancen);
 
@@ -626,56 +756,32 @@ function chaos_create_table(obj, instancen) {
     tr.appendChild(td);
     tbdy.appendChild(tr);
     // init,stop,deinit,start,clrexception
+    
     tr = document.createElement('tr');
-    cu_ctrl = ["start", "stop", "recover", "init", "deinit"];
+    //controllo
     td = document.createElement('td');
-
-    for (var b in cu_ctrl) {
-
-        var ctrl = document.createElement("button");
-        ctrl.id = cu_ctrl[b] + "_input_" + instancen;
-        ctrl.setAttribute('class', "Control-ok");
-        ctrl.name = cu_ctrl[b];
-        ctrl.type = 'button';
-        ctrl.appendChild(document.createTextNode(cu_ctrl[b]));
-
-        //ctrl.addEventListener("change",sendAttr);
-        ctrl.onclick = function () {
-            obj.sendEvent(event);
-        }
-        ctrl.onfocus = function () {
-            obj.onFocus(event);
-        }
-        td.appendChild(ctrl);
-    }
+    chaos_control_table(obj,instancen,td);
     tr.appendChild(td);
-
+    //log
     td = document.createElement('td');
-    td.appendChild(document.createTextNode("sched:"));
-    tr.appendChild(td);
-    ctrl = document.createElement("input");
-    ctrl.id = obj.name + "_sched_input_" + instancen;
-    ctrl.setAttribute('class', "Control-ok");
-    ctrl.name = "sched";
-    //ctrl.addEventListener("change",sendAttr);
-    ctrl.onkeyup = function () {
-        if (event.which == 13)
-            obj.sendEvent(event);
-    }
-    td.appendChild(ctrl);
+    td.setAttribute('colspan', 2);
 
+    var div=document.createElement('div');
+    div.id="console";
+    td.appendChild(div);
     tr.appendChild(td);
-
+    
     tbdy.appendChild(tr);
 
+    
     var input = obj.input;
     var output = obj.output;
     var alarm = obj.alarms;
     var health = obj.health;
-    build_indicator("output", output, instancen, tbdy);
-    build_control("input", input, instancen, tbdy);
-    build_indicator("alarms", alarm, instancen, tbdy);
-    build_indicator("health", health, instancen, tbdy);
+    build_indicator("output", obj,output, instancen, tbdy);
+    build_control("input", obj,input, instancen, tbdy);
+    build_indicator("alarms", obj,alarm, instancen, tbdy);
+    build_indicator("health", obj,health, instancen, tbdy);
 
 
     tbl.appendChild(tbdy);

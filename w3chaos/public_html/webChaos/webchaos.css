@@ -1,4 +1,4 @@
-* {	padding: 0; margin: 0; vertical-align: top;
+b* {	padding: 0; margin: 0; vertical-align: top;
  width: auto;
   
 }
@@ -77,15 +77,16 @@ input[type=checkbox] {
 .Indicator-ok{
 	font-weight: bold; 
 	color: green; 
-	width: auto;
-	
+	width: 100%;
+	colspan:2
 	font-size:150%;
 }
 
 .Control-ok{
 	font-weight: bold; 
 	color: green; 
-	width: auto;
+	width: 100%;
+        
 	font-size:100%;
 }
 
@@ -100,6 +101,8 @@ input[type=checkbox] {
 	font-weight: bold; 
 	color: black; 
 	width: auto;
+        	colspan:2
+
 	font-size:100%;
 }
 .legend table {
