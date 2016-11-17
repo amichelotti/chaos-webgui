@@ -89,6 +89,19 @@ input[type=checkbox] {
 	font-size:100%;
 }
 
+.Control-header{
+	font-weight: bold; 
+	color: black; 
+	width: auto;
+	font-size:100%;
+}
+
+.Indicator-header{
+	font-weight: bold; 
+	color: black; 
+	width: auto;
+	font-size:100%;
+}
 .legend table {
 	border-spacing: 5px;
 }
