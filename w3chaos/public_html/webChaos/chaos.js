@@ -104,19 +104,37 @@ function CU(name) {
     };
     this.sendEvent = function (vv) {
         var request = new XMLHttpRequest();
-
-        console.log("device:" + this.name + " event:" + vv.currentTarget.name + " param:" + vv.currentTarget.value);
-        request.open("GET", request_prefix + this.name + "&cmd=" + vv.currentTarget.name + "&parm=" + vv.currentTarget.value, true);
+        var target= vv.currentTarget.name ;
+        var value = vv.currentTarget.value;
+        var devname=this.name;
+        console.log("device:" + this.name + " event:" +target + " param:" + value);
+        request.open("GET", request_prefix + this.name + "&cmd=" + target + "&parm=" +value, true);
         request.send();
         request.onreadystatechange = function () {
             if (request.readyState == 4 && request.status == 200) {
                 var json_answer = request.responseText;
                 //	console.log("answer :\""+ json_answer+"\"");
+                
+                if( document.getElementById("console")!=null){
+                    var log_str;
+                    var d = new Date();
+                    var n = d.getHours();
+                    var m = d.getMinutes();
+                    var s = d.getSeconds();
+                    
+                    var dat=n+":"+m+":"+":"+s;
+                    if(json_answer!=null){
+                        log_str="["+dat+"] ["+devname +"] OK  event:\"" +target+ "\" param:\"" +value+"\":\n"+json_answer;
+                    } else {
+                         log_str="["+dat+"] ["+devname +"] OK  event:\"" +target+ "\" param:\"" +value+"\"";
+
+                    }
+                    document.getElementById("console").innerHTML = log_str;
+                }
+
                 if (json_answer == "") {
                     return;
                 }
-
-                my.injectJson(json_answer);
 
                 return;
             }
