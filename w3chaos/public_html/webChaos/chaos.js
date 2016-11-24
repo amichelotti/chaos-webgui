@@ -8,10 +8,14 @@ var npoints = 0;
 var refreshInterval = 0;
 //var request_prefix = "http://chaosdev-webui1.chaos.lnf.infn.it:8081/CU?dev="; 
 var request_prefix = "http://" + location.host + ":8081/CU?dev=";
+var gbl_request_prefix = "http://" + location.host + ":8081/CU?";
+
 var internal_param = new Array();
 var excludeInterface = ["oldtimestamp", "dostate", "firsttimestamp", "ndk_uid", "dpck_ds_type", "dpck_ats", "updating"];
 var updateAll = false;
 var defaultDigits = 3;
+
+var cu_node_list;
 ///////
 
 
@@ -97,10 +101,41 @@ function CU(name) {
 
     this.sendAttr = function (vv) {
         var request = new XMLHttpRequest();
-
-        console.log("device:" + this.name + " set attr:" + vv.currentTarget.name + " param:" + vv.currentTarget.value);
-        request.open("GET", request_prefix + this.name + "&cmd=attr" + "&parm={\"" + vv.currentTarget.name + "\": \"" + vv.currentTarget.value + "\"}", true);
+        var target= vv.currentTarget.name ;
+        var value = vv.currentTarget.value;
+        var devname=this.name;
+        console.log("device:" +devname+ " set attr:" + vv.currentTarget.name + " param:" + vv.currentTarget.value);
+        request.open("GET", request_prefix + devname + "&cmd=attr" + "&parm={\"" + vv.currentTarget.name + "\": \"" + vv.currentTarget.value + "\"}", true);
         request.send();
+         request.onreadystatechange = function () {
+            if (request.readyState == 4 && request.status == 200) {
+                var json_answer = request.responseText;
+                //	console.log("answer :\""+ json_answer+"\"");
+                
+                if( document.getElementById("console")!=null){
+                    var log_str;
+                    var d = new Date();
+                    var n = d.getHours();
+                    var m = d.getMinutes();
+                    var s = d.getSeconds();
+                    
+                    var dat=n+":"+m+":"+":"+s;
+                    if(json_answer!=null){
+                        log_str="["+dat+"] ["+devname +"] OK  event:\"" +target+ "\" param:\"" +value+"\":\n"+json_answer;
+                    } else {
+                         log_str="["+dat+"] ["+devname +"] OK  event:\"" +target+ "\" param:\"" +value+"\"";
+
+                    }
+                    document.getElementById("console").innerHTML = log_str;
+                }
+
+                if (json_answer == "") {
+                    return;
+                }
+
+                return;
+            }
+        }
     };
     this.sendEvent = function (vv) {
         var request = new XMLHttpRequest();
@@ -108,7 +143,21 @@ function CU(name) {
         var value = vv.currentTarget.value;
         var devname=this.name;
         console.log("device:" + this.name + " event:" +target + " param:" + value);
-        request.open("GET", request_prefix + this.name + "&cmd=" + target + "&parm=" +value, true);
+        if(target == "save"){
+            var req="cmd=snapshot&parm={\"name\":\""+value+"\",\"what\":\"create\",\"node_list\":"+cu_node_list+"}"
+            request.open("GET", gbl_request_prefix + req,true);
+        } else if (target == "restore"){
+             var req="cmd=snapshot&parm={\"name\":\""+value+"\",\"what\":\"restore\"}";
+            request.open("GET", gbl_request_prefix + req,true);
+        } else if (target == "list"){
+             var req="cmd=search&parm={\"name\":\"\",\"what\":\"snapshots\"}";
+            request.open("GET", gbl_request_prefix + req,true);
+        } else if (target == "delete"){
+             var req="cmd=snapshot&parm={\"name\":\""+value+"\",\"what\":\"delete\"}";
+            request.open("GET", gbl_request_prefix + req,true);
+        } else {
+            request.open("GET", gbl_request_prefix + this.name + "&cmd=" + target + "&parm=" +value, true);
+        }
         request.send();
         request.onreadystatechange = function () {
             if (request.readyState == 4 && request.status == 200) {
@@ -424,22 +473,35 @@ function CULoad(classname, inter) {
 
 function CUBuildInterface() {
     updateAll = true;
+        cu_node_list="[";
+
     for (var i = 0; i < cus.length; i++) {
         cus[i].buildtable = 1;
         cus[i].multibase = 1;
         cus[i].UpdateDataset();
+      if(i+1 <cus.length){
+            cu_node_list=cu_node_list + "\""+cus[i].name+"\",";
+        } else {
+            cu_node_list=cu_node_list + "\""+cus[i].name+"\"";
+
+        }      
         for (var key in cus[i]) {
             internal_param.push(key);
         }
+       
     }
+        cu_node_list=cu_node_list + "]";
+
 }
 
 function initializeCU(cunames) {
+
     for (var i = 0; i < cunames.length; i++) {
         var cu = new CU(cunames[i])
         cus.push(cu);
         console.log("initializing " + cunames[i]);
         cu.init();
+     
 
     }
 }
