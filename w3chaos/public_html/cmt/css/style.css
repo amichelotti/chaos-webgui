@@ -1,0 +1,333 @@
+body {
+font-family: 'Lato', Calibri, Arial, sans-serif;
+    font-weight: 400;
+    font-size: 1em;
+    color: #333;
+    background: #ddd url(../img/bg.jpg) repeat top left;
+    overflow:auto;
+}
+
+.container {
+    width: 98%;
+    margin: 0 auto;
+}
+
+/* Intestazione */
+.col.s12.m8.l6.center {
+    font-size: 30px;
+}
+
+.top {
+    background: #219187;
+    height: 47px;
+    line-height: 47px;
+}
+
+/*footer*/
+footer{
+    background: #219187;
+    height: 30px;
+    width: 100%;
+    line-height: 30px;
+    color: black;
+    font-style: italic;
+}
+
+footer img {
+    height: 40%;
+    padding-left: 5px;
+}
+
+span.right {
+    padding-right: 20px;
+}
+
+/* Menu scomparsa */
+.fixed-action-btn.horizontal.click-to-toggle {
+    position: relative;
+    padding: 0px 0 0 25px;
+}
+
+#menu-scomparsa{
+    margin-right: 63%;
+}
+
+/* Select e dataset */
+.field_zone{
+        border: 2px solid #219187;
+	/*margin-right: 20px; */
+}
+.input-field {
+    margin-top: 0;
+}
+
+select {
+    height: 1.5rem;
+    display: block;
+    padding: 0;
+}
+
+
+/* Tabella principale */
+#table-scroll {
+  /*height:280px;*/
+  overflow:auto;  
+}
+
+.col.s3.m3.l3.table-th, .col.s2.m2.l2.table-th, .col.s1.m1.l1.table-th, .col.s4.m4.l4.table-th {
+    background-color: #219187;
+    height: 38px;
+    color: white;
+    text-align: center;
+   /* font-size: 22px; */
+    font-size: 18px;
+    border: 1px solid white;
+    line-height: 38px;
+    vertical-align: middle;
+}
+
+.col.s12.m12.l12.tr_element {
+    padding: 0;
+}
+
+.col.s2.m2.l2.td_element, .col.s1.m1.l1.td_element {
+    border-bottom: 1px solid #219187;
+    border-left: 1px solid #219187;
+    border-right: 1px solid #219187;
+    text-align: center;
+    font-size: 15px;
+    height: 30px;
+    line-height: 30px;
+    text-overflow: ellipsis;
+}
+
+.col.s2.m2.l2.td_element.td_name {
+    text-align: left;
+}
+
+.row_selected {
+    background-color: #A0A0A0;
+}
+
+
+.tooltip-communication {
+    display: none;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+}
+
+tooltip:hover .tooltip-communication {
+    display: block;
+}
+
+
+/* Comandi principali */
+
+#command {
+    margin-top: 42px;
+}
+
+#new_curr {
+    margin-top: -20px;
+}
+
+#apply_current {
+    text-align: center;
+    font-size:13px;
+}
+
+#input_ampere {
+    margin-left: 22px;
+}
+
+
+/* Popup alarm */
+
+.button.b-close, .button.bClose {
+    border-radius: 7px 7px 7px 7px;
+    box-shadow: none;
+    font: bold 131% sans-serif;
+    padding: 0 6px 2px;
+    position: absolute;
+    right: -7px;
+    top: -7px;
+}
+
+.button {
+    background-color: #128680;
+    border-radius: 10px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
+    color: #FFF;
+    cursor: pointer;
+    display: inline-block;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+}
+
+.popup,.bMulti {
+    background-color: #FFF;
+    border-radius: 10px 10px 10px 10px;
+    box-shadow: 0 0 25px 5px #999;
+    color: #111;
+    display: none;
+    min-width: 450px;
+    min-height: 250px;
+    padding: 25px;
+}
+
+.popup{
+   width: 50%;
+}
+
+.title_popup {
+    font-size: 18px;
+    color: #219187;
+    text-align: center;
+}
+
+.table_popup {
+    border: 1px solid #219187;
+    border-collapse: collapse;
+}
+
+.btn-save {
+   border-radius:7px 7px 7px 7px;
+    font: bold 115% sans-serif;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
+    color: #FFF;
+    cursor: pointer;
+    background-color: #128680;
+    padding: 0 6px 2px;
+    text-align: center;
+}
+
+#popup-load {
+    min-height: 400px;
+    min-width: 550px;
+}
+
+
+#popup-view-dataset{
+    min-height: 350px;
+    min-width: 600px;
+    left: 570px;
+}
+
+#table-view-dataset {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#table-view-dataset th {
+    background-color: #219187;
+    height: 30px;
+    color: white;
+    text-align: center;
+    font-size: 14px;
+    border: 1px solid white;
+    line-height: 30px;
+    vertical-align: middle;
+}
+
+#table-view-dataset tr {
+    border: 1px solid #219187;
+}
+
+#table-view-dataset td {
+    border-right: 1px solid #219187;
+    text-align: center;
+} 
+
+
+.table-scroll-popup {
+    height: 250px;
+    margin-top:20px;
+    overflow: auto;
+}
+
+h5 {
+    text-align: center;
+    color: #219187;
+}
+
+
+#table_error tr {
+    border: 1px solid #219187;
+}
+
+#table_error td {
+    border-right: 1px solid #219187;
+    
+} 
+
+#table_error {
+    width: 70%;
+    border-collapse: collapse;
+}
+
+#list_dataset{
+    border-collapse: collapse;
+    border: 1px solid #219187;   
+}
+
+#list_dataset tr {
+    border: 1px solid #219187;   
+}
+
+ 
+ 
+ 
+ 
+
+/* VECCHIE */
+
+
+
+
+
+
+
+
+/*change state of command button*/
+.butt_std{
+    border: 2px solid #128680;	
+}
+
+.butt_ok{
+    background-color: #868686;
+}
+
+.butt_fail{
+    background-color: #fef014;
+}
+
+
+/* SAVED */
+.input_curr_saved {
+    height: 1rem !important;
+    /*width: 85px;
+    margin:0 auto; */
+}
+
+.select_saved{
+    width: 65px;
+    height: 22px;
+    font-size: 9px;
+}
+
+
+/*#apply_saved{
+    margin-top: 5px;
+    border: 2px solid #128680;
+    margin-left:65%;
+    width: 8%;
+    text-align: center;
+    font-size: 16px;
+    background-color: #d2d2d2;   
+} */
