@@ -1,0 +1,188 @@
+<html>
+<head>
+    <title>!CHAOS Sequencer</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="css/sequencer.css"/>
+    <link rel="stylesheet" type="text/css" href="css/materialize.css" />
+    <link rel="stylesheet" type="text/css" href="css/custom_materialize.css" />
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+    <!--script type="text/javascript" src="js/jquery-1.11.1.min.js"></script-->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="js/materialize.js"></script>
+    <!--script type="text/javascript" src="js/jquery.watermark.min.js"></script-->
+    <script type="text/javascript" src="js/mag_command_chaos.js"></script>
+    <script type="text/javascript" src="js/sequencer.js"></script>
+</head>
+<body>
+    
+<!-- TOP-->
+    <div class="row top">
+	<div class="col s12 m12 l12">
+	    <div class="col s12 m8 l6 center offset-l3 offset-m2">Sequencer</div>
+	</div>
+    </div>
+<!-- END TOP -->
+
+    <div class="row"><!-- break -->
+	<div class="col s12 m12 l12"><br><br></div>
+    </div>
+    
+<!--CONTAINER-->
+    <div class="container">
+    
+        <div class="CR_Table">
+            <!--div class="CR_Title">
+                <span class="CR_Page_Title">!CHAOS on BTF</span><br/>
+                <span class="CR_Page_Subtitle">Sequencer</span>
+            </div-->
+            <div class="CR_Row">
+                <!-- Left Block -->
+                <div id="CR_Elements" class="CR_Cell CR_G_Sel">
+                    <div class="CR_Table">
+                        <div class="CR_Title">
+                            <p>Element</p>
+                        </div>
+                        <div class="CR_Row">
+                            <div class="CR_Ele_Cell CR_C_Ena" id="BTF-CORRECTOR-CHHTB001" onclick="appendEle(this.id)">CHHTB001</div>
+                            <div class="CR_Ele_Cell CR_C_Ena" id="BTF-CORRECTOR-CVVTB001" onclick="appendEle(this.id)">CVVTB001</div>
+                            <div class="CR_Ele_Cell CR_C_Ena" id="BTF-CORRECTOR-CHHTB002" onclick="appendEle(this.id)">CHHTB002</div>
+                            <div class="CR_Ele_Cell CR_C_Ena" id="BTF-CORRECTOR-CVVTB002" onclick="appendEle(this.id)">CVVTB002</div>
+                        </div>
+                        <div class="CR_Row">
+                            <div class="CR_Ele_Cell CR_C_Ena" id="BTF-DIPOLE-DHSTB001" onclick="appendEle(this.id)">DHSTB001</div>
+                            <div class="CR_Ele_Cell CR_C_Ena" id="BTF-DIPOLE-DHSTB002" onclick="appendEle(this.id)">DHSTB002</div>
+                            <div class="CR_Ele_Cell CR_C_Ena" id="BTF-QUADRUPOLE-QUATB101" onclick="appendEle(this.id)">QUATB101</div>
+                            <div class="CR_Ele_Cell CR_C_Ena" id="BTF-QUADRUPOLE-QUATB102" onclick="appendEle(this.id)">QUATB102</div>
+                        </div>
+                        <div class="CR_Row">
+                            <div class="CR_Ele_Cell CR_C_Ena" id="BTF-QUADRUPOLE-QUATB001" onclick="appendEle(this.id)">QUATB001</div>
+                            <div class="CR_Ele_Cell CR_C_Ena" id="BTF-QUADRUPOLE-QUATB002" onclick="appendEle(this.id)">QUATB002</div>
+                            <div class="CR_Ele_Cell CR_C_Ena" id="BTF-QUADRUPOLE-QUATB003" onclick="appendEle(this.id)">QUATB003</div>
+                            <div class="CR_Ele_Cell CR_C_Ena" id="BTF-QUADRUPOLE-QUATB004" onclick="appendEle(this.id)">QUATB004</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Center Block -->
+                <div id="CR_Commands" class="CR_Cell">
+                    <div class="CR_Table">
+                        <div class="CR_Title">
+                            <p>Command</p>
+                        </div>
+                        <div class="CR_Row">
+                            <div class="CR_Cmd_Cell" id="POWR" onclick="appendCmd('POWR')">
+                                <i class="material-icons verde">trending_down</i> On
+                            </div>
+                            <div class="CR_Cmd_Cell" id="STBY" onclick="appendCmd('STBY')">
+                                <i class="material-icons red md-26">pause_circle_outline</i> Standby
+                            </div>
+                            <div class="CR_Cmd_Cell" id="RESE" onclick="appendCmd('RESE')">
+                                <i class="material-icons red md-26">error</i> Reset
+                            </div>
+                        </div>
+                        <div class="CR_Row">
+                            <div class="CR_Cmd_Cell" id="POLA_P" onclick="appendCmd('POLA_P')">
+                                <i class="material-icons red md-26">add_circle</i> Pos
+                            </div>
+                            <div class="CR_Cmd_Cell" id="POLA_O" onclick="appendCmd('POLA_O')">
+                                <i class="material-icons md-26" >radio_button_unchecked</i> Open
+                            </div>
+                            <div class="CR_Cmd_Cell" id="POLA_N" onclick="appendCmd('POLA_N')">
+                                <i class="material-icons blu md-26" >remove_circle</i> Neg
+                            </div>
+                        </div>
+                        <div class="CR_Row">
+                            <div class="CR_Inner_Blank_Cell">
+                                <input class="CR_Current" type="text" id="wait_val" />
+                            </div>
+                            <div class="CR_Cmd_Cell" id="WAIT" onclick="appendWait('WAIT')">
+                                <i class="material-icons md-26" >alarm</i> Wait [ms]
+                            </div>
+                            <div class="CR_Inner_Blank_Cell">
+                                <!-- Empty Cell -->
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+                <!-- Right Block -->
+                <div id="CR_Current_Command" class="CR_Cell">
+                    <div class="CR_Table">
+                        <div class="CR_Title">
+                            <p>Set Current</p>
+                        </div>
+                        <div class="CR_Row">
+                            <div class="CR_Inner_Blank_Cell">
+                                <input class="CR_Current" type="text" id="cur_val" />
+                            </div>
+                            <div class="CR_Cmd_Cell" id="SET_CURRENT" onclick="appendCurrent('SET_CURRENT')">
+                                <i class="material-icons md-26" >flash_on</i>Apply [A]
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="CR_Row CR_Spacer">
+            </div>
+            <!-- Textarea -->
+            <div class="CR_Row">
+                <div class="CR_Cell">
+                    <textarea id="cmds" rows="10" cols="54"></textarea>
+                </div>
+                <div class="CR_Cell">
+                    <div class="CR_Table">
+                        <div class="CR_Row">
+                            <div class=CR_Inner_Blank_Cell">
+                               &nbsp;
+                            </div>
+                            
+                        </div>
+                        <div class="CR_Row">
+                            <div class="CR_Inner_Blank_Cell">
+                                <input class="CR_Current" type="text" id="local_wait_val" />
+                            </div>
+                            <div class="CR_But_Cell" id="add_wtcm" onclick="appendWtcm()">
+                                <i class="material-icons verde md-26">alarm</i> LOC WAIT
+                            </div>
+                        </div>
+                        <div class="CR_Row">
+                            <div class=CR_Inner_Blank_Cell">
+                                &nbsp;
+                            </div>
+                            <div class=CR_Inner_Blank_Cell">
+                                &nbsp;
+                            </div>
+                        </div>
+                        <div class="CR_Row">
+                            <div class="CR_But_Cell" id="send_cmds" onclick="sendCmds()">
+                                <i class="material-icons verde md-26">send</i> SEND
+                            </div>
+                            <div class="CR_But_Cell" id="clear_cmds" onclick="clearFields()">
+                                <i class="material-icons red md-26">highlight_off</i> CLEAR
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="CR_Cell">
+                    
+                </div>
+            </div>
+        </div>
+        <div id="results">
+            
+        </div>
+        
+    </div><!--END CONTAINER-->
+    
+    <div class="row"><!-- break -->
+	<div class="s12 m12 l12"><br><br><br><br></div>
+    </div>
+    
+    <div id="ciaooo"></div>
+    
+    <!--FOOTER-->
+    <footer><span class="right">Powered by <a href="http://chaos.infn.it" target="_blank"><img src="img/logo_chaos_svg.svg"/></a></span></footer>
+
+</body>
+</html>

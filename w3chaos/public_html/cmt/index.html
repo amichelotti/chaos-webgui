@@ -1,0 +1,264 @@
+<html>
+<head>
+    <title>!CHAOS Mag Terminal</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="css/materialize.css" />
+    <link rel="stylesheet" type="text/css" href="css/custom_materialize.css" />
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"rel="stylesheet">
+    <!--script type="text/javascript" src="js/jquery-1.11.1.min.js"></script-->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="js/materialize.js"></script>
+    <script type="text/javascript" src="js/jquery.bpopup-0.9.4.min.js"></script>
+    <!--script type="text/javascript" src="js/jquery.easing.1.3.js"></script-->
+    <script type="text/javascript" src="js/jquery.table2excel.js"></script>
+    <script type="text/javascript" src="js/mag_chaos.js"></script>
+    <script type="text/javascript" src="js/mag_command_chaos.js"></script>
+    <script type="text/javascript" src="js/mag_web.js"></script>
+    <!--script type="text/javascript" src="js/mag_load_set_polarity.js"></script-->
+    <script type="text/javascript" src="js/mag_total_load_chaos.js"></script>
+
+    <script type="text/javascript" src="js/mag_export.js"></script>
+
+</head>
+
+
+
+<body>
+
+<!-- TOP-->
+    <div class="row top">
+	<div class="col s12 m12 l12">
+	    <div class="col s12 m8 l6 center offset-l3 offset-m2">Magnets Terminal</div>
+	</div>
+    </div>
+<!-- END TOP -->
+
+    <div class="row"><!-- break -->
+	<div class="col s12 m12 l12"><br><br></div>
+    </div>
+    
+<!--CONTAINER-->
+    <div class="container">
+        
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="fixed-action-btn horizontal click-to-toggle">
+                    <a class="btn-floating btn-large red"><i class="material-icons">menu</i></a>
+                    <ul id="menu-scomparsa">
+			<li><a class="btn-floating red tooltipped btn-main-function disabled" data-position="bottom" data-delay="50" data-tooltip="Save" onclick="openSaveDataset()"><i class="material-icons">save</i></a></li>
+                        <li><a class="btn-floating yellow darken-1 tooltipped btn-main-function disabled" data-position="bottom" data-delay="50" data-tooltip="Load Dataset" onclick="openGlobalLoad()"><i class="material-icons">insert_drive_file</i></a></li>
+			<li><a class="btn-floating pink darken-2 tooltipped btn-main-function disabled" data-position="bottom" data-delay="50" data-tooltip="Restore" onclick="reLoad()"><i class="material-icons">replay</i></a></li>
+                        <li><a class="btn-floating green tooltipped" data-position="bottom" data-delay="50" data-tooltip="Sequencer" onclick="open_cmd_rec()"><i class="material-icons">format_align_justify</i></a></li>
+                        <li><a class="btn-floating blue tooltipped btn-main-function disabled" data-position="bottom" data-delay="50" data-tooltip="Print" onclick="table2excel()"><i class="material-icons">print</i></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+            
+        <div class="row"><!-- break -->
+            <div class="col s12 m12 l12"></div>
+        </div>
+	
+	<!--POPUP SAVE-->
+        <div id="popup-save" class="popup" style="display: none;">
+            <span class="button b-close"><span>Close</span></span>
+            <p class="title_popup">Save Dataset</p>
+	    <div class="row">
+		<div class="col s10 m10 l10">
+                    <label id="input-save-dataset">Insert name</label>
+                        <input type="text" class="file-path validate" id="nameDataset" name="nameDataset" value="name"/>
+		</div>
+	   </div>
+	    <div class="row"><!-- break -->
+		<div class="col s12 m12 l12"><br></div>
+	    </div>
+	    <div class="row">
+		<div class="col s2 m2 l2 right"><a class="btn-save waves-effect waves-light" onclick="saveDataset(nameDataset.value)">Save</a></div>
+	    </div>   
+        </div>
+	
+	<!--POPUP LOAD -->
+	<div id="popup-load" class="popup" style="display: none;">
+            <span class="button b-close"><span>Close</span></span>
+            <h5>List Dataset</h5>
+	    <div class="row">
+		<div class="col s12 m12 l12" id="table-wrapper_dataset">
+		    <div class="table-scroll-popup">
+			<table class="col s12 m12 l12" id="list_dataset">
+			    <tr>
+				<th class="col s6 m6 l6">Date</th>
+				<th class="col s6 m6 l6">Name</th>
+				<!--th class="col s5 m5 l5">Comment</th-->
+			    </tr>
+			</table>
+		    </div>    
+		</div>
+            </div>
+	    <div class="row"><!-- break -->
+		<div class="col s12 m12 l12"><br></div>
+	    </div>
+	    <!--div class="row">
+		<div class="col s2 m2 l2 right"><a class="btn-save" onclick="">Load</a></div>
+	    </div-->   
+        </div>
+	
+	<!--POPUP VIEW-DATASET-->
+	<div id="popup-view-dataset" class="popup" style="display: none;">
+	    <span class="button b-close"><span>Close</span></span>
+	        <h5>Dataset: <span></span></h5>
+		<div class="col s12 m12 l12">
+		    <div class="table-scroll-popup">
+			<table id="table-view-dataset" class="col s12 m12 l12">
+			    <tr>
+				<th class="col s6 m6 l6">Element</th>
+				<th class="col s4 m4 l4">Setting [A]</th>
+				<th class="col s1 m1 l1">Status</th>
+				<th class="col s1 m1 l1">Polarity</th>
+			    </tr>
+			</table>
+		    </div>
+		</div>
+	    <div class="row"><!-- break -->
+		<div class="col s12 m12 l12"><br><br></div>
+	    </div>
+	    <div class="row">
+		<div class="col s12 m12 l12">
+		    <a class="col s2 m2 l2 offset-s4 offset-m4 offset-l4 btn-save b-close">Cancel</a>
+		    <a class="col s2 m2 l2 offset-s1 offset-m1 offset-l1 btn-save b-close" id="tmp-load" onclick="fill_load_main_table()">Load</a>
+		</div>
+	    </div>
+	</div>
+        
+        
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <div class="col s4 m4 l2">
+                    <fieldset class="field_zone">
+                        <legend>ZONES</legend>
+                        <div class="input-field">
+                            <select id="zones"></select>
+                        </div>
+                    </fieldset>
+                </div>
+                
+                <div class="col s4 m4 l2">
+                    <fieldset class="field_zone">
+                        <legend>ELEMENTS</legend>
+                        <div class="input-field">
+                            <select id="elements"></select>
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row"><!-- break -->
+            <div class="col s12 m12 l12"><br></div>
+        </div>
+ 
+        <div class="row"><!--Intestazione tabella-->
+            <div class="col s12 m12 l12">
+                <div class="col s2 m2 l2 table-th">Element</div>
+                <div class="col s2 m2 l2 table-th">Readout [A]</div>
+                <div class="col s1 m1 l1 table-th">Setting [A]</div>
+                <div class="col s3 m3 l3 table-th">Saved [A]</div>
+                <div class="col s4 m4 l4 table-th">Flags</div>
+            </div>	
+        </div>
+        
+        <div class="row"><!--Elementi-->
+            <div class="col s12 m12 l12" id="table-scroll">
+                <div id="main_table"></div>
+            </div>
+        </div>
+        
+        <!--popup alarms cu-->
+        <div id="popup_alarm" class="popup" style="display: none;">
+            <span class="button b-close"><span>Close</span></span>
+	    <h5>Table alarm of <span></span></h5>
+	    	<div class="col s12 m12 l12" id="table-wrapper_error">
+		    <div class="table-scroll-popup">
+			<table class="col s12 m12 l12" id="table_error">
+			    <tr>
+				<th class="col s8 m8 l8">Description</th>
+				<th class="col s4 m4 l4">Value</th>
+			    </tr>
+			</table>
+		    </div>
+		</div>
+        </div>
+	
+	<!--popup alarms powersupply-->
+        <div id="popup_magnets" class="popup" style="display: none;">
+            <span class="button b-close"><span>Close</span></span>
+	    <h5>Alarms</h5>
+	    	<div class="col s12 m12 l12" id="table-wrapper_error_magnets">
+		    <div class="table-scroll-popup">
+			<table class="col s12 m12 l12" id="table_error_magnets">
+			    <tr>
+				<th class="col s8 m8 l8">Description</th>
+				<th class="col s4 m4 l4">Value</th>
+			    </tr>
+			</table>
+		    </div>
+		</div>
+        </div>
+	
+                
+        <div class="row" id="command"><!--Comandi riga1-->
+            <div class="col s12 m12 l12">
+                <div class="col s2 m2 l1"><!--On-->
+                        <a class="waves-effect waves-light btn icon" id="buttON" onclick=setPowerSupply("On")><i class="material-icons verde">trending_down</i>On</a>
+                </div>
+                
+                <div class="col s2 m2 l1">
+                    <a class="waves-effect waves-light btn icon" id="buttOFF" onclick=setPowerSupply("Standby")><i class="material-icons red">pause_circle_outline</i>Standby</a>
+                </div>
+                
+                <div class="col s2 m2 l1">
+                    <a class="waves-effect waves-light btn icon" id="reset_alarm" onclick=resetAlarm("Reset")><i class="material-icons red">error</i>Reset</a>
+                </div>
+                
+                <div class="col s2 m2 l1 offset-l2 ">
+                    <a class="waves-effect waves-light btn" id="apply_current" onclick=setCurrent(new_curr.value)>Apply</a>
+                </div>
+                <div class="col s2 m2 l2" id="input_ampere">
+                    <label id="input-current-label">[A]</label>
+                        <input type="text" class="file-path validate input_current" id="new_curr" name="setCurrent" value="0"/>
+                    </div>
+                
+            </div>
+        </div>
+        
+        <div class="row"><!--Comandi riga2-->
+            <div class="col s12 m12 l12">
+                <div class="col s2 m2 l1"><!--On-->
+                        <a class="waves-effect waves-light btn icon" id="buttPOS" onclick=setPolarity("Pos")><i class="material-icons red">add_circle</i>Pos</a>
+                </div>
+                
+                <div class="col s2 m2 l1">
+                    <a class="waves-effect waves-light btn icon" id="buttOP" onclick=setPolarity("Open")><i class="material-icons">radio_button_unchecked</i>Open</a>
+                </div>
+                
+                <div class="col s2 m2 l1">
+                    <a class="waves-effect waves-light btn icon" id="buttNEG" onclick=setPolarity("Neg")><i class="material-icons blu">remove_circle</i>Neg</a>
+                </div> 
+            </div>
+        </div>
+	
+    </div><!--END CONTAINER-->
+    
+    <div class="row"><!-- break -->
+	<div class="s12 m12 l12"><br><br><br><br></div>
+    </div>
+    
+    <div id="ciaooo"></div>
+    
+    <!--FOOTER-->
+    <footer><span class="right">Powered by <a href="http://chaos.infn.it" target="_blank"><img src="img/logo_chaos_svg.svg"/></a></span></footer>
+       
+</body>
+</html>

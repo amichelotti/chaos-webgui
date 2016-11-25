@@ -2,9 +2,7 @@
 <configurationDescriptor version="97">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df root="." name="0">
-      <df name=".idea">
-      </df>
-      <df name="build">
+      <df name=".settings">
       </df>
       <df name="CMakeFiles">
         <df name="2.8.12.2">
@@ -14,8 +12,6 @@
           <df name="CompilerIdCXX">
             <in>CMakeCXXCompilerId.cpp</in>
           </df>
-        </df>
-        <df name="CMakeTmp">
         </df>
         <df name="CUIserver.dir">
           <df name="src">
@@ -67,7 +63,8 @@
       </df>
       <df name="src">
         <in>ChaosController.cpp</in>
-        <in>ChaosController.h</in>
+        <in>ChaosWebController.cpp</in>
+        <in>ChaosWebController.h</in>
         <in>dev_status.h</in>
         <in>main.cpp</in>
       </df>

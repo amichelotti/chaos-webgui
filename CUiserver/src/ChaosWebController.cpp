@@ -74,9 +74,28 @@ void ChaosWebController::handleCU(Request &request, StreamResponse &response) {
     if(dev_v.size()>1){
         answer_multi<<"[";
     }
-    
+    if(dev_param.size()==0){
+                controller = new ::driver::misc::ChaosController();
+                if (controller == NULL) {
+                    response << "{}";
+                    CALC_EXEC_TIME;
+                    CUIServerLERR_<<"error creating Chaos Controller";
+                    return;
+                }
+                std::string ret;
+
+                if(controller->get(cmd,(char*)parm.c_str(),0,atoi(cmd_prio.c_str()),atoi(cmd_schedule.c_str()),atoi(cmd_mode.c_str()),0,ret)!=::driver::misc::ChaosController::CHAOS_DEV_OK){
+                    CUIServerLERR_<<"An error occurred during get:"<<controller->getJsonState();
+                    
+                }
+              response << ret;
+              CALC_EXEC_TIME;
+              delete controller;
+              return;
+    }
     for(std::vector<std::string>::iterator idevname=dev_v.begin();idevname!=dev_v.end();idevname++){
         std::string ret;
+
         if (!(*idevname).empty() && !cmd.empty()) {
             
             if (devs.count(*idevname) > 0) {
@@ -87,6 +106,7 @@ void ChaosWebController::handleCU(Request &request, StreamResponse &response) {
                 if (controller == NULL) {
                     response << "{}";
                     CALC_EXEC_TIME;
+                    CUIServerLERR_<<"error creating Chaos Controller";
                     return;
                 }
                 if(controller->init(*idevname,DEFAULT_TIMEOUT_FOR_CONTROLLER)!=0){
