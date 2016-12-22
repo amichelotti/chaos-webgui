@@ -29,10 +29,14 @@ private:
     uint64_t naccess;
     uint64_t tot_us;
     uint64_t refresh;
-    
+    ::driver::misc::ChaosController* info;
     public: 
         ChaosWebController();
+        ~ChaosWebController();
+
         void handleCU(Request &request, StreamResponse &response);
+        void handleMDS(Request &request, StreamResponse &response);
+
         void setup();
         void setMDSTimeout(int timeo);
         static void addDevice(std::string,::driver::misc::ChaosController*);

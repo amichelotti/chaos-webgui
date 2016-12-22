@@ -9,7 +9,7 @@
 #include <mongoose/WebController.h>
 
 #include "ChaosWebController.h"
-
+#include <chaos/common/exception/CException.h>
 #include <common/debug/core/debug.h>
 #include <sstream>
 #include <vector>
@@ -31,8 +31,15 @@ ChaosWebController::ChaosWebController() {
     naccess=0;
     tot_us =0;
     refresh=0;
+    info = new ::driver::misc::ChaosController();
+    if(info==NULL){
+    	throw chaos::CFatalException(-6,"cannot allocate controller",__PRETTY_FUNCTION__);
+    }
 }
+ChaosWebController::~ChaosWebController() {
+	delete info;
 
+}
 void ChaosWebController::setMDSTimeout(int timeo) {
     mds_timeout = timeo;
 }
@@ -75,22 +82,16 @@ void ChaosWebController::handleCU(Request &request, StreamResponse &response) {
         answer_multi<<"[";
     }
     if(dev_param.size()==0){
-                controller = new ::driver::misc::ChaosController();
-                if (controller == NULL) {
-                    response << "{}";
-                    CALC_EXEC_TIME;
-                    CUIServerLERR_<<"error creating Chaos Controller";
-                    return;
-                }
+
                 std::string ret;
 
-                if(controller->get(cmd,(char*)parm.c_str(),0,atoi(cmd_prio.c_str()),atoi(cmd_schedule.c_str()),atoi(cmd_mode.c_str()),0,ret)!=::driver::misc::ChaosController::CHAOS_DEV_OK){
+                if(info->get(cmd,(char*)parm.c_str(),0,atoi(cmd_prio.c_str()),atoi(cmd_schedule.c_str()),atoi(cmd_mode.c_str()),0,ret)!=::driver::misc::ChaosController::CHAOS_DEV_OK){
                     CUIServerLERR_<<"An error occurred during get:"<<controller->getJsonState();
                     
                 }
               response << ret;
               CALC_EXEC_TIME;
-              delete controller;
+
               return;
     }
     for(std::vector<std::string>::iterator idevname=dev_v.begin();idevname!=dev_v.end();idevname++){
@@ -143,6 +144,32 @@ void ChaosWebController::handleCU(Request &request, StreamResponse &response) {
     
 }
 
+
+void ChaosWebController::handleMDS(Request &request, StreamResponse &response) {
+    CDataWrapper*data = NULL;
+
+    ::driver::misc::ChaosController* controller = NULL;
+    std::string cmd, parm,dev_param;
+    cmd = request.get("cmd");
+    parm = request.get("parm");
+    uint64_t reqtime=boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds();
+    response.setHeader("Access-Control-Allow-Origin", "*");
+    naccess++;
+    std::string ret;
+
+   if(info->get(cmd,(char*)parm.c_str(),0,0,0,0,0,ret)!=::driver::misc::ChaosController::CHAOS_DEV_OK){
+	   CUIServerLERR_<<"An error occurred during get:"<<info->getJsonState();
+
+   }
+    response << ret;
+   CALC_EXEC_TIME;
+
+    return;
+
+}
+
+
 void ChaosWebController::setup() {
     addRoute("GET", "/CU", ChaosWebController, handleCU);
+    addRoute("GET", "/MDS", ChaosWebController, handleMDS);
 }
