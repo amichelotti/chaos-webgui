@@ -86,7 +86,7 @@ void ChaosWebController::handleCU(Request &request, StreamResponse &response) {
                 std::string ret;
 
                 if(info->get(cmd,(char*)parm.c_str(),0,atoi(cmd_prio.c_str()),atoi(cmd_schedule.c_str()),atoi(cmd_mode.c_str()),0,ret)!=::driver::misc::ChaosController::CHAOS_DEV_OK){
-                    CUIServerLERR_<<"An error occurred during get:"<<controller->getJsonState();
+                    CUIServerLERR_<<"An error occurred during get:"<<info->getJsonState();
                     
                 }
               response << ret;
