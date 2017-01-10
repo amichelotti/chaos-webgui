@@ -78,9 +78,7 @@ void ChaosWebController::handleCU(Request &request, StreamResponse &response) {
     boost::split(dev_v,dev_param,boost::is_any_of(","));
     
     std::stringstream answer_multi;
-    if(dev_v.size()>1){
-        answer_multi<<"[";
-    }
+
     if(dev_param.size()==0){
 
                 std::string ret;
@@ -94,6 +92,7 @@ void ChaosWebController::handleCU(Request &request, StreamResponse &response) {
 
               return;
     }
+    answer_multi<<"[";
     for(std::vector<std::string>::iterator idevname=dev_v.begin();idevname!=dev_v.end();idevname++){
         std::string ret;
 
@@ -123,18 +122,12 @@ void ChaosWebController::handleCU(Request &request, StreamResponse &response) {
             }
             
             
-            
-            if(dev_v.size()==1){
-                response << ret;
-                CALC_EXEC_TIME;
-                return;
-            } else {
-                if((idevname+1) == dev_v.end()){
-                    answer_multi<<ret<<"]";
-                }else {
-                    answer_multi<<ret<<",";
-                }
+            if((idevname+1) == dev_v.end()){
+               answer_multi<<ret<<"]";
+             }else {
+               answer_multi<<ret<<",";
             }
+
         }
     }
     //CUIServerLDBG_<<"["<<devname<<"]: \""<<oout<<"\"";

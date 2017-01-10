@@ -205,7 +205,8 @@ function CU(name) {
     this.injectJson = function (json_answer) {
         var my = this;
         try {
-            var json = JSON.parse(json_answer);
+            var jsonarr = JSON.parse(json_answer);
+	    var json=jsonarr[0];
         } catch (err) {
             console.log("exception parsing \"" + json_answer + "\"");
             return;
