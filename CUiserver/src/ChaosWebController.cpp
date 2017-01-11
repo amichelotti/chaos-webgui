@@ -71,6 +71,7 @@ void ChaosWebController::handleCU(Request &request, StreamResponse &response) {
     std::string cmd_schedule = request.get("sched");
     std::string cmd_prio = request.get("prio");
     std::string cmd_mode = request.get("mode");
+
     uint64_t reqtime=boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds();
     response.setHeader("Access-Control-Allow-Origin", "*");
     naccess++;
