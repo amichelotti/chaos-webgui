@@ -155,7 +155,9 @@ function CU(name) {
         } else if (target == "delete"){
              var req="cmd=snapshot&parm={\"name\":\""+value+"\",\"what\":\"delete\"}";
             request.open("GET", gbl_request_prefix + req,true);
-        } else {
+        } else if ((target == "init")||(target == "start") || (target == "stop") || (target == "deinit")||(target == "recover")){
+	    request.open("GET", gbl_request_prefix + "dev="+this.name + "&cmd=" + target + "&parm=" +value, true);
+	} else {
             request.open("GET", gbl_request_prefix + this.name + "&cmd=" + target + "&parm=" +value, true);
         }
         request.send();
