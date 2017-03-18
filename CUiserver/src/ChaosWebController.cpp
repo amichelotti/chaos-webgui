@@ -68,6 +68,7 @@ void ChaosWebController::handleCU(Request &request, StreamResponse &response) {
     dev_param = request.get("dev");
     cmd = request.get("cmd");
     parm = request.get("parm");
+    
     std::string cmd_schedule = request.get("sched");
     std::string cmd_prio = request.get("prio");
     std::string cmd_mode = request.get("mode");
@@ -165,5 +166,9 @@ void ChaosWebController::handleMDS(Request &request, StreamResponse &response) {
 
 void ChaosWebController::setup() {
     addRoute("GET", "/CU", ChaosWebController, handleCU);
+    addRoute("POST", "/CU", ChaosWebController, handleCU);
+
     addRoute("GET", "/MDS", ChaosWebController, handleMDS);
+    addRoute("POST", "/MDS", ChaosWebController, handleMDS);
+
 }
