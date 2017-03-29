@@ -11,9 +11,9 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME} mongoose profiler chaos_metadata_service_c
 ELSE()
 if(${CMAKE_BUILD_TYPE} MATCHES "PROFILE")
 ADD_DEFINITIONS(-DGOOGLE_PROFILE)
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} mongoose profiler chaos_metadata_service_client chaos_driver_misc chaos_common common_debug ${FrameworkLib})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} mongoose profiler  chaos_metadata_service_client chaos_driver_misc chaos_common common_debug ${FrameworkLib})
 ELSE() 
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} mongoose chaos_metadata_service_client chaos_driver_misc chaos_common common_debug ${FrameworkLib})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} mongoose chaos_metadata_service_client  chaos_driver_misc  chaos_common common_debug ${FrameworkLib})
 ENDIF()
 ENDIF()
 

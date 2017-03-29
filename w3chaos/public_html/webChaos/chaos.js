@@ -233,6 +233,31 @@ function CU(name) {
 
         }
 
+        for (var kk in json.system) {
+            if (json.system[kk].hasOwnProperty("$numberLong")) {
+                json.system[kk] = parseInt(json.system[kk].$numberLong);
+            }
+        }
+
+        for (var kk in json.health) {
+            if (json.health[kk].hasOwnProperty("$numberLong")) {
+                json.health[kk] = parseInt(json.health[kk].$numberLong);
+            }
+        }
+
+        for (var kk in json.device_alarms) {
+            if (json.device_alarms[kk].hasOwnProperty("$numberLong")) {
+                json.device_alarms[kk] = parseInt(json.device_alarms[kk].$numberLong);
+            }
+        }
+
+        for (var kk in json.cu_alarms) {
+            if (json.cu_alarms[kk].hasOwnProperty("$numberLong")) {
+                json.cu_alarms[kk] = parseInt(json.cu_alarms[kk].$numberLong);
+            }
+        }
+
+
         Object.keys(json).forEach(function (key) {
             try {
                 var val = json[key];
@@ -859,11 +884,16 @@ function chaos_create_table(obj, instancen) {
     
     var input = obj.input;
     var output = obj.output;
-    var alarm = obj.alarms;
+    var cu_alarms = obj.cu_alarms;
+    var device_alarms = obj.device_alarms;
+    var system = obj.system;
     var health = obj.health;
+
     build_indicator("output", obj,output, instancen, tbdy);
     build_control("input", obj,input, instancen, tbdy);
-    build_indicator("alarms", obj,alarm, instancen, tbdy);
+    build_indicator("cu_alarms", obj,cu_alarms, instancen, tbdy);
+    build_indicator("device_alarms", obj,device_alarms, instancen, tbdy);
+    build_indicator("system", obj,system, instancen, tbdy);
     build_indicator("health", obj,health, instancen, tbdy);
 
 
@@ -883,6 +913,9 @@ function isFloat(n) {
 
 
 function formatValue(key,value,base,digits) {
+    if(typeof(value) === "string")
+	return value;
+
     var isarray = Array.isArray(value);
       var number = value;
         var sout = value;
@@ -1033,8 +1066,10 @@ function CUupdateInterface() {
 
         var input = cu.input;
         var output = cu.output;
-        var alarms = cu.alarms;
+        var cu_alarms = cu.cu_alarms;
+        var device_alarms = cu.device_alarms;
         var health = cu.health;
+        var system = cu.system;
         if (document.getElementById("dev_status_" + i) != null) {
             document.getElementById("dev_status_" + i).innerHTML = cu.dev_status;
         }
@@ -1042,8 +1077,10 @@ function CUupdateInterface() {
             document.getElementById("error_status_" + i).innerHTML = cu.error_status;
         }
         updateIndicator("output",output, i, color, tick);
-        updateIndicator("alarms",alarms, i, color, tick);
-        updateIndicator("healt",health, i, color, tick);
+        updateIndicator("cu_alarms",cu_alarms, i, color, tick);
+        updateIndicator("device_alarms",device_alarms, i, color, tick);
+        updateIndicator("system",system, i, color, tick);
+        updateIndicator("health",health, i, color, tick);
         updateControl("input",input, i, color, tick);
 
 

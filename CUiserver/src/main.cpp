@@ -39,7 +39,7 @@ int main(int argc,char**argv)
     server.setOption("Access-Control-Allow-Origin","*");
     server.setOption("num_threads",nthreads.c_str());
     server.registerController(&myController);
-    ProfilerStart("CUIProfile.log");
+
     server.start(); 
 
     while (1) {
@@ -49,5 +49,5 @@ int main(int argc,char**argv)
         sleep(10);
 #endif
     }
-    ProfilerStop();
+
 }

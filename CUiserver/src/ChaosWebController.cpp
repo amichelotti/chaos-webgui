@@ -109,11 +109,13 @@ void ChaosWebController::handleCU(Request &request, StreamResponse &response) {
                     response << "{}";
                     CALC_EXEC_TIME;
                     CUIServerLERR_<<"error creating Chaos Controller";
+
                     return;
                 }
                 if(controller->init(*idevname,DEFAULT_TIMEOUT_FOR_CONTROLLER)!=0){
                     response << controller->getJsonState();
                     CALC_EXEC_TIME;
+                    delete controller;
                     return;
                 }
                 addDevice(*idevname,controller);
