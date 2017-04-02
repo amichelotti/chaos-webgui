@@ -7,9 +7,7 @@
 #include <signal.h>
 
 #include <ChaosMetadataServiceClient/ChaosMetadataServiceClient.h>
-#include <mongoose/Server.h>
-#include <mongoose/WebController.h>
-#include "ChaosWebController.h"
+
 #ifdef GOOGLE_PROFILE
 #include <gperftools/profiler.h>
 #else
@@ -24,7 +22,7 @@ using namespace chaos::metadata_service_client;
 int main(int argc,char**argv)
 { 
     int server_port = 8080;     
-    std::string nthreads="50";
+    std::string nthreads="10";
 
   //  ChaosUIToolkit::getInstance()->getGlobalConfigurationInstance()->addOption("server_port", po::value<int>(&server_port)->default_value(8080), "The server port");
    // ChaosUIToolkit::getInstance()->init(argc, argv);
