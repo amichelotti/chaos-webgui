@@ -17,6 +17,12 @@ struct MongooseEvent {
 		ev=evn;
 		evdata=ev_data;
 	}
+	MongooseEvent(){
+		mgc=NULL;
+		ev=-1;
+		evdata=NULL;
+	}
+
 
 };
 

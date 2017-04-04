@@ -11,8 +11,8 @@
 
 class MongooseServer {
 
-	boost::lockfree::queue<MongooseEvent> m_queue;
-	int nhtread;
+	static boost::lockfree::queue<MongooseEvent > m_queue;
+	int nthread;
 	const std::string port;
 
 	std::vector<MongooseWorker*> v_worker;
@@ -23,7 +23,8 @@ public:
 	MongooseServer(const std::string& port,int nthread=1);
 	virtual ~MongooseServer();
 
-	int run();
+	static void pushInQueue(MongooseEvent& ev);
+	int start();
 	int stop();
 
 };

@@ -11,13 +11,16 @@
 #include <common/misc/scheduler/Worker.h>
 #include <boost/lockfree/queue.hpp>
 
-class MongooseWorker:public ::common::misc::scheduler::Worker<MongooseEvent> {
+class MongooseWorker:public ::common::misc::scheduler::Worker {
+
+	struct mg_mgr* mgr;
+	struct mg_connection* nc;
 
 public:
-	MongooseWorker(boost::lockfree::queue<MongooseEvent>& q):::common::misc::scheduler::Worker<MongooseEvent>(q){}
+	MongooseWorker(struct mg_mgr* mgr,struct mg_connection *nc);
 	virtual ~MongooseWorker();
 
-	int process(MongooseEvent ev);
+	int process();
 
 };
 
