@@ -3,7 +3,7 @@ project(CUIserver)
 SET(CUISERVER src/main.cpp src/ChaosWebController.cpp)
 ADD_DEFINITIONS(-O2 -DDEBUG)
 ADD_EXECUTABLE(CUIserver ${CUISERVER})
-
+CheckConfigureBuild(mongoose mongoose-cpp "-DHAS_JSONCPP=ON;-DENABLE_PIC=ON" https://github.com/amichelotti )
 
 IF(BUILD_FORCE_STATIC)
   SET(CMAKE_EXE_LINKER_FLAGS "-static -Wl,--whole-archive -lchaos_common -Wl,--no-whole-archive")
