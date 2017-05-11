@@ -1,0 +1,156 @@
+/* MENU SAVE-LOAD- */
+
+.opt-menu {
+	color: white !important;
+	font-size: 14px !important;
+}
+
+.disabled {
+	background-color: grey !important;
+	cursor: auto;
+}
+
+
+
+.label.label-important.dropmenu {
+	margin-left: 8px;
+}
+
+table#main_table_scrapers th, table#main_table_scrapers td {
+	text-align: center;
+}
+
+td.name_element {
+	text-align: left !important;
+}
+
+td.position_element{
+	text-align: right !important;
+}
+
+a.quick-button-small.span1.btn-cmd {
+	padding-top: 8px !important;
+	margin-top:4px;
+}
+
+a.quick-button-small.span1.btn-value {
+	margin-top:4px;
+}
+
+
+p.name-cmd {
+	margin: 0px 0 2px !important;
+}
+
+#input-value {
+	margin-top: 20px;
+	margin-bottom: 25px !important;
+}
+
+
+.box.span12.box-cmd {
+	border:2px solid #43B5AD;
+}
+
+#input-value-due {
+	margin-top: 20px;
+}
+
+.rosso {
+	color: red;
+}
+
+.verde {
+	color: green;
+}
+
+
+.row_selected {
+    background-color: #e9e9e9;
+}
+
+#h3-cmd {
+	margin: 0px 0px !important;
+}
+
+#box-cmd-due {
+	margin-left:80px;
+	margin-bottom: 0px !important;
+}
+
+
+table#table_device_alarm th {
+	text-align: center;
+}
+
+table#table_device_alarm td {
+	color: black;
+}
+
+table#table_cu_alarm th {
+	text-align: center;
+}
+
+table#table_cu_alarm td {
+	color: black;
+}
+
+
+/* CSS MAGNETS */
+
+table#main_table_magnets {
+	overflow-y: auto;
+}
+
+table#main_table_magnets th, table#main_table_magnets td {
+	text-align: center;
+}
+
+td.td_name {
+	text-align: left !important;
+}
+
+td.td_readout, td.td_current {
+		text-align: right !important;
+}
+
+.blu {
+	color: blue;
+}
+
+.giallo {
+	color: #DEB948 !important;
+}
+
+
+.warning_value {
+	color: #DEB948 !important;
+}
+
+#input-value-mag {
+	margin-top: 20px;
+	margin-bottom: 15px !important;
+
+}
+
+
+
+
+/* CSS MONITORING */
+
+table#main_table_cu {
+	overflow-y: auto;
+}
+
+table#main_table_cu th, table#main_table_cu td {
+	text-align: center;
+}
+
+table#table_cu_in th {
+	text-align: center;
+}
+
+table#table_cu_out th {
+	text-align: center;
+}
+
