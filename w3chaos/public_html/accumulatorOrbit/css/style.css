@@ -1,0 +1,162 @@
+body {
+    font-family: 'Lato', Calibri, Arial, sans-serif;
+    font-weight: 400;
+    font-size: 1em;
+    color: #333;
+    background: #ddd url(../img/bg.jpg) repeat top left;
+    overflow:auto;
+}
+
+.container {
+    width: 98%;
+    position: relative;
+}
+
+/* Intestazione */
+
+#top-right {
+    float: right;
+}
+
+.top {
+    background: #219187;
+}
+
+.row.top b {
+    color: white;
+    text-transform: uppercase;
+}
+
+header.col.s12 {
+    text-align: center;
+    line-height: 4px;
+}
+
+header.col.s12 h1{
+    font-weight: 700;
+    font-size:3.8em;
+}
+
+header.col.s12 > span {
+    font-weight: 300;
+    font-size: 2em;
+    font-style: oblique;
+    color: #219187;
+}
+
+
+/*Table monitoring with divs */
+
+.row-box {
+    margin-bottom: 70px;
+}
+
+.main-box {
+    margin-top: 80px;
+}
+
+.rTable{
+    display: table;
+    border-spacing: 7px 0px;
+}
+
+.rTableHead{
+    background-color: #219187;
+    border: 2px solid white;
+    height: 48px;
+    text-align: center;
+    border-radius: 5px;
+    color: white;
+    text-transform: uppercase;
+    line-height: 48px;
+    font-size: 16px;
+}
+
+.rTableCell{
+    border: 1px solid #219187;
+    height: 48px;
+    text-align: center;
+    border-radius: 5px;
+}
+
+.rTableCell > b {
+    color: green;
+    text-transform: none;
+    line-height: 48px;
+    font-size: 16px;
+}
+
+/* box command */
+
+
+.box-input {
+    border: 1px solid #219187;
+    border-radius: 10px;
+}
+
+.legend-input{
+    color: #219187;
+    font-size: 20px;
+}
+
+a.waves-effect.waves-light.btn{
+    margin-top: 22px;
+    margin-bottom: 22px;
+    width: 26%;
+    padding-left: 4px;
+}
+
+i.waves-effect.waves-light.btn.btn-load.waves-input-wrapper {
+    width: 50%;
+}
+/* Plot */
+
+.plot {
+    margin-top: 20px;
+}
+
+.plot_title{
+    color: #a06095;
+    font-style: oblique;
+    text-align: center;
+    padding-top: 30px;
+}
+
+.rTableCell.device {
+    border: 3px double #a06095;
+    width: 92px;
+    height: 50px;
+    text-align: center;
+    border-radius: 10px;
+    font-size: 20px;
+    line-height: 50px;
+    margin-top: 55px;
+}
+
+/*footer*/
+
+footer{
+    background: #219187;
+    height: 30px;
+    width: 100%;
+}
+
+button#no-right{
+    float: none;
+}
+
+h4#title-popup{
+    font-size: 30px;
+    color: #128680;
+    text-align: center;
+    font-family: sans-serif;
+}
+
+
+#table-list td {
+    border: 1px solid black;
+}
+
+.row_selected {
+    background-color: #A0A0A0;
+}

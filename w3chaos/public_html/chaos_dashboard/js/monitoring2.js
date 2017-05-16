@@ -2,14 +2,14 @@
  * MONITORING CU (STATUS,ALARM)
  */
 
-var zone_selected = "";     //zona selezionata ad es.BTF; questa variabile è usata anche in mag_command.js
+var zone_selected = "";     //zona selezionata ad es.BTF; questa variabile ÔøΩ usata anche in mag_command.js
 var cu_selected = "";
 var refresh_time = [];
 var old_time = [];
 var timestamp_never_called = true;
 var refresh_values_never_called = true;
 var ok_cu = [];
-var n; //numero delle righe (ovvero degli elementi in tabella); così applicando il dataset l'id delle righe aumenta
+var n; //numero delle righe (ovvero degli elementi in tabella); cosÔøΩ applicando il dataset l'id delle righe aumenta
 var device_alarms = [];
 var cu_alarms = [];
 
@@ -71,7 +71,7 @@ $(document).ready(function() {
                     $("#name_element_" + i).css('color','red');
                 }
             }
-        },6000);  /*** il setInterval è impostato a 6 secondi perché non può essere minore delq refresh cu ***/
+        },6000);  /*** il setInterval ÔøΩ impostato a 6 secondi perchÔøΩ non puÔøΩ essere minore delq refresh cu ***/
     } 
     
     //Funzione per comporre la griglia della tabella dei magneti
@@ -99,7 +99,7 @@ $(document).ready(function() {
 	//$("#main_table_cu").DataTable();
 	
         n = $('#main_table_cu tr').size();
-        if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
+        if (n > 22) {     /***Attivo lo scroll della tabella se ci sono piÔøΩ di 22 elementi ***/
             $("#table-scroll").css('height','280px');
         } else {
             $("#table-scroll").css('height','');
@@ -113,7 +113,8 @@ $(document).ready(function() {
         setInterval(function() {
 	        
 	    //var myKeyVals = { dev: url_cu,cmd:channel, parm= -1}
-	    
+	    if(url_cu =="")
+	    	return;
 	    var str_url_cu = "dev="+ url_cu + "&cmd=channel&parm=-1";
 
 	    var saveData = $.ajax({  // inizio post
@@ -296,7 +297,7 @@ $(document).ready(function() {
     var cu_list = [];
     $("#zones").change(function() {
         zone_selected = $("#zones option:selected").val();
-        if (zone_selected == "--Select--") {        //Disabilito la select dei magneti se non è selezionata la zona
+        if (zone_selected == "--Select--") {        //Disabilito la select dei magneti se non ÔøΩ selezionata la zona
             $("#elements").attr('disabled','disabled');
         } else {
             $("#elements").removeAttr('disabled');
