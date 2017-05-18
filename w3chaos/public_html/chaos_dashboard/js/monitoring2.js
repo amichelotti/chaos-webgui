@@ -145,7 +145,6 @@ $(document).ready(function() {
           
 			var name_cu = $.parseJSON(old_str);
 			//var name_cu = old_str;
-			console.log("string " + name_cu);
 			cu.forEach(function(ctl) {  // cu forEach
 			    name_cu.forEach(function(el) {   //name_cu forEach
 				var name_device_db = ctl;
@@ -175,7 +174,8 @@ $(document).ready(function() {
 					cu_alarms.push(el.cu_alarms);   
 				    }    // fine name device
 				} else {
-				    alert("problem")
+					console.log("cannot access output dataset of ' " + name_device_db + "'");
+
 				}  // fine el output
 			    });   //fine name_cu forEach
 			});   // fine cu forEach
@@ -239,8 +239,8 @@ $(document).ready(function() {
 
                     
 		    } catch(e) {
-			alert("Error status");
-			console.log("errore parsing" + e.message);
+		//	alert("Error status");
+			console.log("errore parsing" + e.message + " of '"+old_str+"'");
 		    }   // fine try 
     
 		//});
