@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+    <script src="//code.jquery.com/jquery-2.1.3.min.js"></script>
+    <script src="js/json-viewer/jquery.json-viewer.js"></script>
+    <script src="js/jchaos.js"></script>
+    <link href="js/json-viewer/jquery.json-viewer.css" type="text/css" rel="stylesheet" />
+       
+
+    <style type="text/css">
+body {
+  margin: 0 100px;
+  font-family: sans-serif;
+}
+textarea#json-input {
+  width: 100%;
+  height: 200px;
+}
+pre#json-renderer {
+  border: 1px solid #aaa;
+  padding: 0.5em 1.5em;
+}
+    </style>
+        <script>
+        var query = window.location.search.substring(1);
+        var vars = query.split("=");
+        var cus_names = vars[1].split("&");
+        var running=true;
+		function update(){
+			jchaos.getChannel(cus_names,-1,function(data){
+				$('#json-renderer').jsonViewer(data);
+			});
+		}
+		 $('#btn-json-viewer').click(function() {
+			  running=!running;
+			  if(running){
+					setInterval(update, 1000);
+
+				  $('#btn-json-viewer').text('Pause');
+			  } else {
+				  $('#btn-json-viewer').text('Run');
+					setInterval(update, 0);
+
+			  }
+			  
+			  });
+		 
+		setInterval(update, 1000);
+		
+        </script>
+        <body>
+            <button id="btn-json-viewer" title=Pause>Pause</button>
+            <pre id="json-renderer"></pre>
+        
+        </body>
+</html>
