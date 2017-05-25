@@ -25,7 +25,7 @@
    * Transform a json object into html representation
    * @return string
    */
-  function json2html(json, options) {
+  function json2html(json, options,pather) {
     var html = '';
     if (typeof json === 'string') {
       /* Escape tags */
@@ -39,7 +39,7 @@
       html += '<span class="json-literal">' + json + '</span>';
     }
     else if (typeof json === 'boolean') {
-      html += '<span class="json-literal">' + json + '</span>';
+      html += '<span class="json-literal">' + json + '</span> ';
     }
     else if (json === null) {
       html += '<span class="json-literal">null</span>';
@@ -53,7 +53,7 @@
           if (isCollapsable(json[i])) {
             html += '<a href class="json-toggle"></a>';
           }
-          html += json2html(json[i], options);
+          html += json2html(json[i], options,key);
           /* Add comma if item is not last */
           if (i < json.length - 1) {
             html += ',';
@@ -73,16 +73,27 @@
         for (var key in json) {
           if (json.hasOwnProperty(key)) {
             html += '<li>';
+            var keyclass="";
+            if(isCollapsable(json[key])){
+            	keyclass="json-string";
+            } else {
+            	keyclass="json-key";
+            }
             var keyRepr = options.withQuotes ?
-              '<span class="json-string">"' + key + '"</span>' : key;
+              '<span class="'+keyclass+'" id='+pather+'_'+key+'>"' + key + '"</span>' : key;
             /* Add toggle button if item is collapsable */
             if (isCollapsable(json[key])) {
               html += '<a href class="json-toggle">' + keyRepr + '</a>';
             }
             else {
               html += keyRepr;
+
             }
-            html += ': ' + json2html(json[key], options);
+            html += ': ' + json2html(json[key], options,key);
+            if (!isCollapsable(json[key])) {
+                html += '<input class="json-keyinput" id="input_'+pather+'_'+key+'"/>';
+
+            }
             /* Add comma if item is not last */
             if (--key_count > 0)
               html += ',';
@@ -110,7 +121,7 @@
     return this.each(function() {
 
       /* Transform to HTML */
-      var html = json2html(json, options);
+      var html = json2html(json, options,'');
       if (isCollapsable(json))
         html = '<a href class="json-toggle"></a>' + html;
 
@@ -133,6 +144,20 @@
         return false;
       });
 
+      $(this).on('click', 'span.json-key', function() {
+    	  $("#input_"+this.id).toggle();
+    	 //var tt =prompt('type value');
+          return false;
+        });
+      
+      $(this).on('keypress', 'input.json-keyinput', function(e) {
+    	  if(e.keyCode == 13){
+    		  $("#"+this.id).toggle();
+    		  return false;
+    	  }
+    	 //var tt =prompt('type value');
+          return this;
+        });
       /* Simulate click on toggle button when placeholder is clicked */
       $(this).on('click', 'a.json-placeholder', function() {
         $(this).siblings('a.json-toggle').click();

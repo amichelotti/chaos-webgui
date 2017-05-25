@@ -27,31 +27,39 @@ pre#json-renderer {
 }
     </style>
         <script>
+        $(document).ready(function() {
         var query = window.location.search.substring(1);
         var vars = query.split("=");
         var cus_names = vars[1].split("&");
         var running=true;
+        var intervalListener;
+        var options = {
+        	      collapsed: false,
+        	      withQuotes: true
+        	    };
 		function update(){
 			jchaos.getChannel(cus_names,-1,function(data){
-				$('#json-renderer').jsonViewer(data);
+				$('#json-renderer').jsonViewer(data,options);
 			});
 		}
+		
 		 $('#btn-json-viewer').click(function() {
 			  running=!running;
 			  if(running){
-					setInterval(update, 1000);
+				  intervalListener=setInterval(update, 1000);
 
 				  $('#btn-json-viewer').text('Pause');
 			  } else {
 				  $('#btn-json-viewer').text('Run');
-					setInterval(update, 0);
+					clearInterval(intervalListener);
 
 			  }
 			  
 			  });
 		 
-		setInterval(update, 1000);
-		
+		 intervalListener=setInterval(update, 1000);
+		// $('#btn-json-viewer').click();
+        });
         </script>
         <body>
             <button id="btn-json-viewer" title=Pause>Pause</button>

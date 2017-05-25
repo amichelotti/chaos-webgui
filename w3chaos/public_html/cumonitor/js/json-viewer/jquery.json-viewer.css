@@ -8,11 +8,24 @@ ul.json-dict, ol.json-array {
 .json-string {
   color: #0B7500;
 }
+
+.json-key {
+  color: #000000;
+}
+
+.json-key:hover {
+    background-color: yellow;
+}
+
 .json-literal {
   color: #1A01CC;
   font-weight: bold;
 }
+.json-keyinput {
+  display: none;
 
+}
+ 
 /* Toggle button */
 a.json-toggle {
   position: relative;
@@ -20,7 +33,7 @@ a.json-toggle {
   text-decoration: none;
 }
 a.json-toggle:focus {
-  outline: none;
+ outline: none;
 }
 a.json-toggle:before {
   color: #aaa;
