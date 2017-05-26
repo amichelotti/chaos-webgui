@@ -94,7 +94,7 @@ $(document).ready(function() {
        //Funzione di riempimento campo dei magneti con i dati chaos, e reload degli stessi
     function worker() {    //function to update request ***
         setInterval(function() {
-            $.get("http://" + location.host + ":8081/CU?dev="+ url_cu + "&cmd=channel&parm=-1", function(datavalue, textStatus) {
+            $.get("http://"+  url_server + ":" + n_port +"/CU?dev="+ url_cu + "&cmd=channel&parm=-1", function(datavalue, textStatus) {
                 var old_str = datavalue.replace(/\$numberLong/g, 'numberLong');
                 
                 //console.log("string " + old_str);
@@ -233,7 +233,7 @@ $(document).ready(function() {
     
     
         //Query a chaos per prendere la zona selezionata
-    $.get("http://" + location.host + ":8081/CU?cmd=search&parm={'name': ' ' , 'what': 'zone', 'alive':true}", function(datazone,textStatus) {
+    $.get("http://"+  url_server + ":" + n_port +"/CU?cmd=search&parm={'name': ' ' , 'what': 'zone', 'alive':true}", function(datazone,textStatus) {
         zones = $.parseJSON(datazone);
         element_sel('#zones', zones, 1);
     });
@@ -248,7 +248,7 @@ $(document).ready(function() {
             $("#elements").removeAttr('disabled');
         }
          
-          $.get("http://" + location.host + ":8081/CU?cmd=search&parm={'name':'" + zone_selected + "','what':'class','alive':true}", function(datael, textStatus) {
+          $.get("http://" +  url_server + ":" + n_port +"/CU?cmd=search&parm={'name':'" + zone_selected + "','what':'class','alive':true}", function(datael, textStatus) {
             cu_list = $.parseJSON(datael);
             element_sel('#elements', cu_list,1);
         });
@@ -281,7 +281,7 @@ $(document).ready(function() {
 
         if(jQuery.inArray(cu_selected, cu_list) == -1) {
             $.ajax({
-                url: "http://" + location.host + ":8081/CU?cmd=search&parm={'name':'','what':'cu','alive':true}",
+                url: "http://"+  url_server + ":" + n_port +"/CU?cmd=search&parm={'name':'','what':'cu','alive':true}",
                 async: false
             }).done(function(datall, textStatus) {
                 cu = $.parseJSON(datall);
@@ -297,7 +297,7 @@ $(document).ready(function() {
 
 	    
             $.ajax({
-                url: "http://" + location.host + ":8081/CU?cmd=search&parm={'name':'','what':'cu','alive':true}",
+                url: "http://"+  url_server + ":" + n_port +"/CU?cmd=search&parm={'name':'','what':'cu','alive':true}",
                 async: false
             }).done(function(datall, textStatus) {
                 cu = $.parseJSON(datall);
@@ -310,7 +310,7 @@ $(document).ready(function() {
 	
 	else {
             $.ajax({
-                url: "http://" + location.host + ":8081/CU?cmd=search&parm={'name':'" + zone_selected + "/" + cu_selected + "','what':'cu','alive':true}",
+                url: "http://"+  url_server + ":" + n_port +"/CU?cmd=search&parm={'name':'" + zone_selected + "/" + cu_selected + "','what':'cu','alive':true}",
                 async: false
             }).done(function(dataele, textStatus) {
                 cu = $.parseJSON(dataele);

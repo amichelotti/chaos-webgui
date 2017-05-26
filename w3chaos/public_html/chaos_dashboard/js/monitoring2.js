@@ -2,14 +2,14 @@
  * MONITORING CU (STATUS,ALARM)
  */
 
-var zone_selected = "";     //zona selezionata ad es.BTF; questa variabile ÔøΩ usata anche in mag_command.js
+var zone_selected = "";     //zona selezionata ad es.BTF; questa variabile è usata anche in mag_command.js
 var cu_selected = "";
 var refresh_time = [];
 var old_time = [];
 var timestamp_never_called = true;
 var refresh_values_never_called = true;
 var ok_cu = [];
-var n; //numero delle righe (ovvero degli elementi in tabella); cosÔøΩ applicando il dataset l'id delle righe aumenta
+var n; //numero delle righe (ovvero degli elementi in tabella); così applicando il dataset l'id delle righe aumenta
 var device_alarms = [];
 var cu_alarms = [];
 
@@ -71,7 +71,7 @@ $(document).ready(function() {
                     $("#name_element_" + i).css('color','red');
                 }
             }
-        },6000);  /*** il setInterval ÔøΩ impostato a 6 secondi perchÔøΩ non puÔøΩ essere minore delq refresh cu ***/
+        },6000);  /*** il setInterval è impostato a 6 secondi perché non può essere minore delq refresh cu ***/
     } 
     
     //Funzione per comporre la griglia della tabella dei magneti
@@ -99,7 +99,7 @@ $(document).ready(function() {
 	//$("#main_table_cu").DataTable();
 	
         n = $('#main_table_cu tr').size();
-        if (n > 22) {     /***Attivo lo scroll della tabella se ci sono piÔøΩ di 22 elementi ***/
+        if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
             $("#table-scroll").css('height','280px');
         } else {
             $("#table-scroll").css('height','');
@@ -113,13 +113,12 @@ $(document).ready(function() {
         setInterval(function() {
 	        
 	    //var myKeyVals = { dev: url_cu,cmd:channel, parm= -1}
-	    if(url_cu =="")
-	    	return;
+	    
 	    var str_url_cu = "dev="+ url_cu + "&cmd=channel&parm=-1";
 
 	    var saveData = $.ajax({  // inizio post
 		type: 'POST',
-		url: "http://" + location.host + ":8081/CU",
+		url: "http://" +  url_server + ":" + n_port +"/CU",
 		data: str_url_cu,
 		dataType: "text",
 		success: function(datavalue) {   //risposta
@@ -145,6 +144,7 @@ $(document).ready(function() {
           
 			var name_cu = $.parseJSON(old_str);
 			//var name_cu = old_str;
+			console.log("string " + name_cu);
 			cu.forEach(function(ctl) {  // cu forEach
 			    name_cu.forEach(function(el) {   //name_cu forEach
 				var name_device_db = ctl;
@@ -174,8 +174,7 @@ $(document).ready(function() {
 					cu_alarms.push(el.cu_alarms);   
 				    }    // fine name device
 				} else {
-					console.log("cannot access output dataset of ' " + name_device_db + "'");
-
+				    alert("problem")
 				}  // fine el output
 			    });   //fine name_cu forEach
 			});   // fine cu forEach
@@ -239,8 +238,8 @@ $(document).ready(function() {
 
                     
 		    } catch(e) {
-		//	alert("Error status");
-			console.log("errore parsing" + e.message + " of '"+old_str+"'");
+			alert("Error status");
+			console.log("errore parsing" + e.message);
 		    }   // fine try 
     
 		//});
@@ -286,7 +285,7 @@ $(document).ready(function() {
     
     
         //Query a chaos per prendere la zona selezionata
-    $.get("http://" + location.host + ":8081/CU?cmd=search&parm={'name': ' ' , 'what': 'zone', 'alive':true}", function(datazone,textStatus) {
+    $.get("http://" +  url_server + ":" + n_port +"/CU?cmd=search&parm={'name': ' ' , 'what': 'zone', 'alive':true}", function(datazone,textStatus) {
         zones = $.parseJSON(datazone);
 	//zones = datazone;
 	//zones = datazone.toString();
@@ -297,12 +296,12 @@ $(document).ready(function() {
     var cu_list = [];
     $("#zones").change(function() {
         zone_selected = $("#zones option:selected").val();
-        if (zone_selected == "--Select--") {        //Disabilito la select dei magneti se non ÔøΩ selezionata la zona
+        if (zone_selected == "--Select--") {        //Disabilito la select dei magneti se non è selezionata la zona
             $("#elements").attr('disabled','disabled');
         } else {
             $("#elements").removeAttr('disabled');
         }
-          $.get("http://" + location.host + ":8081/CU?cmd=search&parm={'name':'" + zone_selected + "','what':'class','alive':true}", function(datael, textStatus) {
+          $.get("http://" +  url_server + ":" + n_port +"/CU?cmd=search&parm={'name':'" + zone_selected + "','what':'class','alive':true}", function(datael, textStatus) {
             cu_list = $.parseJSON(datael);
 	    //cu_list = datael;
             element_sel('#elements', cu_list,0);
@@ -311,7 +310,7 @@ $(document).ready(function() {
 	    if (zone_selected == "ALL") {
 	    //$.get("http://" + location.host + ":8081/CU?cmd=search&parm={'name':'','what':'cu','alive':true}", function(datael, textStatus) {
 		$.ajax({
-		     url: "http://" + location.host + ":8081/CU?cmd=search&parm={'name':'','what':'cu','alive':true}",
+		     url: "http://" +  url_server + ":" + n_port +"/CU?cmd=search&parm={'name':'','what':'cu','alive':true}",
 		     async: false
 		 }).done(function(dataele, textStatus) {
 		     cu = $.parseJSON(dataele);
@@ -339,7 +338,7 @@ $(document).ready(function() {
 	//console.log("cu_selected " + cu_selected + "zone selected " + zone_selected);
         if(jQuery.inArray(cu_selected, cu_list) == -1) {
             $.ajax({
-                url: "http://" + location.host + ":8081/CU?cmd=search&parm={'name':'','what':'cu','alive':true}",
+                url: "http://" +  url_server + ":" + n_port +"/CU?cmd=search&parm={'name':'','what':'cu','alive':true}",
                 async: false
             }).done(function(datall, textStatus) {
                 cu = $.parseJSON(datall);
@@ -349,7 +348,7 @@ $(document).ready(function() {
             });
         } else {
             $.ajax({
-                url: "http://" + location.host + ":8081/CU?cmd=search&parm={'name':'" + zone_selected + "/" + cu_selected + "','what':'cu','alive':true}",
+                url: "http://" +  url_server + ":" + n_port +"/CU?cmd=search&parm={'name':'" + zone_selected + "/" + cu_selected + "','what':'cu','alive':true}",
                 async: false
             }).done(function(dataele, textStatus) {
                 cu = $.parseJSON(dataele);

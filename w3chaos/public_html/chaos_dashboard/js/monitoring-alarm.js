@@ -57,7 +57,7 @@ function decodeCUAlarm(cu_alarm) {
 function openViewIO(cu) {
     $("#table_cu_in").find("tr:gt(0)").remove();
     $("#table_cu_out").find("tr:gt(0)").remove();
-    $.get("http://" + location.host + ":8081/CU?dev="+ cu + "&cmd=channel&parm=-1", function(datavalue,textStatus) {
+    $.get("http://" +  url_server + ":" + n_port +"/CU?dev="+ cu + "&cmd=channel&parm=-1", function(datavalue,textStatus) {
 	
 	var old_str = datavalue.replace(/\$numberLong/g, 'numberLong');
 	//console.log("datavalue " + datavalue);

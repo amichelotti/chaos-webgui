@@ -154,3 +154,18 @@ table#table_cu_out th {
 	text-align: center;
 }
 
+
+/* ARCHIEVE */
+
+#zones-archive {
+	width: 130px !important;
+}
+
+#elements-archive {
+	width: 130px !important;
+}
+
+#CUs-archive {
+	width: 130px !important;
+}
+
