@@ -12,10 +12,10 @@ var cuToPlot = [];
 
 $(document).ready(function() {
     var cu = [];
-    //var url_cu = "";
     var zones = [];
-    
-    
+     
+     
+    /* function to remove element from array */ 
     Array.prototype.remove = function(){
     var args = Array.apply(null, arguments);
     var indices = [];
@@ -58,8 +58,7 @@ $(document).ready(function() {
    // $.get("http://" + location.host + ":8081/CU?cmd=search&parm={'name': ' ' , 'what': 'zone', 'alive':true}", function(datazone,textStatus) {
     $.get("http://" + url_server + ":" + n_port + "/CU?cmd=search&parm={'name': ' ' , 'what': 'zone', 'alive':false}", function(datazone,textStatus) {
 
-    console.log("prova una " + url_server + "porta " +  n_port);
-    
+    //console.log("prova una " + url_server + "porta " +  n_port);
     
         zones = $.parseJSON(datazone);
         element_sel('#zones-archive', zones, 1);
@@ -76,22 +75,18 @@ $(document).ready(function() {
         }
           $.get("http://" +  url_server + ":" + n_port +"/CU?cmd=search&parm={'name':'" + zone_selected + "','what':'class','alive':false}", function(datael, textStatus) {
             cu_list = $.parseJSON(datael);
-	    //cu_list = datael;
             element_sel('#elements-archive', cu_list,0);
         });
-	  	  
-	  
+	  	    
     });
     
-    
-	
 
     //Get per prendere i dati delle cu selezionate
     var cu_effettive = [];
     $("#elements-archive").change(function() {
          cu_selected = $("#elements-archive option:selected").val();
 	 
-	 console.log("aaaaa " + cu_selected);
+	 //console.log("aaaaa " + cu_selected);
         
         if (cu_selected == "--Select--" || zone_selected == "--Select--" ) {
             $(".btn-main-function").hasClass("disabled")
@@ -106,15 +101,12 @@ $(document).ready(function() {
                 async: false
             }).done(function(datall, textStatus) {
                 cu = $.parseJSON(datall);
-		console.log("cccc " + cu);
-
+		//console.log("cccc " + cu);
 		element_sel('#CUs-archive', cu,0);
             });
         }
 	
-
-	
-	}); // *** element list change
+    }); // *** element list change
     
     
     
@@ -134,7 +126,7 @@ $(document).ready(function() {
         }
 
 	 
-	 console.log("diim " + cuToPlot);
+	 //console.log("diim " + cuToPlot);
 	 
 	$.get("http://" +  url_server + ":" + n_port +"/CU?dev="+ cuToPlot + "&cmd=channel&parm=-1", function(datavalue,textStatus) {
 	
@@ -144,35 +136,16 @@ $(document).ready(function() {
 	//console.log("cu_data " + cu_data);
 	$.each(cu_data, function(key, value){
 	    $.each(value, function(key, value_due){
-				
-		//console.log("valueee " + value);
 		channel.push(key);
 	    });
 	});
 	
-	//console.log("channel total " + channel);
-	
-	//var y = [1, 2, 2, 3, 2]
-	//var removeItem = "dev_status";
 	
 	channel.remove("dev_status","log_status","error_status");
-
-	
-	
-	   /* delete hist_data[i].busy;
-	    delete hist_data[i].device_alarm;
-	    delete hist_data[i].cu_alarm; */
-
-	
-	//per rimuovere gli ultimi 3 canali
-	//var removed = channel.splice(7, 3);
-	
-	//console.log("value due " + removed);
 	
 	element_sel('#channel', channel,0);
-
-    
-	 });
+ 
+	});
 	
     });
     
@@ -190,17 +163,12 @@ $(document).ready(function() {
             $("#elements-archive").removeAttr('disabled');
         }
 
-	 
-	// console.log("booo " + chan);
-
 	    data_output = cu_data[0][chan];
 	    
-	     $.each(data_output, function(key, value){
+	    $.each(data_output, function(key, value){
 		
 		if (jQuery.type(value) === "number" || jQuery.type(value) === "boolean" || jQuery.type(value) === "array") {  // per escludere i numberlong e le stringhe
-		    
 		    element_channel.push(key);
-
 		}
 		
 	    }); 
@@ -208,16 +176,7 @@ $(document).ready(function() {
 	    
 	    element_sel('#variable', element_channel, 0);
 	    
-	    
-
-	    
     });
-    
-    
-    
-
-    
-    
   
      
 });   //*** main function

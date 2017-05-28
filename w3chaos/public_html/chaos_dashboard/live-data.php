@@ -136,76 +136,14 @@
 					</div>
 					
 					<div class="span3" style="margin-top:18px;">					
-						<a class="btn yellow" id="plot-view" onclick=plot();><i class="icon-bar-chart"></i> Plot</a>     
+						<!--a class="btn yellow" id="plot-view" onclick=plot-live();><i class="icon-bar-chart"></i> Plot</a-->
+						<a class="btn yellow" id="plot-live"><i class="icon-bar-chart"></i> Plot</a>     
+
 					</div>
 				
 	
 			</div>
 			
-			<!--div class="row-fluid">
-				
-				
-				<div class="control-group span3">
-					<label class="control-label" for="startDate">From</label>
-					<div class="controls">
-						<input class="dataRange" id="startDate" type="text" name="startdate" value="" />
-					</div>
-				</div>	
-				
-				<div class="control-group span3">
-					<label class="control-label" for="endDate">To</label>
-					<div class="controls">
-						<input class="dataRange" id="endDate" type="text" name="enddate" value="" />
-					</div>
-				</div>
-				
-				<div class="span3" style="margin-top:18px;">					
-					<a class="btn btn-small purple" id="plot-view"><i class="icon-bar-chart"></i> Plot</a>     
-				</div>
-				
-			</div-->
-
-	<!--div class="row-fluid">
-
-
-				<div class="control-group span3">
-					<label class="control-label" for="startDate">From</label>
-					<div class="controls">
-						<input class="dataRange" id="startDate" type="text" name="startdate" value="" />
-					</div>
-				</div>	
-				
-				<div class="control-group span3">
-					<label class="control-label" for="endDate">To</label>
-					<div class="controls">
-						<input class="dataRange" id="endDate" type="text" name="enddate" value="" />
-					</div>
-				</div>
-				
-				
-				
-				
-			
-			</div-->
-			
-			
-			<!--div class="span3" style="margin-top:18px;">					
-					<a class="btn yellow" id="dai"><i class="icon-download-alt"></i>AAA</a>     
-			</div-->
-				
-
-			
-			<!--div class="row-fluid">
-				<div class="span7">
-					<label class="control-label" for="nameCUchart">Insert name CU</label><input class="input-xlarge focused" id="nameCUchart" type="text" value="">
-				</div>
-			</div>
-			
-			<div class="row-fluid">
-				<div class="span7">
-					<h4>Choose 2 quantities</h4>
-				</div>
-			</div-->
 
 			
 			<div class="row-fluid">
@@ -223,40 +161,10 @@
 				
 			</div>
 			
-
-			
-			
-			<!--div class="row-fluid">
-				<div class="span7">
-					<h3>Archive</h3>
-				</div>
-			</div-->
 			
 			<div class="row-fluid" style="margin-top:20px;">
 				
 				
-				<!--div class="control-group span3">
-					<label class="control-label" for="startDate">From</label>
-					<div class="controls">
-						<input class="dataRange" id="startDate" type="text" name="startdate" value="" />
-					</div>
-				</div>	
-				
-				<div class="control-group span3">
-					<label class="control-label" for="endDate">To</label>
-					<div class="controls">
-						<input class="dataRange" id="endDate" type="text" name="enddate" value="" />
-					</div>
-				</div-->
-				
-				<!--div class="span3" style="margin-top:18px;">					
-					<a class="btn btn-small purple" id="getData"><i class="fa fa-line-chart" aria-hidden="true"></i> Export csv</a>     
-				</div>
-				
-				
-				<div class="span3" style="margin-top:18px;">					
-					<a class="btn btn-small purple" id="proof"><i class="icon-download-alt"></i> altro</a>     
-				</div-->
 			
 			</div>
 			
@@ -271,24 +179,6 @@
 		</div><!--/fluid-row-->
 		
 	
-	<!--div class="modal hide fade" id="mdl-save">
-		<div class="modal-header">
-			<button type="button" class="close" data-dismiss="modal">×</button>
-			<h3>SAVE DATASET</h3>
-		</div>
-		<div class="modal-body">
-			<div class="control-group">
-				<label class="control-label" for="nameDataset">Insert name</label>
-				<div class="controls">
-					<input class="input-xlarge focused" id="nameDataset" type="text" value="name">
-				</div>
-			</div>
-		</div>
-		<div class="modal-footer">
-			<a href="#" class="btn btn-primary" data-dismiss="modal" onclick="saveDataset(nameDataset.value)">Save</a>
-		</div>
-	</div-->
-	
 	
 	<div class="clearfix"></div>
 	
@@ -301,6 +191,9 @@
 
 	</footer>
 	
+
+<script src="/chaos_dashboard/js/plot-live.js"></script>
+
 	
 <!--script type="text/javascript" src="//cdn.jsdelivr.net/jquery/1/jquery.min.js"></script-->
 <script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>

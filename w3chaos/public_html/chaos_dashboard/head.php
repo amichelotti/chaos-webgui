@@ -127,7 +127,7 @@
 
 
 		<script src="/chaos_dashboard/js/archive.js"></script>
-		<script src="/chaos_dashboard/js/plot-archive.js"></script>
+		<!--script src="/chaos_dashboard/js/plot-archive.js"></script-->
 
 
 

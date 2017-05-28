@@ -9,6 +9,8 @@ and open the template in the editor.
     <script src="//code.jquery.com/jquery-2.1.3.min.js"></script>
     <script src="js/json-viewer/jquery.json-viewer.js"></script>
     <script src="js/jchaos.js"></script>
+    
+    <script src="js/plotly-latest.min.js"></script>
     <link href="js/json-viewer/jquery.json-viewer.css" type="text/css" rel="stylesheet" />
        
 
@@ -56,13 +58,26 @@ pre#json-renderer {
 			  }
 			  
 			  });
-		 
+		 $('#gethistory').click(function() {
+			 var start=$('#input-start').val();
+			 var stop=$('#input-stop').val();
+				jchaos.getHistory(cus_names,0,start,stop,100,"",0,function(data){
+					console.log("carico :"+data);
+				});
+
+		 })
 		 intervalListener=setInterval(update, 1000);
 		// $('#btn-json-viewer').click();
         });
         </script>
         <body>
+        	<div id="history" style="width:600px;height:250px;"></div>
             <button id="btn-json-viewer" title=Pause>Pause</button>
+            <input id="input-start"> Start</input>
+             <input id="input-stop"> Stop</input>
+            
+            <button id="gethistory" title=His>History</button>
+            
             <pre id="json-renderer"></pre>
         
         </body>
