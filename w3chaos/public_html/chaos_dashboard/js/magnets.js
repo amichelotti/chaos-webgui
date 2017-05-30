@@ -87,7 +87,7 @@ $(document).ready(function() {
             $.get("http://" + location.host + ":8081/CU?dev="+ url_mag + "&cmd=channel&parm=-1", function(datavalue, textStatus) {
                 var old_str = datavalue.replace(/\$numberLong/g, 'numberLong');
                 
-                //console.log(old_str);
+                console.log(old_str);
                 
                 try {
                                               

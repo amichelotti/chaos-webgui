@@ -83,7 +83,7 @@ function buildPlotLive() {
         },
         xAxis: {
             type: 'datetime',
-            tickPixelInterval: 150
+            tickPixelInterval: 50
         },
         yAxis: {
             title: {

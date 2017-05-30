@@ -1,9 +1,53 @@
 <!DOCTYPE HTML>
 <html>
 	
-<?php
-require_once('./../../head.php');
-?>
+<head>
+	
+	<!-- start: Meta -->
+	<meta charset="utf-8">
+	<title>!CHAOS Dashboard</title>
+	<!--meta name="description" content="Bootstrap Metro Dashboard">
+	<meta name="author" content="Dennis Ji">
+	<meta name="keyword" content="Metro, Metro UI, Dashboard, Bootstrap, Admin, Template, Theme, Responsive, Fluid, Retina"-->
+	<!-- end: Meta -->
+	
+	<!-- start: Mobile Specific -->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!-- end: Mobile Specific -->
+	
+	<!-- start: CSS -->
+	<link id="bootstrap-style" href="/chaos_dashboard/TOOLS/magterm/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/chaos_dashboard/TOOLS/magterm/css/bootstrap-responsive.min.css" rel="stylesheet">
+	<link id="base-style" href="/chaos_dashboard/TOOLS/magterm/css/style.css" rel="stylesheet">
+	<link id="base-style-responsive" href="/chaos_dashboard/TOOLS/magterm/css/style-responsive.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons"rel="stylesheet">
+
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800&subset=latin,cyrillic-ext,latin-ext' rel='stylesheet' type='text/css'>
+	<!-- end: CSS -->
+	
+
+	<!-- The HTML5 shim, for IE6-8 support of HTML5 elements -->
+	<!--[if lt IE 9]>
+	  	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+		<link id="ie-style" href="/chaos_dashboard/TOOLS/magterm/css/ie.css" rel="stylesheet">
+	<![endif]-->
+	
+	<!--[if IE 9]>
+		<link id="ie9style" href="/chaos_dashboard/TOOLS/magterm/css/ie9.css" rel="stylesheet">
+	<![endif]-->
+		
+	<link href="/chaos_dashboard/TOOLS/magterm/css/custom_style.css" rel="stylesheet">
+
+		
+	<!-- start: Favicon -->
+	<link rel="shortcut icon" href="/chaos_dashboard/TOOLS/magterm/img/favicon.ico">
+	<!-- end: Favicon -->
+	
+		
+		
+		
+</head>
+
 <body>
 
 
@@ -16,7 +60,7 @@ require_once('./../../head.php');
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
 				</a>
-				<a class="brand" href="index.php"><span>Dashboard BTF</span></a>
+				<a class="brand" href="index.php"><span>!CHAOS Dashboard</span></a>
 								
 				<!-- start: Header Menu -->
 				<div class="nav-no-collapse header-nav">
@@ -54,9 +98,17 @@ require_once('./../../head.php');
 				<div class="nav-collapse sidebar-nav">
 					<ul class="nav nav-tabs nav-stacked main-menu">
 						
-					<?php require_once('./../../menu.php'); ?>
 
-						<!--li><a href="../../index.php"><i class="icon-home"></i><span class="hidden-tablet"> Home</span></a></li-->	
+						<li><a href="/chaos_dashboard/index.php"><i class="icon-home"></i><span class="hidden-tablet"> Home</span></a></li>
+						
+						<li><a href="/chaos_dashboard/archive.php"><i class="icon-file-alt"></i></i><span class="hidden-tablet"> ARCHIVE</span></a></li>	
+						<li><a href="/chaos_dashboard/live-data.php"><i class="icon-file-alt"></i><span class="hidden-tablet"> LIVE-DATA</span></a></li>	
+						<li><a class="dropmenu" href="#"><i class="icon-folder-close-alt"></i><span class="hidden-tablet"> TOOLS</span></a></li>
+							<ul>
+								<li><a href="/chaos_dashboard/TOOLS/magterm/index.php"><i class="icon-file-alt"></i><span class="hidden-tablet"> MagTerm</span></a></li>
+							</ul>
+
+
 						<!--li><a href="messages.html"><i class="icon-envelope"></i><span class="hidden-tablet"> Accumulator</span></a></li>
 						<li><a href="tasks.html"><i class="icon-tasks"></i><span class="hidden-tablet"> Dafne status</span></a></li-->
 						<!--li-->
@@ -362,14 +414,71 @@ require_once('./../../head.php');
 	
 	<!-- start: JavaScript-->
 
+		<script src="/chaos_dashboard/TOOLS/magterm/js/jquery-1.9.1.min.js"></script>
+	<script src="/chaos_dashboard/TOOLS/magterm/js/jquery-migrate-1.0.0.min.js"></script>
 	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/jquery-ui-1.10.0.custom.min.js"></script>
 	
-		<script src="js/custom.js"></script>
+		<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.ui.touch-punch.js"></script>
+	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/modernizr.js"></script>
+	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/bootstrap.min.js"></script>
+	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.cookie.js"></script>
+	
+		<script src='/chaos_dashboard/TOOLS/magterm/js/fullcalendar.min.js'></script>
+	
+		<script src='/chaos_dashboard/TOOLS/magterm/js/jquery.dataTables.min.js'></script>
+
+		<script src="/chaos_dashboard/TOOLS/magterm/js/excanvas.js"></script>
+	<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.flot.js"></script>
+	<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.flot.pie.js"></script>
+	<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.flot.stack.js"></script>
+	<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.flot.resize.min.js"></script>
+	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.chosen.min.js"></script>
+	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.uniform.min.js"></script>
 		
-		<script src="js/magnets.js"></script>
-		<script src="js/magnets-cmd.js"></script>
-		<script src="js/magnets-alarm-load.js"></script>
-		<script src="js/magnets_reload.js"></script>
+		<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.cleditor.min.js"></script>
+	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.noty.js"></script>
+	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.elfinder.min.js"></script>
+	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.raty.min.js"></script>
+	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.iphone.toggle.js"></script>
+	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.uploadify-3.1.min.js"></script>
+	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.gritter.min.js"></script>
+	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.imagesloaded.js"></script>
+	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.masonry.min.js"></script>
+	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.knob.modified.js"></script>
+	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/jquery.sparkline.min.js"></script>
+	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/counter.js"></script>
+	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/retina.js"></script>
+
+		
+	
+	
+	
+	
+	
+		<script src="/chaos_dashboard/TOOLS/magterm/js/custom.js"></script>
+		
+		<script src="/chaos_dashboard/TOOLS/magterm/js/magnets.js"></script>
+		<script src="/chaos_dashboard/TOOLS/magterm/js/magnets-cmd.js"></script>
+		<script src="/chaos_dashboard/TOOLS/magterm/js/magnets-alarm-load.js"></script>
+		<script src="/chaos_dashboard/TOOLS/magterm/js/magnets_reload.js"></script>
 
 
 

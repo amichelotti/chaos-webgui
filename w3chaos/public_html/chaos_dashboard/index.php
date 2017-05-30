@@ -89,10 +89,11 @@
 						<select id="elements"></select>
 					</div>	
 				
-					<div class="span3 statbox yellow" onTablet="span6" onDesktop="span3">
+				<!-- ANCORA DA IMPLEMENTARE -->
+					<!--div class="span3 statbox yellow" onTablet="span6" onDesktop="span3">
 						<h3>Search</h3>
 						<input id="search"/>
-					</div>	
+					</div-->	
 
 				
 				</div>

@@ -6,6 +6,13 @@
 		var jchaos={};
 		jchaos.uri=location.host;
 		jchaos.lastChannel={};
+		jchaos.options={
+				updateEachCall:false
+		};
+		jchaos.setOptions=function(opt){
+			jchaos.options=opt;
+		}
+		
 		jchaos.basicPost= function(func,params,handleFunc){
 			var saveData = $.ajax({  // inizio post
 				type: 'POST',
@@ -48,25 +55,34 @@
 			}
 			query+="}";
 			var str_url_cu = "dev="+ devs + "&cmd="+cmd+"&parm="+query;
-			
+			jchaos.registerCU(obj){
+				
+			}
 			jchaos.basicPost("CU",str_url_cu,function(datav){
 				if(datav.uid>0){
 					jchaos.getHistory(devs,channel,start,stop,page,varname,datav.uid,handleFunc);
 				}
 				if(vaname==""){
 					for(ele in datav.data){
-						result.X.push(Number(ele.$numberLong.ts));
+						result.X.push(Number(ele.ts.$numberLong));
 						result.Y.push(ele.val);
 					}
 				} else {
 					for(ele in datav.data){
-						result.X.push(Number(ele.$numberLong.dpck_ats));
+						result.X.push(Number(ele.dpck_ats.$numberLong));
 						result.Y.push(ele.val);
 					}
 					
 				}
-				
-				handleFunc(result);
+				if(jchaos.options.updateEachCall){
+					handleFunc(result);
+				} else {
+					if(!(datav.uid>0)){
+						// update if 0 or something else
+						handleFunc(result);
+
+					}
+				}
 				
 				});
 		}

@@ -154,7 +154,8 @@ $(document).ready(function() {
 				cu_alarms.push(el.cu_alarms);                               
                             }
                         } else {
-                            alert("problem")
+                           // alert("problem")
+			   console.log("problem");
                         } 
                         });
                     });
@@ -221,7 +222,7 @@ $(document).ready(function() {
                     
                 } catch(e) {
                     
-                    alert("Error status");
+                   // alert("Error status");
                     console.log("errore parsing" + e.message);
                 }
     

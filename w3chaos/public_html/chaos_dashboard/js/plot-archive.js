@@ -13,7 +13,7 @@ $(function() {
         },
 	singleDatePicker: true,
 	startDate : moment().format('MM/DD/YYYY'),
-        endDate : moment().format('MM/DD/YYYY')
+        endDate : moment().format('MM/DD/YYYY') 
 
     });
 });
@@ -30,6 +30,7 @@ var globalDataY = [];
 
 var globaLength = '';
 var plotTo = [];
+var x_time = [];
 		
     
 function plot() {
@@ -67,36 +68,63 @@ function plot() {
     //console.log(" fff " + variableToPlot + "canale " + chan + " cu " + cuToPlot);
     
    
-    $.get("http://" +  url_server + ":" + n_port +'/CU?dev=' + cuToPlot + '&cmd=queryhst&parm={"start":'  + StartDate + ',"end":' + EndDate + ',"var":"' + variableToPlot + '","channel":"' + chan + '","page":100}', function(datavalue, textStatus) {
+    $.get("http://" +  url_server + ":" + n_port +'/CU?dev=' + cuToPlot + '&cmd=queryhst&parm={"start":'  + StartDate + ',"end":' + EndDate + ',"var":"' + variableToPlot + '","channel":"' + chan + '","page":1000}', function(datavalue, textStatus) {
 
+	console.log("dataaaa###### " + datavalue);
 	hist = $.parseJSON(datavalue);
 	console.log("hist " + hist);
 	uid_next = hist.uid;
 	//console.log("numero uid" + uid_next);
+	 x_time = hist.data;
+
 
 	if (uid_next == 0) {
-	    var x_time = hist.data;
+	   // x_time = hist.data;
 	    //uid_next = hist.uid;
 	    //console.log("uiidddd " + uid_next);	
 	    var lunghezza_data = x_time.length;
 	
-	    console.log("aaaa " + x_time);
+	   // console.log("aaaa " + x_time);
 	    $.each(x_time, function(key, value){
-	    	$.each(value, function(key, value_p){		    
-		    if (key == 'ts') {			
-			globalData.push(value_p);
-		    } else if ( key == 'val') {
+	    	$.each(value, function(key, value_p){
+		    
+		    if (jQuery.type(key == 'val') != "array") {
+			console.log("riga 91####");
 			
-			globalDataY.push(value_p);
-		    }
+			if (key == 'ts') {			
+			    globalData.push(value_p);
+			    	//console.log("globalData " + globalData);
+
+			} else if ( key == 'val') {
+			
+			    globalDataY.push(value_p);
+			    
+			   // console.log("globalData " + value_p);
+			    
+			} 
+			
+		    } else if(jQuery.type(key == 'val') === "array") {
+			//if ( key == 'val') {
+			    globalDataY = value_p;
+			    //globalData = array_sample;
+			    console.log("IN ARRAY");
+			//}
+			
+			
+			
+		    } 
+		    
+		   
+
+		   // }
 		}); 
 	    });
 
 	    console.log("lunghezza " + globalData.length + "2 " + globalDataY.length);
 	    globaLength = globalData.length;
 		    
-	    console.log("####### numeri " + globalData);
-	    console.log("####### valori " + globalDataY);
+	  //  console.log("####### numeri " + globalData);
+	  //  console.log("####### valori " + globalDataY);
 	   
 	    if ($('#container').is(':empty')){
 		buildPlots();
@@ -114,25 +142,37 @@ function plot() {
 	else {
 	    
 	    
-	    console.log("uiidddd " + uid_next);
+	  //  console.log("uiidddd " + uid_next);
 	    
-	 //   do {
+	/*   do {
+	    
+	  //  console.log("http://" +  url_server + ":" + n_port +'/CU?dev=' + cuToPlot + '&cmd=querynext&parm={"uid":' + uid_next + ',"var":"' +  variableToPlot+ '"}');
     
-   $.get("http://" +  url_server + ":" + n_port +'/CU?dev=' + cuToPlot + '&cmd=querynext&parm={"uid":' + uid_next + '","var":"' +  variableToPlot+ "}", function(datavalue, textStatus) {
+   $.get("http://" +  url_server + ":" + n_port +'/CU?dev=' + cuToPlot + '&cmd=querynext&parm={"uid":' + uid_next + '","var":"' +  variableToPlot+ "}", function(dataval, textStatus) {
 	
-console.log("aaaaa#####");
+	console.log("aaaaa#####");
+
+	hist_next = $.parseJSON(dataval);
+	console.log("hist " + hist_next);
+	uid_next = hist_next.uid;
+	//console.log("numero uid" + uid_next);
+
 	
+	    
+	    x_time =+ hist_next.data;
+	    
+	    console.log("x_time ¡¡¡¡¡¡¡¡¡ " + x_time);
 	    
 	   // hist_tot =+ 
     
     
-   }); // end $get hstnext
+   }); // end $get hstnext 
    
     
     
- //  }  // end do
+   }  // end do
    
- //  while (uid_next != 0) 
+   while (uid_next != 0) */
 	    
 
 	    
@@ -228,6 +268,21 @@ function buildPlots() {
 	
     });
 
+}
+
+
+
+function plot_array() {
+    
+}
+
+// Function per asse x nel caso IMA
+array_sample = [];
+function setX(samples){
+    for (var i = 0; i < samples; i++) {
+	array_sample.push(i/4);
+    }
+return array_sample;
 }
 
     
