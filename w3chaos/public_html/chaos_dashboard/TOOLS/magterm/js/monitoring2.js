@@ -174,7 +174,7 @@ $(document).ready(function() {
 					cu_alarms.push(el.cu_alarms);   
 				    }    // fine name device
 				} else {
-				    alert("problem")
+				    //alert("problem")
 				}  // fine el output
 			    });   //fine name_cu forEach
 			});   // fine cu forEach

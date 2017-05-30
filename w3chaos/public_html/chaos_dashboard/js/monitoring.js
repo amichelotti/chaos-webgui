@@ -154,7 +154,7 @@ $(document).ready(function() {
 				cu_alarms.push(el.cu_alarms);                               
                             }
                         } else {
-                           // alert("problem")
+                           // //alert("problem")
 			   console.log("problem");
                         } 
                         });

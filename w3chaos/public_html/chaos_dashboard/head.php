@@ -55,7 +55,7 @@
 	
 	
 	<script>
-		var url_server =  "chaosdev-webui1.chaos.lnf.infn.it";
+		var url_server =  location.host; //"chaosdev-webui1.chaos.lnf.infn.it";
 		var n_port = "8081";
 	</script>	
 	

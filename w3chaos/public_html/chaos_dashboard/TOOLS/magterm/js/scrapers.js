@@ -111,7 +111,7 @@ $(document).ready(function() {
 
                             }
                         } else {
-                            alert("problem")
+                            //alert("problem")
                         } 
                         });
                     });
