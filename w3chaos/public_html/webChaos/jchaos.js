@@ -32,43 +32,46 @@
 */
 
 			 	
-			 	var url ="http://" + jchaos.options.uri + ":8081/"+func;
 		        //   request.open("GET", "/cgi-bin/cu.cgi?InitId=" + this.name,true);
-		        console.log("opening:"+url);
+		   			var url ="http://" + jchaos.options.uri + ":8081/"+func;
+			        console.log("opening:"+url);
+			    	if (typeof module !== 'undefined' && typeof module.exports !== 'undefined'){
+			    		request.open("POST", url,false);
+			    	} else {
+			    		request.open("POST", url,true);
+			    	}
 
-		        request.open("POST", url,true);
+			    	request.setRequestHeader("Content-type", "application/json");
+			    	//request.responseType = 'JSON';
+		    		//request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
-		        //request.setRequestHeader("Content-type", "application/json");
-		        //request.responseType = 'JSON';
-		        request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-
-		        request.onreadystatechange = function (e) {
-		        	console.log("answer:"+request.status + " state:"+request.readyState+ " e:"+e);
-		            if (request.readyState == 4){
-		            if( request.status == 200) {
-					//	handleFunc(request.responseText);
-		            } else {
-		            	var str="POST "+ url + " body:\"" + params+"\" went wrong, result:"+request.status+ " state:"+request.readyState ; console.log(str); 
-		            	throw str; 
-		            }
-		            }
-
-		        }
-		        request.onerror = function (e) {
-		            console.error(request.statusText);
-		        };
-		        console.log("sending:"+params);
-		        request.send(params);
-		        //request.send(params);
-		        
+			        request.onreadystatechange = function (e) {
+			        	//console.log("answer:"+request.status + " state:"+request.readyState);
+			            if (request.readyState == 4){
+			            if( request.status == 200) {
+							handleFunc(JSON.parse(request.responseText));
+			            } else {
+			            	var str="POST "+ url + " body:\"" + params+"\" went wrong, result:"+request.status+ " state:"+request.readyState ; console.log(str); 
+			            	throw str; 
+			            }
+			            }
+	
+			        }
+			        request.onerror = function (e) {
+			            console.error(request.statusText);
+			            throw "error:"+request.statusText;
+			        };
+			        //console.log("sending:"+params);
+			        request.send(params);
+		    	
 		}
 		jchaos.registerCU=function(cuid,obj,handleFunc){
-			var str_url_cu = "/api/vi/producer/jsonregister/"+cuid;
+			var str_url_cu = "/api/v1/producer/jsonregister/"+cuid;
 			jchaos.basicPost(str_url_cu,JSON.stringify(obj),function(datav){handleFunc(datav);});
 		}
 		
 		jchaos.pushCU=function(cuid,obj,handleFunc){
-			var str_url_cu = "/api/vi/producer/jsoninsert/"+cuid;
+			var str_url_cu = "/api/v1/producer/jsoninsert/"+cuid;
 			jchaos.basicPost(str_url_cu,JSON.stringify(obj),function(datav){handleFunc(datav);});
 		}
 		jchaos.searchBase=function(opt,handleFunc){
@@ -86,7 +89,21 @@
 		}
 		
 		jchaos.getChannel=function(devs,channel_id,handleFunc){
-			var str_url_cu = "dev="+ devs + "&cmd=channel&parm="+channel_id;
+		
+			var dev_array="";
+			if(devs instanceof Array){
+				devs.forEach(function(elem,i,array){
+					if(i<(array.length-1)){
+						dev_array+=elem + ",";
+					} else {
+						dev_array+=elem ;
+					}
+				});
+			} else {
+				dev_array=devs;
+			}
+			var str_url_cu = "dev="+ dev_array + "&cmd=channel&parm="+channel_id;
+		//	console.log("query:"+str_url_cu);
 			jchaos.basicPost("CU",str_url_cu,function(datav){jchaos.lastChannel=datav;handleFunc(datav);});
 		}
 		
@@ -147,8 +164,7 @@
 	}
 	if (typeof module !== 'undefined' && typeof module.exports !== 'undefined'){
 		var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
-		 var request = new XMLHttpRequest();
-
+		var request = new XMLHttpRequest();
 		module.exports = createLibrary();
 	    
 	} else{
