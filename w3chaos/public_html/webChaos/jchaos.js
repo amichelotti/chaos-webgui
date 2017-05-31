@@ -9,10 +9,11 @@
 		jchaos.lastChannel={};
 		jchaos.options={
 				updateEachCall:false,
-				uri:"localhost"
+				uri:"localhost",
+				async:true
 		};
 		jchaos.setOptions=function(opt){
-			jchaos.options=opt;
+			for (var attrname in opt) { jchaos.options[attrname] = opt[attrname]; }
 
 		}
 		
@@ -31,17 +32,21 @@
 		    saveData.error(function() { str="POST \"" + params+"\" went wrong"; console.log(str); throw str; });
 */
 
-			 	
+			var request = new XMLHttpRequest();
 		        //   request.open("GET", "/cgi-bin/cu.cgi?InitId=" + this.name,true);
 		   			var url ="http://" + jchaos.options.uri + ":8081/"+func;
-			        console.log("opening:"+url);
-			    	if (typeof module !== 'undefined' && typeof module.exports !== 'undefined'){
+			   //    console.log("opening:"+url + " async:"+jchaos.options.async);
+			    	/*if (typeof module !== 'undefined' && typeof module.exports !== 'undefined'){
 			    		request.open("POST", url,false);
 			    	} else {
 			    		request.open("POST", url,true);
-			    	}
 
-			    	request.setRequestHeader("Content-type", "application/json");
+			    	}*/
+		    		request.open("POST", url, jchaos.options.async);
+
+			    //	request.setRequestHeader("cache-control", "no-cache");
+			    	request.setRequestHeader("Content-Type", 'application/json');
+			    	//request.setRequestHeader("Content-type", "application/json");
 			    	//request.responseType = 'JSON';
 		    		//request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
@@ -63,15 +68,31 @@
 			        };
 			        //console.log("sending:"+params);
 			        request.send(params);
+			      //  request.close();
 		    	
+		}
+		jchaos.addLongKey=function(obj,key,valuestr){
+			if(obj[key]== undefined){
+				var tt={}
+				tt['$numberLong']=valuestr;
+				obj[key]=tt;
+			}
 		}
 		jchaos.registerCU=function(cuid,obj,handleFunc){
 			var str_url_cu = "/api/v1/producer/jsonregister/"+cuid;
+			var dd=Date.now();
+			jchaos.addLongKey(obj,'dpck_ats',dd.toString());
+			jchaos.addLongKey(obj,'dpck_seq_id',"0");		
 			jchaos.basicPost(str_url_cu,JSON.stringify(obj),function(datav){handleFunc(datav);});
 		}
 		
 		jchaos.pushCU=function(cuid,obj,handleFunc){
 			var str_url_cu = "/api/v1/producer/jsoninsert/"+cuid;
+			var dd=Date.now();
+			obj['dpck_ats'].$numberLong=dd.toString();	
+			var id=parseInt(obj['dpck_seq_id'].$numberLong);
+			id++;
+			obj['dpck_seq_id'].$numberLong=id.toString();
 			jchaos.basicPost(str_url_cu,JSON.stringify(obj),function(datav){handleFunc(datav);});
 		}
 		jchaos.searchBase=function(opt,handleFunc){
@@ -164,7 +185,7 @@
 	}
 	if (typeof module !== 'undefined' && typeof module.exports !== 'undefined'){
 		var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
-		var request = new XMLHttpRequest();
+		
 		module.exports = createLibrary();
 	    
 	} else{
