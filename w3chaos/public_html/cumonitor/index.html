@@ -35,6 +35,8 @@ pre#json-renderer {
         var cus_names = vars[1].split("&");
         var running=true;
         var intervalListener;
+	var xhttp = new XMLHttpRequest();
+
         var options = {
         	      collapsed: false,
         	      withQuotes: true

@@ -3,7 +3,7 @@ var clock = new Date();
 
 options={};
 var npush=10000
-var sleep = require('sleep');
+
 process.argv.forEach(function (val, index, array) {
 	  
 	  if(val=="uri"){

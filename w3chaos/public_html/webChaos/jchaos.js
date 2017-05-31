@@ -1,16 +1,18 @@
 /**
  * !CHAOS REST Library
  */
+
 (function(){
     function createLibrary(){
 	var jchaos={};
 	
-	
+	jchaos.ops_on_going=0;
 	jchaos.lastChannel={};
 	jchaos.options={
 	    updateEachCall:false,
 	    uri:"localhost",
-	    async:true
+	    async:true,
+	    limit_on_going:10000
 	};
 	jchaos.setOptions=function(opt){
 	    for (var attrname in opt) { jchaos.options[attrname] = opt[attrname]; }
@@ -18,22 +20,19 @@
 	}
 	
 	jchaos.basicPost= function(func,params,handleFunc){
-
-	    var request = new XMLHttpRequest();
-
+	    var request;
+	    if (typeof module !== 'undefined' && typeof module.exports !== 'undefined'){	
+		XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+	    }
+	    request = new XMLHttpRequest();
 	    var url ="http://" + jchaos.options.uri + ":8081/"+func;
-	    //    console.log("opening:"+url + " async:"+jchaos.options.async);
-	    /*if (typeof module !== 'undefined' && typeof module.exports !== 'undefined'){
-	      request.open("POST", url,false);
-	      } else {
-	      request.open("POST", url,true);
-
-	      }*/
-	    request.open("POST", url, jchaos.options.async);
+	    request.open("POST", url, (jchaos.ops_on_going>jchaos.options.limit_on_going)?false: jchaos.options.async);
+	    console.log("on going:"+jchaos.ops_on_going);
 	    request.setRequestHeader("Content-Type", 'application/json');
 	    request.onreadystatechange = function (e) {
 		//console.log("answer:"+request.status + " state:"+request.readyState);
 		if (request.readyState == 4){
+		    jchaos.ops_on_going--;
 		    if( request.status == 200) {
 			handleFunc(JSON.parse(request.responseText));
 		    } else {
@@ -48,6 +47,7 @@
 		throw "error:"+request.statusText;
 	    };
 	    //console.log("sending:"+params);
+	    jchaos.ops_on_going++;
 	    request.send(params);
 	    //  request.close();
 	    
@@ -60,10 +60,10 @@
 	    }
 	}
 	jchaos.getLongLong=function(obj,key){
-	    return parseInt(obj[key].'$numberLong');
+	    return parseInt(obj[key].$numberLong);
 	}
 	jchaos.setLongLong=function(obj,key,val){
-	    obj[key].'$numberLong'=val.toString();
+	    obj[key].$numberLong=val.toString();
 	}
 	jchaos.registerCU=function(cuid,obj,handleFunc){
 	    var str_url_cu = "/api/v1/producer/jsonregister/"+cuid;
@@ -76,7 +76,7 @@
 	jchaos.pushCU=function(cuid,obj,handleFunc){
 	    var str_url_cu = "/api/v1/producer/jsoninsert/"+cuid;
 	    var dd=Date.now();
-	    jchaos.setLongLong('dpck_seq_id',obj,jchaos.getLongLong('dpck_seq_id') +1);
+	    jchaos.setLongLong(obj,'dpck_seq_id',jchaos.getLongLong(obj,'dpck_seq_id') +1);
 	    jchaos.basicPost(str_url_cu,JSON.stringify(obj),function(datav){handleFunc(datav);});
 	}
 	jchaos.searchBase=function(opt,handleFunc){
@@ -168,11 +168,11 @@
 	return jchaos;
     }
     if (typeof module !== 'undefined' && typeof module.exports !== 'undefined'){
-	var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+
 	
 	module.exports = createLibrary();
 	
     } else{
 	window.jchaos = createLibrary();
     }
-})();
+}).call(this);
