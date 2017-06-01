@@ -27,8 +27,8 @@
 	    request = new XMLHttpRequest();
 	    var url ="http://" + jchaos.options.uri + ":8081/"+func;
 	    request.open("POST", url, (jchaos.ops_on_going>jchaos.options.limit_on_going)?false: jchaos.options.async);
-	    console.log("on going:"+jchaos.ops_on_going);
-	    request.setRequestHeader("Content-Type", 'application/json');
+	   // console.log("on going:"+jchaos.ops_on_going);
+	   // request.setRequestHeader("Content-Type", 'application/json');
 	    request.onreadystatechange = function (e) {
 		//console.log("answer:"+request.status + " state:"+request.readyState);
 		if (request.readyState == 4){
