@@ -36,11 +36,14 @@ pre#json-renderer {
         var running=true;
         var intervalListener;
 	var xhttp = new XMLHttpRequest();
-
+	
         var options = {
         	      collapsed: false,
-        	      withQuotes: true
-        	    };
+        	      withQuotes: true,
+
+     	    };
+
+	jchaos.setOptions({uri:location.host});
 		function update(){
 			jchaos.getChannel(cus_names,-1,function(data){
 				$('#json-renderer').jsonViewer(data,options);
