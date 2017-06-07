@@ -236,7 +236,6 @@ $(document).ready(function () {
 
         });  // fine risposta
     }
-
     //Funzione di riempimento campo dei magneti con i dati chaos, e reload degli stessi
     function worker() {    //function to update request ***
         setInterval(updateChannel, 1000);
@@ -315,7 +314,7 @@ $(document).ready(function () {
     $("#elements").change(function () {
         cu_selected = $("#elements option:selected").val();
         var str_search="";
-        if((zone_selected!="ALL")&&(zone_selected == "--Select--")){
+        if((zone_selected!="ALL")&&(zone_selected != "--Select--")){
             str_search=zone_selected;
         }
         if((cu_selected!="ALL")&&(cu_selected != "--Select--")){

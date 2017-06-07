@@ -12,7 +12,9 @@
 	    updateEachCall:false,
 	    uri:"localhost",
 	    async:true,
-	    limit_on_going:10000
+	    limit_on_going:10000,
+            history_page_len:1000
+            
 	};
 	jchaos.setOptions=function(opt){
 	    for (var attrname in opt) { jchaos.options[attrname] = opt[attrname]; }
@@ -79,24 +81,104 @@
 	    jchaos.setLongLong(obj,'dpck_seq_id',jchaos.getLongLong(obj,'dpck_seq_id') +1);
 	    jchaos.basicPost(str_url_cu,JSON.stringify(obj),function(datav){handleFunc(datav);});
 	}
-	jchaos.searchBase=function(opt,handleFunc){
-	    var param="cmd=search&parm="+JSON.stringify(opt);
+	jchaos.mdsBase=function(cmd,opt,handleFunc){
+	    var param="cmd="+cmd+"&parm="+JSON.stringify(opt);
 	    jchaos.basicPost("MDS",param,function(datav){handleFunc(datav);});
 	}
 	
-	jchaos.search=function(_name,_what,_alive,handleFunc){
+	jchaos.snapshot=function(_name,_what,_node_list,value_,handleFunc){
+            var opt={};
+            if(_name instanceof Array){
+                opt['names']=_name;
+            } else {
+                opt['name']=_name;
+            }
+            opt['what']=_what;
+            if(_node_list instanceof Array){
+                opt['node_list']=_node_list;
+            }
+            
+            try{
+                JSON.parse(value_);
+                opt['value']=value_;
+
+            } catch(e){
+                
+            }
+            
+	    return jchaos.mdsBase("snapshot",opt,handleFunc);
+	}
+	
+        jchaos.node=function(_name,_what,_type,_parent,value_,handleFunc){
+            var opt={};
+            if(_name instanceof Array){
+                opt['names']=_name;
+            } else {
+                opt['name']=_name;
+            }
+            opt['what']=_what;
+            opt['type']=_type;
+            opt['parent']=_parent;
+
+            
+            try{
+                JSON.parse(value_);
+                opt['value']=value_;
+
+            } catch(e){
+                
+            }
+            
+	    return jchaos.mdsBase("node",opt,handleFunc);
+	}
+        
+        
+        jchaos.variable=function(_name,_what,value_,handleFunc){
+            var opt={};
+            if(_name instanceof Array){
+                opt['names']=_name;
+            } else {
+                opt['name']=_name;
+            }
+            opt['what']=_what;
+            
+            try{
+                JSON.parse(value_);
+                opt['value']=value_;
+
+            } catch(e){
+                
+            }
+            
+	    return jchaos.mdsBase("variable",opt,handleFunc);
+	}
+        
+        jchaos.log=function(_name,_what,_type,_start,_end,handleFunc){
+            var opt={};
+            if(_name instanceof Array){
+                opt['names']=_name;
+            } else {
+                opt['name']=_name;
+            }
+            opt['what']=_what;
+            opt['type']=_type;
+            opt['start']=_start;
+            opt['end']=_end;
+                        
+	    return jchaos.mdsBase("log",opt,handleFunc);
+	}
+        
+        jchaos.search=function(_name,_what,_alive,handleFunc){
 	    var opt={
 		name:_name,
 		what:_what,
 		alive:_alive
 	    };
-	    return jchaos.searchBase(opt,handleFunc);
+	    return jchaos.mdsBase("search",opt,handleFunc);
 	}
-	
-	jchaos.getChannel=function(devs,channel_id,handleFunc){
-	    
-	    var dev_array="";
-	    if(devs instanceof Array){
+        jchaos.convertArray2CSV=function(devs){
+           var dev_array="";
+           if(devs instanceof Array){
 		devs.forEach(function(elem,i,array){
 		    if(i<(array.length-1)){
 			dev_array+=elem + ",";
@@ -107,6 +189,15 @@
 	    } else {
 		dev_array=devs;
 	    }
+            
+            
+            return dev_array;
+        }
+        
+	jchaos.getChannel=function(devs,channel_id,handleFunc){
+	    
+	    var dev_array=jchaos.convertArray2CSV(devs);
+	    
             if(dev_array==""){
                 throw "must specify target(s) devices";
                 return;
@@ -115,34 +206,39 @@
 	    //	console.log("query:"+str_url_cu);
 	    jchaos.basicPost("CU",str_url_cu,function(datav){jchaos.lastChannel=datav;handleFunc(datav);});
 	}
-	
-	jchaos.getHistory=function(devs,channel,start,stop,page,varname,uid,result,handleFunc){
-	    var cmd="";
-	    var varopt="";
-	    var query="{";
-	    
-	    if(page>0){
-		query+="\"page\":"+page+",";
-	    }
-	    if(varname!=""){
-		query+="\"var\":"+varname+",";
-	    }
-	    query+="\"start\":"+start+",";
-	    query+="\"end\":"+stop+",";
-	    query+="\"channel\":"+channel+",";
-	    query+="\"uid\":"+uid;
+        jchaos.getHistory=function(devs,channel,start,stop,varname,handleFunc){
+            var result={
+                X:[],
+                Y:[]
+            };
+            var opt={};
+            opt['start']=start;
+            opt['end']=stop;
+            opt['channel']=channel;
+            opt['page']=jchaos.options.history_page_len;
+            opt['var']=varname;
+            opt['uid']=0;
+            
+            jchaos.getHistory(devs,opt,0,result,handleFunc);
+  
+        }
+        
 
+	jchaos.getHistory=function(devs,opt,uid,result,handleFunc){
+	    var cmd="";
+	    var dev_array=jchaos.convertArray2CSV(devs);
+	   
 	    if(uid==0){
 		cmd="queryhst";
 	    } else {
 		cmd="queryhstnext";
 	    }
-	    query+="}";
-	    var str_url_cu = "dev="+ devs + "&cmd="+cmd+"&parm="+query;
+
+            var str_url_cu = "dev="+ dev_array + "&cmd="+cmd+"&parm="+JSON.stringify(opt);
 	    
 	    jchaos.basicPost("CU",str_url_cu,function(datav){
 		if(datav.uid>0){
-		    jchaos.getHistory(devs,channel,start,stop,page,varname,datav.uid,handleFunc);
+		    jchaos.getHistory(devs,opt,datav.uid,handleFunc);
 		}
 		if(vaname==""){
 		    for(ele in datav.data){

@@ -54,20 +54,26 @@ pre#json-renderer {
 			  running=!running;
 			  if(running){
 				  intervalListener=setInterval(update, 1000);
-
 				  $('#btn-json-viewer').text('Pause');
 			  } else {
 				  $('#btn-json-viewer').text('Run');
 					clearInterval(intervalListener);
-
 			  }
 			  
 			  });
 		 $('#gethistory').click(function() {
 			 var start=$('#input-start').val();
 			 var stop=$('#input-stop').val();
-				jchaos.getHistory(cus_names,0,start,stop,100,"",0,function(data){
+				jchaos.getHistory(cus_names,0,start,stop,"",function(data){
 					console.log("carico :"+data);
+                                        
+                                        
+                                        var trace2 = {};
+                                        trace2['x']=data.X;
+                                        trace2['y']=data.Y;
+                                        trace2['type']='scatter';
+                                        Plotly.newPlot(document.getElementById('history'), [trace2]);
+
 				});
 
 		 })
