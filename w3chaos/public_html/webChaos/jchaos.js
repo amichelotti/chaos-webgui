@@ -244,23 +244,32 @@
 	    } else {
 		cmd="queryhstnext";
 	    }
-
+	    opt['uid']=uid;
             var str_url_cu = "dev="+ dev_array + "&cmd="+cmd+"&parm="+JSON.stringify(opt);
 	    
 	    jchaos.basicPost("CU",str_url_cu,function(datav){
 		if(datav.uid>0){
-		    jchaos.getHistory(devs,opt,datav.uid,handleFunc);
+		    jchaos.getHistoryBase(devs,opt,datav.uid,result,handleFunc);
 		}
-		if(vaname==""){
+		if(opt.var!=""){
+			/*
 		    for(ele in datav.data){
 			result.X.push(Number(ele.ts.$numberLong));
 			result.Y.push(ele.val);
-		    }
+		    }*/
+			datav.data.forEach(function(ele){
+				result.X.push(Number(ele.ts));
+				result.Y.push(ele.val);
+			});
 		} else {
-		    for(ele in datav.data){
+		 /*   for(ele in datav.data){
 			result.X.push(Number(ele.dpck_ats.$numberLong));
 			result.Y.push(ele.val);
-		    }
+		    }*/
+			datav.data.forEach(function(ele){
+				result.X.push(Number(ele.dpck_ats.$numberLong));
+				result.Y.push(ele.val);
+			});
 		    
 		}
 		if(jchaos.options.updateEachCall){

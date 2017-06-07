@@ -66,8 +66,7 @@ function plot() {
     //console.log("starttttt ######### " + StartDate);
     //console.log("end ######### " + EndDate);
     //console.log(" fff " + variableToPlot + "canale " + chan + " cu " + cuToPlot);
-    var result={};
-   jchaos.getHistory(cuToPlot,chan,StartDate,EndDate,1000,variableToPlot,result,function(data){
+   jchaos.getHistory(cuToPlot,chan,StartDate,EndDate,variableToPlot,function(result){
        	console.log("Returned " + result.X.length);
 
        globalData=result.X;

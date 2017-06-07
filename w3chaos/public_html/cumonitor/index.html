@@ -64,9 +64,12 @@ pre#json-renderer {
 		 $('#gethistory').click(function() {
 			 var start=$('#input-start').val();
 			 var stop=$('#input-stop').val();
-				jchaos.getHistory(cus_names,0,start,stop,"",function(data){
-					console.log("carico :"+data);
-                                        
+			 var varia=$('#input-var').val();
+
+				jchaos.getHistory(cus_names,0,start,stop,varia,function(data){
+					console.log("carico X :"+data.X);
+					console.log("carico Y :"+data.Y);
+      
                                         
                                         var trace2 = {};
                                         trace2['x']=data.X;
@@ -86,6 +89,7 @@ pre#json-renderer {
             <button id="btn-json-viewer" title=Pause>Pause</button>
             <input id="input-start"> Start</input>
              <input id="input-stop"> Stop</input>
+              <input id="input-var"> Variable</input>
             
             <button id="gethistory" title=His>History</button>
             
