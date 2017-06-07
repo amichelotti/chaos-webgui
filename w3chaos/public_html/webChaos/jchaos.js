@@ -212,19 +212,30 @@
                 Y:[]
             };
             var opt={};
-            opt['start']=start;
-            opt['end']=stop;
+            //var regex=/^[0-9]+$/;
+            if(!isNaN(start)){
+                opt['start']=Number(start);
+            } else {
+                opt['start']=start;
+
+            }
+            if(!isNaN(stop)){
+               opt['end']=Number(stop);
+
+            } else {
+                opt['end']=stop;
+            }
             opt['channel']=channel;
             opt['page']=jchaos.options.history_page_len;
             opt['var']=varname;
             opt['uid']=0;
             
-            jchaos.getHistory(devs,opt,0,result,handleFunc);
+            jchaos.getHistoryBase(devs,opt,0,result,handleFunc);
   
         }
         
 
-	jchaos.getHistory=function(devs,opt,uid,result,handleFunc){
+	jchaos.getHistoryBase=function(devs,opt,uid,result,handleFunc){
 	    var cmd="";
 	    var dev_array=jchaos.convertArray2CSV(devs);
 	   
