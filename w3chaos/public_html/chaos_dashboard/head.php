@@ -111,6 +111,8 @@
 		<script src="/chaos_dashboard/js/jquery.knob.modified.js"></script>
 	
 		<script src="/chaos_dashboard/js/jquery.sparkline.min.js"></script>
+		<script src="../webChaos/jchaos.js"></script>
+
 	
 		<script src="/chaos_dashboard/js/counter.js"></script>
 	
@@ -129,7 +131,11 @@
 		<script src="/chaos_dashboard/js/archive.js"></script>
 		<!--script src="/chaos_dashboard/js/plot-archive.js"></script-->
 
-
+        <script>
+                jchaos.setOptions({"uri":location.host});
+	
+	</script>	
+	
 
 
 

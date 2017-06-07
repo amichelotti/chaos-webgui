@@ -66,67 +66,13 @@ function plot() {
     //console.log("starttttt ######### " + StartDate);
     //console.log("end ######### " + EndDate);
     //console.log(" fff " + variableToPlot + "canale " + chan + " cu " + cuToPlot);
-    
-   
-    $.get("http://" +  url_server + ":" + n_port +'/CU?dev=' + cuToPlot + '&cmd=queryhst&parm={"start":'  + StartDate + ',"end":' + EndDate + ',"var":"' + variableToPlot + '","channel":"' + chan + '","page":1000}', function(datavalue, textStatus) {
+    var result={};
+   jchaos.getHistory(cuToPlot,chan,StartDate,EndDate,1000,variableToPlot,result,function(data){
+       	console.log("Returned " + result.X.length);
 
-	console.log("dataaaa###### " + datavalue);
-	hist = $.parseJSON(datavalue);
-	console.log("hist " + hist);
-	uid_next = hist.uid;
-	//console.log("numero uid" + uid_next);
-	 x_time = hist.data;
-
-
-	if (uid_next == 0) {
-	   // x_time = hist.data;
-	    //uid_next = hist.uid;
-	    //console.log("uiidddd " + uid_next);	
-	    var lunghezza_data = x_time.length;
-	
-	   // console.log("aaaa " + x_time);
-	    $.each(x_time, function(key, value){
-	    	$.each(value, function(key, value_p){
-		    
-		    if (jQuery.type(key == 'val') != "array") {
-			console.log("riga 91####");
-			
-			if (key == 'ts') {			
-			    globalData.push(value_p);
-			    	//console.log("globalData " + globalData);
-
-			} else if ( key == 'val') {
-			
-			    globalDataY.push(value_p);
-			    
-			   // console.log("globalData " + value_p);
-			    
-			} 
-			
-		    } else if(jQuery.type(key == 'val') === "array") {
-			//if ( key == 'val') {
-			    globalDataY = value_p;
-			    //globalData = array_sample;
-			    console.log("IN ARRAY");
-			//}
-			
-			
-			
-		    } 
-		    
-		   
-
-		   // }
-		}); 
-	    });
-
-	    console.log("lunghezza " + globalData.length + "2 " + globalDataY.length);
-	    globaLength = globalData.length;
-		    
-	  //  console.log("####### numeri " + globalData);
-	  //  console.log("####### valori " + globalDataY);
-	   
-	    if ($('#container').is(':empty')){
+       globalData=result.X;
+       globalDataY=result.Y;
+        if ($('#container').is(':empty')){
 		buildPlots();
 		//console.log("empty");
 	    } else {
@@ -134,55 +80,120 @@ function plot() {
 		buildPlots();
 		//console.log("full");
 	    }
-	
-	
-	} /* chiusura if chiamata queryhst con uid = 0 */
-	
-	
-	else {
+   });
+//    $.get("http://" +  url_server + ":" + n_port +'/CU?dev=' + cuToPlot + '&cmd=queryhst&parm={"start":'  + StartDate + ',"end":' + EndDate + ',"var":"' + variableToPlot + '","channel":"' + chan + '","page":1000}', function(datavalue, textStatus) {
+//
+//	console.log("dataaaa###### " + datavalue);
+//	hist = $.parseJSON(datavalue);
+//	console.log("hist " + hist);
+//	uid_next = hist.uid;
+//	//console.log("numero uid" + uid_next);
+//	 x_time = hist.data;
+//
+//
+//	if (uid_next == 0) {
+//	   // x_time = hist.data;
+//	    //uid_next = hist.uid;
+//	    //console.log("uiidddd " + uid_next);	
+//	    var lunghezza_data = x_time.length;
+//	
+//	   // console.log("aaaa " + x_time);
+//	    $.each(x_time, function(key, value){
+//	    	$.each(value, function(key, value_p){
+//		    
+//		    if (jQuery.type(key == 'val') != "array") {
+//			console.log("riga 91####");
+//			
+//			if (key == 'ts') {			
+//			    globalData.push(value_p);
+//			    	//console.log("globalData " + globalData);
+//
+//			} else if ( key == 'val') {
+//			
+//			    globalDataY.push(value_p);
+//			    
+//			   // console.log("globalData " + value_p);
+//			    
+//			} 
+//			
+//		    } else if(jQuery.type(key == 'val') === "array") {
+//			//if ( key == 'val') {
+//			    globalDataY = value_p;
+//			    //globalData = array_sample;
+//			    console.log("IN ARRAY");
+//			//}
+//			
+//			
+//			
+//		    } 
+//		    
+//		   
+//
+//		   // }
+//		}); 
+//	    });
+//
+//	    console.log("lunghezza " + globalData.length + "2 " + globalDataY.length);
+//	    globaLength = globalData.length;
+//		    
+//	  //  console.log("####### numeri " + globalData);
+//	  //  console.log("####### valori " + globalDataY);
+//	   
+//	    if ($('#container').is(':empty')){
+//		buildPlots();
+//		//console.log("empty");
+//	    } else {
+//		plotTo.destroy();
+//		buildPlots();
+//		//console.log("full");
+//	    }
+//	
+//	
+//	} /* chiusura if chiamata queryhst con uid = 0 */
+//	
+//	
+//	else {
+//	    
+//	    
+//	  //  console.log("uiidddd " + uid_next);
+//	    
+//	/*   do {
+//	    
+//	  //  console.log("http://" +  url_server + ":" + n_port +'/CU?dev=' + cuToPlot + '&cmd=querynext&parm={"uid":' + uid_next + ',"var":"' +  variableToPlot+ '"}');
+//    
+//   $.get("http://" +  url_server + ":" + n_port +'/CU?dev=' + cuToPlot + '&cmd=querynext&parm={"uid":' + uid_next + '","var":"' +  variableToPlot+ "}", function(dataval, textStatus) {
+//	
+//	console.log("aaaaa#####");
+//
+//	hist_next = $.parseJSON(dataval);
+//	console.log("hist " + hist_next);
+//	uid_next = hist_next.uid;
+//	//console.log("numero uid" + uid_next);
+//
+//	
+//	    
+//	    x_time =+ hist_next.data;
+//	    
+//	    console.log("x_time ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ " + x_time);
+//	    
+//	   // hist_tot =+ 
+//    
+//    
+//   }); // end $get hstnext 
+//   
+//    
+//    
+//   }  // end do
+//   
+//   while (uid_next != 0) */
+//	    
+//
+//	    
+//	}  // end else uid != 0
+//	       
+//	});  // chiusura $get queryhst
+//
 	    
-	    
-	  //  console.log("uiidddd " + uid_next);
-	    
-	/*   do {
-	    
-	  //  console.log("http://" +  url_server + ":" + n_port +'/CU?dev=' + cuToPlot + '&cmd=querynext&parm={"uid":' + uid_next + ',"var":"' +  variableToPlot+ '"}');
-    
-   $.get("http://" +  url_server + ":" + n_port +'/CU?dev=' + cuToPlot + '&cmd=querynext&parm={"uid":' + uid_next + '","var":"' +  variableToPlot+ "}", function(dataval, textStatus) {
-	
-	console.log("aaaaa#####");
-
-	hist_next = $.parseJSON(dataval);
-	console.log("hist " + hist_next);
-	uid_next = hist_next.uid;
-	//console.log("numero uid" + uid_next);
-
-	
-	    
-	    x_time =+ hist_next.data;
-	    
-	    console.log("x_time ¡¡¡¡¡¡¡¡¡ " + x_time);
-	    
-	   // hist_tot =+ 
-    
-    
-   }); // end $get hstnext 
-   
-    
-    
-   }  // end do
-   
-   while (uid_next != 0) */
-	    
-
-	    
-	}  // end else uid != 0
-	       
-	});  // chiusura $get queryhst
-
-	    
- 
- 
 }  //end function plot 
 
      

@@ -107,6 +107,10 @@
 	    } else {
 		dev_array=devs;
 	    }
+            if(dev_array==""){
+                throw "must specify target(s) devices";
+                return;
+            }
 	    var str_url_cu = "dev="+ dev_array + "&cmd=channel&parm="+channel_id;
 	    //	console.log("query:"+str_url_cu);
 	    jchaos.basicPost("CU",str_url_cu,function(datav){jchaos.lastChannel=datav;handleFunc(datav);});
