@@ -65,27 +65,32 @@ pre#json-renderer {
 			 var start=$('#input-start').val();
 			 var stop=$('#input-stop').val();
 			 var varia=$('#input-var').val();
-
+			   var OpenWindow = window.open("graph.html", "History");
+				$(OpenWindow.document).ready(function() {
 				jchaos.getHistory(cus_names,0,start,stop,varia,function(data){
 					console.log("carico X :"+data.X);
 					console.log("carico Y :"+data.Y);
       
                                         
-                                        var trace2 = {};
-                                        trace2['x']=data.X;
-                                        trace2['y']=data.Y;
-                                        trace2['type']='scatter';
-                                        Plotly.newPlot(document.getElementById('history'), [trace2]);
-
+                                        var trace = {};
+                                        trace['x']=data.X;
+                                        trace['y']=data.Y;
+                                        trace['type']='scatter';
+	//
+				Plotly.newPlot(OpenWindow.document.getElementById('history'), [trace]);
+				});
+	//	OpenWindow.init();
+	
+});
+	
 				});
 
-		 })
 		 intervalListener=setInterval(update, 1000);
 		// $('#btn-json-viewer').click();
         });
         </script>
         <body>
-        	<div id="history" style="width:600px;height:250px;"></div>
+        	<div id="history" style="width:100%;height:50%;"></div>
             <button id="btn-json-viewer" title=Pause>Pause</button>
             <input id="input-start"> Start</input>
              <input id="input-stop"> Stop</input>
