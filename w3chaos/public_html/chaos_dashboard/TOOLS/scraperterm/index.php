@@ -94,28 +94,19 @@
 			<div id="sidebar-left" class="span2">
 				<div class="nav-collapse sidebar-nav">
 					<ul class="nav nav-tabs nav-stacked main-menu">
-						<li><a href="../../index.php"><i class="icon-home"></i><span class="hidden-tablet"> Home</span></a></li>	
-						<!--li><a href="messages.html"><i class="icon-envelope"></i><span class="hidden-tablet"> Accumulator</span></a></li>
-						<li><a href="tasks.html"><i class="icon-tasks"></i><span class="hidden-tablet"> Dafne status</span></a></li-->
-						<li>
-							<a href="magnets.html"><i class="icon-folder-close-alt"></i><span class="hidden-tablet"> MAGNETS</span><!--span class="label label-important dropmenu"> 4 </span--></a>
-							<!--ul>
-								<li><a class="submenu" href="#mdl-save" role="button" data-toggle="modal"><i class="icon-save"></i><span class="hidden-tablet"> Save</span></a></li>
-								<li><a class="submenu" href="#mdl-load" role="button" data-toggle="modal"><i class="icon-file"></i><span class="hidden-tablet"> Load</span></a></li>
-								<li><a class="submenu" href="submenu3.html"><i class="icon-repeat"></i><span class="hidden-tablet"> Restore</span></a></li>
-								<li><a class="submenu" href="submenu4.html"><i class="icon-print"></i><span class="hidden-tablet"> Print</span></a></li>
-							</ul-->	
-						</li>
+						<li><a href="/chaos_dashboard/index.php"><i class="icon-home"></i><span class="hidden-tablet"> Home</span></a></li>
+						
+						<li><a href="/chaos_dashboard/archive.php"><span class="hidden-tablet"> ARCHIVE</span></a></li>	
+						<li><a href="/chaos_dashboard/live-data.php"><span class="hidden-tablet"> LIVE-DATA</span></a></li>	
+						<li><a class="dropmenu" href="#"><i class="icon-folder-close-alt"></i><span class="hidden-tablet"> TOOLS</span></a></li>
+							<ul>
+								
+								
+								<li><a href="/chaos_dashboard/TOOLS/OrbitAccumulator/index.php" style="color: white;"><span class="hidden-tablet"> ORBITACCUMULATOR</span></a></li>
+								<li><a href="/chaos_dashboard/TOOLS/magterm/index.php" style="color: white;"><span class="hidden-tablet"> MAGTERM</span></a></li>
 
-						<li>
-							<a class="dropmenu" href="#"><i class="icon-folder-close-alt"></i><span class="hidden-tablet"> SCRAPERS</span><!--span class="label label-important dropmenu"> 4 </span--></a>
-							<!--ul>
-								<li><a class="submenu" href="#mdl-save" role="button" data-toggle="modal"><i class="icon-save"></i><span class="hidden-tablet"> Save</span></a></li>
-								<li><a class="submenu" href="#mdl-load" role="button" data-toggle="modal"><i class="icon-file"></i><span class="hidden-tablet"> Load</span></a></li>
-								<li><a class="submenu" href="submenu3.html"><i class="icon-repeat"></i><span class="hidden-tablet"> Restore</span></a></li>
-								<li><a class="submenu" href="submenu4.html"><i class="icon-print"></i><span class="hidden-tablet"> Print</span></a></li>
-							</ul-->	
-						</li>
+								<li><a href="/chaos_dashboard/TOOLS/scraperterm/index.php" style="color: white;"><span class="hidden-tablet"> SCRAPERTERM</span></a></li>
+							</ul>
 
 					</ul>
 				</div>

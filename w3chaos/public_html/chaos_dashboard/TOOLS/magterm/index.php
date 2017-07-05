@@ -101,11 +101,14 @@
 
 						<li><a href="/chaos_dashboard/index.php"><i class="icon-home"></i><span class="hidden-tablet"> Home</span></a></li>
 						
-						<li><a href="/chaos_dashboard/archive.php"><i class="icon-file-alt"></i></i><span class="hidden-tablet"> ARCHIVE</span></a></li>	
-						<li><a href="/chaos_dashboard/live-data.php"><i class="icon-file-alt"></i><span class="hidden-tablet"> LIVE-DATA</span></a></li>	
+						<li><a href="/chaos_dashboard/archive.php"><span class="hidden-tablet"> ARCHIVE</span></a></li>	
+						<li><a href="/chaos_dashboard/live-data.php"><span class="hidden-tablet"> LIVE-DATA</span></a></li>	
 						<li><a class="dropmenu" href="#"><i class="icon-folder-close-alt"></i><span class="hidden-tablet"> TOOLS</span></a></li>
 							<ul>
-								<li><a href="/chaos_dashboard/TOOLS/magterm/index.php"><i class="icon-file-alt"></i><span class="hidden-tablet"> MagTerm</span></a></li>
+								<li><a href="/chaos_dashboard/TOOLS/OrbitAccumulator/index.php" style="color: white;"><span class="hidden-tablet"> ORBITACCUMULATOR</span></a></li>
+								<li><a href="/chaos_dashboard/TOOLS/magterm/index.php" style="color: white;"><span class="hidden-tablet"> MAGTERM</span></a></li>
+
+								<li><a href="/chaos_dashboard/TOOLS/scraperterm/index.php" style="color: white;"><span class="hidden-tablet"> SCRAPERTERM</span></a></li>
 							</ul>
 
 
