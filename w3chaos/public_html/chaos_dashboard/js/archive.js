@@ -167,7 +167,7 @@ $(document).ready(function() {
 	    
 	    $.each(data_output, function(key, value){
 		
-		if (jQuery.type(value) === "number" || jQuery.type(value) === "boolean" || jQuery.type(value) === "array") {  // per escludere i numberlong e le stringhe
+		if (jQuery.type(value) === "number" || jQuery.type(value) === "boolean" || jQuery.type(value) === "array" || jQuery.type(value) === "object") {  // per escludere i numberlong e le stringhe
 		    element_channel.push(key);
 		}
 		

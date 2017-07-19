@@ -219,7 +219,7 @@ function buildPlots() {
         },
         yAxis: {
             title: {
-                text: '[A]'
+                text: 'A.U.'
             },
             plotLines: [{
                 value: 0,
@@ -267,7 +267,7 @@ function buildPlots() {
 			   
 	     data_ele.push([globalData[i],globalDataY[i]]);
 	     
-	     console.log("lunghezza " + globalData.length);
+	     //console.log("lunghezza " + globalData.length);
 	} 
         return data_ele;
             }())

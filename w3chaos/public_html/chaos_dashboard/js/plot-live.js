@@ -83,11 +83,11 @@ function buildPlotLive() {
         },
         xAxis: {
             type: 'datetime',
-            tickPixelInterval: 50
+            tickPixelInterval: 200
         },
         yAxis: {
             title: {
-                text: '[A]'
+                text: 'A.U.'
             },
             plotLines: [{
                 value: 0,
@@ -130,7 +130,7 @@ function buildPlotLive() {
                     time = (new Date()).getTime(),
                     i;
 
-                for (i = -50; i <= 0; i += 1) {
+                for (i = -150; i <= 0; i += 1) {
                     data_ele.push({
                         x: time + i * 1000,
                         y: dataToPlot

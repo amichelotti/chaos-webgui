@@ -27,7 +27,7 @@
 						   
 						   
 				echo '<li>';
-				echo '<a class="submenu" href="/chaos_dashboard/'.$pathChaos.'"><i class="icon-file-alt"></i><span class="hidden-tablet">'.$ths_filename.' </span></a>';
+				echo '<a class="submenu" href="/chaos_dashboard/'.$pathChaos.'" target="_blank"><span class="hidden-tablet">'.$ths_filename.' </span></a>';
 				echo '</li>';
 				}
 			}
@@ -38,7 +38,7 @@
 					
 
 	
-		echo '<a class="dropmenu" href="#"><i class="icon-folder-close-alt"></i><span class="hidden-tablet"> TOOLS</span></a>';
+		echo '<a style="color: white;" class="dropmenu" href="#"><i class="icon-folder-close-alt" style="margin-left:10px;"></i><span class="hidden-tablet"> TOOLS</span></a>';
 		echo '<ul style="display: block;">';
 
 		$files=scandir('TOOLS');
@@ -47,7 +47,7 @@
 				$th_filename=strtoupper(basename($pathTool));
 						   
 				echo '<li>';
-				echo '<a class="submenu" href="/chaos_dashboard/TOOLS/'.$pathTool.'/index.php"><i class="icon-file-alt"></i><span class="hidden-tablet">'.$th_filename.' </span></a>';
+				echo '<a style="color: white;" class="submenu" href="/chaos_dashboard/TOOLS/'.$pathTool.'/index.php" target="_blank"><span class="hidden-tablet">'.$th_filename.' </span></a>';
 				echo '</li>';
 			}
 		}

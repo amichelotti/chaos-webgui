@@ -144,6 +144,37 @@
 	</footer>
 	
 	
+	<!--MODAL FATAL ERROR-->
+	<div class="modal hide fade" id="mdl-fatal-error">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal">X</button>
+			<h3>Error of <span id="name-FE-device"></span></h3>
+		</div>
+		<div class="modal-body">
+			<div class="row-fluid">		
+				<!--div class="box span12"-->
+					<p><b>Health Status:</b><span id="status_message"></span></p>
+					<p><b>Messagge:</b><span id="error_message"></span></p>
+					<p><b>Domain:</b><span id="error_domain"></span></p>
+					<!--div class="box-content">
+						<table class="table table-bordered" id="table_device_alarm">
+							<thead class="box-header red">
+								<tr>
+									<th>Description</th>
+									<th>Value</th>
+								</tr>
+							</thead>
+						</table>
+					</div-->
+				<!--/div-->
+			</div>
+		</div>
+		<div class="modal-footer">
+			<!--a href="#" class="btn btn-primary" onclick="">Save</a-->
+		</div>
+	</div>
+	
+	
 		<!--MODAL DEVICE ALARM-->
 	<div class="modal hide fade" id="mdl-device-alarm-cu">
 		<div class="modal-header">

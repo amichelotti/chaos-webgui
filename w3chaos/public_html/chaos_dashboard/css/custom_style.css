@@ -1,3 +1,12 @@
+/* HOME */
+
+table#main_table_cu th, table#main_table_cu td {
+	vertical-align: middle;
+}
+
+
+
+
 /* MENU SAVE-LOAD- */
 
 .opt-menu {
@@ -62,6 +71,10 @@ p.name-cmd {
 
 .verde {
 	color: green;
+}
+
+.arancione {
+	color: #ff8833; 
 }
 
 
@@ -166,6 +179,6 @@ table#table_cu_out th {
 }
 
 #CUs-archive {
-	width: 130px !important;
+	width: 95% !important;
 }
 

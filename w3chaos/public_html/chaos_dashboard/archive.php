@@ -95,15 +95,15 @@
 			
 			<div class="row-fluid">
 				
-					<div class="span3 statbox purple" onTablet="span6" onDesktop="span2">
+					<div class="span3 statbox purple" onTablet="span3" onDesktop="span3">
 						<h3>Zones</h3>
 						<select id="zones-archive"></select>
 					</div>
-					<div class="span3 statbox purple" onTablet="span6" onDesktop="span2">
+					<div class="span3 statbox purple" onTablet="span3" onDesktop="span3">
 						<h3>Elements</h3>
 						<select id="elements-archive"></select>
 					</div>
-					<div class="span3 statbox purple" onTablet="span6" onDesktop="span2">
+					<div class="span4 statbox purple" onTablet="span3" onDesktop="span3">
 						<h3>CU</h3>
 						<select id="CUs-archive"></select>
 					</div>	
@@ -126,11 +126,11 @@
 			
 			<div class="row-fluid">
 				
-					<div class="span3 statbox purple" onTablet="span6" onDesktop="span3">
+					<div class="span3 statbox purple" onTablet="span3" onDesktop="span3">
 						<h3>Channel</h3>
 						<select id="channel"></select>
 					</div>
-					<div class="span3 statbox purple" onTablet="span6" onDesktop="span3">
+					<div class="span3 statbox purple" onTablet="span3" onDesktop="span3">
 						<h3>Variable</h3>
 						<select id="variable"></select>
 					</div>	

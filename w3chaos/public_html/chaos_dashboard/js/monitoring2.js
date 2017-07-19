@@ -12,6 +12,9 @@ var ok_cu = [];
 var n; //numero delle righe (ovvero degli elementi in tabella); cos� applicando il dataset l'id delle righe aumenta
 var device_alarms = [];
 var cu_alarms = [];
+var fat_err = [];
+var dom_err = [];
+var colm_fl_state = [];
 
 $(document).ready(function () {
     var cu = [];
@@ -124,11 +127,13 @@ $(document).ready(function () {
             try {  // try
 
                 refresh_time.length = 0;
-                var colm_fl_state = [];
+                 colm_fl_state = [];
                 var dev_alarm_col = [];  //booleano
                 var cu_alarm_col = []; //booleano
                 device_alarms = [];  //contenuto allarmi device
                 cu_alarms = [];  //contenuto allarmi cu
+		fat_err	= [];
+		dom_err = [];
                 var busy_col = [];
                 var timestamp = [];
                 var uptime = [];
@@ -149,20 +154,23 @@ $(document).ready(function () {
                                 el.tmUtm = el.health.nh_upt.$numberLong.toHHMMSS();
                                 colm_fl_state.push($.trim(el.health.nh_status));
                                 busy_col.push($.trim(el.output.busy));
-                                timestamp.push(new Date(1000 * el.tmStamp));
+                                timestamp.push(new Date(1000 * el.tmStamp).toUTCString());
                                 uptime.push(el.tmUtm);
                                 systemtime.push(el.systTime);
                                 usertime.push(el.usrTime);
                                 refresh_time.push(Number(el.health.nh_ts.$numberLong)) / 1000;
                                 //refresh_time.push(el.output.dpck_ats.numberLong);
-                                busy_col.push(el.output.busy);
+                                //busy_col.push(el.output.busy);
                                 command.push(el.system.dp_sys_que_cmd);
+				
 
 
                                 dev_alarm_col.push($.trim(el.output.device_alarm));
                                 cu_alarm_col.push($.trim(el.output.cu_alarm));
 
                                 device_alarms.push(el.device_alarms);
+				fat_err.push($.trim(el.health.nh_lem));
+				dom_err.push($.trim(el.health.nh_led));
                                 cu_alarms.push(el.cu_alarms);
                         } else {
                             ////alert("problem")
@@ -171,11 +179,19 @@ $(document).ready(function () {
                 });   // fine cu forEach
 
                 for (var i = 0; i < colm_fl_state.length; i++) {
-                    if (colm_fl_state[i] == 'Start') {
+                    if (colm_fl_state[i] == 'Start' || colm_fl_state[i] ==  'start') {
                         $("#status_" + i).html('<i class="material-icons verde">power_settings_news</i>');
-                    } else if (colm_fl_state[i] == 'true') {
+                    } if (colm_fl_state[i] == 'Stop' || colm_fl_state[i] == 'stop') {
+                        $("#status_" + i).html('<i class="material-icons arancione">power_settings_news</i>');
+                    }  if (colm_fl_state[i] == 'Init' || colm_fl_state[i] == 'init') {
+                        $("#status_" + i).html('<i class="material-icons giallo">power_settings_news</i>');
+                    }if (colm_fl_state[i] == 'Denit' || colm_fl_state[i] == 'deinit') {
                         $("#status_" + i).html('<i class="material-icons rosso">power_settings_news</i>');
-                    }
+                    } if (colm_fl_state[i] == 'Fatal Error' || colm_fl_state[i] == 'fatal error') {
+			$("#status_" + i).html('<a id="fatalError_' + [i] + '" href="#mdl-fatal-error" role="button" data-toggle="modal" onclick="return show_fatal_error(this.id);"><i style="cursor:pointer;" class="material-icons rosso">error</i></a>');
+                    }  else if (colm_fl_state[i] == 'Recoverable Error' || colm_fl_state[i] == 'recoverable error') {
+			$("#status_" + i).html('<a id="recoverError_' + [i] + '" href="#mdl-fatal-error" role="button" data-toggle="modal" onclick="return show_fatal_error(this.id);"><i style="cursor:pointer;" class="material-icons rosso">error</i></a>');
+                    } 
                 }
 
                 for (var i = 0; i < dev_alarm_col.length; i++) {
@@ -190,14 +206,18 @@ $(document).ready(function () {
 
                 for (var i = 0; i < busy_col.length; i++) {
                     if (busy_col[i] == 'true') {
-                        $("#td_busy_" + i).html('<i id="busy_' + [i] + '" class="material-icon verde">hourglass_empty</i>');
+                        $("#td_busy_" + i).html('<i id="busy_' + [i] + '" class="material-icons verde">hourglass_empty</i>');
                     } else if (busy_col[i] == 'false') {
                         $("#busy_" + i).remove();
                     }
+		    console.log("lunghezza busy " + busy_col.length);
+		    //console.log("busy " + busy_col[i]);
+		    
                 }
 
                 for (var i = 0; i < uptime.length; i++) {
                     $("#uptime_" + i).html(uptime[i]);
+		    console.log("uptime " + uptime.length)
                 }
 
                 for (var i = 0; i < timestamp.length; i++) {
@@ -273,7 +293,8 @@ $(document).ready(function () {
 
     }
 
-    jchaos.search("", "zone", true, function (zones) {
+    jchaos.search("", "zone",false, function (zones) {
+	//console.log("zoness " + zones);
         element_sel('#zones', zones, 1);
 
     });
@@ -296,12 +317,12 @@ $(document).ready(function () {
             $("#elements").removeAttr('disabled');
         }
         if (zone_selected == "ALL") {
-            jchaos.search("", "class", true, function (ll) {
+            jchaos.search("", "class",false, function (ll) {
                 element_sel('#elements', ll, 0);
             });
 
         } else {
-            jchaos.search(zone_selected, "class", true, function (ll) {
+            jchaos.search(zone_selected, "class", false, function (ll) {
                 element_sel('#elements', ll, 0);
             });
         }
@@ -314,6 +335,8 @@ $(document).ready(function () {
     $("#elements").change(function () {
         cu_selected = $("#elements option:selected").val();
         var str_search="";
+	
+	
         if((zone_selected!="ALL")&&(zone_selected != "--Select--")){
             str_search=zone_selected;
         }
@@ -321,11 +344,40 @@ $(document).ready(function () {
             str_search+="/"+cu_selected;
         }
         
-        jchaos.search(str_search, "cu", true, function (cu) {
+        jchaos.search(str_search, "cu", false, function (cu) {
                 add_element(cu);
                 populate_url(cu);
 
             });
+	
+	
+	 /*  if (zone_selected == "ALL") {
+	    
+	            jchaos.search("", "cu", true, function (cu) {
+			
+			add_element(cu);
+			                populate_url(cu);
+
+
+            });
+		    
+	   } */
+
+	  
+	
+	/*    if (zone_selected == "ALL") {
+	    //$.get("http://" + location.host + ":8081/CU?cmd=search&parm={'name':'','what':'cu','alive':true}", function(datael, textStatus) {
+		$.ajax({
+		     url: "http://" + location.host + ":8081/CU?cmd=search&parm={'name':'','what':'cu','alive':true}",
+		     async: false
+		 }).done(function(dataele, textStatus) {
+		     cu = $.parseJSON(dataele);
+		     //cu = dataele;
+		     add_element(cu);
+		     //selectElement(0); //da attivare
+		 });
+		populate_url(cu);
+	} */
 
         if (cu_selected == "--Select--" || zone_selected == "--Select--") {
             $(".btn-main-function").hasClass("disabled");

@@ -1,6 +1,26 @@
+function show_fatal_error(id) {
+   // console.log("bla bla " + id);
+    var id_fatal_error = id.split("_")[1];
+    var name_cu_fe = $("#name_element_" + id_fatal_error).text();
+    decodeFatalError(name_cu_fe,colm_fl_state[id_fatal_error],fat_err[id_fatal_error],dom_err[id_fatal_error]);    
+}
+
+function decodeFatalError(nameCu,status_msg,FEmessagge,domMessage) {
+    $("#name-FE-device").html(nameCu);
+
+    //console.log("fatal errror " +FEmessagge);
+    $("#status_message").html(status_msg);
+
+    $("#error_message").html(FEmessagge);
+    $("#error_domain").html(domMessage);
+
+    
+}
+
+
 function show_dev_alarm(id) {
     var id_device_alarm = id.split("_")[1];
-    console.log("popup## " + id_device_alarm);
+    //console.log("popup## " + id_device_alarm);
     decodeDeviceAlarm(device_alarms[id_device_alarm]);   
 }
     
@@ -28,7 +48,7 @@ function decodeDeviceAlarm(dev_alarm) {
 
 function show_cu_alarm(id) {
     var id_cu_alarm = id.split("_")[1];
-    console.log("popup## " + id_cu_alarm);
+    //console.log("popup## " + id_cu_alarm);
     decodeCUAlarm(cu_alarms[id_cu_alarm]);   
 }
     
@@ -100,16 +120,19 @@ function openViewIO(cu) {
     });
 }
 
-
-$(document).on("click", "#main_table_cu tr", function(e) {
+$(document).on("click", ".name_element", function(e) {
+//$(document).on("click", "#main_table_cu tr", function(e) {
     var selected = $(this).hasClass("row_selected");
-    $("#main_table_cu tr").removeClass("row_selected");
+    $(".name_element").removeClass("row_selected");
+   // $("#main_table_cu tr").removeClass("row_selected");
     if (!selected) {
         $(this).addClass("row_selected");
-        num_row = this.rowIndex;
-        num_row = num_row - 1;  // per far partire il conteggio da 1 e non da 0
-	console.log("numero row " + num_row);
+	   num_row = $(this).parent().index();
+      //  num_row = this.rowIndex;
+      //  num_row = num_row - 1;  // per far partire il conteggio da 1 e non da 0
+	//console.log("numero row " + num_row);
 	name_cu = $("#name_element_" + num_row).text();
+	//console.log("name cu #### " + name_cu);
 	openViewIO(name_cu);
     }
 });
