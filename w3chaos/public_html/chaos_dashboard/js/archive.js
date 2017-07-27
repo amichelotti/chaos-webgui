@@ -42,25 +42,19 @@ $(document).ready(function() {
 	//$(field).append("<option value='ALL'>ALL</option>");
 
         if(add_all == 1) {
-            $(field).append("<option value='ALL'>ALL</option>");
-	    
+            $(field).append("<option value='ALL'>ALL</option>");	    
         }  
-        $(arr).each(function(i) {
-	    
-	    $(field).append("<option value='" + arr[i] + "'>" + arr[i] + "</option>");
-     
+        $(arr).each(function(i) {	    
+	    $(field).append("<option value='" + arr[i] + "'>" + arr[i] + "</option>");     
         });
         
     }
     
-        
+  
     //Query a chaos per prendere la zona selezionata
-   // $.get("http://" + location.host + ":8081/CU?cmd=search&parm={'name': ' ' , 'what': 'zone', 'alive':true}", function(datazone,textStatus) {
-    $.get("http://" + url_server + ":" + n_port + "/CU?cmd=search&parm={'name': ' ' , 'what': 'zone', 'alive':false}", function(datazone,textStatus) {
-
-    //console.log("prova una " + url_server + "porta " +  n_port);
-    
-        zones = $.parseJSON(datazone);
+    jchaos.search("", "zone", false, function (zones) {
+//    $.get("http://" + url_server + ":" + n_port + "/CU?cmd=search&parm={'name': ' ' , 'what': 'zone', 'alive':false}", function(datazone,textStatus) {
+       // zones = $.parseJSON(datazone);
         element_sel('#zones-archive', zones, 1);
     });
     
@@ -73,8 +67,9 @@ $(document).ready(function() {
         } else {
             $("#elements-archive").removeAttr('disabled');
         }
-          $.get("http://" +  url_server + ":" + n_port +"/CU?cmd=search&parm={'name':'" + zone_selected + "','what':'class','alive':false}", function(datael, textStatus) {
-            cu_list = $.parseJSON(datael);
+	jchaos.search(zone_selected, "class", false, function (cu_list) {
+         // $.get("http://" +  url_server + ":" + n_port +"/CU?cmd=search&parm={'name':'" + zone_selected + "','what':'class','alive':false}", function(datael, textStatus) {
+           // cu_list = $.parseJSON(datael);
             element_sel('#elements-archive', cu_list,0);
         });
 	  	    
@@ -95,16 +90,22 @@ $(document).ready(function() {
         }
 	
 	//console.log("cu_selected " + cu_selected + "zone selected " + zone_selected);
-        if(jQuery.inArray(cu_selected, cu_effettive) == -1) {
+        /*if(jQuery.inArray(cu_selected, cu_effettive) == -1) {
             $.ajax({
                 url: "http://"+  url_server + ":" + n_port +"/CU?cmd=search&parm={'name':'" + zone_selected + "/" + cu_selected + "','what':'cu','alive':false}",
                 async: false
             }).done(function(datall, textStatus) {
                 cu = $.parseJSON(datall);
-		//console.log("cccc " + cu);
 		element_sel('#CUs-archive', cu,0);
             });
-        }
+        } */
+	
+	if(jQuery.inArray(cu_selected, cu_effettive) == -1) {
+		jchaos.search(zone_selected + "/" + cu_selected,"cu",false,function (cu) {
+		    element_sel('#CUs-archive', cu,0);
+            });
+        } 
+
 	
     }); // *** element list change
     
@@ -112,7 +113,8 @@ $(document).ready(function() {
     
     var channel = [];
     var old_str = '';
-    var cu_data = '';
+    //var cu_data = '';
+    var cu_data = [];
     var channel = [];
     $("#CUs-archive").change(function() {
          cuToPlot = $("#CUs-archive option:selected").val();
@@ -126,33 +128,47 @@ $(document).ready(function() {
         }
 
 	 
-	 //console.log("diim " + cuToPlot);
 	 
 	$.get("http://" +  url_server + ":" + n_port +"/CU?dev="+ cuToPlot + "&cmd=channel&parm=-1", function(datavalue,textStatus) {
-	
-	 old_str = datavalue.replace(/\$numberLong/g, 'numberLong');
-	//console.log("datavalue " + datavalue);
-	cu_data = $.parseJSON(old_str);
-	//console.log("cu_data " + cu_data);
-	$.each(cu_data, function(key, value){
-	    $.each(value, function(key, value_due){
-		channel.push(key);
+	    old_str = datavalue.replace(/\$numberLong/g, 'numberLong');
+	    cu_data = $.parseJSON(old_str);
+	    $.each(cu_data, function(key, value){
+	        $.each(value, function(key, value_due){
+		    channel.push(key);
+		});
 	    });
-	});
 	
-	
-	channel.remove("dev_status","log_status","error_status");
-	
-	element_sel('#channel', channel,0);
+	    channel.remove("dev_status","log_status","error_status");
+	    element_sel('#channel', channel,0);
  
-	});
+	}); 
 	
-    });
+	
+	/*jchaos.getChannel(cuToPlot, -1, function (cu_data) {
+	    $.each(cu_data, function(key, value){
+	        $.each(value, function(key, value_due){
+		    //console.log("key2 " + key + " value 2 " + value_due);
+		    channel.push(key);
+		});
+		//console.log("channel " + channel);
+	    });
+	
+	    channel.remove("dev_status","log_status","error_status");
+	    element_sel('#channel', channel,0);
+ 
+	}); */
+
+	
+	
+    }); 
     
     
-    var data_output = '';
+    //var data_output = '';
+    var data_output;
+
     var element_channel = [];
     $("#channel").change(function() {
+		
          chan = $("#channel option:selected").val();
 	 
 	 element_channel = [];
@@ -163,7 +179,10 @@ $(document).ready(function() {
             $("#elements-archive").removeAttr('disabled');
         }
 
+	//console.log("chan " + chan + " cu_data " + cu_data);
 	    data_output = cu_data[0][chan];
+	   // data_output = cu_data[chan];
+	    //console.log("data output " + data_output);
 	    
 	    $.each(data_output, function(key, value){
 		
@@ -177,6 +196,7 @@ $(document).ready(function() {
 	    element_sel('#variable', element_channel, 0);
 	    
     });
+    
   
      
 });   //*** main function

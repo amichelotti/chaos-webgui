@@ -4,8 +4,39 @@ table#main_table_cu th, table#main_table_cu td {
 	vertical-align: middle;
 }
 
+.nav-tabs>li>a {
+	line-height: 10px;
+}
 
+.sidebar-nav > ul > li > ul {
+	background: rgba(0,0,0,0);
+}
 
+.nav-tabs.nav-stacked > li > ul > li > a {
+	padding-left: 30px;
+	padding-top:6px;
+}
+
+a.dropmenu {
+	padding-left: 4px;
+}
+
+.menu-tools {
+	line-height: 30px;
+}
+
+@media (max-width: 979px) and (min-width: 768px) {
+	.nav-tabs.nav-stacked > li > a, .nav-tabs.nav-stacked > li > ul > li > a {
+		font-size: 12px;
+		text-align: left;
+		padding-bottom: 2px;
+		padding-left: 6px;
+	}
+	
+	.menu-tools {
+		margin-left: -14px;
+	}
+}
 
 /* MENU SAVE-LOAD- */
 
@@ -150,6 +181,21 @@ td.td_readout, td.td_current {
 
 
 /* CSS MONITORING */
+
+@media (max-width: 979px) and (min-width: 768px) {
+	.box-content.span12 {
+		overflow-x: auto;
+	}
+}
+
+
+@media (max-width: 767px) {
+	.box-content.span12 {
+		overflow-x: auto;
+	}
+}
+
+
 
 table#main_table_cu {
 	overflow-y: auto;

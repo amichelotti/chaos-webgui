@@ -2,14 +2,14 @@
  * MONITORING CU (STATUS,ALARM)
  */
 
-var zone_selected = "";     //zona selezionata ad es.BTF; questa variabile � usata anche in mag_command.js
+var zone_selected = "";     //zona selezionata ad es.BTF; questa variabile è usata anche in mag_command.js
 var cu_selected = "";
 var refresh_time = [];
 var old_time = [];
 var timestamp_never_called = true;
 var refresh_values_never_called = true;
 var ok_cu = [];
-var n; //numero delle righe (ovvero degli elementi in tabella); cos� applicando il dataset l'id delle righe aumenta
+var n; //numero delle righe (ovvero degli elementi in tabella); così applicando il dataset l'id delle righe aumenta
 var device_alarms = [];
 var cu_alarms = [];
 var fat_err = [];
@@ -18,7 +18,6 @@ var colm_fl_state = [];
 
 $(document).ready(function () {
     var cu = [];
-    var url_cu = "";
     var zones = [];
 
     //Funzione per riempire le select(quella delle zone, e quella degli alimentatori)
@@ -32,12 +31,6 @@ $(document).ready(function () {
 
         }
         $(arr).each(function (i) {
-
-            //if (arr[i] != "ACCUMULATOR" && arr[i] != "LNF/TEST") { //tolgo dalla lista la zona accumulatore
-            //if (arr[i] != "SCRAPER" && arr[i] != "DAQ") { //tolgo dalla lista gli scraper
-            //$(field).append("<option value='" + arr[i] + "'>" + arr[i] + "</option>");
-            //  }
-            // }
             $(field).append("<option value='" + arr[i] + "'>" + arr[i] + "</option>");
 
         });
@@ -82,23 +75,11 @@ $(document).ready(function () {
                     $("#name_element_" + i).css('color', 'red');
                 }
             }
-        }, 10000);  /*** il setInterval � impostato a 6 secondi perch� non pu� essere minore delq refresh cu ***/
+        }, 10000);  /*** il setInterval è impostato a 6 secondi perché non può essere minore delq refresh cu ***/
     }
 
     //Funzione per comporre la griglia della tabella dei magneti
     function add_element(arr) {
-        //  $(arr).each(function(i) {
-
-        /*$("#table-space").append("<div class='box span12'><div class='box-content'><table class='table table-bordered' id='main_table_cu'>"+
-         "<thead class='box-header'><tr><th>Name CU</th><th colspan='2'>Status</th><th>Timestamp</th><th>Uptime [hh:mm:ss]</th>"+
-         "<th>Systemtime [%]</th><th>UserTime [%]</th><th>Alarm Device</th><th>Alarm CU</th></tr></thead>"+
-         "<tr class='row_element' id='tr_element_" + i + "'><td class='name_element' id='name_element_"+ [i] + "'>" + arr[i]
-         + "</td><td id='status_"+ [i] + "'></td><td id='td_busy_"+ [i] + "'></td><td id='timestamp_"+ [i]
-         + "'></td><td id='uptime_"+ [i] + "'></td><td id='systemtime_"+ [i] + "'></td><td id='usertime_"+ [i]
-         + "'></td><td id='dev_alarm_"+ [i] + "'></td><td id='cu_alarm_"+ [i] + "'></td></tr></table></div></div>") */
-
-
-
         $("#main_table_cu").find("tr:gt(0)").remove();
         $(arr).each(function (i) {
             $("#main_table_cu").append("<tr class='row_element' id='tr_element_" + i + "'><td class='name_element' id='name_element_" + [i] + "'>" + arr[i]
@@ -110,7 +91,7 @@ $(document).ready(function () {
         //$("#main_table_cu").DataTable();
 
         n = $('#main_table_cu tr').size();
-        if (n > 22) {     /***Attivo lo scroll della tabella se ci sono pi� di 22 elementi ***/
+        if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
             $("#table-scroll").css('height', '280px');
         } else {
             $("#table-scroll").css('height', '');
@@ -118,11 +99,15 @@ $(document).ready(function () {
     }
 
     function updateChannel() {
-        jchaos.getChannel(ok_cu, -1, function (cu) {   //risposta
-
-//		    var old_str = datavalue.replace(/\$numberLong/g, 'numberLong');
-
-            //console.log("dati " + old_str + "aaa " + datavalue)
+	
+	//console.log("tot cu " + ok_cu.length );
+	
+	/*if (ok_cu.length > 10) {
+	    
+	    
+	} */
+	
+        jchaos.getChannel(ok_cu, -1, function (cu) {
 
             try {  // try
 
@@ -141,9 +126,6 @@ $(document).ready(function () {
                 var usertime = [];
                 var command = [];
 
-//			var name_cu = $.parseJSON(old_str);
-                //var name_cu = old_str;
-                //console.log("string " + name_cu);
                 cu.forEach(function (el) {  // cu forEach
                         var name_device_db = el.health.ndk_uid;
                         if (el.hasOwnProperty('output')) {   //if el output
@@ -162,9 +144,6 @@ $(document).ready(function () {
                                 //refresh_time.push(el.output.dpck_ats.numberLong);
                                 //busy_col.push(el.output.busy);
                                 command.push(el.system.dp_sys_que_cmd);
-				
-
-
                                 dev_alarm_col.push($.trim(el.output.device_alarm));
                                 cu_alarm_col.push($.trim(el.output.cu_alarm));
 
@@ -185,7 +164,7 @@ $(document).ready(function () {
                         $("#status_" + i).html('<i class="material-icons arancione">power_settings_news</i>');
                     }  if (colm_fl_state[i] == 'Init' || colm_fl_state[i] == 'init') {
                         $("#status_" + i).html('<i class="material-icons giallo">power_settings_news</i>');
-                    }if (colm_fl_state[i] == 'Denit' || colm_fl_state[i] == 'deinit') {
+                    }if (colm_fl_state[i] == 'Deinit' || colm_fl_state[i] == 'deinit') {
                         $("#status_" + i).html('<i class="material-icons rosso">power_settings_news</i>');
                     } if (colm_fl_state[i] == 'Fatal Error' || colm_fl_state[i] == 'fatal error') {
 			$("#status_" + i).html('<a id="fatalError_' + [i] + '" href="#mdl-fatal-error" role="button" data-toggle="modal" onclick="return show_fatal_error(this.id);"><i style="cursor:pointer;" class="material-icons rosso">error</i></a>');
@@ -210,14 +189,10 @@ $(document).ready(function () {
                     } else if (busy_col[i] == 'false') {
                         $("#busy_" + i).remove();
                     }
-		    console.log("lunghezza busy " + busy_col.length);
-		    //console.log("busy " + busy_col[i]);
-		    
                 }
 
                 for (var i = 0; i < uptime.length; i++) {
                     $("#uptime_" + i).html(uptime[i]);
-		    console.log("uptime " + uptime.length)
                 }
 
                 for (var i = 0; i < timestamp.length; i++) {
@@ -252,8 +227,6 @@ $(document).ready(function () {
                 console.log("errore parsing" + e.message);
             }   // fine try 
 
-            //});
-
         });  // fine risposta
     }
     //Funzione di riempimento campo dei magneti con i dati chaos, e reload degli stessi
@@ -263,13 +236,17 @@ $(document).ready(function () {
 
     function populate_url(cu) {
         ok_cu = [];
-//	url_cu = "";   // empty array
+	$("#no-result-monitoring").html("");
+
         cu.forEach(function (ele) {
             ok_cu.push(ele);   //array con la classe dei magneti che ho selezionato
-//	    url_cu += ele + ",";
-        });
 
-//	url_cu = url_cu.substring(0, url_cu.length - 1);   /*** Manipolazione per togliere l'ultima virgola dall'url_cu ***/        
+        });
+	
+	if (cu.length == 0) {
+	    $("#no-result-monitoring").html("No results match");
+	}
+	
 
         worker();
 
@@ -293,8 +270,7 @@ $(document).ready(function () {
 
     }
 
-    jchaos.search("", "zone",false, function (zones) {
-	//console.log("zoness " + zones);
+    jchaos.search("", "zone", true, function (zones) {
         element_sel('#zones', zones, 1);
 
     });
@@ -317,25 +293,23 @@ $(document).ready(function () {
             $("#elements").removeAttr('disabled');
         }
         if (zone_selected == "ALL") {
-            jchaos.search("", "class",false, function (ll) {
-                element_sel('#elements', ll, 0);
+            jchaos.search("", "class", true, function (ll) {
+                element_sel('#elements', ll, 1);
             });
 
         } else {
-            jchaos.search(zone_selected, "class", false, function (ll) {
-                element_sel('#elements', ll, 0);
+            jchaos.search(zone_selected, "class", true, function (ll) {
+                element_sel('#elements', ll, 1);
             });
         }
 
     });
 
-
+    var str_search="";
 
     //Get per prendere i dati delle cu selezionate
     $("#elements").change(function () {
         cu_selected = $("#elements option:selected").val();
-        var str_search="";
-	
 	
         if((zone_selected!="ALL")&&(zone_selected != "--Select--")){
             str_search=zone_selected;
@@ -343,41 +317,7 @@ $(document).ready(function () {
         if((cu_selected!="ALL")&&(cu_selected != "--Select--")){
             str_search+="/"+cu_selected;
         }
-        
-        jchaos.search(str_search, "cu", false, function (cu) {
-                add_element(cu);
-                populate_url(cu);
-
-            });
-	
-	
-	 /*  if (zone_selected == "ALL") {
-	    
-	            jchaos.search("", "cu", true, function (cu) {
-			
-			add_element(cu);
-			                populate_url(cu);
-
-
-            });
-		    
-	   } */
-
-	  
-	
-	/*    if (zone_selected == "ALL") {
-	    //$.get("http://" + location.host + ":8081/CU?cmd=search&parm={'name':'','what':'cu','alive':true}", function(datael, textStatus) {
-		$.ajax({
-		     url: "http://" + location.host + ":8081/CU?cmd=search&parm={'name':'','what':'cu','alive':true}",
-		     async: false
-		 }).done(function(dataele, textStatus) {
-		     cu = $.parseJSON(dataele);
-		     //cu = dataele;
-		     add_element(cu);
-		     //selectElement(0); //da attivare
-		 });
-		populate_url(cu);
-	} */
+                
 
         if (cu_selected == "--Select--" || zone_selected == "--Select--") {
             $(".btn-main-function").hasClass("disabled");
@@ -386,12 +326,40 @@ $(document).ready(function () {
             $(".btn-main-function").removeClass("disabled");
             
         }
-
+	
+	jchaos.search(str_search, "cu", true, function (cu) {
+		add_element(cu);
+		populate_url(cu);
+	    });
 
 
 
     }); // *** element list change
+    
+    
+  
+    
+    var alive;
+        $('input[type=radio][name=alive]').change(function() {
+        if (this.value == 'true') {
 
+	    alive = true;
+	    jchaos.search(str_search, "cu", alive, function (cu) {
+		add_element(cu);
+		populate_url(cu);
+	    });
+	    console.log("entro");
+	} else if (this.value == 'false') {
+	    alive = false;
+	    console.log("falso");
+	  
+	jchaos.search(str_search, "cu", alive, function (cu) {
+		add_element(cu);
+		populate_url(cu);
+	    });
+	}
+	
+    }); 
 
 });   //*** main function
 

@@ -1,5 +1,4 @@
 function show_fatal_error(id) {
-   // console.log("bla bla " + id);
     var id_fatal_error = id.split("_")[1];
     var name_cu_fe = $("#name_element_" + id_fatal_error).text();
     decodeFatalError(name_cu_fe,colm_fl_state[id_fatal_error],fat_err[id_fatal_error],dom_err[id_fatal_error]);    
@@ -7,8 +6,6 @@ function show_fatal_error(id) {
 
 function decodeFatalError(nameCu,status_msg,FEmessagge,domMessage) {
     $("#name-FE-device").html(nameCu);
-
-    //console.log("fatal errror " +FEmessagge);
     $("#status_message").html(status_msg);
 
     $("#error_message").html(FEmessagge);
@@ -20,7 +17,6 @@ function decodeFatalError(nameCu,status_msg,FEmessagge,domMessage) {
 
 function show_dev_alarm(id) {
     var id_device_alarm = id.split("_")[1];
-    //console.log("popup## " + id_device_alarm);
     decodeDeviceAlarm(device_alarms[id_device_alarm]);   
 }
     
@@ -48,7 +44,6 @@ function decodeDeviceAlarm(dev_alarm) {
 
 function show_cu_alarm(id) {
     var id_cu_alarm = id.split("_")[1];
-    //console.log("popup## " + id_cu_alarm);
     decodeCUAlarm(cu_alarms[id_cu_alarm]);   
 }
     
@@ -77,6 +72,10 @@ function decodeCUAlarm(cu_alarm) {
 function openViewIO(cu) {
     $("#table_cu_in").find("tr:gt(0)").remove();
     $("#table_cu_out").find("tr:gt(0)").remove();
+     // jchaos.getChannel(cu, -1, function (datavalue) {   //risposta
+
+     // console.log("datavlaueee "  + "cuccc " + cu);
+      
     $.get("http://" +  url_server + ":" + n_port +"/CU?dev="+ cu + "&cmd=channel&parm=-1", function(datavalue,textStatus) {
 	
 	var old_str = datavalue.replace(/\$numberLong/g, 'numberLong');
@@ -130,9 +129,7 @@ $(document).on("click", ".name_element", function(e) {
 	   num_row = $(this).parent().index();
       //  num_row = this.rowIndex;
       //  num_row = num_row - 1;  // per far partire il conteggio da 1 e non da 0
-	//console.log("numero row " + num_row);
 	name_cu = $("#name_element_" + num_row).text();
-	//console.log("name cu #### " + name_cu);
 	openViewIO(name_cu);
     }
 });

@@ -13,7 +13,7 @@
 @import url("jquery-ui-1.8.21.custom.css");								/* jQuery User Interface Framework Styles */
 @import url("fullcalendar.css");										/* Calendars Styles */
 @import url("chosen.css");												/* Select Boxes Styles */  
-@import url("uniform.default.css");										/* Uniform Styles */
+/*@import url("uniform.default.css"); */										/* Uniform Styles */
 @import url("jquery.cleditor.css");										/* Text Editor Styles. */  
 @import url("jquery.noty.css");											/* Noty Notifications Style */
 @import url("noty_theme_default.css");									/* Noty Notifications Style */
@@ -2139,9 +2139,9 @@ fieldset[disabled] .btn-link:focus {
 /* UI - Uniform
 =================================================================== */
 
-div.checker {
+/*div.checker {
 	margin-top: -4px !important;
-}
+} */
 
 div.radio {
 	margin-top: -4px !important;

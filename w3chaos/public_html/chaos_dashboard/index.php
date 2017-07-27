@@ -1,64 +1,25 @@
 <!DOCTYPE HTML>
 <html>
-<?php require_once('head.php'); ?>
+<?php
+require_once('head.php');
+
+$curr_page = "Home";
+
+?>
 <body>
 
+<?php
+require_once('header.php');
+?>
 
-	<div class="navbar">
-		<div class="navbar-inner">
-			<div class="container-fluid">
-				<a class="btn btn-navbar" data-toggle="collapse" data-target=".top-nav.nav-collapse,.sidebar-nav.nav-collapse">
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</a>
-				<a class="brand" href="index.html"><span>!CHAOS Dashboard</span></a>
-								
-				<!-- start: Header Menu -->
-				<div class="nav-no-collapse header-nav">
-					<ul class="nav pull-right">
-						
-						<!-- start: User Dropdown -->
-						<li class="dropdown">
-							<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-								<i class="halflings-icon white user"></i> Login
-								<span class="caret"></span>
-							</a>
-							<ul class="dropdown-menu">
-								<li class="dropdown-menu-title">
- 									<span>Account Settings</span>
-								</li>
-								<li><a href="#"><i class="halflings-icon user"></i> Profile</a></li>
-								<li><a href="login.html"><i class="halflings-icon off"></i> Logout</a></li>
-							</ul>
-						</li>
-						<!-- end: User Dropdown -->
-					
-
-					</ul>
-					
-					
-				</div>
-				<!-- end: Header Menu -->
-				
-			</div>
-		</div>
-	</div>
-	<!-- start: Header -->
-	
 	<div class="container-fluid-full">
 		<div class="row-fluid">
 				
 			<!-- start: Main Menu -->
 			<div id="sidebar-left" class="span2">
 				<div class="nav-collapse sidebar-nav">
-					<ul class="nav nav-tabs nav-stacked main-menu">
-						<!--li><a href="index.php"><i class="icon-home"></i><span class="hidden-tablet"> Home</span></a></li-->	
-						
-
-											<?php require_once('menu.php'); ?>
-
-					
+					<ul class="nav nav-tabs nav-stacked main-menu">						
+						<?php require_once('menu.php'); ?>	
 					</ul>
 				</div>
 			</div>
@@ -68,41 +29,48 @@
 			<!-- start: Content -->
 			<div id="content" class="span10">
 			
-			
 				<ul class="breadcrumb">
 					<li>
 						<i class="icon-home"></i>
-						<a href="index.html">Home</a> 
+						<a href="<?php echo $index; ?>"><?php echo $curr_page; ?></a> 
 						<i class="icon-angle-right"></i>
 					</li>
-					<!--li><a href="#">Scrapers</a></li-->
 				</ul>
 			
 				<div class="row-fluid">
 				
-					<div class="span3 statbox purple" onTablet="span6" onDesktop="span3">
+					<div class="statbox purple" onTablet="span6" onDesktop="span3">
 						<h3>Zones</h3>
 						<select id="zones"></select>
 					</div>
-					<div class="span3 statbox purple" onTablet="span6" onDesktop="span3">
+					<div class="statbox purple" onTablet="span6" onDesktop="span3">
 						<h3>Elements</h3>
 						<select id="elements"></select>
-					</div>	
-				
+					</div>
+					
+					<!--div class="span2" onTablet="span6" onDesktop="span2">
+						<input type="radio" id="cu-true"/><label for="cu-true" id="choices-load-labelX">true</label>
+						<input type="radio" id="cu-false"/><label for="cu-false" id="choices-diff-labelX">false</label>
+					</div-->
+					
+					<div class="span2" onTablet="span6" onDesktop="span2">
+						<input type="radio" name="alive" value="true" id="radio-true" checked="checked"/><label>true</label>
+						<input type="radio" name="alive" value="false" id="radio-false"/><label>false</label>
+					</div>
+
+					
+					
 				<!-- ANCORA DA IMPLEMENTARE -->
 					<!--div class="span3 statbox yellow" onTablet="span6" onDesktop="span3">
 						<h3>Search</h3>
 						<input id="search"/>
 					</div-->	
-
-				
 				</div>
 				
 				<div class="row-fluid" id="table-space">
-					
-					
 					<div class="box span12">
-						<div class="box-content">
+						<div class="box-content span12">
+							<p id="no-result-monitoring"></p>
 							<table class="table table-bordered" id="main_table_cu">
 								<thead class="box-header">
 								  <tr>
@@ -120,28 +88,66 @@
 							</table>            
 						</div>
 					</div><!--/span-->
-					
-					
-					
 				</div><!--/row-->
 				
+	
+				
+			<div class="row-fluid">				
+				<div class="box span12 box-cmd">
+					<div class="box-header green">
+						<h3 id="h3-cmd">Commands</h3>
+					</div>
+					<div class="box-content">
+						
+						<div class="row-fluid">				
+							<div class="span3 offset1" onTablet="span6" onDesktop="span3">
+								<input class="input focused" id="cu-cmd" name="" type="text" value="">
+							</div>
+							<a class="quick-button-small span1 btn-cmd" id="cmd-init" onclick="Init()">
+								<!--i class="material-icons verde">trending_down</i-->
+								<p class="name-cmd">Init</p>
+							</a>
+							<a class="quick-button-small span1 btn-cmd" id="cmd-start" onclick="Start()">
+								<!--i class="material-icons verde">trending_down</i-->
+								<p class="name-cmd">Start</p>
+							</a>
+							<a class="quick-button-small span1 btn-cmd" id="cmd-load" onclick="Load()">
+								<!--i class="material-icons verde">trending_down</i-->
+								<p class="name-cmd">Load</p>
+							</a>
+
+						</div>
+						
+						<div class="row-fluid">
+							<a class="quick-button-small span1 btn-cmd offset4" id="cmd-deinit" onclick="Deinit()">
+								<!--i class="material-icons verde">trending_down</i-->
+								<p class="name-cmd">Deinit</p>
+							</a>
+							<a class="quick-button-small span1 btn-cmd" id="cmd-stop" onclick="Stop()">
+								<!--i class="material-icons verde">trending_down</i-->
+								<p class="name-cmd">Stop</p>
+							</a>
+							<!--a class="quick-button-small span1 btn-cmd" id="cmd-unload" onclick="Unload()">
+								<i class="material-icons verde">trending_down</i>
+								<p class="name-cmd">Unload</p>
+							</a-->
+
+						</div>
+
+					</div>
+				</div>
+			</div>
 
 			</div><!--/.--/#content.span10---->
+
 	
 		</div><!--/fluid-row-->
 	</div>
 	
-		
-	
+
 	<div class="clearfix"></div>
-	<footer>
-
-		<p>
-			<span style="text-align:left;float:left">&copy; 2016 <a href="http://chaos.infn.it/" alt="logo-!CHAOS" target="_blank">!CHAOS</a></span>
-			
-		</p>
-
-	</footer>
+	
+	<footer><?php require_once('footer.php');?></footer>
 	
 	
 	<!--MODAL FATAL ERROR-->
@@ -152,30 +158,17 @@
 		</div>
 		<div class="modal-body">
 			<div class="row-fluid">		
-				<!--div class="box span12"-->
-					<p><b>Health Status:</b><span id="status_message"></span></p>
-					<p><b>Messagge:</b><span id="error_message"></span></p>
-					<p><b>Domain:</b><span id="error_domain"></span></p>
-					<!--div class="box-content">
-						<table class="table table-bordered" id="table_device_alarm">
-							<thead class="box-header red">
-								<tr>
-									<th>Description</th>
-									<th>Value</th>
-								</tr>
-							</thead>
-						</table>
-					</div-->
-				<!--/div-->
+				<p><b>Health Status:</b><span id="status_message"></span></p>
+				<p><b>Messagge:</b><span id="error_message"></span></p>
+				<p><b>Domain:</b><span id="error_domain"></span></p>
 			</div>
 		</div>
-		<div class="modal-footer">
-			<!--a href="#" class="btn btn-primary" onclick="">Save</a-->
+			<div class="modal-footer">
 		</div>
 	</div>
 	
 	
-		<!--MODAL DEVICE ALARM-->
+	<!--MODAL DEVICE ALARM-->
 	<div class="modal hide fade" id="mdl-device-alarm-cu">
 		<div class="modal-header">
 			<button type="button" class="close" data-dismiss="modal">X</button>
@@ -198,7 +191,6 @@
 			</div>
 		</div>
 		<div class="modal-footer">
-			<!--a href="#" class="btn btn-primary" onclick="">Save</a-->
 		</div>
 	</div>
 	
@@ -235,11 +227,8 @@
 			<h3>DATA of <span id="name-cu-io"></span></h3>
 		</div>
 		<div class="modal-body">
-				<!--div id="lalla"><table id="cc"></table></div-->
-
 			<div class="row-fluid">		
 				<div class="span12">
-
 					<table class="table table-bordered" id="table_cu_out">						
 						<thead class="box-header green">
 							<tr>
@@ -255,38 +244,17 @@
 							</tr>
 						</thead>
 					</table>
-
-
-					<!--div class="box-content">
-						
-						<div id="lalla"><table id="cc"></table></div-->
-
-						<!--table class="table table-bordered" id="table_cu_out">
-							<thead class="box-header green">
-								<tr>
-									<th>Output</th>
-								</tr>
-							</thead>
-							<tbody>
-								
-							</tbody>
-						</table-->
-						
-						<!--table class="table table-bordered" id="table_cu_in">
-							<thead class="box-header green">
-								<tr>
-									<th colspan="2">Input</th>
-								</tr>
-							</thead>
-						</table-->
-
-					<!--/div-->
 				</div>
 			</div>
 		</div>
 		<div class="modal-footer"></div>
 	</div>
 
+
+<script src="/<?php echo $main_dir ?>/js/monitoring2.js"></script>
+<script src="/<?php echo $main_dir ?>/js/monitoring-alarm.js"></script>
+<script src="/<?php echo $main_dir ?>/js/monitoring-cmd.js"></script>	
+	
 
 </body>
 </html>
