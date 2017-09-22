@@ -13,10 +13,6 @@
             <in>CMakeCXXCompilerId.cpp</in>
           </df>
         </df>
-        <df name="CUIserver.dir">
-          <df name="src">
-          </df>
-        </df>
       </df>
       <df name="mongoose-cpp">
         <df name="CMakeFiles">
