@@ -41,7 +41,7 @@ require_once('../../header.php');
 			<div class="row-fluid">
 				
 				<div class="span4" onTablet="span4" onDesktop="span4">
-					<h2>DAFNE STATUS: <span id="linac_status"></span></h2>
+					<h2>DAFNE STATUS: <span id="linac_status"></span> </h2>
 					<h2>MODE: <span> Slow Acquisition</span>  <!--strong>DAFNE STATUS:</strong><span id="dafne_status"></span--></h2>
 					<br>
 					<h2>Snapshot e-: <span id="snapshot-ele"></span> </h2>
@@ -116,6 +116,13 @@ require_once('../../header.php');
 					<input type="checkbox" id="choices-loadSUM" class="filled-in checkSUM"/><label for="choices-loadSUM" id="choices-load-labelSUM">dataset</label>
 				    <input type="checkbox" id="choices-diffSUM" class="filled-in checkSUM"/><label for="choices-diffSUM" id="choices-diff-labelSUM">diff</label>
 				</div> 
+
+			</div>
+
+			<div class="row-fluid">
+				<div class="span11" onTablet="span11" onDesktop="span11">
+					<div id="containerCurrent" style="min-width: 750px; height: 300px; margin: 0 auto"></div>
+				</div>
 
 			</div>
 

@@ -354,7 +354,7 @@ $(document).ready(function() {
 
         if(jQuery.inArray(mag_selected, btf_list) == -1) {
             $.ajax({
-                url: "http://" + location.host + ":8081/CU?cmd=search&parm={'names':['BTF/DIPOLE','BTF/QUADRUPOLE','BTF/CORRECTOR'],'what':'cu','alive':true}",
+                url: "http://" + location.host + ":8081/CU?cmd=search&parm={'names':['DAFNE/TM/DIPOLE','DAFNE/TM/QUADRUPOLE'],'what':'cu','alive':true}",
                 async: false
             }).done(function(datall, textStatus) {
                 magnets = $.parseJSON(datall);
