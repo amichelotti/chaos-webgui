@@ -1,6 +1,6 @@
 
 
-var frequency=3000;
+var frequency=500;
 
 var cu_bpm = [];
 var dafne_global = [];
@@ -30,6 +30,8 @@ var dataLoadYP = [];
 var dataLoadSumP = [];
 
 var diffXE,diffXP,diffYE,diffYP,diffSumE,diffSumP
+var currentp=0;
+var currente=0;
 
 var plotLiveBpmX,plotLiveBpmY,plotLiveBpmSum;
 
@@ -39,7 +41,7 @@ $(document).ready(function() {
     buildPlotsOrbitX();
     buildPlotsOrbitY();
     buildPlotsOrbitSum();
-    
+    buildPlotCurrent();
 });
 
 var bpm_accumulator_orbit=["ACCUMULATOR/BPM/BPBA1001","ACCUMULATOR/BPM/BPSA1001","ACCUMULATOR/BPM/BPBA1002","ACCUMULATOR/BPM/BPBA2001",
@@ -49,34 +51,42 @@ var bpm_accumulator_orbit=["ACCUMULATOR/BPM/BPBA1001","ACCUMULATOR/BPM/BPSA1001"
 
 function OrbitAccumulator() {
     
-    jchaos.getChannel("DAFNE/FILE/NEWDAFNE", -1, function (dafne_global) {
+    jchaos.getChannel("DAFNE/FILE/NEWDAFNE", 0, function (dafne_global) {
 	
 	linac_mode = 0;
-	
-	dafne_global.forEach(function(el) {   
-	    $.each(el, function(index, value){		    
-		if (index == "output") {
-		    $.each(value, function(ind_out, val_out){
-			if (ind_out == "linac_mode") {
-			    linac_mode = val_out;
-			    switch (linac_mode) {
-			    case 1:
-				$("#linac_status").html("e+");
-				break;
-			    case -1:
-				$("#linac_status").html("e-");
-				break;
-			    default:
-				$("#linac_status").html(linac_mode);
-			    }  // end switch
-			    
-			    setTimeout(OrbitAccumulator,frequency);
-			} // end if linac mode
+	if(dafne_global[0].hasOwnProperty("linac_mode")){
+	    linac_mode=dafne_global[0].linac_mode;
+	    var ep=dafne_global[0].ep;
+	    var em=dafne_global[0].em;
+	    currentp=ep;
+	    currente=em;
+	    switch (linac_mode) {
+	    case 1:
+		$("#linac_status").html("e+ ("+ep+" mA)");
 
-		    });  // end 3 each
-		} // end if output
-	    }); //end 2 each
-	});  // end 1 each
+		break;
+	    case -1:
+		$("#linac_status").html("e- ("+em+" mA)");
+	
+		break;
+	    default:
+		$("#linac_status").html(linac_mode);
+	    }  // end switch
+	    
+	    
+	}
+	// dafne_global.forEach(function(el) {   
+	//     $.each(el, function(index, value){		    
+	// 	if (index == "output") {
+	// 	    $.each(value, function(ind_out, val_out){
+	// 		if (ind_out == "linac_mode") {
+	// 		    linac_mode = val_out;
+	// 		} // end if linac mode
+
+	// 	    });  // end 3 each
+	// 	} // end if output
+	//     }); //end 2 each
+	// });  // end 1 each
 
 	getBPM();
 	
@@ -99,25 +109,29 @@ function getBPM() {
 	    
 	    cnt++;
 	}); // end 1 each
+	buildPlotsOrbitX();
+	buildPlotsOrbitY();
+	buildPlotsOrbitSum();
+	setTimeout(OrbitAccumulator,frequency);
     }); // end getChannel BPM
     
-    if ($('#containerX').is(':empty')){
-	buildPlotsOrbitX();
-    } else {
-	buildPlotsOrbitX();
-    }
+    // if ($('#containerX').is(':empty')){
+    // 	buildPlotsOrbitX();
+    // } else {
+    // 	buildPlotsOrbitX();
+    // }
     
-    if ($('#containerY').is(':empty')){
-	buildPlotsOrbitY();
-    } else {
-	buildPlotsOrbitY();
-    }
+    // if ($('#containerY').is(':empty')){
+    // 	buildPlotsOrbitY();
+    // } else {
+    // 	buildPlotsOrbitY();
+    // }
     
-    if ($('#containerSum').is(':empty')){
-	buildPlotsOrbitSum();
-    } else {
-	buildPlotsOrbitSum();
-    } 
+    // if ($('#containerSum').is(':empty')){
+    // 	buildPlotsOrbitSum();
+    // } else {
+    // 	buildPlotsOrbitSum();
+    // } 
 	/*$("input.checkX").attr("disabled", true);
 	$("input.checkY").attr("disabled", true);
 	$("input.checkSUM").attr("disabled", true); */
@@ -1041,3 +1055,117 @@ function loadDataOrbit(name_snap) {
 
 }
 
+
+
+function buildPlotCurrent() {
+    Highcharts.setOptions({
+        global: {
+            useUTC: true
+        }
+    });
+
+   plotLive = new Highcharts.chart('containerCurrent', {
+        chart: {
+            type: 'spline',
+            animation: Highcharts.svg, // don't animate in old IE
+            marginRight: 10,
+            events: {
+                load: function () {
+
+                    // set up the updating of the chart each second
+                    var series = this.series[0];
+                  var seriesP = this.series[1];
+                    setInterval(function () {
+                        var x = (new Date()).getTime(); // current time
+                        series.addPoint([x, currente], true, true);
+                        seriesP.addPoint([x, currentp], true, true);
+                    }, 7500);
+                }
+            }
+        },
+        title: {
+            text: ''
+        },
+        xAxis: {
+            type: 'datetime',
+            tickPixelInterval: 200
+        },
+        yAxis: {
+            title: {
+                text: 'mA'
+            },
+            plotLines: [{
+                value: 0,
+                width: 1,
+                color: 'black'
+            }]
+        },
+        tooltip: {
+            formatter: function () {
+                return '<b>' + this.series.name + '</b><br/>' +
+                    Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '<br/>' +
+                    Highcharts.numberFormat(this.y, 2);
+            }
+        },
+        legend: {
+            enabled: true
+        },
+        exporting: {
+            enabled: true
+        },
+	
+	credits: {
+            enabled: false
+        },
+	
+	
+	plotOptions: {
+	    series: {
+		marker: {
+		    enabled: false
+		}
+	    }
+	},
+	
+        series: [{
+            name: "current e-",
+	    color:"blue",
+            data: (function () {
+                // generate an array of random data
+                var data_ele = [],
+                    time = (new Date()).getTime(),
+                    i;
+
+                for (i = -150; i <= 0; i += 1) {
+                    data_ele.push({
+                        x: time + i * 1000,
+                        y: currente
+                    });
+                }
+                return data_ele;
+            }())
+	    
+        },
+{
+            name: "current e+",
+	    color:"red",
+            data: (function () {
+                // generate an array of random data
+                var data_ele = [],
+                    time = (new Date()).getTime(),
+                    i;
+
+                for (i = -150; i <= 0; i += 1) {
+                    data_ele.push({
+                        x: time + i * 1000,
+                        y: currentp
+                    });
+                }
+                return data_ele;
+            }())
+	    
+        }
+	
+	]
+    });
+} 

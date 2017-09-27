@@ -53,10 +53,10 @@ require_once('header.php');
 						<input type="radio" id="cu-false"/><label for="cu-false" id="choices-diff-labelX">false</label>
 					</div-->
 					
-					<div class="span2" onTablet="span6" onDesktop="span2">
+					<!--div class="span2" onTablet="span6" onDesktop="span2">
 						<input type="radio" name="alive" value="true" id="radio-true" checked="checked"/><label>true</label>
 						<input type="radio" name="alive" value="false" id="radio-false"/><label>false</label>
-					</div>
+					</div-->
 
 					
 					
