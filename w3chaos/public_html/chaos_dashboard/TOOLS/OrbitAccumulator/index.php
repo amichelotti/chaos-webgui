@@ -287,66 +287,66 @@ require_once('../../header.php');
 	
 	<!-- start: JavaScript-->
 
-		<!--script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery-1.9.1.min.js"></script>
-	<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery-migrate-1.0.0.min.js"></script>
+		<!--script src="./js/jquery-1.9.1.min.js"></script>
+	<script src="./js/jquery-migrate-1.0.0.min.js"></script>
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery-ui-1.10.0.custom.min.js"></script>
+		<script src="./js/jquery-ui-1.10.0.custom.min.js"></script>
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.ui.touch-punch.js"></script>
+		<script src="./js/jquery.ui.touch-punch.js"></script>
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/modernizr.js"></script>
+		<script src="./js/modernizr.js"></script>
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/bootstrap.min.js"></script>
+		<script src="./js/bootstrap.min.js"></script>
 	
 	
-		<script src='/chaos_dashboard/TOOLS/OrbitAccumulator/js/fullcalendar.min.js'></script>
+		<script src='./js/fullcalendar.min.js'></script>
 	
-		<script src='/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.dataTables.min.js'></script>
+		<script src='./js/jquery.dataTables.min.js'></script>
 
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/excanvas.js"></script>
-	<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.flot.js"></script>
-	<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.flot.pie.js"></script>
-	<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.flot.stack.js"></script>
-	<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.flot.resize.min.js"></script>
+		<script src="./js/excanvas.js"></script>
+	<script src="./js/jquery.flot.js"></script>
+	<script src="./js/jquery.flot.pie.js"></script>
+	<script src="./js/jquery.flot.stack.js"></script>
+	<script src="./js/jquery.flot.resize.min.js"></script>
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.chosen.min.js"></script>
+		<script src="./js/jquery.chosen.min.js"></script>
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.uniform.min.js"></script>
+		<script src="./js/jquery.uniform.min.js"></script>
 		
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.cleditor.min.js"></script>
+		<script src="./js/jquery.cleditor.min.js"></script>
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.noty.js"></script>
+		<script src="./js/jquery.noty.js"></script>
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.elfinder.min.js"></script>
+		<script src="./js/jquery.elfinder.min.js"></script>
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.raty.min.js"></script>
+		<script src="./js/jquery.raty.min.js"></script>
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.iphone.toggle.js"></script>
+		<script src="./js/jquery.iphone.toggle.js"></script>
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.uploadify-3.1.min.js"></script>
+		<script src="./js/jquery.uploadify-3.1.min.js"></script>
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.gritter.min.js"></script>
+		<script src="./js/jquery.gritter.min.js"></script>
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.imagesloaded.js"></script>
+		<script src="./js/jquery.imagesloaded.js"></script>
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.masonry.min.js"></script>
+		<script src="./js/jquery.masonry.min.js"></script>
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.knob.modified.js"></script>
+		<script src="./js/jquery.knob.modified.js"></script>
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/jquery.sparkline.min.js"></script>
+		<script src="./js/jquery.sparkline.min.js"></script>
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/counter.js"></script>
+		<script src="./js/counter.js"></script>
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/retina.js"></script>
+		<script src="./js/retina.js"></script>
 
 	
-		<script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/custom.js"></script-->
+		<script src="./js/custom.js"></script-->
 		
 		<script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/modules/exporting.js"></script>
 
 		
-		<!--script src="/chaos_dashboard/TOOLS/OrbitAccumulator/js/accumulator.js"></script-->
+		<!--script src="./js/accumulator.js"></script-->
 		<script src="js/accumulator.js"></script>
 
 		

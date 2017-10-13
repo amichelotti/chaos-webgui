@@ -17,13 +17,13 @@
 	<!-- end: Mobile Specific -->
 	
 	<!-- start: CSS -->
-	<!--link id="bootstrap-style" href="/chaos_dashboard/css/bootstrap.min.css" rel="stylesheet">
-	<link href="/chaos_dashboard/css/bootstrap-responsive.min.css" rel="stylesheet"-->
+	<!--link id="bootstrap-style" href="./css/bootstrap.min.css" rel="stylesheet">
+	<link href="./css/bootstrap-responsive.min.css" rel="stylesheet"-->
 		
 		<?php
 			global $main_dir;
-			$main_dir="chaos_dashboard";
-			
+#			$main_dir="chaos_dashboard";
+			$main_dir=".";
 			global $index;
 			$index = "index.php";
 			
@@ -97,73 +97,73 @@
 
 	<!-- start: JavaScript-->
 
-		<!--script src="/chaos_dashboard/js/jquery-1.9.1.min.js"></script>
+		<!--script src="./js/jquery-1.9.1.min.js"></script>
 		
-	<script src="/chaos_dashboard/js/jquery-migrate-1.0.0.min.js"></script>
+	<script src="./js/jquery-migrate-1.0.0.min.js"></script>
 	
-		<script src="/chaos_dashboard/js/jquery-ui-1.10.0.custom.min.js"></script>
+		<script src="./js/jquery-ui-1.10.0.custom.min.js"></script>
 	
-		<script src="/chaos_dashboard/js/jquery.ui.touch-punch.js"></script>
+		<script src="./js/jquery.ui.touch-punch.js"></script>
 	
-		<script src="/chaos_dashboard/js/modernizr.js"></script>
+		<script src="./js/modernizr.js"></script>
 	
-		<script src="/chaos_dashboard/js/bootstrap.min.js"></script>
+		<script src="./js/bootstrap.min.js"></script>
 	
-		<script src="/chaos_dashboard/js/jquery.cookie.js"></script>
+		<script src="./js/jquery.cookie.js"></script>
 	
-		<script src='/chaos_dashboard/js/fullcalendar.min.js'></script>
+		<script src='./js/fullcalendar.min.js'></script>
 	
-		<script src='/chaos_dashboard/js/jquery.dataTables.min.js'></script>
+		<script src='./js/jquery.dataTables.min.js'></script>
 
-		<script src="/chaos_dashboard/js/excanvas.js"></script-->
-	<!--script src="/chaos_dashboard/js/jquery.flot.js"></script>
-	<script src="/chaos_dashboard/js/jquery.flot.pie.js"></script>
-	<script src="/chaos_dashboard/js/jquery.flot.stack.js"></script>
-	<script src="/chaos_dashboard/js/jquery.flot.resize.min.js"></script-->
+		<script src="./js/excanvas.js"></script-->
+	<!--script src="./js/jquery.flot.js"></script>
+	<script src="./js/jquery.flot.pie.js"></script>
+	<script src="./js/jquery.flot.stack.js"></script>
+	<script src="./js/jquery.flot.resize.min.js"></script-->
 	
-		<!--script src="/chaos_dashboard/js/jquery.chosen.min.js"></script>
+		<!--script src="./js/jquery.chosen.min.js"></script>
 	
-		<script src="/chaos_dashboard/js/jquery.uniform.min.js"></script>
+		<script src="./js/jquery.uniform.min.js"></script>
 		
-		<script src="/chaos_dashboard/js/jquery.cleditor.min.js"></script>
+		<script src="./js/jquery.cleditor.min.js"></script>
 	
-		<script src="/chaos_dashboard/js/jquery.noty.js"></script>
+		<script src="./js/jquery.noty.js"></script>
 	
-		<script src="/chaos_dashboard/js/jquery.elfinder.min.js"></script>
+		<script src="./js/jquery.elfinder.min.js"></script>
 	
-		<script src="/chaos_dashboard/js/jquery.raty.min.js"></script>
+		<script src="./js/jquery.raty.min.js"></script>
 	
-		<script src="/chaos_dashboard/js/jquery.iphone.toggle.js"></script>
+		<script src="./js/jquery.iphone.toggle.js"></script>
 	
-		<script src="/chaos_dashboard/js/jquery.uploadify-3.1.min.js"></script>
+		<script src="./js/jquery.uploadify-3.1.min.js"></script>
 	
-		<script src="/chaos_dashboard/js/jquery.gritter.min.js"></script>
+		<script src="./js/jquery.gritter.min.js"></script>
 	
-		<script src="/chaos_dashboard/js/jquery.imagesloaded.js"></script>
+		<script src="./js/jquery.imagesloaded.js"></script>
 	
-		<script src="/chaos_dashboard/js/jquery.masonry.min.js"></script>
+		<script src="./js/jquery.masonry.min.js"></script>
 	
-		<script src="/chaos_dashboard/js/jquery.knob.modified.js"></script>
+		<script src="./js/jquery.knob.modified.js"></script>
 	
-		<script src="/chaos_dashboard/js/jquery.sparkline.min.js"></script-->
+		<script src="./js/jquery.sparkline.min.js"></script-->
 
 	
-		<!--script src="/chaos_dashboard/js/counter.js"></script>
+		<!--script src="./js/counter.js"></script>
 	
-		<script src="/chaos_dashboard/js/retina.js"></script>
+		<script src="./js/retina.js"></script>
 
-		<script src="/chaos_dashboard/js/custom.js"></script>
+		<script src="./js/custom.js"></script>
 		
-		<script src="/chaos_dashboard/js/monitoring2.js"></script>
+		<script src="./js/monitoring2.js"></script>
 		
-		<script src="/chaos_dashboard/js/monitoring-alarm.js"></script-->
+		<script src="./js/monitoring-alarm.js"></script-->
 		
 		<!--link href="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js">
 <link href="https://cdn.datatables.net/1.10.13/js/dataTables.bootstrap.min.js"-->
 
 
-		<!--script src="/chaos_dashboard/js/archive.js"></script-->
-		<!--script src="/chaos_dashboard/js/plot-archive.js"></script-->
+		<!--script src="./js/archive.js"></script-->
+		<!--script src="./js/plot-archive.js"></script-->
 		
 		<!--script src="../webChaos/jchaos.js"></script-->
 

@@ -19,7 +19,7 @@ if($pathChaos !== "./head.php" && $pathChaos !== "./menu.php" && $pathChaos !== 
 
 $ths_filename=strtoupper(basename($pathChaos, ".php"));
 echo '<li>';
-echo '<a class="submenu" href="./'.$pathChaos.'"><span>'.$ths_filename.' </span></a>';
+echo '<a class="submenu" href="'.$pathChaos.'"><span>'.$ths_filename.' </span></a>';
 echo '</li>';
 
 
@@ -37,7 +37,7 @@ $th_filename=strtoupper(basename($pathTool));
 echo '<li class="menu-tools">';
 echo '<a style="color: white;" class="submenu" href="./TOOLS/'.$pathTool.'/index.php"><span>'.$th_filename.' </span></a>';
 
-//echo '<a style="color: white;" class="submenu" href="/chaos_dashboard/TOOLS/'.$pathTool.'/index.php" target="_blank"><span>'.$th_filename.' </span></a>';
+//echo '<a style="color: white;" class="submenu" href="./TOOLS/'.$pathTool.'/index.php" target="_blank"><span>'.$th_filename.' </span></a>';
 echo '</li>';
 }
 }
