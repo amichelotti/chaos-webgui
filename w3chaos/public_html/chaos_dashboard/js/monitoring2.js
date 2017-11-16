@@ -10,11 +10,9 @@ var timestamp_never_called = true;
 var refresh_values_never_called = true;
 var ok_cu = [];
 var n; //numero delle righe (ovvero degli elementi in tabella); così applicando il dataset l'id delle righe aumenta
-var device_alarms = [];
-var cu_alarms = [];
-var fat_err = [];
-var dom_err = [];
-var colm_fl_state = [];
+var cu_cache={};
+var row_2_cu=[];
+var row_2_cuid=[];
 
 $(document).ready(function () {
     var cu = [];
@@ -77,15 +75,21 @@ $(document).ready(function () {
             }
         }, 10000);  /*** il setInterval è impostato a 6 secondi perché non può essere minore delq refresh cu ***/
     }
-
+    function encodeName(str){
+        var tt=str.replace(/\//g,"_");
+        return tt;
+    }
     //Funzione per comporre la griglia della tabella dei magneti
     function add_element(arr) {
         $("#main_table_cu").find("tr:gt(0)").remove();
         $(arr).each(function (i) {
-            $("#main_table_cu").append("<tr class='row_element' id='tr_element_" + i + "'><td class='name_element' id='name_element_" + [i] + "'>" + arr[i]
-                    + "</td><td id='status_" + [i] + "'></td><td id='td_busy_" + [i] + "'></td><td id='timestamp_" + [i]
-                    + "'></td><td id='uptime_" + [i] + "'></td><td id='systemtime_" + [i] + "'></td><td id='usertime_" + [i]
-                    + "'></td><td id='command_" + [i] + "'></td><td id='dev_alarm_" + [i] + "'></td><td id='cu_alarm_" + [i] + "'></td></tr>")
+            var cuname=encodeName(arr[i]);
+            row_2_cu[i]=arr[i];
+            row_2_cuid[i]=cuname;
+            $("#main_table_cu").append("<tr class='row_element' id='tr_element_" + i + "'><td class='name_element' id='name_element_" + cuname + "'>" + arr[i]
+                    + "</td><td id='status_" + cuname + "'></td><td id='td_busy_" + cuname + "'><td id='td_bypass_" + cuname + "'></td><td id='timestamp_" +cuname
+                    + "'></td><td id='uptime_" + cuname + "'></td><td id='systemtime_" + cuname + "'></td><td id='usertime_" + cuname
+                    + "'></td><td id='command_" + cuname + "'></td><td id='dev_alarm_" + cuname + "'></td><td id='cu_alarm_" + cuname + "'></td><td id='prate_" + cuname + "'></td></tr>")
         });
 
         //$("#main_table_cu").DataTable();
@@ -106,11 +110,78 @@ $(document).ready(function () {
 	    
 	    
 	} */
-	
         jchaos.getChannel(ok_cu, -1, function (cu) {
 
             try {  // try
+                cu.forEach(function (el) {  // cu forEach
+                    var name_device_db,name_id;
+                    var status;
+                    if (el.hasOwnProperty('health')) {   //if el health
+                        name_device_db=el.health.ndk_uid;
+                        name_id=encodeName(name_device_db);
+                        el.systTime = Number(el.health.nh_st).toFixed(3);
+                        el.usrTime = Number(el.health.nh_ut).toFixed(3);
+                        el.tmStamp = Number(el.health.nh_ts.$numberLong) / 1000;
+                        el.tmUtm = el.health.nh_upt.$numberLong.toHHMMSS();
+                        status=el.health.nh_status;
+                        cu_cache[name_id]=el;
+                        $("#uptime_" + name_id).html(el.tmUtm);
+                        $("#timestamp_" + name_id).html(new Date(1000 * el.tmStamp).toUTCString());
+                        $("#usertime_" + name_id).html( el.usrTime);
+                        $("#systemtime_" + name_id).html(el.systTime);
+                        $("#prate_" + name_id).html(Number(el.health.cuh_dso_prate).toFixed(3));
+                    //    colm_fl_state[name_id]=status;
+                    //    fat_err[name_id]=el.health.nh_lem;
+                   //     dom_err[name_id]=el.health.nh_led;
+                        if (status == 'Start' || status ==  'start') {
+                            $("#status_" + name_id).html('<i class="material-icons verde">power_settings_news</i>');
+                        } if (status == 'Stop' || status == 'stop') {
+                            $("#status_" + name_id).html('<i class="material-icons arancione">power_settings_news</i>');
+                        }  if (status == 'Init' || status == 'init') {
+                            $("#status_" + name_id).html('<i class="material-icons giallo">power_settings_news</i>');
+                        }if (status == 'Deinit' || status == 'deinit') {
+                            $("#status_" + name_id).html('<i class="material-icons rosso">power_settings_news</i>');
+                        } if (status == 'Fatal Error' || status == 'fatal error') {
+                            $("#status_" + name_id).html('<a id="fatalError_' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" onclick="return show_fatal_error(this.id);"><i style="cursor:pointer;" class="material-icons rosso">error</i></a>');
+                        }  else if (status == 'Recoverable Error' || status == 'recoverable error') {
+                            $("#status_" + name_id).html('<a id="recoverError_' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" onclick="return show_fatal_error(this.id);"><i style="cursor:pointer;" class="material-icons rosso">error</i></a>');
+                        } 
+                    }  
+                    if (el.hasOwnProperty('system')) {   //if el system
+                        $("#command_" + name_id).html(el.system.dp_sys_que_cmd);
+                        if (el.system.cudk_bypass_state == false) {
+                            $("#td_bypass_" + name_id).html('<i id="td_bypass_' + name_id + '" class="material-icons verde">usb</i>');
+                        } else {
+                            $("#td_bypass_" + name_id).html('<i id="td_bypass_' + name_id + '" class="material-icons verde">cached</i>');
+                        }
+                    }                           
+                    if (el.hasOwnProperty('output')) {   //if el output
+                        var busy=$.trim(el.output.busy);
+                        var dev_alarm=$.trim(el.output.device_alarm);
+                        var cu_alarm=$.trim(el.output.cu_alarm);
+                        if (dev_alarm == 1) {
+                            $("#dev_alarm_" + name_id).html('<a id="error-' + name_id + '" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" onclick="return show_dev_alarm(this.id);"><i class="material-icons giallo">error</i></a>');
+                        } else if (dev_alarm == 2) {
+                            $("#dev_alarm_" + name_id).html('<a id="error-' + name_id + '" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" onclick="return show_dev_alarm(this.id);"><i class="material-icons rosso">error</i></a>');
+                        } else {
+                            $("#error_" + name_id).remove();
+                        }
 
+                        if (cu_alarm == 1) {
+                          $("#cu_alarm_" + name_id).html('<a id="warning-' + name_id + '" href="#mdl-cu-alarm-cu" role="button" data-toggle="modal" onclick="return show_cu_alarm(this.id);"><i class="material-icons giallo">error_outline</i></a>');
+                        } else if (cu_alarm == 2) {
+                            $("#cu_alarm_" + name_id).html('<a id="warning-' + name_id + '" href="#mdl-cu-alarm-cu" role="button" data-toggle="modal" onclick="return show_cu_alarm(this.id);"><i  class="material-icons rosso">error_outline</i></a>');
+                        } else {
+                            $("#warning_" + name_id).remove();
+                        }
+                        if (busy == 'true') {
+                            $("#td_busy_" + name_id).html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_empty</i>');
+                        } else {
+                            $("#busy_" + name_id).remove();
+                        }
+                    }                        
+                });
+/*
                 refresh_time.length = 0;
                  colm_fl_state = [];
                 var dev_alarm_col = [];  //booleano
@@ -221,7 +292,7 @@ $(document).ready(function () {
                     }
                 }
 
-
+*/
             } catch (e) {
                 //alert("Error status");
                 console.log("errore parsing" + e.message);

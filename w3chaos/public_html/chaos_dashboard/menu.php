@@ -43,3 +43,50 @@ echo '</li>';
 }
 echo '</ul>';
 ?>
+
+<div class="row-fluid">				
+				
+						
+						<div class="row-fluid" id="available_commands">				
+<!-- 							
+							<a class="quick-button-small span2 btn-cmd" id="cmd-init" onclick="Init()">
+								<i class="material-icons verde">trending_up</i>
+								<p class="name-cmd">Init</p>
+							</a>
+							<a class="quick-button-small span2 btn-cmd" id="cmd-start" onclick="Start()">
+								<i class="material-icons verde">play_arrow</i>
+								<p class="name-cmd">Start</p>
+							</a>
+							<a class="quick-button-small span2 btn-cmd" id="cmd-load" onclick="Load()">
+								<i class="material-icons verde">settings_power</i>
+								<p class="name-cmd">Load</p>
+							</a>
+							<a class="quick-button-small span2 btn-cmd" id="cmd-bypassOn" onclick="ByPassON()">
+								<i class="material-icons red">cached</i>
+								<p class="name-cmd">ByPass</p>
+							</a>
+						</div>
+						
+						<div class="row-fluid">
+							<a class="quick-button-small span2 btn-cmd" id="cmd-deinit" onclick="Deinit()">
+								<i class="material-icons giallo">trending_down</i>
+								<p class="name-cmd">Deinit</p>
+							</a>
+							<a class="quick-button-small span2 btn-cmd" id="cmd-stop" onclick="Stop()">
+								<i class="material-icons verde">pause</i>
+								<p class="name-cmd">Stop</p>
+							</a>
+							<a class="quick-button-small span2 btn-cmd" id="cmd-unload" onclick="Unload()">
+								<i class="material-icons red">highlight_off</i>
+								<p class="name-cmd">Unload</p>
+</a>
+							<a class="quick-button-small span2 btn-cmd" id="cmd-bypassOFF" onclick="ByPassOff()">
+								<i class="material-icons verde">usb</i>
+								<p class="name-cmd">ByPass OFF</p>
+							</a>
+						</div> -->
+
+                    </div>
+                    </div>
+   			
+	

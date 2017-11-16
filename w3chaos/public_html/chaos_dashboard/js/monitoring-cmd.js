@@ -18,8 +18,10 @@ var current;
 
 
 //funzione generale per mandare i comandi           
-function sendCommand(command,elem_id) {
-    $.ajaxSetup({async:false});
+function sendCommand(command,parm) {
+    jchaos.sendCUCmd(device,command,parm,null);
+    
+ /*   $.ajaxSetup({async:false});
     console.log(url + "&cmd="+ command)
     //console.log("device: " + device + " command:" + command + " param:" + parm);
     $.get(url + "&cmd="+ command, function(data) {
@@ -37,18 +39,46 @@ function sendCommand(command,elem_id) {
                 $(elem_id).addClass("butt_std");
             }, 3000);
             });
-    $.ajaxSetup({async:true});
+    $.ajaxSetup({async:true});*/
+
 } 
 
 
 function selectElement(ele_num) {
+    var status,bypass;
     $("#tr_element_" + ele_num).addClass("row_selected");
     //current = $("#td_settCurr_" + ele_num).text();
     //$("#new_curr").val(current);
-    device = $("#name_element_" + ele_num).text();
-    $("#cu-cmd").val(device);
+    device = row_2_cu[ele_num];
+    $("#cu-cmd").html(device);
+    status=cu_cache[row_2_cuid[ele_num]].health.nh_status;
+    bypass=cu_cache[row_2_cuid[ele_num]].system.cudk_bypass_state;
+    $("#available_commands").find("a").remove();
+    
+  //  $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-bypassOn' onclick='ByPassON()'><i class='material-icons verde'>cached</i><p class='name-cmd'>ByPass</p></a>");
+    
+    if (status == 'Start' || status ==  'start') {
+        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-stop' onclick='Stop()'><i class='material-icons verde'>pause</i><p class='name-cmd'>Stop</p></a>");
+        
+    } if (status == 'Stop' || status == 'stop') {
+        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-start' onclick='Start()'><i class='material-icons verde'>play_arrow</i><p class='name-cmd'>Start</p></a>");
+        
+    }  if (status == 'Init' || status == 'init') {
+        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-start' onclick='Start()'><i class='material-icons verde'>play_arrow</i><p class='name-cmd'>Start</p></a>");        
+        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-deinit' onclick='Deinit()'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>");
+    } if (status == 'Deinit' || status == 'deinit') {
+        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-init' onclick='Init()'><i class='material-icons verde'>trending_up</i><p class='name-cmd'>Init</p></a>");
+    } 
+
+    if(bypass){
+        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-bypassOFF' onclick='ByPassOFF()'><i class='material-icons verde'>usb</i><p class='name-cmd'>BypassOFF</p></a>");
+        
+    } else {
+        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-bypassON' onclick='ByPassON()'><i class='material-icons verde'>cached</i><p class='name-cmd'>BypassON</p></a>");   
+    }
    // console.log("device "+ device);
-    url = request_prefix + device;
+    //url = request_prefix + device;
+    
 }
 
 
@@ -110,24 +140,35 @@ $(document).keydown(function(e) {
 
 
 function Init() {
-    sendCommand("init","#cmd-init");
+    sendCommand("init","");
+}
+
+function ByPassON() {
+    jchaos.setBypass(device,true,null);
+        
+}
+function ByPassOFF() {
+    jchaos.setBypass(device,false,null);
+}
+function Init() {
+    sendCommand("init","");
 }
 
 function Start() {
-    sendCommand("start","#cmd-start");
+    sendCommand("start","");
 }
 
 
 function Stop() {
-    sendCommand("stop","#cmd-stop");
+    sendCommand("stop","");
 }
 
 function Deinit() {
-    sendCommand("deinit","#cmd-deinit");
+    sendCommand("deinit","");
 }
 
 function Load() {
-    sendCommand("load","#cmd-load");
+    sendCommand("load","");
 }
 
 /*function Unload() {

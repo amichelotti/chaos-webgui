@@ -1,7 +1,7 @@
 function show_fatal_error(id) {
-    var id_fatal_error = id.split("_")[1];
-    var name_cu_fe = $("#name_element_" + id_fatal_error).text();
-    decodeFatalError(name_cu_fe,colm_fl_state[id_fatal_error],fat_err[id_fatal_error],dom_err[id_fatal_error]);    
+    var id_fatal_error = id.split("-")[1];
+    //var name_cu_fe = $("#name_element_" + id_fatal_error).text();
+    decodeFatalError(cu_cache[id_fatal_error].health.ndk_uid,cu_cache[id_fatal_error].health.nh_lem,cu_cache[id_fatal_error].health.nh_led);    
 }
 
 function decodeFatalError(nameCu,status_msg,FEmessagge,domMessage) {
@@ -16,8 +16,8 @@ function decodeFatalError(nameCu,status_msg,FEmessagge,domMessage) {
 
 
 function show_dev_alarm(id) {
-    var id_device_alarm = id.split("_")[1];
-    decodeDeviceAlarm(device_alarms[id_device_alarm]);   
+    var id_device_alarm = id.split("-")[1];
+    decodeDeviceAlarm(cu_cache[id_device_alarm].device_alarms);   
 }
     
     
@@ -43,8 +43,8 @@ function decodeDeviceAlarm(dev_alarm) {
 
 
 function show_cu_alarm(id) {
-    var id_cu_alarm = id.split("_")[1];
-    decodeCUAlarm(cu_alarms[id_cu_alarm]);   
+    var id_cu_alarm = id.split('-')[1];
+    decodeCUAlarm(cu_cache[id_cu_alarm].cu_alarms);   
 }
     
     
