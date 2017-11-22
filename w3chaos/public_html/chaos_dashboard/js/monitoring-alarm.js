@@ -69,54 +69,18 @@ function decodeCUAlarm(cu_alarm) {
 }
 
 
-function openViewIO(cu) {
-    $("#table_cu_in").find("tr:gt(0)").remove();
-    $("#table_cu_out").find("tr:gt(0)").remove();
-     // jchaos.getChannel(cu, -1, function (datavalue) {   //risposta
+function openViewIO() {
+    $("#name-cu-io").html(selected_device.health.ndk_uid)
+    
+    $('#json-renderer').jsonViewer(selected_device,{
+        collapsed: false,
+        withQuotes: true
 
-     // console.log("datavlaueee "  + "cuccc " + cu);
-      
-    $.get("http://" +  url_server + ":" + n_port +"/CU?dev="+ cu + "&cmd=channel&parm=-1", function(datavalue,textStatus) {
-	
-	var old_str = datavalue.replace(/\$numberLong/g, 'numberLong');
-	//console.log("datavalue " + datavalue);
-	var cu_data = $.parseJSON(old_str);
-	
-	var output_data = cu_data[0].output;
-	
-	var input_data = cu_data[0].input;	
-	
-	$("#name-cu-io").html(cu);	
-	
-	var textToInsertOut = '';
-	$.each(output_data, function(key, value) {
-	    
-	    if(typeof value =='object') {
-		$.each(value, function(key, value){
-		    textToInsertOut  += '<tr><td>' + key + '</td><td>'+ value+'</td></tr>';
-		});
-	    } else
-	    
-	    textToInsertOut  += '<tr><td>' + key + '</td><td>'+ value+'</td></tr>';
-	});
-	$("#table_cu_out").append(textToInsertOut);	
-	
-	var textToInsertIn = '';
-	$.each(input_data, function(key, value) {
-	    
-	    if(typeof value =='object') {
-		$.each(value, function(key, value){
-		    textToInsertIn  += '<tr><td>' + key + '</td><td>'+ value+'</td></tr>';
-		});
-	    } else
-	    textToInsertIn  += '<tr><td>' + key + '</td><td>'+ value+'</td></tr>';
-	});
-	$("#table_cu_in").append(textToInsertIn);
-
+   });
 	
 	$("#mdl-io-cu").modal()
     
-    });
+
 }
 
 $(document).on("click", ".name_element", function(e) {
@@ -129,7 +93,6 @@ $(document).on("click", ".name_element", function(e) {
 	   num_row = $(this).parent().index();
       //  num_row = this.rowIndex;
       //  num_row = num_row - 1;  // per far partire il conteggio da 1 e non da 0
-	name_cu = $("#name_element_" + num_row).text();
-	openViewIO(name_cu);
+	openViewIO();
     }
 });

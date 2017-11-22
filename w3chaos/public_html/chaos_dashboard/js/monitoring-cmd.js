@@ -2,11 +2,9 @@
  * COMANDI DEI MAGNETI AL CLICK DELLA RIGA I-ESIMA
  */
 
-var device;
 //get url al cui-server (webui server)
 var request_prefix = "http://" + location.host + ":8081/CU?dev=";
 // var request_prefix = "http://chaosdev-webui1.chaos.lnf.infn.it:8081/CU?dev="; 
-//var device; // nome del device selezionato
 var url;    // url completa di device per la get al cuiserver
 var num_row = 0;    //n¡ riga selezionata
 var current;
@@ -19,28 +17,7 @@ var current;
 
 //funzione generale per mandare i comandi           
 function sendCommand(command,parm) {
-    jchaos.sendCUCmd(device,command,parm,null);
-    
- /*   $.ajaxSetup({async:false});
-    console.log(url + "&cmd="+ command)
-    //console.log("device: " + device + " command:" + command + " param:" + parm);
-    $.get(url + "&cmd="+ command, function(data) {
-            $(elem_id).removeClass("butt_std");
-            $(elem_id).addClass("butt_ok");
-            setTimeout(function() {
-                $(elem_id).removeClass("butt_ok");
-                $(elem_id).addClass("butt_std");
-            }, 3000);
-    }).fail(function() {
-            $(elem_id).removeClass("butt_std");
-            $(elem_id).addClass("butt_fail");
-            setTimeout(function() {
-                $(elem_id).removeClass("butt_fail");
-                $(elem_id).addClass("butt_std");
-            }, 3000);
-            });
-    $.ajaxSetup({async:true});*/
-
+    jchaos.sendCUCmd(selected_device.health.ndk_uid,command,parm,null);
 } 
 
 
@@ -49,8 +26,8 @@ function selectElement(ele_num) {
     $("#tr_element_" + ele_num).addClass("row_selected");
     //current = $("#td_settCurr_" + ele_num).text();
     //$("#new_curr").val(current);
-    device = row_2_cu[ele_num];
-    $("#cu-cmd").html(device);
+    selected_device = cu_cache[row_2_cuid[ele_num]];
+ //   $("#cu-cmd").html(selected_device);
     status=cu_cache[row_2_cuid[ele_num]].health.nh_status;
     bypass=cu_cache[row_2_cuid[ele_num]].system.cudk_bypass_state;
     $("#available_commands").find("a").remove();
@@ -144,11 +121,11 @@ function Init() {
 }
 
 function ByPassON() {
-    jchaos.setBypass(device,true,null);
+    jchaos.setBypass(selected_device.health.ndk_uid,true,null);
         
 }
 function ByPassOFF() {
-    jchaos.setBypass(device,false,null);
+    jchaos.setBypass(device.health.ndk_uid,false,null);
 }
 function Init() {
     sendCommand("init","");

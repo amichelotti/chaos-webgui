@@ -301,7 +301,18 @@
 			//	console.log("query:"+str_url_cu);
 			jchaos.basicPost("CU",str_url_cu,function(datav){jchaos.lastChannel=datav;handleFunc(datav);});
 		}
-
+		jchaos.getDesc=function(devs,handleFunc){
+			
+						var dev_array=jchaos.convertArray2CSV(devs);
+			
+						if(dev_array==""){
+							handleFunc([{}]);
+							return;
+						}
+						var str_url_cu = "dev="+ dev_array + "&cmd=desc";
+						//	console.log("query:"+str_url_cu);
+						jchaos.basicPost("CU",str_url_cu,function(datav){jchaos.lastChannel=datav;handleFunc(datav);});
+		}
 		jchaos.setBypass=function(dev,value,handleFunc){
 			var opt={
 					"name":	dev,

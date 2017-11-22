@@ -231,26 +231,19 @@ require_once('header.php');
 	<div class="modal hide fade" id="mdl-io-cu">
 		<div class="modal-header">
 			<button type="button" class="close" data-dismiss="modal">X</button>
-			<h3>DATA of <span id="name-cu-io"></span></h3>
+			<h2><span id="name-cu-io"></span></h2>
 		</div>
 		<div class="modal-body">
 			<div class="row-fluid">		
 				<div class="span12">
-					<table class="table table-bordered" id="table_cu_out">						
-						<thead class="box-header green">
-							<tr>
-								<th colspan="2">Output</th>
-							</tr>
-						</thead>
-					</table>
+				<h2>DATASET</span></h2>
 
-					<table class="table table-bordered" id="table_cu_in">						
-						<thead class="box-header green">
-							<tr>
-								<th colspan="2">Input</th>
-							</tr>
-						</thead>
-					</table>
+				<pre id="cu-json-dataset"></pre>
+				</div>
+				<div class="span12">
+				<h2>DESCRIPTION</span></h2>
+
+				<pre id="cu-json-description"></pre>
 				</div>
 			</div>
 		</div>
@@ -258,9 +251,7 @@ require_once('header.php');
 	</div>
 
 
-<script src="<?php echo $main_dir ?>/js/monitoring2.js"></script>
-<script src="<?php echo $main_dir ?>/js/monitoring-alarm.js"></script>
-<script src="<?php echo $main_dir ?>/js/monitoring-cmd.js"></script>	
+<script src="<?php echo $main_dir ?>/js/monitoring.js"></script>
 	
 
 </body>
