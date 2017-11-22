@@ -258,9 +258,9 @@ require_once('header.php');
 	</div>
 
 
-<script src="/<?php echo $main_dir ?>/js/monitoring2.js"></script>
-<script src="/<?php echo $main_dir ?>/js/monitoring-alarm.js"></script>
-<script src="/<?php echo $main_dir ?>/js/monitoring-cmd.js"></script>	
+<script src="<?php echo $main_dir ?>/js/monitoring2.js"></script>
+<script src="<?php echo $main_dir ?>/js/monitoring-alarm.js"></script>
+<script src="<?php echo $main_dir ?>/js/monitoring-cmd.js"></script>	
 	
 
 </body>
