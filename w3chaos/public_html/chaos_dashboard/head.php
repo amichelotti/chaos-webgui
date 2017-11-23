@@ -74,6 +74,7 @@
 			//echo '<script src="'.$main_dir.'/js/monitoring-alarm.js"></script>';
 			echo '<script src="'.$main_dir.'/js/jchaos.js"></script>';	
 			echo '<script src="'.$main_dir.'/js/json-viewer/jquery.json-viewer.js"></script>';
+			echo '<script src="'.$main_dir.'/js/chaos-widget/chaos-ctrl.js"></script>';
 			
 			//<script src="js/plotly-latest.min.js"></script>
 			//<link href="js/json-viewer/jquery.json-viewer.css" type="text/css" rel="stylesheet" />

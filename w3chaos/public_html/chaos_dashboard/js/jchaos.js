@@ -299,6 +299,9 @@
 			}
 			var str_url_cu = "dev="+ dev_array + "&cmd=channel&parm="+channel_id;
 			//	console.log("query:"+str_url_cu);
+			if((typeof handleFunc !== "function" )){
+				return jchaos.basicPost("CU",str_url_cu,null);
+			}
 			jchaos.basicPost("CU",str_url_cu,function(datav){jchaos.lastChannel=datav;handleFunc(datav);});
 		}
 		jchaos.getDesc=function(devs,handleFunc){

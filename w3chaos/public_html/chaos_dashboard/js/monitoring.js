@@ -355,7 +355,7 @@ function selectElement(ele_num) {
     $("#available_commands").find("a").remove();
     
   //  $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-bypassOn' onclick='ByPassON()'><i class='material-icons verde'>cached</i><p class='name-cmd'>ByPass</p></a>");
-    
+   /*  
     if (status == 'Start' || status ==  'start') {
         $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-stop' onclick='Stop()'><i class='material-icons verde'>pause</i><p class='name-cmd'>Stop</p></a>");
         
@@ -374,7 +374,7 @@ function selectElement(ele_num) {
         
     } else {
         $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-bypassON' onclick='ByPassON()'><i class='material-icons verde'>cached</i><p class='name-cmd'>BypassON</p></a>");   
-    }
+    } */
    // console.log("device "+ device);
     //url = request_prefix + device;
     
@@ -532,14 +532,19 @@ function openViewIO() {
         withQuotes: true
 
    });
+   $('#cu-dashboard').chaosDashboard(selected_device.health.ndk_uid,{
+    CUtype:"generic"
+
+});
    jchaos.getDesc(selected_device.health.ndk_uid, function (cu) {
     $('#cu-json-description').jsonViewer(cu,{
         collapsed: true,
         withQuotes: true
 
    });
-   });    
-	$("#mdl-io-cu").modal()
+   });
+   $("#mdl-io-cu").draggable();    
+   $("#mdl-io-cu").modal();
     
 
 }

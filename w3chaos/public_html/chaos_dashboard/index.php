@@ -242,8 +242,11 @@ require_once('header.php');
 				</div>
 				<div class="span12">
 				<h2>DESCRIPTION</span></h2>
-
 				<pre id="cu-json-description"></pre>
+				</div>
+				<div class="span12">
+				<h2>DASHBOARD</span></h2>
+				<div id="cu-dashboard"></div>
 				</div>
 			</div>
 		</div>
