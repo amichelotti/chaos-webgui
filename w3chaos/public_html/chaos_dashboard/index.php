@@ -22,6 +22,7 @@ require_once('header.php');
 						<?php require_once('menu.php'); ?>	
 					</ul>
 				</div>
+				
 			</div>
 			<!-- end: Main Menu -->
 			
@@ -75,14 +76,13 @@ require_once('header.php');
 								<thead class="box-header">
 								  <tr>
 									  <th>Name CU</th>
-									  <th colspan="2">Status</th>
+									  <th colspan="3">Status</th>
 									  <th>Timestamp</th>
 									  <th>Uptime</th>
-									  <th>SystemTime [%]</th>
-									  <th>UserTime [%]</th>
+									  <th colspan="2">Time sys/usr [%]</th>
 									  <th>Command Queue</th>
-									  <th>Alarm Device</th>
-									  <th>Alarm CU</th>
+									  <th colspan="2">Alarms dev/cu</th>
+									  <th>Push rate</th>
 								  </tr>
 								</thead>   
 							</table>            
@@ -92,7 +92,7 @@ require_once('header.php');
 				
 	
 				
-			<div class="row-fluid">				
+<!-- 			<div class="row-fluid">				
 				<div class="box span12 box-cmd">
 					<div class="box-header green">
 						<h3 id="h3-cmd">Commands</h3>
@@ -101,37 +101,44 @@ require_once('header.php');
 						
 						<div class="row-fluid">				
 							<div class="span3 offset1" onTablet="span6" onDesktop="span3">
-								<input class="input focused" id="cu-cmd" name="" type="text" value="">
+								<p class=input focused id="cu-cmd" </p>
+
 							</div>
 							<a class="quick-button-small span1 btn-cmd" id="cmd-init" onclick="Init()">
-								<!--i class="material-icons verde">trending_down</i-->
+								<i class="material-icons verde">trending_up</i>
 								<p class="name-cmd">Init</p>
 							</a>
 							<a class="quick-button-small span1 btn-cmd" id="cmd-start" onclick="Start()">
-								<!--i class="material-icons verde">trending_down</i-->
+								<i class="material-icons verde">play_arrow</i>
 								<p class="name-cmd">Start</p>
 							</a>
 							<a class="quick-button-small span1 btn-cmd" id="cmd-load" onclick="Load()">
-								<!--i class="material-icons verde">trending_down</i-->
+								<i class="material-icons verde">settings_power</i>
 								<p class="name-cmd">Load</p>
 							</a>
-
+							<a class="quick-button-small span1 btn-cmd" id="cmd-bypassOn" onclick="ByPassON()">
+								<i class="material-icons red">cached</i>
+								<p class="name-cmd">ByPass</p>
+							</a>
 						</div>
 						
 						<div class="row-fluid">
 							<a class="quick-button-small span1 btn-cmd offset4" id="cmd-deinit" onclick="Deinit()">
-								<!--i class="material-icons verde">trending_down</i-->
+								<i class="material-icons giallo">trending_down</i>
 								<p class="name-cmd">Deinit</p>
 							</a>
 							<a class="quick-button-small span1 btn-cmd" id="cmd-stop" onclick="Stop()">
-								<!--i class="material-icons verde">trending_down</i-->
+								<i class="material-icons verde">pause</i>
 								<p class="name-cmd">Stop</p>
 							</a>
-							<!--a class="quick-button-small span1 btn-cmd" id="cmd-unload" onclick="Unload()">
-								<i class="material-icons verde">trending_down</i>
+							<a class="quick-button-small span1 btn-cmd" id="cmd-unload" onclick="Unload()">
+								<i class="material-icons red">highlight_off</i>
 								<p class="name-cmd">Unload</p>
-							</a-->
-
+</a>
+							<a class="quick-button-small span1 btn-cmd" id="cmd-bypassOFF" onclick="ByPassOff()">
+								<i class="material-icons verde">usb</i>
+								<p class="name-cmd">ByPass OFF</p>
+							</a>
 						</div>
 
 					</div>
@@ -141,7 +148,7 @@ require_once('header.php');
 			</div><!--/.--/#content.span10---->
 
 	
-		</div><!--/fluid-row-->
+		</div><!--/fluid-row--> -->
 	</div>
 	
 
@@ -224,26 +231,22 @@ require_once('header.php');
 	<div class="modal hide fade" id="mdl-io-cu">
 		<div class="modal-header">
 			<button type="button" class="close" data-dismiss="modal">X</button>
-			<h3>DATA of <span id="name-cu-io"></span></h3>
+			<h2><span id="name-cu-io"></span></h2>
 		</div>
 		<div class="modal-body">
 			<div class="row-fluid">		
 				<div class="span12">
-					<table class="table table-bordered" id="table_cu_out">						
-						<thead class="box-header green">
-							<tr>
-								<th colspan="2">Output</th>
-							</tr>
-						</thead>
-					</table>
+				<h2>DATASET</span></h2>
 
-					<table class="table table-bordered" id="table_cu_in">						
-						<thead class="box-header green">
-							<tr>
-								<th colspan="2">Input</th>
-							</tr>
-						</thead>
-					</table>
+				<pre id="cu-json-dataset"></pre>
+				</div>
+				<div class="span12">
+				<h2>DESCRIPTION</span></h2>
+				<pre id="cu-json-description"></pre>
+				</div>
+				<div class="span12">
+				<h2>DASHBOARD</span></h2>
+				<div id="cu-dashboard"></div>
 				</div>
 			</div>
 		</div>
@@ -251,9 +254,7 @@ require_once('header.php');
 	</div>
 
 
-<script src="/<?php echo $main_dir ?>/js/monitoring2.js"></script>
-<script src="/<?php echo $main_dir ?>/js/monitoring-alarm.js"></script>
-<script src="/<?php echo $main_dir ?>/js/monitoring-cmd.js"></script>	
+<script src="<?php echo $main_dir ?>/js/monitoring.js"></script>
 	
 
 </body>

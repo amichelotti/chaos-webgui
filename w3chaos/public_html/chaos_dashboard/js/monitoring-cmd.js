@@ -2,11 +2,9 @@
  * COMANDI DEI MAGNETI AL CLICK DELLA RIGA I-ESIMA
  */
 
-var device;
 //get url al cui-server (webui server)
 var request_prefix = "http://" + location.host + ":8081/CU?dev=";
 // var request_prefix = "http://chaosdev-webui1.chaos.lnf.infn.it:8081/CU?dev="; 
-//var device; // nome del device selezionato
 var url;    // url completa di device per la get al cuiserver
 var num_row = 0;    //n¡ riga selezionata
 var current;
@@ -18,37 +16,46 @@ var current;
 
 
 //funzione generale per mandare i comandi           
-function sendCommand(command,elem_id) {
-    $.ajaxSetup({async:false});
-    console.log(url + "&cmd="+ command)
-    //console.log("device: " + device + " command:" + command + " param:" + parm);
-    $.get(url + "&cmd="+ command, function(data) {
-            $(elem_id).removeClass("butt_std");
-            $(elem_id).addClass("butt_ok");
-            setTimeout(function() {
-                $(elem_id).removeClass("butt_ok");
-                $(elem_id).addClass("butt_std");
-            }, 3000);
-    }).fail(function() {
-            $(elem_id).removeClass("butt_std");
-            $(elem_id).addClass("butt_fail");
-            setTimeout(function() {
-                $(elem_id).removeClass("butt_fail");
-                $(elem_id).addClass("butt_std");
-            }, 3000);
-            });
-    $.ajaxSetup({async:true});
+function sendCommand(command,parm) {
+    jchaos.sendCUCmd(selected_device.health.ndk_uid,command,parm,null);
 } 
 
 
 function selectElement(ele_num) {
+    var status,bypass;
     $("#tr_element_" + ele_num).addClass("row_selected");
     //current = $("#td_settCurr_" + ele_num).text();
     //$("#new_curr").val(current);
-    device = $("#name_element_" + ele_num).text();
-    $("#cu-cmd").val(device);
+    selected_device = cu_cache[row_2_cuid[ele_num]];
+ //   $("#cu-cmd").html(selected_device);
+    status=cu_cache[row_2_cuid[ele_num]].health.nh_status;
+    bypass=cu_cache[row_2_cuid[ele_num]].system.cudk_bypass_state;
+    $("#available_commands").find("a").remove();
+    
+  //  $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-bypassOn' onclick='ByPassON()'><i class='material-icons verde'>cached</i><p class='name-cmd'>ByPass</p></a>");
+    
+    if (status == 'Start' || status ==  'start') {
+        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-stop' onclick='Stop()'><i class='material-icons verde'>pause</i><p class='name-cmd'>Stop</p></a>");
+        
+    } if (status == 'Stop' || status == 'stop') {
+        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-start' onclick='Start()'><i class='material-icons verde'>play_arrow</i><p class='name-cmd'>Start</p></a>");
+        
+    }  if (status == 'Init' || status == 'init') {
+        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-start' onclick='Start()'><i class='material-icons verde'>play_arrow</i><p class='name-cmd'>Start</p></a>");        
+        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-deinit' onclick='Deinit()'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>");
+    } if (status == 'Deinit' || status == 'deinit') {
+        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-init' onclick='Init()'><i class='material-icons verde'>trending_up</i><p class='name-cmd'>Init</p></a>");
+    } 
+
+    if(bypass){
+        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-bypassOFF' onclick='ByPassOFF()'><i class='material-icons verde'>usb</i><p class='name-cmd'>BypassOFF</p></a>");
+        
+    } else {
+        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-bypassON' onclick='ByPassON()'><i class='material-icons verde'>cached</i><p class='name-cmd'>BypassON</p></a>");   
+    }
    // console.log("device "+ device);
-    url = request_prefix + device;
+    //url = request_prefix + device;
+    
 }
 
 
@@ -110,24 +117,35 @@ $(document).keydown(function(e) {
 
 
 function Init() {
-    sendCommand("init","#cmd-init");
+    sendCommand("init","");
+}
+
+function ByPassON() {
+    jchaos.setBypass(selected_device.health.ndk_uid,true,null);
+        
+}
+function ByPassOFF() {
+    jchaos.setBypass(device.health.ndk_uid,false,null);
+}
+function Init() {
+    sendCommand("init","");
 }
 
 function Start() {
-    sendCommand("start","#cmd-start");
+    sendCommand("start","");
 }
 
 
 function Stop() {
-    sendCommand("stop","#cmd-stop");
+    sendCommand("stop","");
 }
 
 function Deinit() {
-    sendCommand("deinit","#cmd-deinit");
+    sendCommand("deinit","");
 }
 
 function Load() {
-    sendCommand("load","#cmd-load");
+    sendCommand("load","");
 }
 
 /*function Unload() {

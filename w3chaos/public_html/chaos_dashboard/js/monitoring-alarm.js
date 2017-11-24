@@ -1,7 +1,7 @@
 function show_fatal_error(id) {
-    var id_fatal_error = id.split("_")[1];
-    var name_cu_fe = $("#name_element_" + id_fatal_error).text();
-    decodeFatalError(name_cu_fe,colm_fl_state[id_fatal_error],fat_err[id_fatal_error],dom_err[id_fatal_error]);    
+    var id_fatal_error = id.split("-")[1];
+    //var name_cu_fe = $("#name_element_" + id_fatal_error).text();
+    decodeFatalError(cu_cache[id_fatal_error].health.ndk_uid,cu_cache[id_fatal_error].health.nh_lem,cu_cache[id_fatal_error].health.nh_led);    
 }
 
 function decodeFatalError(nameCu,status_msg,FEmessagge,domMessage) {
@@ -16,8 +16,8 @@ function decodeFatalError(nameCu,status_msg,FEmessagge,domMessage) {
 
 
 function show_dev_alarm(id) {
-    var id_device_alarm = id.split("_")[1];
-    decodeDeviceAlarm(device_alarms[id_device_alarm]);   
+    var id_device_alarm = id.split("-")[1];
+    decodeDeviceAlarm(cu_cache[id_device_alarm].device_alarms);   
 }
     
     
@@ -43,8 +43,8 @@ function decodeDeviceAlarm(dev_alarm) {
 
 
 function show_cu_alarm(id) {
-    var id_cu_alarm = id.split("_")[1];
-    decodeCUAlarm(cu_alarms[id_cu_alarm]);   
+    var id_cu_alarm = id.split('-')[1];
+    decodeCUAlarm(cu_cache[id_cu_alarm].cu_alarms);   
 }
     
     
@@ -69,54 +69,18 @@ function decodeCUAlarm(cu_alarm) {
 }
 
 
-function openViewIO(cu) {
-    $("#table_cu_in").find("tr:gt(0)").remove();
-    $("#table_cu_out").find("tr:gt(0)").remove();
-     // jchaos.getChannel(cu, -1, function (datavalue) {   //risposta
+function openViewIO() {
+    $("#name-cu-io").html(selected_device.health.ndk_uid)
+    
+    $('#json-renderer').jsonViewer(selected_device,{
+        collapsed: false,
+        withQuotes: true
 
-     // console.log("datavlaueee "  + "cuccc " + cu);
-      
-    $.get("http://" +  url_server + ":" + n_port +"/CU?dev="+ cu + "&cmd=channel&parm=-1", function(datavalue,textStatus) {
-	
-	var old_str = datavalue.replace(/\$numberLong/g, 'numberLong');
-	//console.log("datavalue " + datavalue);
-	var cu_data = $.parseJSON(old_str);
-	
-	var output_data = cu_data[0].output;
-	
-	var input_data = cu_data[0].input;	
-	
-	$("#name-cu-io").html(cu);	
-	
-	var textToInsertOut = '';
-	$.each(output_data, function(key, value) {
-	    
-	    if(typeof value =='object') {
-		$.each(value, function(key, value){
-		    textToInsertOut  += '<tr><td>' + key + '</td><td>'+ value+'</td></tr>';
-		});
-	    } else
-	    
-	    textToInsertOut  += '<tr><td>' + key + '</td><td>'+ value+'</td></tr>';
-	});
-	$("#table_cu_out").append(textToInsertOut);	
-	
-	var textToInsertIn = '';
-	$.each(input_data, function(key, value) {
-	    
-	    if(typeof value =='object') {
-		$.each(value, function(key, value){
-		    textToInsertIn  += '<tr><td>' + key + '</td><td>'+ value+'</td></tr>';
-		});
-	    } else
-	    textToInsertIn  += '<tr><td>' + key + '</td><td>'+ value+'</td></tr>';
-	});
-	$("#table_cu_in").append(textToInsertIn);
-
+   });
 	
 	$("#mdl-io-cu").modal()
     
-    });
+
 }
 
 $(document).on("click", ".name_element", function(e) {
@@ -129,7 +93,6 @@ $(document).on("click", ".name_element", function(e) {
 	   num_row = $(this).parent().index();
       //  num_row = this.rowIndex;
       //  num_row = num_row - 1;  // per far partire il conteggio da 1 e non da 0
-	name_cu = $("#name_element_" + num_row).text();
-	openViewIO(name_cu);
+	openViewIO();
     }
 });
