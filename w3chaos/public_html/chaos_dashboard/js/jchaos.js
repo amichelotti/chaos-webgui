@@ -316,6 +316,9 @@
 						//	console.log("query:"+str_url_cu);
 						jchaos.basicPost("CU",str_url_cu,function(datav){jchaos.lastChannel=datav;handleFunc(datav);});
 		}
+		jchaos.setSched=function(cu,schedule_ms){
+			return jchaos.sendCUCmd(cu,"sched",schedule_ms);
+		}
 		jchaos.setBypass=function(dev,value,handleFunc){
 			var opt={
 					"name":	dev,
@@ -439,9 +442,10 @@
 			if(params!=""){
 				str_url_cu=str_url_cu + "&param="+params;
 			}
-
-			//console.log("sending command:"+str_url_cu);
-			jchaos.basicPost("CU",str_url_cu,handleFunc);
+			if((typeof handleFunc !== "function" )){
+				return jchaos.basicPost("CU",str_url_cu,null);
+			}
+			jchaos.basicPost("CU",str_url_cu,function(datav){jchaos.lastChannel=datav;handleFunc(datav);});
 		}
 
 		jchaos.getHistory=function(devs,channel,start,stop,varname,handleFunc){

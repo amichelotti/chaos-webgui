@@ -69,9 +69,7 @@
 			echo '<script src="'.$main_dir.'/js/jquery.sparkline.min.js"></script>';
 			echo '<script src="'.$main_dir.'/js/counter.js"></script>';
 			echo '<script src="'.$main_dir.'/js/retina.js"></script>';
-			echo '<script src="'.$main_dir.'/js/custom.js"></script>';		
-			//echo '<script src="'.$main_dir.'/js/monitoring2.js"></script>';		
-			//echo '<script src="'.$main_dir.'/js/monitoring-alarm.js"></script>';
+			echo '<script src="'.$main_dir.'/js/custom.js"></script>';
 			echo '<script src="'.$main_dir.'/js/jchaos.js"></script>';	
 			echo '<script src="'.$main_dir.'/js/json-viewer/jquery.json-viewer.js"></script>';
 			echo '<script src="'.$main_dir.'/js/chaos-widget/chaos-ctrl.js"></script>';
