@@ -4,6 +4,10 @@
  */
 (function($){
 
+
+  function setSched(name,value){
+    jchaos.setSched(name,value);
+  }
   /**
    * Check if arg is either an array with at least 1 element, or a dict with at least 1 key
    * @return boolean
@@ -47,15 +51,34 @@ function chaosGeneric(cuid,html){
   if(cu[0].hasOwnProperty('health')) { 
       status=cu[0].health.nh_status;
       var ctrlid=cuid.replace(/\//g,"_");
-      if(cu[0].hasOwnProperty('system')){
-        html+="<div class='span3 statbox yellow' onTablet='span6' onDesktop='span3'>";
-        html+="<h3>Actual scheduling (ms):" + cu[0].system.cudk_thr_sch_delay+"/h3>";
-        html+="<input type='number' oninput='jchaos.setSched(\""+cuid+"\",this.value);'>"; 
-        html+="</div>";    
+      html+='<div class="row-fluid">';
+      html+='<div class="box span12 box-cmd">';
+      html+='<div class="box-header green">';
+      html+='<h3 id="h3-cmd">Commands</h3>';
+      html+='</div>';
+      html+='<div class="box-content">';
+
+      if(cu[0].hasOwnProperty('system')){						
+              html+='<div class="row-fluid">';
+              html+="<div class='span6 statbox'>";
+              html+="<h3>Actual scheduling (us):" + cu[0].system.cudk_thr_sch_delay+"</h3>";
+              html+="</div>";    
+              
+              html+="<div class='span3'>";              
+              //html+="<input type='text' id='setSchedule' onkeypress='setSched(\""+cuid.cuname+"\",this.value);'>"; 
+              html+="<input type='text' class='setSchedule' cuname=\""+cuid+"\">"; 
+            //html+="<input type='text' id='setSchedule' onkeypress='jchaos.setSched(\""+cuid+"\",this.value);'>"; 
+              html+="</div>";
+              html+="</div>";    
+              
       }
+
+						
+					
+    html+='<div class="row-fluid">';    
+    html+="<div class='span12'>";
+    if (status == 'Start' || status ==  'start') {
       
-    	html+="<div class='span3 statbox yellow' onTablet='span6' onDesktop='span3'>";
-      if (status == 'Start' || status ==  'start') {
         html+="<a class='quick-button-small span2 btn-cmd' id='cmd-stop-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"stop\",\"\",null);'><i class='material-icons verde'>pause</i><p class='name-cmd'>Stop</p></a>";
         
     } if (status == 'Stop' || status == 'stop') {
@@ -68,7 +91,7 @@ function chaosGeneric(cuid,html){
     } if (status == 'Deinit' || status == 'deinit') {
       html+="<a class='quick-button-small span2 btn-cmd' id='cmd-init-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"init\",\"\",null);'><i class='material-icons verde'>trending_up</i><p class='name-cmd'>Init</p></a>";
     } 
-    html+="</div>";    
+    
   }
   if(cu[0].hasOwnProperty('system')){
     var bypass;
@@ -79,6 +102,12 @@ function chaosGeneric(cuid,html){
       html+="<a class='quick-button-small span2 btn-cmd' id='cmd-bypassON-"+ctrlid+"'' onclick='jchaos.setBypass(\""+cuid+"\",\"true\",null);'><i class='material-icons verde'>cached</i><p class='name-cmd'>BypassON</p></a>";   
     }
   }
+  html+="</div>";    
+  html+="</div>";    
+  html+="</div>";    
+  html+="</div>";   
+  html+="</div>";    
+  
 return html;
 }
   /**
@@ -100,26 +129,50 @@ return html;
    * @param json: a javascript object
    * @param options: an optional options hash
    */
+  
   $.fn.chaosDashboard = function(cu, options) {
     options = options || {};
 
     /* jQuery chaining */
     return this.each(function() {
-      setInterval(function () {
-      
-       
-    }, 1000);  /***
+    
       /* Transform to HTML */
      var html = chaosCtrl2html(cu, options,'');
      
       /* Insert HTML in target DOM element */
      $(this).html(html);
      $(this).off('mousemove');
-     var last=0, diff;
+     $(this).off('keypress');
+     $(this).on('keypress',function(event){
+      var t = $(event.target);
+      
+       if((event.which == 13)&&(t.attr('class')=="setSchedule")){
+         var name = $(t).attr("cuname");
+         var value=$(t).attr("value");
+        jchaos.setSched(name,value);
+        
+       }
+      
+     });
+  /*  var t=$(this).find("#setSchedule");
+    t.bind('keypress',function(event){
+      var value=t.value;
+
+    });
+    t.setSched=function(name,value){
+      jchaos.setSched(name,value);
+    }*/
+    /*t.off('value');
+    t.on('value',function(event){
+        if(event.which== 13){
+          jchaos.setSched(this.cuname,this.value);
+        }
+     });
+    */  var last=0, diff;
      $(this).on('mousemove',  function(event) {
         diff = event.timeStamp - last;
         last=event.timeStamp;
-        if(diff>999){
+        if(diff>500){
         var html = chaosCtrl2html(cu, options,'');
         
          /* Insert HTML in target DOM element */
