@@ -121,7 +121,7 @@ $(document).ready(function () {
                         name_id=encodeName(name_device_db);
                         el.systTime = Number(el.health.nh_st).toFixed(3);
                         el.usrTime = Number(el.health.nh_ut).toFixed(3);
-                        el.tmStamp = Number(el.health.nh_ts) / 1000;
+                        el.tmStamp = Number(el.health.dpck_ats) / 1000;
 
                         el.tmUtm = toHHMMSS(el.health.nh_upt);
                         status=el.health.nh_status;
