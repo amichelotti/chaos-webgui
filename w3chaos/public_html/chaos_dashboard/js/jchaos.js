@@ -418,6 +418,13 @@
 				});
 			});
 		}
+		jchaos.setAttribute=function(devs,attr,value){
+			//var parm="{\""+attr+"\":\""+value+"\"}";
+			var parm={};
+			parm[attr]=value;
+			return jchaos.sendCUCmd(devs,"attr",JSON.stringify(parm),null);
+		}
+			
 		/*
 		 * Send a command to a set of devices
 		 * 
@@ -440,7 +447,7 @@
 			}
 			var str_url_cu = "dev="+ dev_array + "&cmd="+cmd;
 			if(params!=""){
-				str_url_cu=str_url_cu + "&param="+params;
+				str_url_cu=str_url_cu + "&parm="+params;
 			}
 			if((typeof handleFunc !== "function" )){
 				return jchaos.basicPost("CU",str_url_cu,null);

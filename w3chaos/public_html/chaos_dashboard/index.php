@@ -166,7 +166,7 @@ require_once('header.php');
 		<div class="modal-body">
 			<div class="row-fluid">		
 				<p><b>Health Status:</b><span id="status_message"></span></p>
-				<p><b>Messagge:</b><span id="error_message"></span></p>
+				<p><b>Message:</b><span id="error_message"></span></p>
 				<p><b>Domain:</b><span id="error_domain"></span></p>
 			</div>
 		</div>
@@ -235,15 +235,7 @@ require_once('header.php');
 		</div>
 		<div class="modal-body">
 			<div class="row-fluid">		
-				<div class="span12">
-				<h2>DATASET</span></h2>
-
-				<pre id="cu-json-dataset"></pre>
-				</div>
-				<div class="span12">
-				<h2>DESCRIPTION</span></h2>
-				<pre id="cu-json-description"></pre>
-				</div>
+				
 				<div class="span12">
 				<h2>DASHBOARD</span></h2>
 				<div id="cu-dashboard"></div>

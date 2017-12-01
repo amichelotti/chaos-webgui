@@ -41,7 +41,7 @@
 			echo '<link id="ie9style" href="' .$main_dir. '/css/ie9.css" rel="stylesheet">';
 			
 			echo '<link href="' .$main_dir. '/css/custom_style.css" rel="stylesheet">';
-			echo '<link href="' .$main_dir. '/css/jquery.json-viewer.css" type="text/css" rel="stylesheet" />';;
+			echo '<link href="' .$main_dir. '/js/chaos-widget/chaos-json-ctrl.css" type="text/css" rel="stylesheet" />';;
 			
 			//link script
 			echo '<script src="'.$main_dir.'/js/jquery-1.9.1.min.js"></script>';
@@ -72,6 +72,8 @@
 			echo '<script src="'.$main_dir.'/js/custom.js"></script>';
 			echo '<script src="'.$main_dir.'/js/jchaos.js"></script>';	
 			echo '<script src="'.$main_dir.'/js/json-viewer/jquery.json-viewer.js"></script>';
+			echo '<script src="'.$main_dir.'/js/chaos-widget/chaos-json-ctrl.js"></script>';
+			
 			echo '<script src="'.$main_dir.'/js/chaos-widget/chaos-ctrl.js"></script>';
 			
 			//<script src="js/plotly-latest.min.js"></script>
