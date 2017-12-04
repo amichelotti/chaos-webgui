@@ -14,11 +14,28 @@ var cu_cache={};
 var row_2_cu=[];
 var row_2_cuid=[];
 var selected_device; // 
+var str_search="";
 
 $(document).ready(function () {
     var cu = [];
     var zones = [];
-
+    function show_fatal_error(id) {
+        var id_fatal_error = id.split("-")[1];
+        //var name_cu_fe = $("#name_element_" + id_fatal_error).text();
+        selected_device = cu_cache[id_fatal_error];
+        
+        decodeFatalError(cu_cache[id_fatal_error].health.ndk_uid,cu_cache[id_fatal_error].health.nh_status,cu_cache[id_fatal_error].health.nh_lem,cu_cache[id_fatal_error].health.nh_led);    
+    }
+    
+    function decodeFatalError(nameCu,status_msg,FEmessagge,domMessage) {
+        $("#name-FE-device").html(nameCu);
+        $("#status_message").html(status_msg);
+    
+        $("#error_message").html(FEmessagge);
+        $("#error_domain").html(domMessage);
+    
+        
+    }
     //Funzione per riempire le select(quella delle zone, e quella degli alimentatori)
     function element_sel(field, arr, add_all) {
         $(field).empty();
@@ -104,29 +121,7 @@ $(document).ready(function () {
 
     function updateChannel() {
 	
-	//console.log("tot cu " + ok_cu.length );
-	
-	/*if (ok_cu.length > 10) {
-	    
-	    
-    } */
-    function show_fatal_error(id) {
-        var id_fatal_error = id.split("-")[1];
-        //var name_cu_fe = $("#name_element_" + id_fatal_error).text();
-        selected_device = cu_cache[id_fatal_error];
-        
-        decodeFatalError(cu_cache[id_fatal_error].health.ndk_uid,cu_cache[id_fatal_error].health.nh_status,cu_cache[id_fatal_error].health.nh_lem,cu_cache[id_fatal_error].health.nh_led);    
-    }
     
-    function decodeFatalError(nameCu,status_msg,FEmessagge,domMessage) {
-        $("#name-FE-device").html(nameCu);
-        $("#status_message").html(status_msg);
-    
-        $("#error_message").html(FEmessagge);
-        $("#error_domain").html(domMessage);
-    
-        
-    }
     
         jchaos.getChannel(ok_cu, -1, function (cu) {
 
@@ -152,13 +147,13 @@ $(document).ready(function () {
                     //    colm_fl_state[name_id]=status;
                     //    fat_err[name_id]=el.health.nh_lem;
                    //     dom_err[name_id]=el.health.nh_led;
-                        if (status == 'Start' || status ==  'start') {
+                        if (status == 'Start' ) {
                             $("#status-" + name_id).html('<i class="material-icons verde">play_arrow</i>');
-                        } if (status == 'Stop' || status == 'stop') {
+                        } if (status == 'Stop' ) {
                             $("#status-" + name_id).html('<i class="material-icons arancione">stop</i>');
-                        }  if (status == 'Init' || status == 'init') {
+                        }  if (status == 'Init') {
                             $("#status-" + name_id).html('<i class="material-icons giallo">trending_up</i>');
-                        }if (status == 'Deinit' || status == 'deinit') {
+                        }if (status == 'Deinit' ) {
                             $("#status-" + name_id).html('<i class="material-icons rosso">trending_down</i>');
                         } if (status == 'Fatal Error' || status == 'fatal error') {
                             //$("#status_" + name_id).html('<a id="fatalError_' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" onclick="return show_fatal_error(this.id);"><i style="cursor:pointer;" class="material-icons rosso">error</i></a>');
@@ -173,6 +168,12 @@ $(document).ready(function () {
                            /*$("fatalError_" + name_id).on("click",function(){
                             show_fatal_error(this.id)});
                         } */
+                    } else if(status == "Unload"){
+                        $("#status-" + name_id).html('<i class="material-icons rosso">power</i>');
+                        
+                    } else if(status == "Load"){
+                        $("#status-" + name_id).html('<i class="material-icons verde">power</i>');
+                        
                     }
                     }  
                     if (el.hasOwnProperty('system')) {   //if el system
@@ -219,6 +220,7 @@ $(document).ready(function () {
     //Funzione di riempimento campo dei magneti con i dati chaos, e reload degli stessi
     function worker() {    //function to update request ***
         setInterval(updateChannel, 1000);
+        
     }
 
     function populate_url(cu) {
@@ -261,15 +263,7 @@ $(document).ready(function () {
         element_sel('#zones', zones, 1);
 
     });
-    //Query a chaos per prendere la zona selezionata
-//    $.get("http://" +  url_server + ":" + n_port +"/CU?cmd=search&parm={'name': ' ' , 'what': 'zone', 'alive':true}", function(datazone,textStatus) {
-//        zones = $.parseJSON(datazone);
-//	//zones = datazone;
-//	//zones = datazone.toString();
-//        element_sel('#zones', zones, 1);
-//    });
-//    
-//    //Query a chaos per prendere la lista dei magneti
+
     var cu_list = [];
 
     $("#zones").change(function () {
@@ -292,7 +286,6 @@ $(document).ready(function () {
 
     });
 
-    var str_search="";
 
     //Get per prendere i dati delle cu selezionate
     $("#elements").change(function () {
@@ -351,10 +344,7 @@ $(document).ready(function () {
  * COMANDI DEI MAGNETI AL CLICK DELLA RIGA I-ESIMA
  */
 
-//get url al cui-server (webui server)
-var request_prefix = "http://" + location.host + ":8081/CU?dev=";
-// var request_prefix = "http://chaosdev-webui1.chaos.lnf.infn.it:8081/CU?dev="; 
-var url;    // url completa di device per la get al cuiserver
+
 var num_row = 0;    //n¡ riga selezionata
 var current;
 
@@ -381,29 +371,6 @@ function selectElement(ele_num) {
     bypass=cu_cache[row_2_cuid[ele_num]].system.cudk_bypass_state;
     $("#available_commands").find("a").remove();
     
-  //  $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-bypassOn' onclick='ByPassON()'><i class='material-icons verde'>cached</i><p class='name-cmd'>ByPass</p></a>");
-   /*  
-    if (status == 'Start' || status ==  'start') {
-        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-stop' onclick='Stop()'><i class='material-icons verde'>pause</i><p class='name-cmd'>Stop</p></a>");
-        
-    } if (status == 'Stop' || status == 'stop') {
-        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-start' onclick='Start()'><i class='material-icons verde'>play_arrow</i><p class='name-cmd'>Start</p></a>");
-        
-    }  if (status == 'Init' || status == 'init') {
-        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-start' onclick='Start()'><i class='material-icons verde'>play_arrow</i><p class='name-cmd'>Start</p></a>");        
-        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-deinit' onclick='Deinit()'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>");
-    } if (status == 'Deinit' || status == 'deinit') {
-        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-init' onclick='Init()'><i class='material-icons verde'>trending_up</i><p class='name-cmd'>Init</p></a>");
-    } 
-
-    if(bypass){
-        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-bypassOFF' onclick='ByPassOFF()'><i class='material-icons verde'>usb</i><p class='name-cmd'>BypassOFF</p></a>");
-        
-    } else {
-        $("#available_commands").append("<a class='quick-button-small span2 btn-cmd' id='cmd-bypassON' onclick='ByPassON()'><i class='material-icons verde'>cached</i><p class='name-cmd'>BypassON</p></a>");   
-    } */
-   // console.log("device "+ device);
-    //url = request_prefix + device;
     
 }
 

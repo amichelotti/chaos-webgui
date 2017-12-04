@@ -314,10 +314,13 @@
 						}
 						var str_url_cu = "dev="+ dev_array + "&cmd=desc";
 						//	console.log("query:"+str_url_cu);
+						if((typeof handleFunc !== "function" )){
+							return jchaos.basicPost("CU",str_url_cu,null);
+						}
 						jchaos.basicPost("CU",str_url_cu,function(datav){jchaos.lastChannel=datav;handleFunc(datav);});
 		}
 		jchaos.setSched=function(cu,schedule_ms){
-			return jchaos.sendCUCmd(cu,"sched",schedule_ms);
+			return jchaos.sendCUCmd(cu,"sched",Number(schedule_ms));
 		}
 		jchaos.setBypass=function(dev,value,handleFunc){
 			var opt={
@@ -325,6 +328,15 @@
 					"type": "cu",
 					"what": "set",
 					"value":{"properties":[{"cudk_bypass_state":value}]}
+			};
+			jchaos.mdsBase("node",opt,handleFunc);
+		}
+
+		jchaos.loadUnload=function(dev,value,handleFunc){
+			var opt={
+					"name":	dev,
+					"type": "cu",
+					"what": value?"load":"unload",
 			};
 			jchaos.mdsBase("node",opt,handleFunc);
 		}
@@ -422,7 +434,7 @@
 			//var parm="{\""+attr+"\":\""+value+"\"}";
 			var parm={};
 			parm[attr]=value;
-			return jchaos.sendCUCmd(devs,"attr",JSON.stringify(parm),null);
+			return jchaos.sendCUCmd(devs,"attr",parm,null);
 		}
 			
 		/*
@@ -438,9 +450,11 @@
 				return;
 			}
 			try{
-				JSON.parse(param);
+				if(!(param instanceof Object)){
+					JSON.parse(param);
+					
+				} 
 				params=JSON.stringify(param);
-
 			} catch(e){
 				params=param;
 

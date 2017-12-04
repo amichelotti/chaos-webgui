@@ -153,21 +153,26 @@ function ByPassOFF() {
 function chaosGeneric(cuid,html,options){
   var status;
   var cu=jchaos.getChannel(cuid, -1,null);
+  var desc=jchaos.getDesc(cuid,null);
   if(cu[0].hasOwnProperty('health')) { 
      var jsonhtml;
       status=cu[0].health.nh_status;
       var ctrlid=cuid.replace(/\//g,"_");
       html+='<div class="span12">';
       html+='<h2>DATASET</span></h2>';
-      jsonhtml+=json2html(cu[0], options,cuid);
+      jsonhtml=json2html(cu[0], options,cuid);
       if (isCollapsable(cu[0])){
         jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
       }
       html+=jsonhtml;
       html+='</div>';      
       html+='<div class="span12">';
-      html+='<h2>DESCRIPTION</span></h2>';        
-      html+='<pre id="cu-json-description"></pre>';        
+      html+='<h2>DESCRIPTION</span></h2>';
+      jsonhtml=json2html(desc, options,cuid);
+      if (isCollapsable(desc)){
+        jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
+      }        
+      html+=jsonhtml;      
       html+='</div>'        
               
       html+='<div class="row-fluid">';
@@ -196,33 +201,41 @@ function chaosGeneric(cuid,html,options){
 					
     html+='<div class="row-fluid">';    
     html+="<div class='span12'>";
-    if (status == 'Start' || status ==  'start') {
+    if (status == 'Start') {
       
         html+="<a class='quick-button-small span2 btn-cmd' id='cmd-stop-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"stop\",\"\",null);'><i class='material-icons verde'>pause</i><p class='name-cmd'>Stop</p></a>";
         
-    } else if (status == 'Stop' || status == 'stop') {
+    } else if (status == 'Stop') {
       html+="<a class='quick-button-small span2 btn-cmd' id='cmd-start-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"start\",\"\",null);'><i class='material-icons verde'>play_arrow</i><p class='name-cmd'>Start</p></a>";
       html+="<a class='quick-button-small span2 btn-cmd' id='cmd-deinit-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"deinit\",\"\",null);'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>";
       
-    }  else if (status == 'Init' || status == 'init') {
+    }  else if (status == 'Init') {
       html+="<a class='quick-button-small span2 btn-cmd' id='cmd-start-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"start\",\"\",null);'><i class='material-icons verde'>play_arrow</i><p class='name-cmd'>Start</p></a>";        
       html+="<a class='quick-button-small span2 btn-cmd' id='cmd-deinit-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"deinit\",\"\",null);'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>";
-    } else if (status == 'Deinit' || status == 'deinit') {
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-init-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"init\",\"\",null);'><i class='material-icons verde'>trending_up</i><p class='name-cmd'>Init</p></a>";
+    } else if (status == 'Deinit') {
+      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-deinit-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"init\",\"\",null);'><i class='material-icons verde'>trending_up</i><p class='name-cmd'>Init</p></a>";
+      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-unload-"+ctrlid+"' onclick='jchaos.loadUnload(\""+cuid+"\",false,null);'><i class='material-icons verde'>power</i><p class='name-cmd'>Unload</p></a>";
+      
     } else if (status == 'Recoverable Error') {
       html+="<a class='quick-button-small span2 btn-cmd' id='cmd-init-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"recover\",\"\",null);'><i class='material-icons verde'>build</i><p class='name-cmd'>Recover Error</p></a>";
     } else if(status == "Recoverable Error"){
 
+    } else if (status == "Load") {
+      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-load-"+ctrlid+"' onclick='jchaos.loadUnload(\""+cuid+"\",true,null);'><i class='material-icons green'>power</i><p class='name-cmd'>Unload</p></a>";
+      
+    } else {
+      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-load-"+ctrlid+"' onclick='jchaos.loadUnload(\""+cuid+"\",true,null);'><i class='material-icons red'>power</i><p class='name-cmd'>Load</p></a>";
+      
     }
     
-  }
+  
   if(cu[0].hasOwnProperty('system')){
-    var bypass;
+    var bypass=cu[0].system.cudk_bypass_state;
     if(bypass){
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-bypassOFF-"+ctrlid+"'' onclick='jchaos.setBypass(\""+cuid+"\",\"false\",null);'><i class='material-icons verde'>usb</i><p class='name-cmd'>BypassOFF</p></a>";
+      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-bypassOFF-"+ctrlid+"'' onclick='jchaos.setBypass(\""+cuid+"\",false,null);'><i class='material-icons verde'>usb</i><p class='name-cmd'>BypassOFF</p></a>";
         
     } else {
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-bypassON-"+ctrlid+"'' onclick='jchaos.setBypass(\""+cuid+"\",\"true\",null);'><i class='material-icons verde'>cached</i><p class='name-cmd'>BypassON</p></a>";   
+      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-bypassON-"+ctrlid+"'' onclick='jchaos.setBypass(\""+cuid+"\",true,null);'><i class='material-icons verde'>cached</i><p class='name-cmd'>BypassON</p></a>";   
     }
   }
   html+="</div>";    
@@ -230,7 +243,7 @@ function chaosGeneric(cuid,html,options){
   html+="</div>";    
   html+="</div>";   
   html+="</div>";    
-  
+}
 return html;
 }
   /**
@@ -325,7 +338,8 @@ return html;
        $(this).find('a.json-toggle').click();
      }
     var last=0, diff;
-     $(this).on('mousemove',  function(event) {
+    $(this).off('mousemove');
+    $(this).on('mousemove',  function(event) {
         diff = event.timeStamp - last;
         last=event.timeStamp;
         if(diff>500){
