@@ -201,10 +201,8 @@ function chaosGeneric(cuid,html,options){
 					
     html+='<div class="row-fluid">';    
     html+="<div class='span12'>";
-    if (status == 'Start') {
-      
-        html+="<a class='quick-button-small span2 btn-cmd' id='cmd-stop-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"stop\",\"\",null);'><i class='material-icons verde'>pause</i><p class='name-cmd'>Stop</p></a>";
-        
+    if (status == 'Start') { 
+        html+="<a class='quick-button-small span2 btn-cmd' id='cmd-stop-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"stop\",\"\",null);'><i class='material-icons verde'>pause</i><p class='name-cmd'>Stop</p></a>";      
     } else if (status == 'Stop') {
       html+="<a class='quick-button-small span2 btn-cmd' id='cmd-start-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"start\",\"\",null);'><i class='material-icons verde'>play_arrow</i><p class='name-cmd'>Start</p></a>";
       html+="<a class='quick-button-small span2 btn-cmd' id='cmd-deinit-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"deinit\",\"\",null);'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>";
@@ -213,18 +211,20 @@ function chaosGeneric(cuid,html,options){
       html+="<a class='quick-button-small span2 btn-cmd' id='cmd-start-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"start\",\"\",null);'><i class='material-icons verde'>play_arrow</i><p class='name-cmd'>Start</p></a>";        
       html+="<a class='quick-button-small span2 btn-cmd' id='cmd-deinit-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"deinit\",\"\",null);'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>";
     } else if (status == 'Deinit') {
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-deinit-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"init\",\"\",null);'><i class='material-icons verde'>trending_up</i><p class='name-cmd'>Init</p></a>";
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-unload-"+ctrlid+"' onclick='jchaos.loadUnload(\""+cuid+"\",false,null);'><i class='material-icons verde'>power</i><p class='name-cmd'>Unload</p></a>";
+      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-init-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"init\",\"\",null);'><i class='material-icons verde'>trending_up</i><p class='name-cmd'>Init</p></a>";
+      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-unload-"+ctrlid+"' onclick='jchaos.loadUnload(\""+cuid+"\",false,null);'><i class='material-icons red'>power</i><p class='name-cmd'>Unload</p></a>";
       
     } else if (status == 'Recoverable Error') {
       html+="<a class='quick-button-small span2 btn-cmd' id='cmd-init-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"recover\",\"\",null);'><i class='material-icons verde'>build</i><p class='name-cmd'>Recover Error</p></a>";
-    } else if(status == "Recoverable Error"){
-
+    } else if(status == "Fatal Error"){
+      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-deinit-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"deinit\",\"\",null);'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>";
+      
     } else if (status == "Load") {
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-load-"+ctrlid+"' onclick='jchaos.loadUnload(\""+cuid+"\",true,null);'><i class='material-icons green'>power</i><p class='name-cmd'>Unload</p></a>";
+      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-init-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"init\",\"\",null);'><i class='material-icons verde'>trending_up</i><p class='name-cmd'>Init</p></a>";      
+      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-unload-"+ctrlid+"' onclick='jchaos.loadUnload(\""+cuid+"\",false,null);'><i class='material-icons red'>power</i><p class='name-cmd'>Unload</p></a>";
       
     } else {
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-load-"+ctrlid+"' onclick='jchaos.loadUnload(\""+cuid+"\",true,null);'><i class='material-icons red'>power</i><p class='name-cmd'>Load</p></a>";
+      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-load-"+ctrlid+"' onclick='jchaos.loadUnload(\""+cuid+"\",true,null);'><i class='material-icons green'>power</i><p class='name-cmd'>Load</p></a>";
       
     }
     

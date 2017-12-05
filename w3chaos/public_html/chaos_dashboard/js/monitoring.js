@@ -290,10 +290,11 @@ $(document).ready(function () {
     //Get per prendere i dati delle cu selezionate
     $("#elements").change(function () {
         cu_selected = $("#elements option:selected").val();
-	
+        str_search="";
+        
         if((zone_selected!="ALL")&&(zone_selected != "--Select--")){
             str_search=zone_selected;
-        }
+        } 
         if((cu_selected!="ALL")&&(cu_selected != "--Select--")){
             str_search+="/"+cu_selected;
         }
