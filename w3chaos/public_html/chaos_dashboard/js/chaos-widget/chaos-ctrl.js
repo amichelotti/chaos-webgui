@@ -2,7 +2,7 @@
  * jQuery chaos widget
  * @author: Andrea Michelotti <andrea.michelotti@lnf.infn.it>
  */
-(function($){
+(function ($) {
 
 
   /**
@@ -18,15 +18,124 @@
    * @return boolean
    */
   function isUrl(string) {
-     var regexp = /^(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
-     return regexp.test(string);
+    var regexp = /^(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
+    return regexp.test(string);
   }
 
+  function generateDataSet(cuid) {
+    // var cu=jchaos.getChannel(cuid, -1,null);
+    // var desc=jchaos.getDesc(cuid,null);
+
+    var html = '<div class="modal hide fade " id="mdl-dataset">';
+    html += '<div class="modal-header">';
+    html += '<button type="button" class="close" data-dismiss="modal">×</button>';
+    html += '<h3>DATASET ' +cuid+'</h3>';
+    html += '</div>';
+    html += '<div class="modal-body">';
+    html += '<div id="cu-dataset" class="json-dataset"></div>';
+    html += '</div>';
+    html += '<div class="modal-footer">';
+    html += '<a href="#" class="btn btn-primary" id="dataset-update">Pause</a>';    
+    html += '<a href="#" class="btn btn-primary" id="dataset-close">Close</a>';
+    html += '</div>';
+    html += '</div>';
+    return html;
+  }
+
+  function generateDescription(cuid) {
+    // var cu=jchaos.getChannel(cuid, -1,null);
+    // var desc=jchaos.getDesc(cuid,null);
+
+    var html = '<div class="modal hide fade " id="mdl-description">';
+    html += '<div class="modal-header">';
+    html += '<button type="button" class="close" data-dismiss="modal">×</button>';
+    html += '<h3>Description ' +cuid+'</h3>';
+    html += '</div>';
+    html += '<div class="modal-body">';
+    html += '<div id="cu-description" class="json-dataset"></div>';
+    html += '</div>';
+    html += '<div class="modal-footer">';
+    html += '<a href="#" class="btn btn-primary" id="description-close">Close</a>';
+    html += '</div>';
+    html += '</div>';
+    return html;
+  }
+
+  function generateModalActions(cuid) {
+    var html = generateDataSet(cuid);
+    html +=generateDescription(cuid);
+    html += '<div class="modal hide fade" id="mdl-save">';
+    html += '<div class="modal-header">';
+    html += '<button type="button" class="close" data-dismiss="modal">×</button>';
+    html += '<h3>SAVE DATASET</h3>';
+    html += '</div>';
+    html += '<div class="modal-body">';
+    html += '<div class="control-group">';
+    html += '<label class="control-label" for="nameDataset">Insert name</label>';
+    html += '<div class="controls">';
+    html += '<input class="input-xlarge focused" id="nameDataset" type="text" value="name">';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '<div class="modal-footer">';
+    html += '<a href="#" class="btn btn-primary" id="mdl-save-button">Save</a>';
+    html += '</div>';
+    html += '</div>';
+    return html;
+  }
+
+  function generateActionBox(cuid) {
+    var html = '<div class="box black span4" onTablet="span4" onDesktop="span4">';
+    html += '<div class="box-header">';
+    html += '<h2><i class="halflings-icon white list"></i><span class="break"></span>Actions</h2>';
+    html += '<div class="box-icon">';
+    html += '<a href="#" class="btn-minimize"><i class="halflings-icon white chevron-up"></i></a>';
+    html += '</div>';
+    html += '</div>';
+    html += '<div class="box-content">';
+    html += '<ul class="dashboard-list metro">';
+    html += '<li class="green">';
+    html += '<a href="#mdl-save" role="button" data-toggle="modal">';
+    html += '<i class="icon-save green"></i><span class="opt-menu hidden-tablet">Save</span>';
+    html += '</a>';
+    html += '</li>';
+    html += '<li class="red">';
+    html += '<a href="#mdl-load" role="button" data-toggle="modal" onclick="return openGlobalLoad()">';
+    html += '<i class="icon-file red"></i><span class="opt-menu hidden-tablet">Load</span>';
+    html += '</a>';
+    html += '</li>';
+    html += '<li class="blue">';
+    html += '<a href="#" role="button" onclick="reLoad()">';
+    html += '<i class="icon-repeat blue"></i><span class="opt-menu hidden-tablet">Reload</span>';
+    html += '</a>';
+    html += '</li>';
+    html += '<li class="yellow">';
+    html += '<a href="#">';
+    html += '<i class="icon-print yellow"></i><span class="opt-menu hidden-tablet">Print</span>';
+    html += '</a>';
+    html += '</li>';
+
+    html += '<li class="green">';
+    html += '<a href="#mdl-dataset" role="button" class="show_dataset" data-toggle="modal">';
+    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Dataset</span>';
+    html += '</a>';
+    html += '</li>';
+
+    html += '<li class="red">';
+    html += '<a href="#mdl-description" role="button" class="show_description" data-toggle="modal">';
+    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Description</span>';
+    html += '</a>';
+    html += '</li>';
+    html += '</ul>';
+    html += '</div>';
+    html += '</div>';
+    return html;
+  }
   /**
    * Transform a json object into html representation
    * @return string
    */
-  function json2html(json, options,pather) {
+  function json2html(json, options, pather) {
     var html = '';
     if (typeof json === 'string') {
       /* Escape tags */
@@ -54,7 +163,7 @@
           if (isCollapsable(json[i])) {
             html += '<a href class="json-toggle"></a>';
           }
-          html += json2html(json[i], options,key);
+          html += json2html(json[i], options, key);
           /* Add comma if item is not last */
           if (i < json.length - 1) {
             html += ',';
@@ -74,14 +183,14 @@
         for (var key in json) {
           if (json.hasOwnProperty(key)) {
             html += '<li>';
-            var keyclass="";
-            if(isCollapsable(json[key])){
-            	keyclass="json-string";
+            var keyclass = "";
+            if (isCollapsable(json[key])) {
+              keyclass = "json-string";
             } else {
-            	keyclass="json-key";
+              keyclass = "json-key";
             }
             var keyRepr = options.withQuotes ?
-              '<span class="'+keyclass+'" id='+pather+'-'+key+'>"' + key + '"</span>' : key;
+              '<span class="' + keyclass + '" id=' + pather + '-' + key + '>"' + key + '"</span>' : key;
             /* Add toggle button if item is collapsable */
             if (isCollapsable(json[key])) {
               html += '<a href class="json-toggle">' + keyRepr + '</a>';
@@ -90,9 +199,9 @@
               html += keyRepr;
 
             }
-            html += ': ' + json2html(json[key], options,key);
-            if ((!isCollapsable(json[key]))&& (pather == "input")) {
-                html += '<input class="json-keyinput" id="attr-'+key+'"/>';
+            html += ': ' + json2html(json[key], options, key);
+            if ((!isCollapsable(json[key])) && (pather == "input")) {
+              html += '<input class="json-keyinput" id="attr-' + key + '"/>';
 
             }
             /* Add comma if item is not last */
@@ -110,8 +219,8 @@
     return html;
   }
 
-  function setSched(name,value){
-    jchaos.setSched(name,value);
+  function setSched(name, value) {
+    jchaos.setSched(name, value);
   }
   /**
    * Check if arg is either an array with at least 1 element, or a dict with at least 1 key
@@ -126,126 +235,111 @@
    * @return boolean
    */
   function isUrl(string) {
-     var regexp = /^(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
-     return regexp.test(string);
+    var regexp = /^(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
+    return regexp.test(string);
   }
 
-  function Stop(cuid){
-    jchaos.sendCUCmd(cuid,"stop","",null);
+  function Stop(cuid) {
+    jchaos.sendCUCmd(cuid, "stop", "", null);
   }
-  function Start(cuid){
-    jchaos.sendCUCmd(cuid,"start","",null);
+  function Start(cuid) {
+    jchaos.sendCUCmd(cuid, "start", "", null);
   }
-  function Deinit(cuid){
-    jchaos.sendCUCmd(cuid,"deinit","",null);
+  function Deinit(cuid) {
+    jchaos.sendCUCmd(cuid, "deinit", "", null);
   }
-  function Init(cuid){
-    jchaos.sendCUCmd(cuid,"init","",null);
+  function Init(cuid) {
+    jchaos.sendCUCmd(cuid, "init", "", null);
   }
   function ByPassON(cuid) {
-    jchaos.setBypass(cuid,true,null);
-        
-}
-function ByPassOFF() {
-    jchaos.setBypass(cuid,false,null);
-}
+    jchaos.setBypass(cuid, true, null);
 
-function chaosGeneric(cuid,html,options){
-  var status;
-  var cu=jchaos.getChannel(cuid, -1,null);
-  var desc=jchaos.getDesc(cuid,null);
-  if(cu[0].hasOwnProperty('health')) { 
-     var jsonhtml;
-      status=cu[0].health.nh_status;
-      var ctrlid=cuid.replace(/\//g,"_");
-      html+='<div class="span12">';
-      html+='<h2>DATASET</span></h2>';
-      jsonhtml=json2html(cu[0], options,cuid);
-      if (isCollapsable(cu[0])){
-        jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
-      }
-      html+=jsonhtml;
-      html+='</div>';      
-      html+='<div class="span12">';
-      html+='<h2>DESCRIPTION</span></h2>';
-      jsonhtml=json2html(desc, options,cuid);
-      if (isCollapsable(desc)){
-        jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
-      }        
-      html+=jsonhtml;      
-      html+='</div>'        
-              
-      html+='<div class="row-fluid">';
-      html+='<div class="box span12 box-cmd">';
-      html+='<div class="box-header green">';
-      html+='<h3 id="h3-cmd">Commands</h3>';
-      html+='</div>';
-      html+='<div class="box-content">';
-
-      if(cu[0].hasOwnProperty('system')){						
-              html+='<div class="row-fluid">';
-              html+="<div class='span6 statbox'>";
-              html+="<h3>Actual scheduling (us):" + cu[0].system.cudk_thr_sch_delay+"</h3>";
-              html+="</div>";    
-              
-              html+="<div class='span3'>";              
-              //html+="<input type='text' id='setSchedule' onkeypress='setSched(\""+cuid.cuname+"\",this.value);'>"; 
-              html+="<input type='text' class='setSchedule' cuname=\""+cuid+"\">"; 
-            //html+="<input type='text' id='setSchedule' onkeypress='jchaos.setSched(\""+cuid+"\",this.value);'>"; 
-              html+="</div>";
-              html+="</div>";    
-              
-      }
-
-						
-					
-    html+='<div class="row-fluid">';    
-    html+="<div class='span12'>";
-    if (status == 'Start') { 
-        html+="<a class='quick-button-small span2 btn-cmd' id='cmd-stop-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"stop\",\"\",null);'><i class='material-icons verde'>pause</i><p class='name-cmd'>Stop</p></a>";      
-    } else if (status == 'Stop') {
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-start-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"start\",\"\",null);'><i class='material-icons verde'>play_arrow</i><p class='name-cmd'>Start</p></a>";
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-deinit-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"deinit\",\"\",null);'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>";
-      
-    }  else if (status == 'Init') {
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-start-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"start\",\"\",null);'><i class='material-icons verde'>play_arrow</i><p class='name-cmd'>Start</p></a>";        
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-deinit-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"deinit\",\"\",null);'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>";
-    } else if (status == 'Deinit') {
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-init-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"init\",\"\",null);'><i class='material-icons verde'>trending_up</i><p class='name-cmd'>Init</p></a>";
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-unload-"+ctrlid+"' onclick='jchaos.loadUnload(\""+cuid+"\",false,null);'><i class='material-icons red'>power</i><p class='name-cmd'>Unload</p></a>";
-      
-    } else if (status == 'Recoverable Error') {
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-init-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"recover\",\"\",null);'><i class='material-icons verde'>build</i><p class='name-cmd'>Recover Error</p></a>";
-    } else if(status == "Fatal Error"){
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-deinit-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"deinit\",\"\",null);'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>";
-      
-    } else if (status == "Load") {
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-init-"+ctrlid+"' onclick='jchaos.sendCUCmd(\""+cuid+"\",\"init\",\"\",null);'><i class='material-icons verde'>trending_up</i><p class='name-cmd'>Init</p></a>";      
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-unload-"+ctrlid+"' onclick='jchaos.loadUnload(\""+cuid+"\",false,null);'><i class='material-icons red'>power</i><p class='name-cmd'>Unload</p></a>";
-      
-    } else {
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-load-"+ctrlid+"' onclick='jchaos.loadUnload(\""+cuid+"\",true,null);'><i class='material-icons green'>power</i><p class='name-cmd'>Load</p></a>";
-      
-    }
-    
-  
-  if(cu[0].hasOwnProperty('system')){
-    var bypass=cu[0].system.cudk_bypass_state;
-    if(bypass){
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-bypassOFF-"+ctrlid+"'' onclick='jchaos.setBypass(\""+cuid+"\",false,null);'><i class='material-icons verde'>usb</i><p class='name-cmd'>BypassOFF</p></a>";
-        
-    } else {
-      html+="<a class='quick-button-small span2 btn-cmd' id='cmd-bypassON-"+ctrlid+"'' onclick='jchaos.setBypass(\""+cuid+"\",true,null);'><i class='material-icons verde'>cached</i><p class='name-cmd'>BypassON</p></a>";   
-    }
   }
-  html+="</div>";    
-  html+="</div>";    
-  html+="</div>";    
-  html+="</div>";   
-  html+="</div>";    
-}
-return html;
-}
+  function ByPassOFF() {
+    jchaos.setBypass(cuid, false, null);
+  }
+
+  function chaosGeneric(cu) {
+    var status;
+    var html = "";
+    if (cu.hasOwnProperty('health')) {
+      var cuid = cu.health.ndk_uid;
+      status = cu.health.nh_status;
+      var ctrlid = cuid.replace(/\//g, "_");
+
+
+      html += '<div class="row-fluid">';
+      html += '<div class="box span12 box-cmd">';
+      html += '<div class="box-header green">';
+      html += '<h3 id="h3-cmd">Commands</h3>';
+      html += '</div>';
+      html += '<div class="box-content">';
+
+      if (cu.hasOwnProperty('system')) {
+        html += '<div class="row-fluid">';
+        html += "<div class='span6 statbox'>";
+        html += "<h3>Actual scheduling (us):" + cu.system.cudk_thr_sch_delay + "</h3>";
+        html += "</div>";
+
+        html += "<div class='span3'>";
+        //html+="<input type='text' id='setSchedule' onkeypress='setSched(\""+cuid.cuname+"\",this.value);'>"; 
+        html += "<input type='text' class='setSchedule' cuname=\"" + cuid + "\">";
+        //html+="<input type='text' id='setSchedule' onkeypress='jchaos.setSched(\""+cuid+"\",this.value);'>"; 
+        html += "</div>";
+        html += "</div>";
+
+      }
+
+
+
+      html += '<div class="row-fluid">';
+      html += "<div class='span12'>";
+      if (status == 'Start') {
+        html += "<a class='quick-button-small span2 btn-cmd' id='cmd-stop-" + ctrlid + "' onclick='jchaos.sendCUCmd(\"" + cuid + "\",\"stop\",\"\",null);'><i class='material-icons verde'>pause</i><p class='name-cmd'>Stop</p></a>";
+      } else if (status == 'Stop') {
+        html += "<a class='quick-button-small span2 btn-cmd' id='cmd-start-" + ctrlid + "' onclick='jchaos.sendCUCmd(\"" + cuid + "\",\"start\",\"\",null);'><i class='material-icons verde'>play_arrow</i><p class='name-cmd'>Start</p></a>";
+        html += "<a class='quick-button-small span2 btn-cmd' id='cmd-deinit-" + ctrlid + "' onclick='jchaos.sendCUCmd(\"" + cuid + "\",\"deinit\",\"\",null);'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>";
+
+      } else if (status == 'Init') {
+        html += "<a class='quick-button-small span2 btn-cmd' id='cmd-start-" + ctrlid + "' onclick='jchaos.sendCUCmd(\"" + cuid + "\",\"start\",\"\",null);'><i class='material-icons verde'>play_arrow</i><p class='name-cmd'>Start</p></a>";
+        html += "<a class='quick-button-small span2 btn-cmd' id='cmd-deinit-" + ctrlid + "' onclick='jchaos.sendCUCmd(\"" + cuid + "\",\"deinit\",\"\",null);'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>";
+      } else if (status == 'Deinit') {
+        html += "<a class='quick-button-small span2 btn-cmd' id='cmd-init-" + ctrlid + "' onclick='jchaos.sendCUCmd(\"" + cuid + "\",\"init\",\"\",null);'><i class='material-icons verde'>trending_up</i><p class='name-cmd'>Init</p></a>";
+        html += "<a class='quick-button-small span2 btn-cmd' id='cmd-unload-" + ctrlid + "' onclick='jchaos.loadUnload(\"" + cuid + "\",false,null);'><i class='material-icons red'>power</i><p class='name-cmd'>Unload</p></a>";
+
+      } else if (status == 'Recoverable Error') {
+        html += "<a class='quick-button-small span2 btn-cmd' id='cmd-init-" + ctrlid + "' onclick='jchaos.sendCUCmd(\"" + cuid + "\",\"recover\",\"\",null);'><i class='material-icons verde'>build</i><p class='name-cmd'>Recover Error</p></a>";
+      } else if (status == "Fatal Error") {
+        html += "<a class='quick-button-small span2 btn-cmd' id='cmd-deinit-" + ctrlid + "' onclick='jchaos.sendCUCmd(\"" + cuid + "\",\"deinit\",\"\",null);'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>";
+
+      } else if (status == "Load") {
+        html += "<a class='quick-button-small span2 btn-cmd' id='cmd-init-" + ctrlid + "' onclick='jchaos.sendCUCmd(\"" + cuid + "\",\"init\",\"\",null);'><i class='material-icons verde'>trending_up</i><p class='name-cmd'>Init</p></a>";
+        html += "<a class='quick-button-small span2 btn-cmd' id='cmd-unload-" + ctrlid + "' onclick='jchaos.loadUnload(\"" + cuid + "\",false,null);'><i class='material-icons red'>power</i><p class='name-cmd'>Unload</p></a>";
+
+      } else {
+        html += "<a class='quick-button-small span2 btn-cmd' id='cmd-load-" + ctrlid + "' onclick='jchaos.loadUnload(\"" + cuid + "\",true,null);'><i class='material-icons green'>power</i><p class='name-cmd'>Load</p></a>";
+
+      }
+
+
+      if (cu.hasOwnProperty('system')) {
+        var bypass = cu.system.cudk_bypass_state;
+        if (bypass) {
+          html += "<a class='quick-button-small span2 btn-cmd' id='cmd-bypassOFF-" + ctrlid + "'' onclick='jchaos.setBypass(\"" + cuid + "\",false,null);'><i class='material-icons verde'>usb</i><p class='name-cmd'>BypassOFF</p></a>";
+
+        } else {
+          html += "<a class='quick-button-small span2 btn-cmd' id='cmd-bypassON-" + ctrlid + "'' onclick='jchaos.setBypass(\"" + cuid + "\",true,null);'><i class='material-icons verde'>cached</i><p class='name-cmd'>BypassON</p></a>";
+        }
+      }
+      html += "</div>";
+      html += "</div>";
+      html += "</div>";
+      html += "</div>";
+      html += "</div>";
+    }
+    return html;
+  }
+
   /**
    * Transform a json object into html representation
    * @return string
@@ -253,10 +347,10 @@ return html;
   function chaosCtrl2html(cuid, options) {
     var html = '';
 
-    if(options.CUtype=="generic"){
-      html=chaosGeneric(cuid,html,options);
+    if (options.CUtype == "generic") {
+      html = chaosGeneric(cuid, html, options);
     }
-   
+
     return html;
   }
 
@@ -265,95 +359,165 @@ return html;
    * @param json: a javascript object
    * @param options: an optional options hash
    */
-  
-  $.fn.chaosDashboard = function(cu, options) {
+  $.fn.chaosDashboard = function (cu, options) {
     options = options || {};
-    var collapsed=options.collapsed;
+    var collapsed = options.collapsed;
     /* jQuery chaining */
-    return this.each(function() {
-    
+    return this.each(function () {
+      var notupdate_dataset=1;
       /* Transform to HTML */
-     var html = chaosCtrl2html(cu, options,'');
-     
+      // var html = chaosCtrl2html(cu, options, '');
+      var html = "";
+      /**
+       * fixed part
+       */
+      html += generateModalActions(cu);
+      html += generateActionBox(cu);
+      html += '<div class="cu-generic-control"></div>';
+
+      /*** */
       /* Insert HTML in target DOM element */
-     $(this).html(html);
-     $(this).off('mousemove');
-     $(this).off('keypress');
-     $(this).on('keypress',function(event){
-      var t = $(event.target);
-      
-       if((event.which == 13)&&(t.attr('class')=="setSchedule")){
-         var name = $(t).attr("cuname");
-         var value=$(t).attr("value");
-        jchaos.setSched(name,value);
-        
-       }
-      
-     });
+      $(this).html(html);
+      $(this).off('mousemove');
+      $(this).off('keypress');
+      $(this).on('keypress', function (event) {
+        var t = $(event.target);
 
-     /*** json events */
-     $(this).off('click');
-     $(this).on('click', 'a.json-toggle', function() {
-       var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
-       target.toggle();
-       if (target.is(':visible')) {
-         target.siblings('.json-placeholder').remove();
-       }
-       else {
-         var count = target.children('li').length;
-         var placeholder = count + (count > 1 ? ' items' : ' item');
-         target.after('<a href class="json-placeholder">' + placeholder + '</a>');
-       }
-       return false;
-     });
+        if ((event.which == 13) && (t.attr('class') == "setSchedule")) {
+          var name = $(t).attr("cuname");
+          var value = $(t).attr("value");
+          jchaos.setSched(name, value);
 
-     $(this).on('click', 'span.json-key', function() {
-       var id=this.id;
-      var attr = id.split("-")[1];
+        }
+
+      });
+      $("#mdl-dataset").draggable();
+      $("#mdl-description").draggable();
       
-       $("#attr-"+attr).toggle();
-      //var tt =prompt('type value');
-         return false;
-       });
+      /*** json events */
+      $(this).off('click');
+      $(this).on('click', 'a.json-toggle', function () {
+        var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
+        target.toggle();
+        if (target.is(':visible')) {
+          target.siblings('.json-placeholder').remove();
+        }
+        else {
+          var count = target.children('li').length;
+          var placeholder = count + (count > 1 ? ' items' : ' item');
+          target.after('<a href class="json-placeholder">' + placeholder + '</a>');
+        }
+        return false;
+      });
+      $(this).on('click', 'a.show_dataset', function () {
+        var dataset = jchaos.getChannel(cu, -1, null);
+        var jsonhtml = json2html(dataset[0], options, cu);
+        if (isCollapsable(dataset[0])) {
+          jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
+        }
+
+        $("#cu-dataset").html(jsonhtml);
+      });
      
-     $(this).on('keypress', 'input.json-keyinput', function(e) {
-       if(e.keyCode == 13){
-        var id=this.id;
+      $(this).on('click', 'span.json-key', function () {
+        var id = this.id;
         var attr = id.split("-")[1];
-        jchaos.setAttribute(cu,attr,this.value);
-         $("#"+this.id).toggle();
-         return false;
-       }
-      //var tt =prompt('type value');
-         return this;
-       });
-     /* Simulate click on toggle button when placeholder is clicked */
-     $(this).on('click', 'a.json-placeholder', function() {
-       $(this).siblings('a.json-toggle').click();
-       return false;
-     });
 
-     if (options.collapsed == true) {
-       /* Trigger click to collapse all nodes */
-       $(this).find('a.json-toggle').click();
-     }
-    var last=0, diff;
-    $(this).off('mousemove');
-    $(this).on('mousemove',  function(event) {
-        diff = event.timeStamp - last;
-        last=event.timeStamp;
-        if(diff>500){
-        var html = chaosCtrl2html(cu, options,'');
-        collapsed=!$(this).find('a.json-toggle').is(':visible');
-         /* Insert HTML in target DOM element */
-         $(this).html(html);
-         if (collapsed == true) {
-          /* Trigger click to collapse all nodes */
-          $(this).find('a.json-toggle').click();
+        $("#attr-" + attr).toggle();
+        //var tt =prompt('type value');
+        return false;
+      });
+
+      $(this).on('keypress', 'input.json-keyinput', function (e) {
+        if (e.keyCode == 13) {
+          var id = this.id;
+          var attr = id.split("-")[1];
+          jchaos.setAttribute(cu, attr, this.value);
+          $("#" + this.id).toggle();
+          return false;
         }
+        //var tt =prompt('type value');
+        return this;
+      });
+      /* Simulate click on toggle button when placeholder is clicked */
+      $(this).on('click', 'a.json-placeholder', function () {
+        $(this).siblings('a.json-toggle').click();
+        return false;
+      });
+
+      if (options.collapsed == true) {
+        /* Trigger click to collapse all nodes */
+        $(this).find('a.json-toggle').click();
+      }
+      ///******* control buttons */
+      $("#mdl-save-button").on('click',function(){
+        var value=$("#nameDataset").val();
+        jchaos.snapshot(value,"create",cu,null);
+        $("#mdl-save").modal("hide");
+      });
+
+      $("#dataset-close").on('click',function(){
+        $("#mdl-dataset").modal("hide");
+      });
+      if(notupdate_dataset){
+        $("#dataset-update").html('Update');
+      } else {
+        $("#dataset-update").html('Pause');
+      }
+      $("#dataset-update").on('click',function(){
+        notupdate_dataset=!notupdate_dataset;
+        if(notupdate_dataset){
+          $("#dataset-update").html('Update');
+        } else {
+          $("#dataset-update").html('Pause');
         }
-      }); 
-     
+      });
+      $("#description-close").on('click',function(){
+        $("#mdl-description").modal("hide");
+      });
+
+      $(this).on('click', 'a.show_description', function () {
+        var dataset = jchaos.getDesc(cu,null);
+        var jsonhtml = json2html(dataset, options, cu);
+        if (isCollapsable(dataset)) {
+          jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
+        }
+
+        $("#cu-description").html(jsonhtml);
+      });
+      /****** */
+      $("div.cu-generic-control").html(chaosGeneric(jchaos.getChannel(cu, -1, null)[0]));
+      var interval=setInterval(function () {
+        var data = jchaos.getChannel(cu, -1, null)[0];
+        if($("div.cu-generic-control").is(':visible')==false){
+          clearInterval(interval);  
+        } else {
+          $("div.cu-generic-control").html(chaosGeneric(data));
+          if($("#cu-dataset").is(':visible')&& !notupdate_dataset){
+            var jsonhtml = json2html(data, options, cu);
+            if (isCollapsable(data)) {
+              jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
+            }
+  
+            $("#cu-dataset").html(jsonhtml);
+           
+          }
+        }
+        
+      }, 500);
+     /* $(this).hide(1,function(){
+        clearInterval(interval);
+      });*/
+      /*   $(this).off('mousemove');
+        $(this).on('mousemove', function (event) {
+          diff = event.timeStamp - last;
+          last = event.timeStamp;
+          if (diff > 500) {
+            $("div.cu-generic-control").html(chaosGeneric(jchaos.getChannel(cu, -1, null)[0]));
+  
+          }
+        }); */
+
     });
   };
 })(jQuery);
