@@ -22,6 +22,44 @@
     return regexp.test(string);
   }
 
+  function generateSnapshotTable(cuid) {
+
+    var html = '<div class="modal hide fade" id="mdl-snap">';
+    html += '<div class="modal-header">';
+    html += '<button type="button" class="close" data-dismiss="modal">×</button>';
+    html += '<h3>List Snapshots</h3>';
+    html += '</div>';
+    html += '<div class="modal-body">';
+    html += '<div class="row-fluid">';
+    html += '<div class="box span12">';
+    html += '<div class="box-content">';
+    html += '<table class="table table-bordered" id="table_snap">';
+    html += '<thead class="box-header">';
+    html += '<tr>';
+    html += '<th>Date</th>';
+    html += '<th>Name</th>';
+    html += '</tr>';
+    html += '</thead>';
+    html += '</table>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '<div class="modal-footer">';
+    html += '<div class="control-group">';
+    html += '<label class="control-label" for="nameDataset">Insert name</label>';
+    html += '<div class="controls">';
+    html += '<input class="input-xlarge focused" id="snap_save_name" type="text" value="name">';
+    html += '</div>';
+    html += '</div>';
+    html += '<a href="#" class="btn" id="snap-save">Save</a>';
+    html += '<a href="#" class="btn" id="snap-show">Show</a>';
+    html += '<a href="#" class="btn" id="snap-apply">Apply</a>';
+    html += '<a href="#" class="btn" id="snap-close">Close</a>';
+    html += '</div>';
+    html += '</div>';
+    return html;
+  }
   function generateDataSet(cuid) {
     // var cu=jchaos.getChannel(cuid, -1,null);
     // var desc=jchaos.getDesc(cuid,null);
@@ -29,13 +67,13 @@
     var html = '<div class="modal hide fade " id="mdl-dataset">';
     html += '<div class="modal-header">';
     html += '<button type="button" class="close" data-dismiss="modal">×</button>';
-    html += '<h3>DATASET ' +cuid+'</h3>';
+    html += '<h3>DATASET ' + cuid + '</h3>';
     html += '</div>';
     html += '<div class="modal-body">';
     html += '<div id="cu-dataset" class="json-dataset"></div>';
     html += '</div>';
     html += '<div class="modal-footer">';
-    html += '<a href="#" class="btn btn-primary" id="dataset-update">Pause</a>';    
+    html += '<a href="#" class="btn btn-primary" id="dataset-update">Pause</a>';
     html += '<a href="#" class="btn btn-primary" id="dataset-close">Close</a>';
     html += '</div>';
     html += '</div>';
@@ -49,7 +87,7 @@
     var html = '<div class="modal hide fade " id="mdl-description">';
     html += '<div class="modal-header">';
     html += '<button type="button" class="close" data-dismiss="modal">×</button>';
-    html += '<h3>Description ' +cuid+'</h3>';
+    html += '<h3>Description ' + cuid + '</h3>';
     html += '</div>';
     html += '<div class="modal-body">';
     html += '<div id="cu-description" class="json-dataset"></div>';
@@ -63,24 +101,8 @@
 
   function generateModalActions(cuid) {
     var html = generateDataSet(cuid);
-    html +=generateDescription(cuid);
-    html += '<div class="modal hide fade" id="mdl-save">';
-    html += '<div class="modal-header">';
-    html += '<button type="button" class="close" data-dismiss="modal">×</button>';
-    html += '<h3>SAVE DATASET</h3>';
-    html += '</div>';
-    html += '<div class="modal-body">';
-    html += '<div class="control-group">';
-    html += '<label class="control-label" for="nameDataset">Insert name</label>';
-    html += '<div class="controls">';
-    html += '<input class="input-xlarge focused" id="nameDataset" type="text" value="name">';
-    html += '</div>';
-    html += '</div>';
-    html += '</div>';
-    html += '<div class="modal-footer">';
-    html += '<a href="#" class="btn btn-primary" id="mdl-save-button">Save</a>';
-    html += '</div>';
-    html += '</div>';
+    html += generateDescription(cuid);
+    html += generateSnapshotTable(cuid);
     return html;
   }
 
@@ -94,26 +116,29 @@
     html += '</div>';
     html += '<div class="box-content">';
     html += '<ul class="dashboard-list metro">';
-    html += '<li class="green">';
-    html += '<a href="#mdl-save" role="button" data-toggle="modal">';
-    html += '<i class="icon-save green"></i><span class="opt-menu hidden-tablet">Save</span>';
-    html += '</a>';
-    html += '</li>';
+    /*    html += '<li class="green">';
+       html += '<a href="#mdl-save" role="button" data-toggle="modal">';
+       html += '<i class="icon-save green"></i><span class="opt-menu hidden-tablet">Save</span>';
+       html += '</a>';
+       html += '</li>';
+       html += '<li class="blue">';
+       html += '<a href="#" role="button" onclick="reLoad()">';
+       html += '<i class="icon-repeat blue"></i><span class="opt-menu hidden-tablet">Reload</span>';
+       html += '</a>';
+       html += '</li>';
+       html += '<li class="yellow">';
+       html += '<a href="#">';
+       html += '<i class="icon-print yellow"></i><span class="opt-menu hidden-tablet">Print</span>';
+       html += '</a>';
+       html += '</li>';
+       
+       */
     html += '<li class="red">';
-    html += '<a href="#mdl-load" role="button" data-toggle="modal" onclick="return openGlobalLoad()">';
-    html += '<i class="icon-file red"></i><span class="opt-menu hidden-tablet">Load</span>';
+    html += '<a href="#mdl-snap" role="button" class="show_snapshot" data-toggle="modal">';
+    html += '<i class="icon-file red"></i><span class="opt-menu hidden-tablet">Snapshot</span>';
     html += '</a>';
     html += '</li>';
-    html += '<li class="blue">';
-    html += '<a href="#" role="button" onclick="reLoad()">';
-    html += '<i class="icon-repeat blue"></i><span class="opt-menu hidden-tablet">Reload</span>';
-    html += '</a>';
-    html += '</li>';
-    html += '<li class="yellow">';
-    html += '<a href="#">';
-    html += '<i class="icon-print yellow"></i><span class="opt-menu hidden-tablet">Print</span>';
-    html += '</a>';
-    html += '</li>';
+
 
     html += '<li class="green">';
     html += '<a href="#mdl-dataset" role="button" class="show_dataset" data-toggle="modal">';
@@ -364,10 +389,11 @@
     var collapsed = options.collapsed;
     /* jQuery chaining */
     return this.each(function () {
-      var notupdate_dataset=1;
+      var notupdate_dataset = 1;
       /* Transform to HTML */
       // var html = chaosCtrl2html(cu, options, '');
       var html = "";
+      var snap_selected = "";
       /**
        * fixed part
        */
@@ -378,7 +404,6 @@
       /*** */
       /* Insert HTML in target DOM element */
       $(this).html(html);
-      $(this).off('mousemove');
       $(this).off('keypress');
       $(this).on('keypress', function (event) {
         var t = $(event.target);
@@ -393,8 +418,12 @@
       });
       $("#mdl-dataset").draggable();
       $("#mdl-description").draggable();
-      
-      /*** json events */
+      $("#mdl-snap").draggable();
+
+      /*** 
+       * 
+       * JSON EVENTS
+       * */
       $(this).off('click');
       $(this).on('click', 'a.json-toggle', function () {
         var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
@@ -409,16 +438,8 @@
         }
         return false;
       });
-      $(this).on('click', 'a.show_dataset', function () {
-        var dataset = jchaos.getChannel(cu, -1, null);
-        var jsonhtml = json2html(dataset[0], options, cu);
-        if (isCollapsable(dataset[0])) {
-          jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
-        }
 
-        $("#cu-dataset").html(jsonhtml);
-      });
-     
+
       $(this).on('click', 'span.json-key', function () {
         var id = this.id;
         var attr = id.split("-")[1];
@@ -449,35 +470,113 @@
         /* Trigger click to collapse all nodes */
         $(this).find('a.json-toggle').click();
       }
+
+      /****************************/
       ///******* control buttons */
-      $("#mdl-save-button").on('click',function(){
-        var value=$("#nameDataset").val();
-        jchaos.snapshot(value,"create",cu,null);
-        $("#mdl-save").modal("hide");
+      /*** 
+       * Snapshot handling
+       */
+      $("#snap-save").on('click', function () {
+        var value = $("#snap_save_name").val();
+        if (cu instanceof Array) {
+          jchaos.snapshot(value, "create", cu, null);
+        } else {
+          jchaos.snapshot(value, "create", [cu], null, null);
+        }
+        var snap_table = $(this).find('a.show_snapshot');
+        $(snap_table).click(); // force reload table
       });
 
-      $("#dataset-close").on('click',function(){
+      $("#snap-close").on('click', function () {
+        $("#mdl-snap").modal("hide");
+      });
+
+      $(this).on('click', 'a.show_snapshot', function () {
+      
+        jchaos.search(cu, "snapshotsof", false, function (snaplist) {
+          $("#table_dataset").find("tr:gt(0)").remove();
+          if (snaplist.length == 0) {
+            $('#table_snap').append('<p id="no-results">No results</p>');
+          } else {
+            var dataset;
+            snap_selected = "";
+            snaplist.forEach(function (dataset, index) {
+              var date = new Date(dataset.ts);
+              $('#table_snap').append('<tr> class="row_element" id="' + dataset.name + '" <td>' + date + '</td><td>' + dataset.name + '</td></tr>');
+            });
+            $("#table_snap tbody tr").click(function (e) {
+              var selected = $(this).hasClass("row_selected");
+              $(".row_element").removeClass("row_selected");
+              if (!selected) {
+                $(".row_element").addClass("row_selected");
+                var row_index = $(this).parent().index();
+                snap_selected = $(this).attr("id");
+                $("#snap_save_name").val(snap_save_name);
+              }
+            });
+          }
+        });
+      });
+      
+
+      $("#snap-show").on('click', function (e) {
+        if (snap_selected != "") {
+          var dataset = jchaos.snapshot(snap_selected, "load", "", "", null);
+          var jsonhtml = json2html(dataset, options, cu);
+          if (isCollapsable(dataset)) {
+            jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
+          }
+
+          $("#cu-description").html(jsonhtml);
+          $("#mdl-description").modal("show");
+
+        }
+      });
+      $("#snap-apply").on('click', function (e) {
+        if (snap_selected != "") {
+          jchaos.snapshot(snap, "restore", "", "", null);
+        }
+      });
+      /***********************/
+
+      /*
+      * DATASET HANDLING 
+       */
+      $(this).on('click', 'a.show_dataset', function () {
+        var dataset = jchaos.getChannel(cu, -1, null);
+        var jsonhtml = json2html(dataset[0], options, cu);
+        if (isCollapsable(dataset[0])) {
+          jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
+        }
+
+        $("#cu-dataset").html(jsonhtml);
+      });
+      $("#dataset-close").on('click', function () {
         $("#mdl-dataset").modal("hide");
       });
-      if(notupdate_dataset){
+      if (notupdate_dataset) {
         $("#dataset-update").html('Update');
       } else {
         $("#dataset-update").html('Pause');
       }
-      $("#dataset-update").on('click',function(){
-        notupdate_dataset=!notupdate_dataset;
-        if(notupdate_dataset){
+      $("#dataset-update").on('click', function () {
+        notupdate_dataset = !notupdate_dataset;
+        if (notupdate_dataset) {
           $("#dataset-update").html('Update');
         } else {
           $("#dataset-update").html('Pause');
         }
       });
-      $("#description-close").on('click',function(){
+      /********************/
+      /*********
+       * DESCRIPTION HANDLING
+       */
+      $("#description-close").on('click', function () {
         $("#mdl-description").modal("hide");
       });
 
       $(this).on('click', 'a.show_description', function () {
-        var dataset = jchaos.getDesc(cu,null);
+        var dataset = jchaos.getDesc(cu, null);
         var jsonhtml = json2html(dataset, options, cu);
         if (isCollapsable(dataset)) {
           jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
@@ -485,38 +584,28 @@
 
         $("#cu-description").html(jsonhtml);
       });
-      /****** */
+
+      /************** */
       $("div.cu-generic-control").html(chaosGeneric(jchaos.getChannel(cu, -1, null)[0]));
-      var interval=setInterval(function () {
+      var interval = setInterval(function () {
         var data = jchaos.getChannel(cu, -1, null)[0];
-        if($("div.cu-generic-control").is(':visible')==false){
-          clearInterval(interval);  
+        if ($("div.cu-generic-control").is(':visible') == false) {
+          clearInterval(interval);
         } else {
           $("div.cu-generic-control").html(chaosGeneric(data));
-          if($("#cu-dataset").is(':visible')&& !notupdate_dataset){
+          if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
             var jsonhtml = json2html(data, options, cu);
             if (isCollapsable(data)) {
               jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
             }
-  
+
             $("#cu-dataset").html(jsonhtml);
-           
+
           }
         }
-        
+
       }, 500);
-     /* $(this).hide(1,function(){
-        clearInterval(interval);
-      });*/
-      /*   $(this).off('mousemove');
-        $(this).on('mousemove', function (event) {
-          diff = event.timeStamp - last;
-          last = event.timeStamp;
-          if (diff > 500) {
-            $("div.cu-generic-control").html(chaosGeneric(jchaos.getChannel(cu, -1, null)[0]));
-  
-          }
-        }); */
+
 
     });
   };
