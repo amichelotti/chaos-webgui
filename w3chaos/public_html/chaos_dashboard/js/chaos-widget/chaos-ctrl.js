@@ -502,16 +502,17 @@
             snap_selected = "";
             snaplist.forEach(function (dataset, index) {
               var date = new Date(dataset.ts);
-              $('#table_snap').append('<tr> class="row_element" id="' + dataset.name + '" <td>' + date + '</td><td>' + dataset.name + '</td></tr>');
+              $('#table_snap').append('<tr class="row_element" id="' + dataset.name + '"><td>' + date + '</td><td>' + dataset.name + '</td></tr>');
             });
             $("#table_snap tbody tr").click(function (e) {
               var selected = $(this).hasClass("row_selected");
-              $(".row_element").removeClass("row_selected");
+
+              $(this).removeClass("row_selected");
               if (!selected) {
-                $(".row_element").addClass("row_selected");
+                $(this).addClass("row_selected");
                 var row_index = $(this).parent().index();
                 snap_selected = $(this).attr("id");
-                $("#snap_save_name").val(snap_save_name);
+                $("#snap_save_name").val(snap_selected);
               }
             });
           }
