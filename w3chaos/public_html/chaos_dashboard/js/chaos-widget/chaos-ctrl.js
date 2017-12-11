@@ -12,7 +12,10 @@
   function isCollapsable(arg) {
     return arg instanceof Object && Object.keys(arg).length > 0;
   }
-
+  function encodeName(str){
+    var tt=str.replace(/\//g,"_");
+    return tt;
+}
   /**
    * Check if a string represents a valid url
    * @return boolean
@@ -21,71 +24,88 @@
     var regexp = /^(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
     return regexp.test(string);
   }
-  function generatePStable(){
-    var html='<div class="row-fluid">';		
-    html+='<div class="box span12">';
-    html+='<div class="box-content">';
-    html+='<table class="table table-bordered" id="main_table_magnets">';
-    html+='<thead class="box-header">';
-    html+='<tr>';
-    html+='<th>Element</th>';
-    html+='<th>Readout [A]</th>';
-    html+='<th>Setting [A]</th>';
-    html+='<th colspan="3">Saved</th>';
-    html+='<th colspan="6">Flags</th>';
-    html+='</tr>';
-    html+='</thead>';   
-    html+='</table>';            
-    html+='</div>';
-    html+='</div>';			
-    html+='</div>';
+  function generatePStable(cu) {
+    var html = '<div class="row-fluid">';
+    html += '<div class="box span12">';
+    html += '<div class="box-content">';
+    html += '<table class="table table-bordered" id="main_table_magnets">';
+    html += '<thead class="box-header">';
+    html += '<tr>';
+    html += '<th>Element</th>';
+    html += '<th>Readout [A]</th>';
+    html += '<th>Setting [A]</th>';
+    html += '<th colspan="3">Saved</th>';
+    html += '<th colspan="6">Flags</th>';
+    html += '</tr>';
+    $(cu).each(function (i) {
+      
+      var cuname = encodeName(cu[i]);
+      html += "<tr class='ps_element' id='" + cu[i] + "'><td class='td_element td_name'>" + cuname + "</td><td class='td_element td_readout' id='" + cuname
+        + ".output.current'> 0</td><td class='td_element td_current' id='" + cuname + ".input.current'>0</td><td class='td_element' id='" + cuname
+        + ".saved.current'></td><td class='td_element' id='" + cuname
+        + ".saved.state'></td><td class='td_element' id='" + cuname
+        + ".saved.polarity'></td><td class='td_element' id='" + cuname
+        + ".output.off'></td><td class='td_element' id='" + cuname
+        + ".output.polarity'></td><td class='td_element' id='" + cuname
+        + ".output.local'></td><td class='td_element' id='" + cuname
+        + ".output.busy'></td><td class='td_element' id='" + cuname
+        + ".output.device_alarm'></td><td class='td_element' id='" + cuname
+        + ".output.cu_alarm'></td></tr>";
+    });
+
+    html += '</thead>';
+    html += '</table>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+
     return html;
   }
-  function generatePSCmd(){
-    var html='<div class="row-fluid">';				
-    html+='<div class="box span12 box-cmd">';
-    html+='<div class="box-header green">';
-    html+='<h3 id="h3-cmd">Commands</h3>';
-    html+='</div>';
-    html+='<div class="box-content">';
-    html+='<div class="row-fluid">';				
-    html+='<a class="quick-button-small span1 btn-cmd" id="buttON" onclick=setPowerSupply("On")>';
-    html+='<i class="material-icons verde">trending_down</i>';
-    html+='<p class="name-cmd">On</p>';
-    html+='</a>';
-    html+='<a class="quick-button-small span1 btn-cmd" id="buttOFF" onclick=setPowerSupply("Standby")>';
-    html+='<i class="material-icons rosso">pause_circle_outline</i>';
-    html+='<p class="name-cmd">Standby</p>';
-    html+='</a>';
-    html+='<a class="quick-button-small span1 btn-cmd" id="reset_alarm" onclick=resetAlarm("Reset")>';
-    html+='<i class="material-icons rosso">error</i>';
-    html+='<p class="name-cmd">Reset</p>';
-    html+='</a>';     
-    html+='<div class="span3 offset1" onTablet="span6" onDesktop="span3" id="input-value-mag">';
-    html+='<input class="input focused" id="new_curr" name="setCurrent" type="text" value="[A]">';
-    html+='</div>';
-    html+='<a class="quick-button-small span1 btn-value" id="apply_current" onclick=setCurrent(new_curr.value)>';
-    html+='<p>Apply</p>';
-    html+='</a>';
-    html+='</div>';
-    html+='<div class="row-fluid">';				
-    html+='<a class="quick-button-small span1 btn-cmd" id="buttPOS" onclick=setPolarity("Pos")>';
-    html+='<i class="material-icons rosso">add_circle</i>';
-    html+='<p class="name-cmd">Pos</p>';
-    html+='</a>';
-    html+='<a class="quick-button-small span1 btn-cmd" id="buttOP" onclick=setPolarity("Open")>';							
-    html+='<i class="material-icons">radio_button_unchecked</i>';
-    html+='<p class="name-cmd">Open</p>';
-    html+='</a>';
-    html+='<a class="quick-button-small span1 btn-cmd" id="buttNEG" onclick=setPolarity("Neg")>';							
-    html+='<i class="material-icons blu">remove_circle</i>';
-    html+='<p class="name-cmd">Neg</p>';
-    html+='</a>';
-    html+='</div>';	
-    html+='</div>';
-    html+='</div>';
-    html+='</div>';
-    
+  function generatePSCmd() {
+    var html = '<div class="row-fluid">';
+    html += '<div class="box span12 box-cmd">';
+    html += '<div class="box-header green">';
+    html += '<h3 id="h3-cmd">Commands</h3>';
+    html += '</div>';
+    html += '<div class="box-content">';
+    html += '<div class="row-fluid">';
+    html += '<a class="quick-button-small span1 btn-cmd" id="PSbuttON" >';
+    html += '<i class="material-icons verde">trending_down</i>';
+    html += '<p class="name-cmd">On</p>';
+    html += '</a>';
+    html += '<a class="quick-button-small span1 btn-cmd" id="PSbuttOFF">';
+    html += '<i class="material-icons rosso">pause_circle_outline</i>';
+    html += '<p class="name-cmd">Standby</p>';
+    html += '</a>';
+    html += '<a class="quick-button-small span1 btn-cmd" id="PSreset_alarm" >';
+    html += '<i class="material-icons rosso">error</i>';
+    html += '<p class="name-cmd">Reset</p>';
+    html += '</a>';
+    html += '<div class="span3 offset1" onTablet="span6" onDesktop="span3" id="input-value-mag">';
+    html += '<input class="input focused" id="PSnew_curr" name="setCurrent" type="text" value="[A]">';
+    html += '</div>';
+    html += '<a class="quick-button-small span1 btn-value" id="PSapply_current" >';
+    html += '<p>Apply</p>';
+    html += '</a>';
+    html += '</div>';
+    html += '<div class="row-fluid">';
+    html += '<a class="quick-button-small span1 btn-cmd" id="PSbuttPOS" >';
+    html += '<i class="material-icons rosso">add_circle</i>';
+    html += '<p class="name-cmd">Pos</p>';
+    html += '</a>';
+    html += '<a class="quick-button-small span1 btn-cmd" id="PSbuttOP" >';
+    html += '<i class="material-icons">radio_button_unchecked</i>';
+    html += '<p class="name-cmd">Open</p>';
+    html += '</a>';
+    html += '<a class="quick-button-small span1 btn-cmd" id="PSbuttNEG" >';
+    html += '<i class="material-icons blu">remove_circle</i>';
+    html += '<p class="name-cmd">Neg</p>';
+    html += '</a>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+
     return html;
   }
   function generateSnapshotTable(cuid) {
@@ -355,14 +375,14 @@
     var html = "";
     html += '<div class="row-fluid">';
     html += '<div class="box span12 box-cmd">';
-    
-   
+
+
     if (cu.hasOwnProperty('health')) {
       var cuid = cu.health.ndk_uid;
       status = cu.health.nh_status;
       var ctrlid = cuid.replace(/\//g, "_");
       html += '<div class="box-header green">';
-      html += '<h3 id="h3-cmd">Commands</h3>';
+      html += '<h3 id="h3-cmd">Generic Commands</h3>';
       html += '</div>';
       html += '<div class="box-content">';
 
@@ -425,39 +445,30 @@
       html += "</div>";
       html += "</div>";
       html += "</div>";
-     
+
     } else {
-      html += '<div class="box-header red">';      
+      html += '<div class="box-header red">';
       html += '<h3 id="h3-cmd" style=”color: red; font-weight: bold;">DEAD</h3>';
       html += '</div>';
-      
+
     }
     html += "</div>";
     html += "</div>";
     return html;
   }
 
-  /**
-   * Transform a json object into html representation
-   * @return string
-   */
-  function chaosCtrl2html(cuid, options) {
-    var html = '';
-
-    if (options.CUtype == "generic") {
-      html = chaosGeneric(cuid, html, options);
-    }
-
-    return html;
-  }
-  var snap_selected = "";
   
-  function updateSnapshotTable(cu){
+  var snap_selected = "";
+  var cu_selected = "";
+  var cu_live_selected={};
+  var cu_list=[];
+  function updateSnapshotTable(cu) {
     $("#table_snap").find("tr:gt(0)").remove();
-    $("#snap-apply").hide(); 
-    $("#snap-show").hide(); 
-    $("#snap-delete").hide(); 
-    
+    $("#snap-apply").hide();
+    $("#snap-show").hide();
+    $("#snap-delete").hide();
+    $("#snap-save").show();
+
     jchaos.search(cu, "snapshotsof", false, function (snaplist) {
       if (snaplist.length == 0) {
         $('#table_snap').append('<p id="no-results">No results</p>');
@@ -475,9 +486,9 @@
           $("#snap-apply").show();
           $("#snap-show").show();
           $("#snap-delete").show();
-          
+
           $("#snap_save_name").val(snap_selected);
-          
+
         });
       }
     });
@@ -487,7 +498,7 @@
    * @param json: a javascript object
    * @param options: an optional options hash
    */
-  $.fn.chaosDashboard = function (cu, options) {
+  $.fn.chaosDashboard = function (cuids, options) {
     options = options || {};
     var collapsed = options.collapsed;
     /* jQuery chaining */
@@ -495,12 +506,26 @@
       var notupdate_dataset = 1;
       /* Transform to HTML */
       // var html = chaosCtrl2html(cu, options, '');
+      if (!(cuids instanceof Array)) {
+        cu_selected=cuids;
+        cu_list=[cuids];
+      } else {
+        cu_list=cuids;
+      }
       var html = "";
       /**
        * fixed part
        */
-      html += generateModalActions(cu);
-      html += generateActionBox(cu);
+      html += generateModalActions("");
+      html += generateActionBox("");
+
+      if (options.CUtype.indexOf("SCPowerSupply") != -1) {
+        html += generatePStable(cu_list);
+        
+        html += '<div class="ps-control"></div>';
+
+        // $("div.powersupply-control").html(chaosGeneric(jchaos.getChannel(cu, -1, null)[0]));
+      }
       html += '<div class="cu-generic-control"></div>';
 
       /*** */
@@ -511,9 +536,9 @@
         var t = $(event.target);
 
         if ((event.which == 13) && (t.attr('class') == "setSchedule")) {
-          var name = $(t).attr("cuname");
+        //  var name = $(t).attr("cuname");
           var value = $(t).attr("value");
-          jchaos.setSched(name, value);
+          jchaos.setSched(cu_selected, value);
 
         }
 
@@ -555,7 +580,7 @@
         if (e.keyCode == 13) {
           var id = this.id;
           var attr = id.split("-")[1];
-          jchaos.setAttribute(cu, attr, this.value);
+          jchaos.setAttribute(cu_selected, attr, this.value);
           $("#" + this.id).toggle();
           return false;
         }
@@ -580,17 +605,12 @@
        */
       $("#snap-save").on('click', function () {
         var value = $("#snap_save_name").val();
-        if (cu instanceof Array) {
-          jchaos.snapshot(value, "create", cu, function(){
+       
+        jchaos.snapshot(value, "create", cu_selected, function () {
             updateSnapshotTable(cu);
-            
+
           });
-        } else {
-          jchaos.snapshot(value, "create", [cu], null, function(){
-            updateSnapshotTable(cu);
-            
-          });
-        }
+       
         //var snap_table = $(this).find('a.show_snapshot');
       });
 
@@ -599,31 +619,31 @@
       });
 
       $(this).on('click', 'a.show_snapshot', function () {
-      
-        updateSnapshotTable(cu);
+
+        updateSnapshotTable(cu_selected);
       });
-      
+
       $("#snap-delete").on('click', function (e) {
         if (snap_selected != "") {
-          jchaos.snapshot(snap_selected, "delete", "", "", function(){
-            updateSnapshotTable(cu);
-            
+          jchaos.snapshot(snap_selected, "delete", "", "", function () {
+            updateSnapshotTable(cu_selected);
+
           });
-          
-        }          
-      });      
+
+        }
+      });
       $("#snap-show").on('click', function (e) {
 
         if (snap_selected != "") {
           var dataset = jchaos.snapshot(snap_selected, "load", "", "", null);
-          var jsonhtml = json2html(dataset, options, cu);
+          var jsonhtml = json2html(dataset, options, cu_selected);
           if (isCollapsable(dataset)) {
             jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
           }
-          updateSnapshotTable(cu);
-          
+          updateSnapshotTable(cu_selected);
+
           $("#cu-description").html(jsonhtml);
-          $("#desc_text").html("Snapshot "+snap_selected);
+          $("#desc_text").html("Snapshot " + snap_selected);
           $("#mdl-description").modal("show");
 
         }
@@ -639,8 +659,8 @@
       * DATASET HANDLING 
        */
       $(this).on('click', 'a.show_dataset', function () {
-        var dataset = jchaos.getChannel(cu, -1, null);
-        var jsonhtml = json2html(dataset[0], options, cu);
+        var dataset = jchaos.getChannel(cu_selected, -1, null);
+        var jsonhtml = json2html(dataset[0], options, cu_selected);
         if (isCollapsable(dataset[0])) {
           jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
         }
@@ -672,8 +692,8 @@
       });
 
       $(this).on('click', 'a.show_description', function () {
-        var dataset = jchaos.getDesc(cu, null);
-        var jsonhtml = json2html(dataset, options, cu);
+        var dataset = jchaos.getDesc(cu_selected, null);
+        var jsonhtml = json2html(dataset, options, cu_selected);
         if (isCollapsable(dataset)) {
           jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
         }
@@ -681,17 +701,78 @@
         $("#cu-description").html(jsonhtml);
       });
 
+
+      /**
+       * 
+       * POWER SUPPLY HANDLING
+       */
+      if (options.CUtype.indexOf("SCPowerSupply") != -1) {
+        $("#main_table_magnets tbody tr").click(function (e) {
+          $(".ps_element").removeClass("row_snap_selected");
+          $(this).addClass("row_snap_selected");
+          cu_selected = $(this).attr("id");
+        });
+        
+        $("div.ps-control").html(generatePSCmd(cu_selected));
+        var ps_interval=setInterval(function () {
+          if ($("div.ps-control").is(':visible') == false) {
+            clearInterval(ps_interval);
+          }
+          var datasets=jchaos.getChannel(cu_list,-1,null);
+          datasets.forEach(function(elem){
+                var cuname=encodeName(elem.output.ndk_uid);
+               
+                $("#"+cuname+".output.current").html(elem.output.current);
+                $("#"+cuname+".input.current").html(elem.input.current);    
+                switch(elem.output.polarity){
+                    case 1:
+                        $("#"+cuname+".output.polarity").html('<i class="material-icons rosso">add_circle</i>');
+                        break;
+                    case -1:
+                        $("#"+cuname+".output.polarity").html('<i class="material-icons blu">remove_circle</i>');
+                        break;
+                    case 0:
+                        $("#"+cuname+".output.polarity").html('<i class="material-icons">radio_button_unchecked</i>');
+                        break;
+                
+                }
+
+              
+                  if (elem.output.off == 'false') {
+                      $("#"+cuname+".output.off").html('<i class="material-icons verde">trending_down</i>');
+                  } else if (elem.output.off == 'true') {
+                      $("#"+cuname+".output.off").html('<i class="material-icons rosso">pause_circle_outline</i>');
+                      
+                  }
+              
+                  if (elem.output.busy == 'true') {
+                    $("#"+cuname+".output.busy").html('<i class="material-icon verde">hourglass empty</i>');
+                } else if (elem.output.busy == 'false') {
+                  $("#"+cuname+".output.busy").remove();
+                }
+              
+            
+                  if (elem.output.local == "true") {
+                      $("#"+cuname+".output.local").html('<i class="material-icons rosso">vpn_key</i>');
+                  } else if (elem.output.local  == "false") {
+                      $("#"+cuname+".output.local").remove();
+                  }
+              
+          });
+        },options.Interval);
+      }
+
       /************** */
-      $("div.cu-generic-control").html(chaosGeneric(jchaos.getChannel(cu, -1, null)[0]));
+      $("div.cu-generic-control").html(chaosGeneric(jchaos.getChannel(cu_selected, -1, null)[0]));
       var interval = setInterval(function () {
-        var data = jchaos.getChannel(cu, -1, null)[0];
+        cu_live_selected = jchaos.getChannel(cu_selected, -1, null)[0];
         if ($("div.cu-generic-control").is(':visible') == false) {
           clearInterval(interval);
         } else {
-          $("div.cu-generic-control").html(chaosGeneric(data));
+          $("div.cu-generic-control").html(chaosGeneric(cu_live_selected));
           if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
-            var jsonhtml = json2html(data, options, cu);
-            if (isCollapsable(data)) {
+            var jsonhtml = json2html(cu_live_selected, options, cu_selected);
+            if (isCollapsable(cu_live_selected)) {
               jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
             }
 
@@ -700,7 +781,7 @@
           }
         }
 
-      }, 500);
+      }, options.Interval);
 
 
     });
