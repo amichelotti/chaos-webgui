@@ -21,7 +21,73 @@
     var regexp = /^(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
     return regexp.test(string);
   }
-
+  function generatePStable(){
+    var html='<div class="row-fluid">';		
+    html+='<div class="box span12">';
+    html+='<div class="box-content">';
+    html+='<table class="table table-bordered" id="main_table_magnets">';
+    html+='<thead class="box-header">';
+    html+='<tr>';
+    html+='<th>Element</th>';
+    html+='<th>Readout [A]</th>';
+    html+='<th>Setting [A]</th>';
+    html+='<th colspan="3">Saved</th>';
+    html+='<th colspan="6">Flags</th>';
+    html+='</tr>';
+    html+='</thead>';   
+    html+='</table>';            
+    html+='</div>';
+    html+='</div>';			
+    html+='</div>';
+    return html;
+  }
+  function generatePSCmd(){
+    var html='<div class="row-fluid">';				
+    html+='<div class="box span12 box-cmd">';
+    html+='<div class="box-header green">';
+    html+='<h3 id="h3-cmd">Commands</h3>';
+    html+='</div>';
+    html+='<div class="box-content">';
+    html+='<div class="row-fluid">';				
+    html+='<a class="quick-button-small span1 btn-cmd" id="buttON" onclick=setPowerSupply("On")>';
+    html+='<i class="material-icons verde">trending_down</i>';
+    html+='<p class="name-cmd">On</p>';
+    html+='</a>';
+    html+='<a class="quick-button-small span1 btn-cmd" id="buttOFF" onclick=setPowerSupply("Standby")>';
+    html+='<i class="material-icons rosso">pause_circle_outline</i>';
+    html+='<p class="name-cmd">Standby</p>';
+    html+='</a>';
+    html+='<a class="quick-button-small span1 btn-cmd" id="reset_alarm" onclick=resetAlarm("Reset")>';
+    html+='<i class="material-icons rosso">error</i>';
+    html+='<p class="name-cmd">Reset</p>';
+    html+='</a>';     
+    html+='<div class="span3 offset1" onTablet="span6" onDesktop="span3" id="input-value-mag">';
+    html+='<input class="input focused" id="new_curr" name="setCurrent" type="text" value="[A]">';
+    html+='</div>';
+    html+='<a class="quick-button-small span1 btn-value" id="apply_current" onclick=setCurrent(new_curr.value)>';
+    html+='<p>Apply</p>';
+    html+='</a>';
+    html+='</div>';
+    html+='<div class="row-fluid">';				
+    html+='<a class="quick-button-small span1 btn-cmd" id="buttPOS" onclick=setPolarity("Pos")>';
+    html+='<i class="material-icons rosso">add_circle</i>';
+    html+='<p class="name-cmd">Pos</p>';
+    html+='</a>';
+    html+='<a class="quick-button-small span1 btn-cmd" id="buttOP" onclick=setPolarity("Open")>';							
+    html+='<i class="material-icons">radio_button_unchecked</i>';
+    html+='<p class="name-cmd">Open</p>';
+    html+='</a>';
+    html+='<a class="quick-button-small span1 btn-cmd" id="buttNEG" onclick=setPolarity("Neg")>';							
+    html+='<i class="material-icons blu">remove_circle</i>';
+    html+='<p class="name-cmd">Neg</p>';
+    html+='</a>';
+    html+='</div>';	
+    html+='</div>';
+    html+='</div>';
+    html+='</div>';
+    
+    return html;
+  }
   function generateSnapshotTable(cuid) {
 
     var html = '<div class="modal hide fade" id="mdl-snap">';
@@ -52,9 +118,9 @@
     html += '<input class="input-xlarge focused" id="snap_save_name" type="text" value="name">';
     html += '</div>';
     html += '</div>';
-    html += '<a href="#" class="btn" id="snap-save">Save</a>';
     html += '<a href="#" class="btn" id="snap-show">Show</a>';
     html += '<a href="#" class="btn" id="snap-apply">Apply</a>';
+    html += '<a href="#" class="btn" id="snap-delete">Delete</a>';
     html += '<a href="#" class="btn" id="snap-close">Close</a>';
     html += '</div>';
     html += '</div>';
@@ -87,7 +153,7 @@
     var html = '<div class="modal hide fade " id="mdl-description">';
     html += '<div class="modal-header">';
     html += '<button type="button" class="close" data-dismiss="modal">×</button>';
-    html += '<h3>Description ' + cuid + '</h3>';
+    html += '<h3 id="desc_text">Description ' + cuid + '</h3>';
     html += '</div>';
     html += '<div class="modal-body">';
     html += '<div id="cu-description" class="json-dataset"></div>';
@@ -287,14 +353,14 @@
   function chaosGeneric(cu) {
     var status;
     var html = "";
+    html += '<div class="row-fluid">';
+    html += '<div class="box span12 box-cmd">';
+    
+   
     if (cu.hasOwnProperty('health')) {
       var cuid = cu.health.ndk_uid;
       status = cu.health.nh_status;
       var ctrlid = cuid.replace(/\//g, "_");
-
-
-      html += '<div class="row-fluid">';
-      html += '<div class="box span12 box-cmd">';
       html += '<div class="box-header green">';
       html += '<h3 id="h3-cmd">Commands</h3>';
       html += '</div>';
@@ -359,9 +425,15 @@
       html += "</div>";
       html += "</div>";
       html += "</div>";
-      html += "</div>";
-      html += "</div>";
+     
+    } else {
+      html += '<div class="box-header red">';      
+      html += '<h3 id="h3-cmd" style=”color: red; font-weight: bold;">DEAD</h3>';
+      html += '</div>';
+      
     }
+    html += "</div>";
+    html += "</div>";
     return html;
   }
 
@@ -378,7 +450,38 @@
 
     return html;
   }
-
+  var snap_selected = "";
+  
+  function updateSnapshotTable(cu){
+    $("#table_snap").find("tr:gt(0)").remove();
+    $("#snap-apply").hide(); 
+    $("#snap-show").hide(); 
+    $("#snap-delete").hide(); 
+    
+    jchaos.search(cu, "snapshotsof", false, function (snaplist) {
+      if (snaplist.length == 0) {
+        $('#table_snap').append('<p id="no-results">No results</p>');
+      } else {
+        var dataset;
+        snap_selected = "";
+        snaplist.forEach(function (dataset, index) {
+          var date = new Date(dataset.ts);
+          $('#table_snap').append('<tr class="row_element" id="' + dataset.name + '"><td>' + date + '</td><td>' + dataset.name + '</td></tr>');
+        });
+        $("#table_snap tbody tr").click(function (e) {
+          $(".row_element").removeClass("row_snap_selected");
+          $(this).addClass("row_snap_selected");
+          snap_selected = $(this).attr("id");
+          $("#snap-apply").show();
+          $("#snap-show").show();
+          $("#snap-delete").show();
+          
+          $("#snap_save_name").val(snap_selected);
+          
+        });
+      }
+    });
+  }
   /**
    * jQuery plugin method
    * @param json: a javascript object
@@ -393,7 +496,6 @@
       /* Transform to HTML */
       // var html = chaosCtrl2html(cu, options, '');
       var html = "";
-      var snap_selected = "";
       /**
        * fixed part
        */
@@ -479,12 +581,17 @@
       $("#snap-save").on('click', function () {
         var value = $("#snap_save_name").val();
         if (cu instanceof Array) {
-          jchaos.snapshot(value, "create", cu, null);
+          jchaos.snapshot(value, "create", cu, function(){
+            updateSnapshotTable(cu);
+            
+          });
         } else {
-          jchaos.snapshot(value, "create", [cu], null, null);
+          jchaos.snapshot(value, "create", [cu], null, function(){
+            updateSnapshotTable(cu);
+            
+          });
         }
-        var snap_table = $(this).find('a.show_snapshot');
-        $(snap_table).click(); // force reload table
+        //var snap_table = $(this).find('a.show_snapshot');
       });
 
       $("#snap-close").on('click', function () {
@@ -493,42 +600,30 @@
 
       $(this).on('click', 'a.show_snapshot', function () {
       
-        jchaos.search(cu, "snapshotsof", false, function (snaplist) {
-          $("#table_dataset").find("tr:gt(0)").remove();
-          if (snaplist.length == 0) {
-            $('#table_snap').append('<p id="no-results">No results</p>');
-          } else {
-            var dataset;
-            snap_selected = "";
-            snaplist.forEach(function (dataset, index) {
-              var date = new Date(dataset.ts);
-              $('#table_snap').append('<tr class="row_element" id="' + dataset.name + '"><td>' + date + '</td><td>' + dataset.name + '</td></tr>');
-            });
-            $("#table_snap tbody tr").click(function (e) {
-              var selected = $(this).hasClass("row_selected");
-
-              $(this).removeClass("row_selected");
-              if (!selected) {
-                $(this).addClass("row_selected");
-                var row_index = $(this).parent().index();
-                snap_selected = $(this).attr("id");
-                $("#snap_save_name").val(snap_selected);
-              }
-            });
-          }
-        });
+        updateSnapshotTable(cu);
       });
       
-
+      $("#snap-delete").on('click', function (e) {
+        if (snap_selected != "") {
+          jchaos.snapshot(snap_selected, "delete", "", "", function(){
+            updateSnapshotTable(cu);
+            
+          });
+          
+        }          
+      });      
       $("#snap-show").on('click', function (e) {
+
         if (snap_selected != "") {
           var dataset = jchaos.snapshot(snap_selected, "load", "", "", null);
           var jsonhtml = json2html(dataset, options, cu);
           if (isCollapsable(dataset)) {
             jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
           }
-
+          updateSnapshotTable(cu);
+          
           $("#cu-description").html(jsonhtml);
+          $("#desc_text").html("Snapshot "+snap_selected);
           $("#mdl-description").modal("show");
 
         }

@@ -477,13 +477,24 @@ function openViewIO() {
     }
     $("#name-cu-io").html(selected_device.health.ndk_uid)
     
-    
-   $('#cu-dashboard').chaosDashboard(selected_device.health.ndk_uid,{
-    CUtype:"generic",
-    collapsed: true,
-    withQuotes: true
+    jchaos.getDesc(selected_device.health.ndk_uid, function(desc){
+        if(desc[0].hasOwnProperty('instance_description')){
+            var type=desc[0].instance_description.control_unit_implentation;
+            $('#cu-dashboard').chaosDashboard(selected_device.health.ndk_uid,{
+                CUtype:type,
+                collapsed: true,
+                withQuotes: true
 
-});
+            });
+        } else {
+            $('#cu-dashboard').chaosDashboard(selected_device.health.ndk_uid,{
+                CUtype:"generic",
+                collapsed: true,
+                withQuotes: true
+
+            });
+        }
+    });
   /* jchaos.getDesc(selected_device.health.ndk_uid, function (cu) {
     $('#cu-json-description').jsonViewer(cu,{
         collapsed: true,
