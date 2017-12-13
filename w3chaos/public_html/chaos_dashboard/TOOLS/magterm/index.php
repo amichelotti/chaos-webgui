@@ -148,11 +148,11 @@
 
 			<div class="row-fluid">
 				
-				<div class="span3 statbox purple" onTablet="span6" onDesktop="span3">
+				<div class="span3 statbox purple" onTablet="span4" onDesktop="span3">
 					<h3>Zones</h3>
 					<select id="zones"></select>
 				</div>
-				<div class="span3 statbox purple" onTablet="span6" onDesktop="span3">
+				<div class="span3 statbox purple" onTablet="span4" onDesktop="span3">
 					<h3>Elements</h3>
 					<select id="elements"></select>
 				</div>
@@ -195,7 +195,8 @@
 				
 			</div>		
 
-
+			<div id="#cu-dashboard">
+<!-- 
 			<div class="row-fluid">		
 				<div class="box span12">
 					<div class="box-content">
@@ -211,10 +212,10 @@
 							</thead>   
 						</table>            
 					</div>
-				</div><!--/span-->			
-			</div><!--/row-->
+				</div>		
+			</div> -->
 			
-						
+	<!-- 					
 			<div class="row-fluid">				
 				<div class="box span12 box-cmd">
 					<div class="box-header green">
@@ -266,141 +267,16 @@
 			
 			
 
-	</div><!--/.fluid-container-->
+	</div> -->
 	
 			<!-- end: Content -->
 		</div><!--/#content.span10-->
 		</div><!--/fluid-row-->
 		
 	
-	<div class="modal hide fade" id="mdl-save">
-		<div class="modal-header">
-			<button type="button" class="close" data-dismiss="modal">×</button>
-			<h3>SAVE DATASET</h3>
-		</div>
-		<div class="modal-body">
-			<div class="control-group">
-				<label class="control-label" for="nameDataset">Insert name</label>
-				<div class="controls">
-					<input class="input-xlarge focused" id="nameDataset" type="text" value="name">
-				</div>
-			</div>
-		</div>
-		<div class="modal-footer">
-			<a href="#" class="btn btn-primary" data-dismiss="modal" onclick="saveDataset(nameDataset.value)">Save</a>
-		</div>
-	</div>
-	
-	<!--MODAL LOAD-->
-	<div class="modal hide fade" id="mdl-load">
-		<div class="modal-header">
-			<button type="button" class="close" data-dismiss="modal">×</button>
-			<h3>LIST DATASET</h3>
-		</div>
-		<div class="modal-body">
-			<div class="row-fluid">		
-				<div class="box span12">
-					<div class="box-content">
-						<table class="table table-bordered" id="table_dataset">
-							<thead class="box-header">
-								<tr>
-									<th>Date</th>
-									<th>Name</th>
-								</tr>
-							</thead>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="modal-footer">
-			<a href="#" class="btn" data-dismiss="modal">Close</a>
-		</div>
-	</div>
-	
-<!--MODAL VIEW DATASET-->
-	<div class="modal hide fade" id="mdl-into-load">
-		<div class="modal-header">
-			<button type="button" class="close" data-dismiss="modal">×</button>
-			<h3>DATASET of <span id="name_dataset"></span></h3>
-		</div>
-		<div class="modal-body">
-			<div class="row-fluid">		
-				<div class="box span12">
-					<div class="box-content">
-						<table class="table table-bordered" id="table_into_dataset">
-							<thead class="box-header">
-								<tr>
-									<th>Element</th>
-									<th>Setting</th>
-									<th>Status</th>
-									<th>Polarity</th>
-								</tr>
-							</thead>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="modal-footer">
-			<a href="#" class="btn btn-primary" data-dismiss="modal" onclick="fill_load_main_table()">Load</a>
-			<a href="#" class="btn" data-dismiss="modal">Close</a>
-		</div>
-	</div>
-	
-	
-	<!--MODAL DEVICE ALARM-->
-	<div class="modal hide fade" id="mdl-device-alarm-mag">
-		<div class="modal-header">
-			<button type="button" class="close" data-dismiss="modal">×</button>
-			<h3>TABLE ALARM of <span id="name-device-alarm"></span></h3>
-		</div>
-		<div class="modal-body">
-			<div class="row-fluid">		
-				<div class="box span12 red">
-					<div class="box-content">
-						<table class="table table-bordered" id="table_device_alarm">
-							<thead class="box-header red">
-								<tr>
-									<th>Description</th>
-									<th>Value</th>
-								</tr>
-							</thead>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="modal-footer">
-			<!--a href="#" class="btn btn-primary" onclick="">Save</a-->
-		</div>
-	</div>
-	
-	<!--MODAL CU ALARM-->
-	<div class="modal hide fade" id="mdl-cu-alarm-mag">
-		<div class="modal-header">
-			<button type="button" class="close" data-dismiss="modal">×</button>
-			<h3>TABLE CU ALARM of <span id="name-cu-alarm"></span></h3>
-		</div>
-		<div class="modal-body">
-			<div class="row-fluid">		
-				<div class="box span12 yellow">
-					<div class="box-content">
-						<table class="table table-bordered" id="table_cu_alarm">
-							<thead class="box-header yellow">
-								<tr>
-									<th>Description</th>
-									<th>Value</th>
-								</tr>
-							</thead>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="modal-footer"></div>
-	</div>
 
+	
+	
 
 
 	
@@ -478,13 +354,7 @@
 	
 		<script src="./js/custom.js"></script>
 		
-		<script src="./js/magnets.js"></script>
-		<script src="./js/magnets-cmd.js"></script>
-		<script src="./js/magnets-alarm-load.js"></script>
-		<script src="./js/magnets_reload.js"></script>
-
-
-
+		
 
 	<!-- end: JavaScript-->
 	
