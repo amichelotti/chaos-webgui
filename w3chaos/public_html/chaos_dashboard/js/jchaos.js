@@ -294,7 +294,12 @@
 			var dev_array=jchaos.convertArray2CSV(devs);
 
 			if(dev_array==""){
-				handleFunc([{}]);
+				var empty=[{}];
+				
+				if(typeof handleFunc !== "function" ){
+					return empty;
+				}
+				handleFunc(empty);
 				return;
 			}
 			var str_url_cu = "dev="+ dev_array + "&cmd=channel&parm="+channel_id;

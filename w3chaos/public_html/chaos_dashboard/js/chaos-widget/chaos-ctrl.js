@@ -9,6 +9,8 @@
   var cu_live_selected = {};
   var cu_list = [];
   var cu_name_to_index = [];
+  var cu_name_to_desc = [];
+  
   var health_time_stamp_old=[];
   var off_line=[];
   function cusWithInterface(culist,interface){
@@ -16,7 +18,7 @@
     culist.forEach(function(name){
       var desc=jchaos.getDesc(name,null);
       if (desc[0].hasOwnProperty('instance_description') && desc[0].instance_description.hasOwnProperty("control_unit_implementation")&&(desc[0].instance_description.control_unit_implementation.indexOf(interface)!=-1)) {
-        
+        cu_name_to_desc[name]=desc[0];
         retlist.push(name);
     }
     });
@@ -309,16 +311,16 @@
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
       html += "<tr class='ps_element' cuname='"+cu[i]+"' id='" + cuname + "'><td class='td_element td_name'>" + cu[i] + "</td><td class='td_element td_readout' id='" + cuname
-      + ".output.current'> 0</td><td class='td_element td_current' id='" + cuname + ".input.current'>0</td><td class='td_element' id='" + cuname
-      + ".saved.current'></td><td class='td_element' id='" + cuname
-      + ".saved.state'></td><td class='td_element' id='" + cuname
-      + ".saved.polarity'></td><td class='td_element' id='" + cuname
-      + ".output.off'></td><td class='td_element' id='" + cuname
-      + ".output.polarity'></td><td class='td_element' id='" + cuname
-      + ".output.local'></td><td class='td_element' id='" + cuname
-      + ".output.busy'></td><td class='td_element' id='" + cuname
-      + ".output.device_alarm'></td><td class='td_element' id='" + cuname
-      + ".output.cu_alarm'></td></tr>";
+      + "_output_current'>NA</td><td class='td_element td_current' id='" + cuname + "_input_current'>NA</td><td class='td_element' id='" + cuname
+      + "_saved_current'></td><td class='td_element' id='" + cuname
+      + "_saved_state'></td><td class='td_element' id='" + cuname
+      + "_saved_polarity'></td><td class='td_element' id='" + cuname
+      + "_output_stby'></td><td class='td_element' id='" + cuname
+      + "_output_polarity'></td><td class='td_element' id='" + cuname
+      + "_output_local'></td><td class='td_element' id='" + cuname
+      + "_output_busy'></td><td class='td_element' id='" + cuname
+      + "_output_device_alarm'></td><td class='td_element' id='" + cuname
+      + "_output_cu_alarm'></td></tr>";
     });
     html += '</table>';
     html += '</div>';
@@ -331,40 +333,40 @@
     cu.forEach(function (elem) {
       var cuname = encodeName(elem.output.ndk_uid);
 
-      $("#" + cuname + ".output.current").html(elem.output.current);
-      $("#" + cuname + ".input.current").html(elem.input.current);
+      $("#" + cuname + "_output_current").html(elem.output.current.toFixed(3));
+      $("#" + cuname + "_input_current").html(elem.input.current);
       switch (elem.output.polarity) {
         case 1:
-          $("#" + cuname + ".output.polarity").html('<i class="material-icons rosso">add_circle</i>');
+          $("#" + cuname + "_output_polarity").html('<i class="material-icons rosso">add_circle</i>');
           break;
         case -1:
-          $("#" + cuname + ".output.polarity").html('<i class="material-icons blu">remove_circle</i>');
+          $("#" + cuname + "_output_polarity").html('<i class="material-icons blu">remove_circle</i>');
           break;
         case 0:
-          $("#" + cuname + ".output.polarity").html('<i class="material-icons">radio_button_unchecked</i>');
+          $("#" + cuname + "_output_polarity").html('<i class="material-icons">radio_button_unchecked</i>');
           break;
 
       }
 
 
-      if (elem.output.off == 'false') {
-        $("#" + cuname + ".output.off").html('<i class="material-icons verde">trending_down</i>');
-      } else if (elem.output.off == 'true') {
-        $("#" + cuname + ".output.off").html('<i class="material-icons rosso">pause_circle_outline</i>');
+      if (elem.output.stby == false) {
+        $("#" + cuname + "_output_stby").html('<i class="material-icons verde">trending_down</i>');
+      } else if (elem.output.ostby= true) {
+        $("#" + cuname + "_output_stby").html('<i class="material-icons rosso">pause_circle_outline</i>');
 
       }
 
-      if (elem.output.busy == 'true') {
-        $("#" + cuname + ".output.busy").html('<i class="material-icon verde">hourglass empty</i>');
-      } else if (elem.output.busy == 'false') {
-        $("#" + cuname + ".output.busy").remove();
+      if (elem.output.busy == true) {
+        $("#" + cuname + "_output_busy").html('<i class="material-icon verde">hourglass empty</i>');
+      } else if (elem.output.busy == false) {
+        $("#" + cuname + "_output_busy").remove();
       }
 
 
-      if (elem.output.local == "true") {
-        $("#" + cuname + ".output.local").html('<i class="material-icons rosso">vpn_key</i>');
-      } else if (elem.output.local == "false") {
-        $("#" + cuname + ".output.local").remove();
+      if (elem.output.local == true) {
+        $("#" + cuname + "_output_local").html('<i class="material-icons rosso">vpn_key</i>');
+      } else if (elem.output.local == false) {
+        $("#" + cuname + "_output_local").remove();
       }
 
     });
@@ -385,35 +387,36 @@
     html += '</div>';
     html += '<div class="box-content">';
     html += '<div class="row-fluid">';
-    html += '<a class="quick-button-small span1 btn-cmd" id="PSbuttON" >';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="PSbuttON" cucmdid="mode" cucmdvalue=1>';
     html += '<i class="material-icons verde">trending_down</i>';
     html += '<p class="name-cmd">On</p>';
     html += '</a>';
-    html += '<a class="quick-button-small span1 btn-cmd" id="PSbuttOFF">';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="PSbuttOFF" cucmdid="mode" cucmdvalue=0>';
     html += '<i class="material-icons rosso">pause_circle_outline</i>';
     html += '<p class="name-cmd">Standby</p>';
     html += '</a>';
-    html += '<a class="quick-button-small span1 btn-cmd" id="PSreset_alarm" >';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="PSreset_alarm" cucmdid="rst">';
     html += '<i class="material-icons rosso">error</i>';
     html += '<p class="name-cmd">Reset</p>';
     html += '</a>';
     html += '<div class="span3 offset1" onTablet="span6" onDesktop="span3" id="input-value-mag">';
-    html += '<input class="input focused" id="PSnew_curr" name="setCurrent" type="text" value="[A]">';
+    html += '<input class="input focused" id="sett_sett_cur" name="setCurrent" type="text" value="[A]">';
     html += '</div>';
-    html += '<a class="quick-button-small span1 btn-value" id="PSapply_current" >';
+
+    html += '<a class="quick-button-small span1 btn-value cucmd" cucmdid="sett" id="PSapply_current" >';
     html += '<p>Apply</p>';
     html += '</a>';
     html += '</div>';
     html += '<div class="row-fluid">';
-    html += '<a class="quick-button-small span1 btn-cmd" id="PSbuttPOS" >';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" cucmdid="pola" cucmdvalue=1 >';
     html += '<i class="material-icons rosso">add_circle</i>';
     html += '<p class="name-cmd">Pos</p>';
     html += '</a>';
-    html += '<a class="quick-button-small span1 btn-cmd" id="PSbuttOP" >';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" cucmdid="pola" cucmdvalue=0 >';
     html += '<i class="material-icons">radio_button_unchecked</i>';
     html += '<p class="name-cmd">Open</p>';
     html += '</a>';
-    html += '<a class="quick-button-small span1 btn-cmd" id="PSbuttNEG" >';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" cucmdid="pola" cucmdvalue=-1 >';
     html += '<i class="material-icons blu">remove_circle</i>';
     html += '<p class="name-cmd">Neg</p>';
     html += '</a>';
@@ -862,12 +865,16 @@
    */
   $.fn.chaosDashboard = function (cuids, options) {
     options = options || {};
+    if(cuids == null){
+      return;
+    }
     var collapsed = options.collapsed;
     /* jQuery chaining */
     return this.each(function () {
       var notupdate_dataset = 1;
       /* Transform to HTML */
       // var html = chaosCtrl2html(cu, options, '');
+      
       if (!(cuids instanceof Array)) {
         cu_list = [cuids];
       } else {
@@ -1107,13 +1114,13 @@
         });
 
         $("div.ps-control").html(generatePSCmd(cu_selected));
-        var ps_interval = setInterval(function () {
+       /*  var ps_interval = setInterval(function () {
           if ($("div.ps-control").is(':visible') == false) {
             clearInterval(ps_interval);
           }
           var datasets = jchaos.getChannel(cu_list, -1, null);
          
-        }, options.Interval);
+        }, options.Interval); */
       }
 
       /************** 
@@ -1126,10 +1133,13 @@
       $("div.cu-generic-control").html(chaosGenericControl(jchaos.getChannel(cu_selected, -1, null)[0]));
       var interval = setInterval(function () {
         cu_live_selected = jchaos.getChannel(cu_list, -1, null);
-        
         if ($("div.cu-generic-control").is(':visible') == false) {
           clearInterval(interval);
         } else {
+          if(cu_live_selected.length==0 || cu_selected == null || cu_name_to_index[cu_selected]==null){
+            return;
+          }
+          
           var index = cu_name_to_index[cu_selected];
           $("div.cu-generic-control").html(chaosGenericControl(cu_live_selected[index]));
           if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
@@ -1148,8 +1158,9 @@
           }
           if ($("#main_table_magnets").is(':visible')) {
             // update 
-            updateGenericTableDataset(cu_live_selected);
-            $("div.ps-control").html(generatePSCmd(cu_live_selected[index]));
+            
+            updatePStable(cu_live_selected);
+          //  $("div.ps-control").html(generatePSCmd(cu_live_selected[index]));
           }
         }
 
@@ -1157,7 +1168,58 @@
       for(var i=1;i<interval;i++){
         clearInterval(i);
       }
-
+      $(".cucmd").click(function(){
+        var alias=$(this).attr("cucmdid");
+        var parvalue=$(this).attr("cucmdvalue");
+        
+        if(cu_selected!=null && cu_name_to_desc[cu_selected].hasOwnProperty("cudk_ds_desc")&& cu_name_to_desc[cu_selected].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")){
+          var desc=cu_name_to_desc[cu_selected].cudk_ds_desc.cudk_ds_command_description;
+          desc.forEach(function(item){
+            if(item.bc_alias == alias){
+              //
+              var cmdparam={};
+              var params=item.bc_parameters;
+              params.forEach(function(par){
+                var parname=par.bc_parameter_name;
+                if(parvalue==null){
+                  parvalue=$("#"+alias+"_"+parname).val();
+                  
+                } 
+                switch(par.bc_parameter_type){
+                  case 0:
+                  //bool
+                  if(parvalue == "true"){
+                    cmdparam[parname]=true;
+                    
+                  } else  if(parvalue == "false"){
+                    cmdparam[parname]=true;
+                  } else {
+                    cmdparam[parname]=parseInt(parvalue);
+                    
+                  }                    
+                  break;
+                  case 1:
+                    //integer
+                    cmdparam[parname]=parseInt(parvalue);
+                   break;
+                  case 3:{
+                    var d={};
+                    d['$numberDouble']=parvalue.toString();
+                    cmdparam[parname]=d;
+                    }
+                  
+                }
+                
+              });
+            jchaos.sendCUCmd(cu_selected,alias,cmdparam);
+            
+            }
+            
+          });
+          
+        }
+        
+      });
       var check_time_stamp_interval=setInterval(function(){
         if ($("div.cu-generic-control").is(':visible') == false) {
           clearInterval(check_time_stamp_interval);
