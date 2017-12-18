@@ -52,6 +52,9 @@ require_once('header.php');
 					<h3>Class</h3>
 					<select id="classe"></select>
 					</div>
+					
+					<div id="main-dashboard"></div>
+
 					<!--div class="span2" onTablet="span6" onDesktop="span2">
 						<input type="radio" id="cu-true"/><label for="cu-true" id="choices-load-labelX">true</label>
 						<input type="radio" id="cu-false"/><label for="cu-false" id="choices-diff-labelX">false</label>
@@ -71,7 +74,6 @@ require_once('header.php');
 					</div-->	
 				</div>
 				
-				<div id="main-dashboard"></div>
 								
 	
 		</div><!--/fluid-row--> -->

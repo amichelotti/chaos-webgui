@@ -139,6 +139,11 @@
 			opt['what']=_what;
 			if(_node_list instanceof Array){
 				opt['node_list']=_node_list;
+			} else {
+				if(_node_list!=null){
+					opt['node_list']=[_node_list];
+				}
+				
 			}
 
 			try{
