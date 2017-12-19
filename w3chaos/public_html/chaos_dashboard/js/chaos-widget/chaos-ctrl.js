@@ -18,12 +18,115 @@
   var curr_cu_selected={};
   var last_index_selected=-1;
 
+  function retriveCurrentCmdArguments(alias){
+    var arglist=[];
+    if(cu_selected!=null && cu_name_to_desc[cu_selected].hasOwnProperty("cudk_ds_desc")&& cu_name_to_desc[cu_selected].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")){
+      var desc=cu_name_to_desc[cu_selected].cudk_ds_desc.cudk_ds_command_description;
+      desc.forEach(function(item){
+        if(item.bc_alias == alias){
+          var params=item.bc_parameters;
+          if((params==null) || (params.length==0)){
+            return arglist;
+          }
+          params.forEach(function(par){
+            var arg={};
+            arg['name']=par.bc_parameter_name;
+            arg['desc']=par.bc_parameter_description;
+            arg['optional']=(par.bc_parameter_flag==0);
+            arg['value']=null;
+            switch(par.bc_parameter_type){
+              case 0:
+              arg['type']="bool";
+              break;
+              case 1:
+              arg['type']="int32";
+              break;
+              case 2:
+              arg['type']="int64";
+              break;
+              case 4:
+              arg['type']="string";
+              break;
+              case 3:
+              arg['type']="double";
+              break;
+              case 5:
+              arg['type']="binary";
+              break;
+
+            }
+            arglist.push(arg);
+          });
+        }
+      });
+    }
+  return arglist;
+}
+  // encode the arguments value as extended json
+  // alias: command name
+  // argument values arglist['name'] ...
+  // return a filled argument list ready to be send
+  function buildCmdParams(arglist){
+    var cmdparam={};    
+    arglist.forEach(function(par){
+            var parname=par['name'];
+            var parvalue=par['value'];
+            var type=par['type'];
+            if(parvalue!=null){
+            switch(type){
+              case "bool":
+              //bool
+              if(parvalue == "true"){
+                cmdparam[parname]=true;
+                
+              } else  if(parvalue == "false"){
+                cmdparam[parname]=true;
+              } else {
+                cmdparam[parname]=parseInt(parvalue);
+                
+              }                    
+              break;
+              case "int32":
+                //integer
+                cmdparam[parname]=parseInt(parvalue);
+               break;
+              case "double":{
+                var d={};
+                if(typeof parvalue === 'string'){
+                  d['$numberDouble']=parvalue;
+                } else {
+                  d['$numberDouble']=parvalue.toString();
+                }
+                cmdparam[parname]=d;
+                break;
+                }
+                case "string":{
+                  cmdparam[parname]=parvalue;
+                  break;
+                }
+                case "int64":{
+                  var d={};
+                  if(typeof parvalue === 'string'){
+                    d['$numberLong']=parvalue;
+                  } else {
+                    d['$numberLong']=parvalue.toString();
+                  }
+                  cmdparam[parname]=d;
+                  break;
+                  }
+              
+            }
+          }
+          });
+  return cmdparam;
+}
   function cusWithInterface(culist,interface){
     var retlist=[];
     culist.forEach(function(name){
       var desc=jchaos.getDesc(name,null);
+      cu_name_to_desc[name]=desc[0];
+      
       if (desc[0].hasOwnProperty('instance_description') && desc[0].instance_description.hasOwnProperty("control_unit_implementation")&&(desc[0].instance_description.control_unit_implementation.indexOf(interface)!=-1)) {
-        cu_name_to_desc[name]=desc[0];
         retlist.push(name);
     }
     });
@@ -145,6 +248,101 @@
     var regexp = /^(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
     return regexp.test(string);
   }
+/******************
+ * MAIN TABLE HANDLING
+ * 
+ */
+  function mainTableCommonHandling(id,e){
+    $(".row_element").removeClass("row_snap_selected");
+    $(e.currentTarget).addClass("row_snap_selected");
+    $("#mdl-commands").modal("hide");
+    $("#cu_full_commands").empty();
+    
+    cu_selected = $(e.currentTarget).attr("cuname");
+    cu_multi_selected=[];
+
+    /**
+     * handling commands
+     */ 
+    if(cu_name_to_desc[cu_selected] == null){
+      var desc=jchaos.getDesc(cu_selected,null);
+      cu_name_to_desc[cu_selected]=desc[0];
+    }
+    if(cu_selected!=null && cu_name_to_desc[cu_selected].hasOwnProperty("cudk_ds_desc")&& cu_name_to_desc[cu_selected].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")){
+      var desc=cu_name_to_desc[cu_selected].cudk_ds_desc.cudk_ds_command_description;
+      $("#cu_full_commands").add("<option>--Select--</option>"); 
+      
+      desc.forEach(function(item){
+        $("#cu_full_commands").append("<option value='"+item.bc_alias+"'>"+item.bc_alias+ " (\""+item.bc_description+"\")</option>");
+        });
+
+        $("#cu_full_commands").change(function (e) {
+          //show the command
+          var cmdselected = $("#cu_full_commands option:selected").val();
+          var arguments=retriveCurrentCmdArguments(cmdselected);
+          var input_type="number";
+          if(arguments.length==0){
+            $("#list_command_argument").html("Command \""+cmdselected+"\" NO ARGUMENTS");
+          } else {
+            $("#list_command_argument").html("Command \""+cmdselected+"\"");
+          }
+          $("#commands_argument_table").find("tr:gt(0)").remove();
+          arguments.forEach(function(item){
+          if(item['type']=="string"){
+            input_type="text";
+          }
+          if(item["optional"]){
+            $('#commands_argument_table').append('<tr class="row_element" ><td>' + item["name"] + '</td><td>' + item["desc"]+ '</td><td>' + item["type"]+ '</td><td><input class="input focused" id="'+cmdselected+'_'+item["name"]+'" type="'+input_type+'"></td></tr>');
+          } else {
+            $('#commands_argument_table').append('<tr class="row_element" ><td><b>' + item["name"] + '</b></td><td>' + item["desc"]+ '</td><td>' + item["type"]+ '</td><td><input class="input focused" id="'+cmdselected+'_'+item["name"]+'" type="'+input_type+'"></td></tr>');
+          }
+            
+          });
+          $("#mdl-commands").draggable();
+          
+          $("#mdl-commands").modal("show");
+        });
+
+    }
+    $("#command-close").click(function(){
+      $("#mdl-commands").modal("hide");
+      
+    });
+
+    $("#command-send").click(function(){
+      var cmdselected = $("#cu_full_commands option:selected").val();
+      var arguments=retriveCurrentCmdArguments(cmdselected);
+      arguments.forEach(function(item,index){
+        var value=$("#"+cmdselected+"_"+item["name"]).val();
+        if((value == null || value=="")&&(item["optional"]==false)){
+          alert("argument '"+item['name']+"' is required in command:'"+cmdselected+"'");
+          return;
+        }
+        item['value']=value;
+      });
+      var parm=buildCmdParams(arguments);
+      jchaos.sendCUCmd(cu_selected,cmdselected,parm);
+    });
+
+    if(e.shiftKey){
+      var nrows=$(e.currentTarget).index();
+      if(last_index_selected!=-1){
+       //alert("selected shift:"+nrows+" interval:"+(nrows-last_index_selected));
+       if(nrows>last_index_selected){
+        //$('#main_table_cu tr:gt('+(last_index_selected)+'):lt('+(nrows)+')').addClass("row_snap_selected");
+        $("#"+id +" tr").slice(last_index_selected+1,nrows+1).addClass("row_snap_selected");
+         for(var cnt=last_index_selected;cnt<=nrows;cnt++){
+          cu_multi_selected.push(cu_list[cnt]);
+           
+         }
+         
+       }
+      }
+    }
+    last_index_selected=$(e.currentTarget).index();
+    
+  }
+  /********************* */
   function generateGenericTable(cu) {
     var html = '<div class="row-fluid" id="table-space">';
     html += '<div class="box span12">';
@@ -322,7 +520,17 @@
     html += '<th colspan="2">Saved [mm]</th>';
     html += '<th colspan="5">Out In !</th>';
     html += '</tr>';
-    html += '</thead>';   
+    html += '</thead>';
+    
+    
+    $(cu).each(function (i) {
+      var cuname = encodeName(cu[i]);
+      html += "<tr class='row_element' cuname='"+cu[i]+"' id='" + cuname + "'><td class='name_element'>" +cu[i]
+      + "</td><td class='position_element' id='"+ cuname + "_output_position'></td><td class='position_element' id='"+ cuname
+      + "_input_position'></td><td id='"+ cuname + "_saved_position'></td><td id='"+ cuname + "_saved_status'></td><td id='"+ cuname + "_output_status'></td><td id='"+ cuname
+      + "_in'></td><td id='"+cuname + "_out'></td><td id='"+ cuname + "_output_device_alarm'></td><td id='"+ cuname+ "_cu_alarm'></td></tr>";
+    });
+    
     html += '</table>';            
     html += '</div>';
     html += '</div>';
@@ -331,6 +539,64 @@
 
     return html;
   }
+
+  function updateScraperTable(cu) {
+    cu.forEach(function (elem) {
+      var cuname = encodeName(elem.output.ndk_uid);
+
+      $("#" + cuname + "_output_position").html(elem.output.position.toFixed(3));
+      $("#" + cuname + "_input_position").html(elem.input.position);
+      switch (elem.output.polarity) {
+        case 1:
+          $("#" + cuname + "_output_polarity").html('<i class="material-icons rosso">add_circle</i>');
+          break;
+        case -1:
+          $("#" + cuname + "_output_polarity").html('<i class="material-icons blu">remove_circle</i>');
+          break;
+        case 0:
+          $("#" + cuname + "_output_polarity").html('<i class="material-icons">radio_button_unchecked</i>');
+          break;
+
+      }
+
+
+      if (elem.output.powerOn == true) {
+        $("#" + cuname + "_output_status").html('<i class="material-icons verde">trending_down</i>');
+      } else if (elem.output.powerOn= false) {
+        $("#" + cuname + "_output_status").html('<i class="material-icons rosso">pause_circle_outline</i>');
+
+      }
+        if ( elem.output.NegativeLimitSwitchActive == 'true') {
+          $("#" + cuname + "_out").html('<i id="out_icon_'+ cuname + '" class="icon-caret-left verde"></i>');
+        } else if (out_neg_col[i] == 'false') {
+          $("#" + cuname + "_out").remove();
+        }
+        
+          
+        if (elem.output.PositiveLimitSwitchActive == 'true') {
+            $("#" + cuname + "_in").html('<i id="in_icon_'+ cuname + '" class="icon-caret-right verde"></i>');
+        }  else if (in_pos_col[i] == 'false') {
+          $("#" + cuname + "_in").remove();
+        }
+          
+      if (elem.output.busy == true) {
+        $("#" + cuname + "_output_busy").html('<i class="material-icon verde">hourglass empty</i>');
+      } else if (elem.output.busy == false) {
+        $("#" + cuname + "_output_busy").remove();
+      }
+
+
+      if (elem.output.local == true) {
+        $("#" + cuname + "_output_local").html('<i class="material-icons rosso">vpn_key</i>');
+      } else if (elem.output.local == false) {
+        $("#" + cuname + "_output_local").remove();
+      }
+
+    });
+
+   
+    
+  }
   function generateScraperCmd(cu){
     var html = '<div class="row-fluid">';
     html += '<div class="box span12 box-cmd">';
@@ -338,42 +604,42 @@
     html += '<h3 id="h3-cmd">Commands</h3>';
     html += '</div>';
     html += '<div class="box-content">';
-    html += '<a class="quick-button-small span1 btn-cmd" id="standby" onclick=setPower("Standby")>';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_standby" cucmdid="poweron" cucmdvalue=0>';
     html += '<i class="material-icons rosso">pause_circle_outline</i>';
     html += '<p class="name-cmd">Stanby</p>';
     html += '</a>';
-    html += '<a class="quick-button-small span1 btn-cmd" id="oper" onclick=setPower("Oper")>';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_oper"  cucmdid="poweron" cucmdvalue=1>';
     html += '<i class="material-icons verde">trending_down</i>';
     html += '<p class="name-cmd">Oper</p>';
     html += '</a>';
-    html += '<a class="quick-button-small span1 btn-cmd" id="reset" onclick=resetAlarm("Reset")>';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_reset" cucmdid="rset" cucmdvalue=1>';
     html += '<i class="material-icons rosso">error</i>';
     html += '<p class="name-cmd">Reset</p>';
     html += '</a>';    
     html += '<div class="span3 offset1" onTablet="span6" onDesktop="span3" id="input-value">';
-    html += '<input class="input focused" id="input_position" type="text" value="[mm]">';
+    html += '<input class="input focused" id="mov_abs_offset_mm" type="number" value="[mm]">';
     html += '</div>';  
-    html += '<a class="quick-button-small span1 btn-value" id="setPosition" onclick=setPosition(input_position.value)>';
+    html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPosition" cucmdid="mov_abs">';
     html += '<p>Apply</p>';
     html += '</a>';
         
-    html += '<a class="quick-button-small span1 btn-value" id="setStop" onclick=setStop()>';
+    html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setStop" cucmdid="stopMotion">';
     html += '<p>Stop</p>';
     html += '</a>'; 
     html += '<div class="span12 statbox" onTablet="span12" onDesktop="span12" id="box-cmd-due">';
-    html += '<a class="quick-button-small span1 btn-cmd offset2" id="in" onclick=setPositionRel("In")>';
+    html += '<a class="quick-button-small span1 btn-cmd offset2 cucmd" id="scraper_in" cucmdid="mov_rel">';
     html += '<i class="icon-angle-left"></i>';
     html += '<p class="name-cmd">In</p>';
     html += '</a>';							
     html += '<div class="span3" onTablet="span6" onDesktop="span3" id="input-value-due">';
-    html += '<input class="input focused" id="position-rel" type="text" value="&#916; [mm]">';
+    html += '<input class="input focused" id="mov_rel_offset_mm" type="number" value="&#916; [mm]">';
     html += '</div>';
-    html += '<a class="quick-button-small span1 btn-cmd" id="out" onclick=setPositionRel("Out")>';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_out" cucmdid="mov_rel">';
     html += '<i class="icon-angle-right"></i>';
     html += '<p class="name-cmd">Out</p>';
     html += '</a>';
           
-    html += '<a href="#mdl-homing" role="button" class="quick-button-small span1 btn-cmd offset3" data-toggle="modal">';
+    html += '<a href="#mdl-homing" role="button" class="quick-button-small span1 btn-cmd offset3 cucmd" cucmdid="stopMotion" cucmdvalue=1>';
     html += '<i class="icon-home"></i>';
     html += '<p class="name-cmd">Homing</p>';
     html += '</a>';
@@ -402,7 +668,7 @@
 
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html += "<tr class='ps_element' cuname='"+cu[i]+"' id='" + cuname + "'><td class='td_element td_name'>" + cu[i] + "</td><td class='td_element td_readout' id='" + cuname
+      html += "<tr class='row_element' cuname='"+cu[i]+"' id='" + cuname + "'><td class='td_element td_name'>" + cu[i] + "</td><td class='td_element td_readout' id='" + cuname
       + "_output_current'>NA</td><td class='td_element td_current' id='" + cuname + "_input_current'>NA</td><td class='td_element' id='" + cuname
       + "_saved_current'></td><td class='td_element' id='" + cuname
       + "_saved_state'></td><td class='td_element' id='" + cuname
@@ -607,6 +873,35 @@
     return html;
   }
 
+  function generateCmdModal(){
+    var html = '<div class="modal hide fade" id="mdl-commands">';
+    html += '<div class="modal-header">';
+    html += '<button type="button" class="close" data-dismiss="modal">×</button>';
+    html += '<h3 id="list_command_argument"></h3>';
+    html += '</div>';
+
+    html += '<div class="modal-body">';
+    html += '<table class="table table-bordered" id="commands_argument_table">';
+    html += '<thead class="box-header">';
+    html += '<tr>';
+    html += '<th>Argument Name</th>';
+    html += '<th>Description</th>';
+    html += '<th>Type</th>';
+    html += '<th>Value</th>';
+    html += '</tr>';
+    html += '</thead>';
+    html += '</table>';
+    html += '</div>';
+
+    html += '<div class="modal-footer">';
+    html += '<a href="#" class="btn btn-primary" id="command-send">Send</a>';
+    html += '<a href="#" class="btn btn-primary" id="command-close">Close</a>';
+    html += '</div>';
+    
+    html += '</div>';
+   return html;
+  }
+
   function generateAlarms(cuid) {
     var html = '<div class="modal hide fade" id="mdl-fatal-error">';
     html += '<div class="modal-header">';
@@ -657,6 +952,7 @@
     html += generateDescription(cuid);
     html += generateSnapshotTable(cuid);
     html += generateAlarms(cuid);
+    html +=generateCmdModal();
     return html;
   }
 
@@ -849,13 +1145,22 @@
       html += '<div class="box-content">';
 
         html += '<div class="row-fluid">';
-        html += "<div class='span6 statbox'>";
+        
+        html += "<div class='span3 statbox'>";
         html += "<h3 id='scheduling_title'></h3>";
+        html += "<input type='text' class='setSchedule'>";
+        
         html += "</div>";
 
-        html += "<div class='span3'>";
-        html += "<input type='text' class='setSchedule'>";
-        html += "</div>";
+       // html += "<div class='span3'>";
+       // html += "</div>";
+
+ 
+        html += "<div class='span8'>";
+        html += '<h2 class="span2">Available Commands</h2>';
+        html += '<select class="span6" id="cu_full_commands" data-toggle="modal"> </select>';
+        html += '</div>';
+        
         html += "</div>";
 
       
@@ -871,22 +1176,12 @@
       html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-bypass-on-off'><i class='material-icons verde'>usb</i><p class='name-cmd'>BypassOFF</p></a>";
       
      // html += "<a class='quick-button-small span2 btn-cmd' id='cmd-bypassON-" + ctrlid + "'' onclick='jchaos.setBypass(\"" + cuid + "\",true,null);'><i class='material-icons verde'>cached</i><p class='name-cmd'>BypassON</p></a>";
-     html += '<div class="statbox purple" onTablet="span2" onDesktop="span3">';
-     html += '<h3>Available Commands</h3>';
-     html += '<select id="cu_full_commands"></select>';
-     html += '</div>';
+  //   html += '<div class="statbox purple" onTablet="span2" onDesktop="span3">';
+   //  html += '<h3>Available Commands</h3>';
+   //  html += '<select id="cu_full_commands" data-toggle="modal"> </select>';
+  //   html += '</div>';
 
-     html += '<table class="table table-bordered" id="commands_argument_table">';
-     html += '<thead class="box-header">';
-     html += '<tr>';
-     html += '<th>Command Name</th>';
-     html += '<th>Description</th>';
-     html += '<th>Type</th>';
-     html += '<th>Value</th>';
-     html += '</tr>';
-     html += '</thead>';
-     html += '</table>';
-    
+     
      
       html += "</div>";
       html += "</div>";
@@ -1115,39 +1410,7 @@
        */
       
       $("#main_table_cu tbody tr").click(function (e) {
-        $(".row_element").removeClass("row_snap_selected");
-        $(this).addClass("row_snap_selected");
-        cu_selected = $(this).attr("cuname");
-        cu_multi_selected=[];
-        /**
-         * handling commands
-         */ 
-        if(cu_selected!=null && cu_name_to_desc[cu_selected].hasOwnProperty("cudk_ds_desc")&& cu_name_to_desc[cu_selected].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")){
-          var desc=cu_name_to_desc[cu_selected].cudk_ds_desc.cudk_ds_command_description;
-          desc.forEach(function(item){
-            $("#cu_full_commands").add(item.bc_alias); 
-            });
-        }
-
-
-        if(e.shiftKey){
-          var nrows=$(this).index();
-          if(last_index_selected!=-1){
-           //alert("selected shift:"+nrows+" interval:"+(nrows-last_index_selected));
-           if(nrows>last_index_selected){
-            //$('#main_table_cu tr:gt('+(last_index_selected)+'):lt('+(nrows)+')').addClass("row_snap_selected");
-            $('#main_table_cu tr').slice(last_index_selected+1,nrows+1).addClass("row_snap_selected");
-             for(var cnt=last_index_selected;cnt<=nrows;cnt++){
-              cu_multi_selected.push(cu_list[cnt]);
-               
-             }
-             
-           }
-          }
-        }
-        last_index_selected=$(this).index();
-        
-  
+        mainTableCommonHandling("main_table_cu",e);
       });
       /******** */
       $(this).off('keypress');
@@ -1331,36 +1594,11 @@
        */
       if (options.CUtype.indexOf("SCPowerSupply") != -1) {
         $("#main_table_magnets tbody tr").click(function (e) {
-          $(".ps_element").removeClass("row_snap_selected");
-          $(this).addClass("row_snap_selected");
-          cu_selected = $(this).attr("cuname");
-          cu_multi_selected=[];
-          if(e.shiftKey){
-            var nrows=$(this).index();
-            if(last_index_selected!=-1){
-             //alert("selected shift:"+nrows+" interval:"+(nrows-last_index_selected));
-             if(nrows>last_index_selected){
-              //$('#main_table_cu tr:gt('+(last_index_selected)+'):lt('+(nrows)+')').addClass("row_snap_selected");
-              $('#main_table_magnets tr').slice(last_index_selected+1,nrows+1).addClass("row_snap_selected");
-               for(var cnt=last_index_selected;cnt<=nrows;cnt++){
-                cu_multi_selected.push(cu_list[cnt]);
-                 
-               }
-               
-             }
-            }
-          }
-          last_index_selected=$(this).index();
+          mainTableCommonHandling("main_table_magnets",e);
         });
 
         $("div.ps-control").html(generatePSCmd(cu_selected));
-       /*  var ps_interval = setInterval(function () {
-          if ($("div.ps-control").is(':visible') == false) {
-            clearInterval(ps_interval);
-          }
-          var datasets = jchaos.getChannel(cu_list, -1, null);
-         
-        }, options.Interval); */
+     
       }
 
       /************** 
@@ -1439,53 +1677,24 @@
       $(".cucmd").click(function(){
         var alias=$(this).attr("cucmdid");
         var parvalue=$(this).attr("cucmdvalue");
-        
-        if(cu_selected!=null && cu_name_to_desc[cu_selected].hasOwnProperty("cudk_ds_desc")&& cu_name_to_desc[cu_selected].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")){
-          var desc=cu_name_to_desc[cu_selected].cudk_ds_desc.cudk_ds_command_description;
-          desc.forEach(function(item){
-            if(item.bc_alias == alias){
-              //
-              var cmdparam={};
-              var params=item.bc_parameters;
-              params.forEach(function(par){
-                var parname=par.bc_parameter_name;
-                if(parvalue==null){
-                  parvalue=$("#"+alias+"_"+parname).val();
-                  
-                } 
-                switch(par.bc_parameter_type){
-                  case 0:
-                  //bool
-                  if(parvalue == "true"){
-                    cmdparam[parname]=true;
-                    
-                  } else  if(parvalue == "false"){
-                    cmdparam[parname]=true;
-                  } else {
-                    cmdparam[parname]=parseInt(parvalue);
-                    
-                  }                    
-                  break;
-                  case 1:
-                    //integer
-                    cmdparam[parname]=parseInt(parvalue);
-                   break;
-                  case 3:{
-                    var d={};
-                    d['$numberDouble']=parvalue.toString();
-                    cmdparam[parname]=d;
-                    }
-                  
-                }
-                
-              });
-            jchaos.sendCUCmd(cu_selected,alias,cmdparam);
-            
+        var arglist=retriveCurrentCmdArguments(alias);
+        var cmdparam={};
+          var arguments={};
+          arglist.forEach(function(item,index){
+            // search for values
+            if(parvalue==null){
+              parvalue=$("#"+alias+"_"+item['name']).val();
+            } 
+            if((parvalue == null) && (item['optional'] == false)) {
+              alert("argument '"+item['name']+"' is required in command:'"+alias+"'");
+              return;
             }
-            
+
+            item['value']=parvalue;
           });
-          
-        }
+         
+        cmdparam=buildCmdParams(arglist);
+        jchaos.sendCUCmd(cu_selected,alias,cmdparam);
         
       });
       var check_time_stamp_interval=setInterval(function(){
