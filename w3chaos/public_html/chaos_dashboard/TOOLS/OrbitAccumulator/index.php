@@ -350,7 +350,7 @@ require_once('../../header.php');
 		<script src="js/accumulator.js"></script>
 
 		
-		<script src="/webChaos/jchaos.js"></script>
+		<script src="../../js/jchaos.js"></script>
 
 		<script>
                 jchaos.setOptions({"uri":location.host});

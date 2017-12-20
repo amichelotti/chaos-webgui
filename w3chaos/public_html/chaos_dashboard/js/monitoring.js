@@ -19,7 +19,7 @@ $(document).ready(function () {
     var cu = [];
     var zones = [];
     var classe=["powersupply","scraper"];
-    var implementation_map={"powersupply":"SCPowerSupply"};
+    var implementation_map={"powersupply":"SCPowerSupply","scraper":"SCActuator"};
 
     //Funzione per riempire le select(quella delle zone, e quella degli alimentatori)
     function element_sel(field, arr, add_all) {

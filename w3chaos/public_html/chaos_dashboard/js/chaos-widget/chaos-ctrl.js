@@ -18,6 +18,24 @@
   var curr_cu_selected={};
   var last_index_selected=-1;
 
+
+  function findImplementationName(type){
+    var implementation_map={"SCPowerSupplyControlUnit":"powersupply","SCActuatorControlUnit":"scraper"};
+    
+    var ret="uknown";
+    if(type !=null){
+      var r=type.lastIndexOf(":");
+      var tmp=type.substring(r+1);
+
+      if(implementation_map[tmp]!=null){
+        ret=implementation_map[tmp];
+      } else if(tmp!=null){
+        ret=tmp;
+      }
+    }
+    return ret;
+
+  }
   function retriveCurrentCmdArguments(alias){
     var arglist=[];
     if(cu_selected!=null && cu_name_to_desc[cu_selected].hasOwnProperty("cudk_ds_desc")&& cu_name_to_desc[cu_selected].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")){
@@ -310,6 +328,7 @@
     });
 
     $("#command-send").click(function(){
+      var cuselection;
       var cmdselected = $("#cu_full_commands option:selected").val();
       var arguments=retriveCurrentCmdArguments(cmdselected);
       arguments.forEach(function(item,index){
@@ -321,7 +340,12 @@
         item['value']=value;
       });
       var parm=buildCmdParams(arguments);
-      jchaos.sendCUCmd(cu_selected,cmdselected,parm);
+      if(cu_multi_selected.length>0){
+        cuselection=cu_multi_selected;
+      } else {
+        cuselection=cu_selected;
+      }
+      jchaos.sendCUCmd(cuselection,cmdselected,parm);
     });
 
     if(e.shiftKey){
@@ -372,10 +396,19 @@
     html += '</thead> ';
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html+="<tr class='row_element' cuname='"+cu[i]+"' id='" + cuname + "'><td class='name_element'>" + cu[i]
-        + "</td><td id='status-" + cuname + "'></td><td id='td_busy_" + cuname + "'><td id='td_bypass_" + cuname + "'></td><td id='timestamp_" + cuname
-        + "'></td><td id='uptime_" + cuname + "'></td><td id='systemtime_" + cuname + "'></td><td id='usertime_" + cuname
-        + "'></td><td id='command_" + cuname + "'></td><td id='dev_alarm_" + cuname + "'></td><td id='cu_alarm_" + cuname + "'></td><td id='prate_" + cuname + "'></td></tr>";
+      html+="<tr class='row_element' cuname='"+cu[i]+"' id='" + cuname + "'>";
+      html+="<td class='name_element'>" + cu[i]+ "</td>";
+      html+="<td id='" + cuname + "_health_status'></td>";
+      html+="<td id='" + cuname + "_output_busy'></td>";
+      html+="<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
+      html+="<td id='" + cuname+ "_health_timestamp'></td>";
+      html+="<td id='" + cuname + "_health_uptime'></td>";
+      html+="<td id='" + cuname + "_health_systemtime'></td>";
+      html+="<td id='" + cuname+ "_health_usertime'></td>";
+      html+="<td id='" + cuname + "_system_command'></td>";
+      html+="<td title='Device alarms' id='"+cuname + "_output_device_alarm'></td>";
+      html+="<td title='Control Unit alarms' id='" + cuname + "_output_cu_alarm'></td>";
+      html+="<td id='" + cuname + "_system_prate'></td></tr>";
     });
 
     html += '</table>';
@@ -400,6 +433,7 @@
    
   }
 
+ 
   function updateGenericTableDataset(cu) {
     cu.forEach(function (el) {  // cu forEach
       var name_device_db, name_id;
@@ -413,29 +447,29 @@
 
         el.tmUtm = toHHMMSS(el.health.nh_upt);
         status = el.health.nh_status;
-        $("#uptime_" + name_id).html(el.tmUtm);
-        $("#timestamp_" + name_id).html(new Date(1000 * el.tmStamp).toUTCString());
-        $("#usertime_" + name_id).html(el.usrTime);
-        $("#systemtime_" + name_id).html(el.systTime);
-        $("#prate_" + name_id).html(Number(el.health.cuh_dso_prate).toFixed(3));
+        $("#"+name_id+"_health_uptime").html(el.tmUtm);
+        $("#"+name_id+"_health_timestamp").html(new Date(1000 * el.tmStamp).toUTCString());
+        $("#"+name_id+"_health_usertime").html(el.usrTime);
+        $("#"+name_id+"_health_systemtime").html(el.systTime);
+        $("#"+name_id+"_health_prate").html(Number(el.health.cuh_dso_prate).toFixed(3));
         if((off_line[name_device_db]==true) && (status !="Unload")){
           status="Dead";
         }
        
         if (status == 'Start') {
-          $("#status-" + name_id).html('<i class="material-icons verde">play_arrow</i>');
+          $("#"+name_id+"_health_status").html('<i class="material-icons verde">play_arrow</i>');
 
         } else if (status == 'Stop') {
-          $("#status-" + name_id).html('<i class="material-icons arancione">stop</i>');
+          $("#"+name_id+"_health_status").html('<i class="material-icons arancione">stop</i>');
         } else if (status == 'Init') {
-          $("#status-" + name_id).html('<i class="material-icons giallo">trending_up</i>');
+          $("#"+name_id+"_health_status").html('<i class="material-icons giallo">trending_up</i>');
           
         } else if (status == 'Deinit') {
-          $("#status-" + name_id).html('<i class="material-icons rosso">trending_down</i>');
+          $("#"+name_id+"_health_status").html('<i class="material-icons rosso">trending_down</i>');
           
         } else if (status == 'Fatal Error' || status == 'Recoverable Error') {
           //$("#status_" + name_id).html('<a id="fatalError_' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" onclick="return show_fatal_error(this.id);"><i style="cursor:pointer;" class="material-icons rosso">error</i></a>');
-          $("#status-" + name_id).html('<a id="Error-' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" ><i style="cursor:pointer;" class="material-icons rosso">cancel</i></a>');
+          $("#"+name_id+"_health_status").html('<a id="Error-' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" ><i style="cursor:pointer;" class="material-icons rosso">cancel</i></a>');
           
           $("Error-" + name_id).on("click", function () {
             $("#name-FE-device").html(el.health.ndk_uid);
@@ -445,28 +479,30 @@
             $("#error_domain").html(el.health.nh_led);
           });
         } else if (status == "Unload") {
-          $("#status-" + name_id).html('<i class="material-icons rosso">power</i>');
+          $("#"+name_id+"_health_status").html('<i class="material-icons rosso">power</i>');
           
           
         } else if (status == "Load") {
-          $("#status-" + name_id).html('<i class="material-icons verde">power</i>');
+          $("#"+name_id+"_health_status").html('<i class="material-icons verde">power</i>');
           
         } else {
-          $("#status-" + name_id).html('<i class="material-icons red">block</i>');
+          $("#"+name_id+"_health_status").html('<i class="material-icons red">block</i>');
           
         }
       }
+      $("#"+name_id+"_health_status").attr('title',"Device status:"+status);
       if (el.hasOwnProperty('system')&& (status != "Dead")) {   //if el system
-        $("#command_" + name_id).html(el.system.dp_sys_que_cmd);
+        $("#" + name_id+"_system_command").html(el.system.dp_sys_que_cmd);
        
         
         if (el.system.cudk_bypass_state == false) {
-          $("#td_bypass_" + name_id).html('<i id="td_bypass_' + name_id + '" class="material-icons verde">usb</i>');
-          
+          $("#"+name_id+"_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">usb</i>');
+          $("#"+name_id+"_system_bypass").attr('title',"Bypass disabled")
           
         } else {
-             
-          $("#td_bypass_" + name_id).html('<i id="td_bypass_' + name_id + '" class="material-icons verde">cached</i>');
+          $("#"+name_id+"_system_bypass").attr('title',"Bypass enabled")
+          
+          $("#"+name_id+"_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons yellow">cached</i>');
         }
       }
       if (el.hasOwnProperty('output')) {   //if el output
@@ -474,19 +510,25 @@
         var dev_alarm = $.trim(el.output.device_alarm);
         var cu_alarm = $.trim(el.output.cu_alarm);
         if (dev_alarm == 1) {
-          $("#dev_alarm_" + name_id).html('<a id="device-alarm-butt-'+  name_id +'" cuname="'+name_device_db+'" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error</i></a>');
+          $("#"+name_id+"_output_device_alarm").attr('title',"Device Warning");
+          $("#"+name_id+"_output_device_alarm").html('<a id="device-alarm-butt-'+  name_id +'" cuname="'+name_device_db+'" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error</i></a>');
         } else if (dev_alarm == 2) {
-          $("#dev_alarm_" + name_id).html('<a id="device-alarm-butt-'+  name_id +'" cuname="'+name_device_db+'" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons rosso">error</i></a>');
+          $("#"+name_id+"_output_device_alarm").attr('title',"Device Error");
+          $("#"+name_id+"_output_device_alarm").html('<a id="device-alarm-butt-'+  name_id +'" cuname="'+name_device_db+'" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons rosso">error</i></a>');
         } else {
-          $("#device-alarm-butt-"+  name_id).remove();
+          $("#"+name_id+"_output_device_alarm").html('');
         }
 
         if (cu_alarm == 1) {
-          $("#cu_alarm_" + name_id).html('<a id="cu-alarm-butt-'+  name_id +'" cuname="'+name_device_db+'" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error_outline</i></a>');
+          $("#"+name_id+"_output_cu_alarm").attr('title',"Control Unit Warning");
+          
+          $("#"+name_id+"_output_cu_alarm").html('<a id="cu-alarm-butt-'+  name_id +'" cuname="'+name_device_db+'" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error_outline</i></a>');
         } else if (cu_alarm == 2) {
-          $("#cu_alarm_" + name_id).html('<a id="cu-alarm-butt-'+  name_id +'" cuname="'+name_device_db+'" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal"><i  class="material-icons rosso">error_outline</i></a>');
+          $("#"+name_id+"_output_cu_alarm").attr('title',"Control Unit Error");
+          
+          $("#"+name_id+"_output_cu_alarm").html('<a id="cu-alarm-butt-'+  name_id +'" cuname="'+name_device_db+'" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal"><i  class="material-icons rosso">error_outline</i></a>');
         } else {
-          $("#cu-alarm-butt-"+  name_id).remove();
+          $("#"+name_id+"_output_cu_alarm").html('');
         }
         $("a.device-alarm").click(function(e){
           var id=$(this).attr("cuname");
@@ -499,9 +541,14 @@
         });
 
         if (busy == 'true') {
-          $("#td_busy_" + name_id).html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_empty</i>');
+          $("#"+name_id+"_output_busy").attr('title',"The device is busy command in queue:"+el.system.dp_sys_que_cmd);
+          if(el.output.dpck_seq_id&1){
+            $("#"+name_id+"_output_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_empty</i>');
+          } else {
+            $("#"+name_id+"_output_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_full</i>');
+          }
         } else {
-          $("#busy_" + name_id).remove();
+          $("#"+name_id+"_output_busy").html('');
         }
       }
     });
@@ -528,7 +575,7 @@
       html += "<tr class='row_element' cuname='"+cu[i]+"' id='" + cuname + "'><td class='name_element'>" +cu[i]
       + "</td><td class='position_element' id='"+ cuname + "_output_position'></td><td class='position_element' id='"+ cuname
       + "_input_position'></td><td id='"+ cuname + "_saved_position'></td><td id='"+ cuname + "_saved_status'></td><td id='"+ cuname + "_output_status'></td><td id='"+ cuname
-      + "_in'></td><td id='"+cuname + "_out'></td><td id='"+ cuname + "_output_device_alarm'></td><td id='"+ cuname+ "_cu_alarm'></td></tr>";
+      + "_in'></td><td id='"+cuname + "_out'></td><td  title='Device alarms' id='"+ cuname + "_output_device_alarm'></td><td title='Control Unit alarms' id='"+ cuname+ "_cu_alarm'></td></tr>";
     });
     
     html += '</table>';            
@@ -579,11 +626,7 @@
           $("#" + cuname + "_in").remove();
         }
           
-      if (elem.output.busy == true) {
-        $("#" + cuname + "_output_busy").html('<i class="material-icon verde">hourglass empty</i>');
-      } else if (elem.output.busy == false) {
-        $("#" + cuname + "_output_busy").remove();
-      }
+     
 
 
       if (elem.output.local == true) {
@@ -662,23 +705,26 @@
     html += '<th>Readout [A]</th>';
     html += '<th>Setting [A]</th>';
     html += '<th colspan="3">Saved</th>';
-    html += '<th colspan="6">Flags</th>';
+    html += '<th colspan="7">Flags</th>';
     html += '</tr>';
     html += '</thead>';
 
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html += "<tr class='row_element' cuname='"+cu[i]+"' id='" + cuname + "'><td class='td_element td_name'>" + cu[i] + "</td><td class='td_element td_readout' id='" + cuname
-      + "_output_current'>NA</td><td class='td_element td_current' id='" + cuname + "_input_current'>NA</td><td class='td_element' id='" + cuname
-      + "_saved_current'></td><td class='td_element' id='" + cuname
-      + "_saved_state'></td><td class='td_element' id='" + cuname
-      + "_saved_polarity'></td><td class='td_element' id='" + cuname
-      + "_output_stby'></td><td class='td_element' id='" + cuname
-      + "_output_polarity'></td><td class='td_element' id='" + cuname
-      + "_output_local'></td><td class='td_element' id='" + cuname
-      + "_output_busy'></td><td class='td_element' id='" + cuname
-      + "_output_device_alarm'></td><td class='td_element' id='" + cuname
-      + "_output_cu_alarm'></td></tr>";
+      html+="<tr class='row_element' cuname='"+cu[i]+"' id='" + cuname + "'>";
+      html+="<td class='td_element td_name'>" + cu[i] + "</td>";
+      html+="<td title='Readout current' class='td_element td_readout' id='" + cuname+ "_output_current'>NA</td>";
+      html+="<td class='td_element td_current' title='Setpoint current' id='" + cuname + "_input_current'>NA</td>";
+      html+="<td class='td_element' title='Restore setpoint current'  id='" + cuname+ "_saved_current'></td>";
+      html+="<td class='td_element' id='" + cuname+ "_saved_state'></td>";
+      html+="<td class='td_element' id='" + cuname+ "_saved_polarity'></td>";
+      html+="<td class='td_element' id='" + cuname+ "_output_stby'></td>";
+      html+="<td class='td_element' id='" + cuname+ "_output_polarity'></td>";
+      html+="<td class='td_element' title='Bypass Mode' id='" + cuname+ "_system_bypass'></td>";
+      html+="<td class='td_element' title='Local controlled' id='" + cuname+ "_output_local'></td>";
+      html+="<td class='td_element' id='" + cuname+ "_output_busy'></td>";
+      html+="<td class='td_element' title='Control Unit alarms' id='" + cuname+ "_output_cu_alarm'></td>";
+      html+="<td class='td_element' title='Device alarms' id='" + cuname+ "_output_device_alarm'></td></tr>";
     });
     html += '</table>';
     html += '</div>';
@@ -714,11 +760,6 @@
 
       }
 
-      if (elem.output.busy == true) {
-        $("#" + cuname + "_output_busy").html('<i class="material-icon verde">hourglass empty</i>');
-      } else if (elem.output.busy == false) {
-        $("#" + cuname + "_output_busy").remove();
-      }
 
 
       if (elem.output.local == true) {
@@ -1114,25 +1155,7 @@
     return regexp.test(string);
   }
 
-  function Stop(cuid) {
-    jchaos.sendCUCmd(cuid, "stop", "", null);
-  }
-  function Start(cuid) {
-    jchaos.sendCUCmd(cuid, "start", "", null);
-  }
-  function Deinit(cuid) {
-    jchaos.sendCUCmd(cuid, "deinit", "", null);
-  }
-  function Init(cuid) {
-    jchaos.sendCUCmd(cuid, "init", "", null);
-  }
-  function ByPassON(cuid) {
-    jchaos.setBypass(cuid, true, null);
-
-  }
-  function ByPassOFF() {
-    jchaos.setBypass(cuid, false, null);
-  }
+  
 
   function generateGenericControl(cu) {
     var html = "";
@@ -1293,7 +1316,8 @@
       
       cu_multi_selected.forEach(function(elem){
         var name=encodeName(elem);
-        var type=cu_name_to_desc[elem].instance_description.control_unit_implementation;
+        var type=findImplementationName(cu_name_to_desc[elem].instance_description.control_unit_implementation);
+       
         $('#table_snap_nodes').append('<tr class="row_element" id="' + name + '"><td>' + name + '</td><td>' + type + '</td></tr>');
         
       });
@@ -1328,7 +1352,7 @@
               
             }
             var desc=jchaos.getDesc(name,null);
-            var type=desc[0].instance_description.control_unit_implementation;
+            var type=findImplementationName(desc[0].instance_description.control_unit_implementation);
             $('#table_snap_nodes').append('<tr class="row_element" id="' + name + '"><td>' + name + '</td><td>' + type + '</td></tr>');
             
           });
@@ -1393,12 +1417,12 @@
 
       if ((options.CUtype.indexOf("SCPowerSupply") != -1)) {
         html += generatePStable(cu_list);
-
-        html += '<div class="ps-control"></div>';
-
+      } else if((options.CUtype.indexOf("SCActuator") != -1)) {
+        html+=generateScraperTable(cu_list);
       } else {
         html+=generateGenericTable(cu_list);
       }
+      html += '<div class="specific-control"></div>';
       html += '<div class="cu-generic-control"></div>';
 
       /*** */
@@ -1536,7 +1560,7 @@
       });
       $("#snap-apply").on('click', function (e) {
         if (snap_selected != "") {
-          jchaos.snapshot(snap, "restore", "", "", null);
+          jchaos.snapshot(snap_selected, "restore", "", "", null);
         }
       });
       /***********************/
@@ -1597,8 +1621,13 @@
           mainTableCommonHandling("main_table_magnets",e);
         });
 
-        $("div.ps-control").html(generatePSCmd(cu_selected));
+        $("div.specific-control").html(generatePSCmd(cu_selected));
      
+      } else if((options.CUtype.indexOf("SCActuator") != -1)) {
+        $("#main_table_scrapers tbody tr").click(function (e) {
+          mainTableCommonHandling("main_table_scrapers",e);
+        });
+        $("div.specific-control").html(generateScraperCmd(cu_selected));
       }
 
       /************** 
@@ -1611,25 +1640,32 @@
 
       $(".cucmdbase").click(function(){
         var cmd=$(this).attr("cucmdid");
-        
+        var cuselection;
+        if(cu_multi_selected.length>0){
+          cuselection=cu_multi_selected;
+        } else {
+          cuselection=cu_selected;
+        }
         if(cu_selected!=null && cmd!=null){
           if(cmd=="bypasson"){
-            jchaos.setBypass(cu_selected,true,null);
+            jchaos.setBypass(cuselection,true,null);
             return;
           }
           if(cmd=="bypassoff"){
-            jchaos.setBypass(cu_selected,false,null);
+            jchaos.setBypass(cuselection,false,null);
             return;
           }
           if(cmd=="load"){
-            jchaos.loadUnload(cu_selected,true,null);
+            jchaos.loadUnload(cuselection,true,null);
             return;
           }
           if(cmd=="unload"){
-            jchaos.loadUnload(cu_selected,false,null);
+            jchaos.loadUnload(cuselection,false,null);
             return;
           }
-          jchaos.sendCUCmd(cu_selected,cmd,"",null);
+         
+            jchaos.sendCUCmd(cuselection,cmd,"",null);
+          
         }
           
         
@@ -1658,14 +1694,19 @@
 
           }
           
-          if ($("#main_table_cu").is(':visible')) {
-            // update 
-            updateGenericTableDataset(cu_live_selected);
-          }
+            // update all generic
+          updateGenericTableDataset(cu_live_selected);
+          
           if ($("#main_table_magnets").is(':visible')) {
             // update 
             
             updatePStable(cu_live_selected);
+          //  $("div.ps-control").html(generatePSCmd(cu_live_selected[index]));
+          }
+          if ($("#main_table_scrapers").is(':visible')) {
+            // update 
+            
+            updateScraperTabletable(cu_live_selected);
           //  $("div.ps-control").html(generatePSCmd(cu_live_selected[index]));
           }
         }
@@ -1678,6 +1719,7 @@
         var alias=$(this).attr("cucmdid");
         var parvalue=$(this).attr("cucmdvalue");
         var arglist=retriveCurrentCmdArguments(alias);
+        var cuselection;
         var cmdparam={};
           var arguments={};
           arglist.forEach(function(item,index){
@@ -1694,7 +1736,12 @@
           });
          
         cmdparam=buildCmdParams(arglist);
-        jchaos.sendCUCmd(cu_selected,alias,cmdparam);
+        if(cu_multi_selected.length>0){
+          cuselection=cu_multi_selected;
+        } else {
+          cuselection=cu_selected;
+        }
+        jchaos.sendCUCmd(cuselection,alias,cmdparam);
         
       });
       var check_time_stamp_interval=setInterval(function(){
