@@ -448,12 +448,12 @@
         name_id = encodeName(name_device_db);
         el.systTime = Number(el.health.nh_st).toFixed(3);
         el.usrTime = Number(el.health.nh_ut).toFixed(3);
-        el.tmStamp = Number(el.health.dpck_ats) / 1000;
+        el.tmStamp = Number(el.health.dpck_ats);
 
         el.tmUtm = toHHMMSS(el.health.nh_upt);
         status = el.health.nh_status;
         $("#"+name_id+"_health_uptime").html(el.tmUtm);
-        $("#"+name_id+"_health_timestamp").html(new Date(1000 * el.tmStamp).toUTCString());
+        $("#"+name_id+"_health_timestamp").html(new Date(el.tmStamp).toUTCString());
         $("#"+name_id+"_health_usertime").html(el.usrTime);
         $("#"+name_id+"_health_systemtime").html(el.systTime);
         $("#"+name_id+"_health_prate").html(Number(el.health.cuh_dso_prate).toFixed(3));
@@ -978,19 +978,25 @@
     html += '</div>';
     html += '</div>';
     html += '</div>';
+
     html += '<div class="modal-footer">';
     html += '<div class="control-group">';
-    html += '<label class="control-label" for="nameDataset">Insert name</label>';
-    html += '<div class="controls">';
-    html += '<input class="input-xlarge focused" id="log_search" type="text" value="Node search..">';
-    html += '</div>';
-    html += '</div>';
-    html += '<div class="span2" onTablet="span6" onDesktop="span2">';
-    html += '<input type="radio" name="log" value="log" checked="checked"/><label>Log</label>';
-    html += '<input type="radio" name="log" value="warning"/><label>Warning</label>';
-    html += '<input type="radio" name="log" value="error"/><label>Error</label>';
     
+    html += '<div class="controls">';
+    
+    
+    html += '<select id="logtype">';
+    html += '<option value="all" selected="selected">All</option>';
+    html += '<option value="Info">Informative</option>';
+    html += '<option value="error">Error</option>';
+    html += '<option value="warning">Warning</option>';
+    html += '</select>';    
+   
+    html += '<input class="input-xlarge focused" id="log_search" type="text" value="Node search..">';
+
     html += '</div>';
+    html += '</div>';
+
     html += '<a href="#" class="btn" id="log-search-go">Search</a>';
     html += '<a href="#" class="btn" id="log-next">Next</a>';
     html += '<a href="#" class="btn" id="log-close">Close</a>';
@@ -1078,6 +1084,8 @@
     html += generateSnapshotTable(cuid);
     html += generateAlarms(cuid);
     html +=generateCmdModal();
+    html +=generateLog();
+
     return html;
   }
 
@@ -1432,18 +1440,27 @@
   }
   function updateLog(cu) {
     $("#table_logs").find("tr:gt(0)").remove();
-    var logtype= $( "input[name=log]:radio" );
+    //var logtype= $( "input[name=log]:radio" );
+    var logtype=$("#logtype option:selected").val();
     /*
     { "result_list" : [ { "seq" : 1618, "mdsndk_nl_lts" : 1513869648206, "mdsndk_nl_sid" : "BTF/QUADRUPOLE/QUATB001", "mdsndk_nl_ld" : "error", "mdsndk_nl_lsubj" : "mode", "mdsndk_nl_e_ed" : "", "mdsndk_nl_e_em" : "", "mdsndk_nl_e_ec" : 0 }, { "seq" : 1256, "mdsndk_nl_lts" : 1513869317995, "mdsndk_nl_sid" : "BTF/QUADRUPOLE/QUATB001", "mdsndk_nl_ld" : "error", "mdsndk_nl_lsubj" : "mode", "mdsndk_nl_e_ed" : "", "mdsndk_nl_e_em" : "", "mdsndk_nl_e_ec" : 0 }, { "seq" : 654, "mdsndk_nl_lts" : 1513869128475, "mdsndk_nl_sid" : "BTF/QUADRUPOLE/QUATB001", "mdsndk_nl_ld" : "error", "mdsndk_nl_lsubj" : "mode", "mdsndk_nl_e_ed" : "", "mdsndk_nl_e_em" : "", "mdsndk_nl_e_ec" : 0 }, { "seq" : 196, "mdsndk_nl_lts" : 1513869042637, "mdsndk_nl_sid" : "BTF/QUADRUPOLE/QUATB001", "mdsndk_nl_ld" : "error", "mdsndk_nl_lsubj" : "pola", "mdsndk_nl_e_ed" : "", "mdsndk_nl_e_em" : "", "mdsndk_nl_e_ec" : 0 } ] }
     */
-    jchaos.log(cu_selected,"search","log",0,10000000,function(data){
+    jchaos.log(cu,"search","log",0,10000000000000,function(data){
       if(data.hasOwnProperty("result_list")){
         data.result_list.forEach(function(item){
-          var dat=toHHMMSS(item.mdsndk_nl_lts/1000);
-          var nam=item.mdsndk_nl_sid;
-          var msg=item.mdsndk_nl_l_m;
-          $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td>' + dat + '</td><td>' + nam + '</td><td>'+msg+'</td></tr>');
-          
+          if((item.mdsndk_nl_ld==logtype)|| (logtype == "all")){
+            var dat=new Date(item.mdsndk_nl_lts).toString();
+            var nam=item.mdsndk_nl_sid;
+            var msg=item.mdsndk_nl_l_m;
+            if(logtype=="warning"){
+              $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td>' + dat + '</td><td>' + nam + '</td><td>'+msg+'</td></tr>').css('color', 'yellow');;
+          } else if(logtype =="error"){
+            $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td>' + dat + '</td><td>' + nam + '</td><td>'+msg+'</td></tr>').css('color', 'red');;
+          } else {
+            $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td>' + dat + '</td><td>' + nam + '</td><td>'+msg+'</td></tr>');
+
+          }
+        }
         });
       }
       
@@ -1575,6 +1592,7 @@
       $("#mdl-dataset").draggable();
       $("#mdl-description").draggable();
       $("#mdl-snap").draggable();
+      $("#mdl-log").draggable();
 
       /*** 
        * 
@@ -1692,7 +1710,16 @@
       /********* LOG */
       $(this).on('click', 'a.show_log', function () {
         updateLog(cu_selected);
-        
+        //$("#mdl-log").modal("show");
+      });
+      $("#log-search-go").click(function () {
+        var sel=$("#log_search").val();
+        updateLog(sel);
+        //$("#mdl-log").modal("show");
+      });
+      $("#log-close").click(function () {
+          $("#mdl-log").modal("hide");
+
       });
       /***********************/
 
