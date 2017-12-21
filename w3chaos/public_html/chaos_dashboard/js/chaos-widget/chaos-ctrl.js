@@ -12,6 +12,7 @@
   var cu_list = [];
   var cu_name_to_index = [];
   var cu_name_to_desc = [];
+  var cu_name_to_saved = []; // cuname saved state if any
   
   var health_time_stamp_old=[];
   var off_line=[];
@@ -272,9 +273,13 @@
  */
   function mainTableCommonHandling(id,e){
     $(".row_element").removeClass("row_snap_selected");
-    $(e.currentTarget).addClass("row_snap_selected");
     $("#mdl-commands").modal("hide");
     $("#cu_full_commands").empty();
+    if(cu_selected == $(e.currentTarget).attr("cuname")){
+      cu_selected = null;
+      return;
+    }
+    $(e.currentTarget).addClass("row_snap_selected");
     
     cu_selected = $(e.currentTarget).attr("cuname");
     cu_multi_selected=[];
@@ -574,7 +579,7 @@
       var cuname = encodeName(cu[i]);
       html += "<tr class='row_element' cuname='"+cu[i]+"' id='" + cuname + "'><td class='name_element'>" +cu[i]
       + "</td><td class='position_element' id='"+ cuname + "_output_position'></td><td class='position_element' id='"+ cuname
-      + "_input_position'></td><td id='"+ cuname + "_saved_position'></td><td id='"+ cuname + "_saved_status'></td><td id='"+ cuname + "_output_status'></td><td id='"+ cuname
+      + "_input_position'></td><td id='"+ cuname + "_input_saved_position'></td><td id='"+ cuname + "_input_saved_status'></td><td id='"+ cuname + "_output_status'></td><td id='"+ cuname
       + "_in'></td><td id='"+cuname + "_out'></td><td  title='Device alarms' id='"+ cuname + "_output_device_alarm'></td><td title='Control Unit alarms' id='"+ cuname+ "_cu_alarm'></td></tr>";
     });
     
@@ -589,7 +594,9 @@
 
   function updateScraperTable(cu) {
     cu.forEach(function (elem) {
-      var cuname = encodeName(elem.output.ndk_uid);
+      if (elem.hasOwnProperty('health')) {   //if el health
+        
+      var cuname = encodeName(elem.health.ndk_uid);
 
       $("#" + cuname + "_output_position").html(elem.output.position.toFixed(3));
       $("#" + cuname + "_input_position").html(elem.input.position);
@@ -634,13 +641,13 @@
       } else if (elem.output.local == false) {
         $("#" + cuname + "_output_local").remove();
       }
-
+    }
     });
 
    
     
   }
-  function generateScraperCmd(cu){
+  function generateScraperCmd(){
     var html = '<div class="row-fluid">';
     html += '<div class="box span12 box-cmd">';
     html += '<div class="box-header green">';
@@ -715,9 +722,9 @@
       html+="<td class='td_element td_name'>" + cu[i] + "</td>";
       html+="<td title='Readout current' class='td_element td_readout' id='" + cuname+ "_output_current'>NA</td>";
       html+="<td class='td_element td_current' title='Setpoint current' id='" + cuname + "_input_current'>NA</td>";
-      html+="<td class='td_element' title='Restore setpoint current'  id='" + cuname+ "_saved_current'></td>";
-      html+="<td class='td_element' id='" + cuname+ "_saved_state'></td>";
-      html+="<td class='td_element' id='" + cuname+ "_saved_polarity'></td>";
+      html+="<td class='td_element' title='Restore setpoint current'  id='" + cuname+ "_input_saved_current'></td>";
+      html+="<td class='td_element' title='Restore Stanby/Operational' id='" + cuname+ "_input_saved_stby'></td>";
+      html+="<td class='td_element' title='Restore setpoint polarity' id='" + cuname+ "_input_saved_polarity'></td>";
       html+="<td class='td_element' id='" + cuname+ "_output_stby'></td>";
       html+="<td class='td_element' id='" + cuname+ "_output_polarity'></td>";
       html+="<td class='td_element' title='Bypass Mode' id='" + cuname+ "_system_bypass'></td>";
@@ -734,9 +741,17 @@
     return html;
   }
   function updatePStable(cu) {
-    cu.forEach(function (elem) {
-      var cuname = encodeName(elem.output.ndk_uid);
-
+    cu.forEach(function (elem,index) {
+      if(elem.hasOwnProperty("health")){
+        
+      
+      var id=elem.health.ndk_uid;
+      var cuname = encodeName(id);
+      if(!elem.output.hasOwnProperty("current")){
+        $("#" + cuname + "_output_current").html("NO DATASET");
+        $("#" + cuname + "_input_current").html("NO DATASET");
+        return;
+      }
       $("#" + cuname + "_output_current").html(elem.output.current.toFixed(3));
       $("#" + cuname + "_input_current").html(elem.input.current);
       switch (elem.output.polarity) {
@@ -755,7 +770,7 @@
 
       if (elem.output.stby == false) {
         $("#" + cuname + "_output_stby").html('<i class="material-icons verde">trending_down</i>');
-      } else if (elem.output.ostby= true) {
+      } else if (elem.output.stby= true) {
         $("#" + cuname + "_output_stby").html('<i class="material-icons rosso">pause_circle_outline</i>');
 
       }
@@ -768,6 +783,31 @@
         $("#" + cuname + "_output_local").remove();
       }
 
+      if((cu_name_to_saved!=null) && (cu_name_to_saved[elem.output.ndk_uid]!=null)){
+        var saved=cu_name_to_saved[elem.output.ndk_uid];
+        if (saved.input.stby == false) {
+          $("#" + cuname + "_input_saved_stby").attr('title',"from snapshot:"+snap_selected);
+          $("#" + cuname + "_input_saved_stby").html('<i class="material-icons verde">trending_down</i>');
+        } else if (saved.input.stby= true) {
+          $("#" + cuname + "_input_saved_stby").html('<i class="material-icons rosso">pause_circle_outline</i>');
+        }
+        $("#" + cuname + "_input_saved_current").attr('title',"from snapshot:"+snap_selected);
+        $("#" + cuname + "_input_saved_current").html(saved.input.current);
+        $("#" + cuname + "_input_saved_polarity").attr('title',"from snapshot:"+snap_selected);
+        switch (saved.input.polarity) {
+          case 1:
+            $("#" + cuname + "_input_saved_polarity").html('<i class="material-icons rosso">add_circle</i>');
+            break;
+          case -1:
+            $("#" + cuname + "_input_saved_polarity").html('<i class="material-icons blu">remove_circle</i>');
+            break;
+          case 0:
+            $("#" + cuname + "_input_saved_polarity").html('<i class="material-icons">radio_button_unchecked</i>');
+            break;
+  
+        }
+      }
+    }
     });
 
     n = $('#main_table_magnets tr').size();
@@ -778,7 +818,7 @@
     }
     
   }
-  function generatePSCmd(cu) {
+  function generatePSCmd() {
     var html = '<div class="row-fluid">';
     html += '<div class="box span12 box-cmd">';
     html += '<div class="box-header green">';
@@ -913,7 +953,51 @@
     html += '</div>';
     return html;
   }
-
+  function generateLog() {
+    var html = '<div class="modal hide fade" id="mdl-log">';
+    html += '<div class="modal-header">';
+    html += '<button type="button" class="close" data-dismiss="modal">×</button>';
+    html += '<h3 id="list_logs">List logs</h3>';
+    html += '</div>';
+    html += '<div class="modal-body">';
+    html += '<div class="row-fluid">';
+    html += '<div class="box span12">';
+    html += '<div class="box-content">';
+    
+    html += '<table class="table table-bordered" id="table_logs">';
+    html += '<thead class="box-header">';
+    html += '<tr>';
+    html += '<th>Date</th>';
+    html += '<th>Node</th>';
+    html += '<th>Description</th>';
+    html += '</tr>';
+    html += '</thead>';
+    html += '</table>';
+    
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '<div class="modal-footer">';
+    html += '<div class="control-group">';
+    html += '<label class="control-label" for="nameDataset">Insert name</label>';
+    html += '<div class="controls">';
+    html += '<input class="input-xlarge focused" id="log_search" type="text" value="Node search..">';
+    html += '</div>';
+    html += '</div>';
+    html += '<div class="span2" onTablet="span6" onDesktop="span2">';
+    html += '<input type="radio" name="log" value="log" checked="checked"/><label>Log</label>';
+    html += '<input type="radio" name="log" value="warning"/><label>Warning</label>';
+    html += '<input type="radio" name="log" value="error"/><label>Error</label>';
+    
+    html += '</div>';
+    html += '<a href="#" class="btn" id="log-search-go">Search</a>';
+    html += '<a href="#" class="btn" id="log-next">Next</a>';
+    html += '<a href="#" class="btn" id="log-close">Close</a>';
+    html += '</div>';
+    html += '</div>';
+    return html;
+  }
   function generateCmdModal(){
     var html = '<div class="modal hide fade" id="mdl-commands">';
     html += '<div class="modal-header">';
@@ -1042,6 +1126,13 @@
     html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Description</span>';
     html += '</a>';
     html += '</li>';
+    
+    html += '<li class="green">';
+    html += '<a href="#mdl-log" role="button" class="show_log" data-toggle="modal">';
+    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Logging</span>';
+    html += '</a>';
+    html += '</li>';
+
     html += '</ul>';
     html += '</div>';
     html += '</div>';
@@ -1300,7 +1391,65 @@
     
   }    
 
+  function populateSnapList(snaplist){
+    if (snaplist.length > 0) {
+      var dataset;
+      snap_selected = "";
+      snaplist.forEach(function (dataset, index) {
+        var date = new Date(dataset.ts);
+        $('#table_snap').append('<tr class="row_element" id="' + dataset.name + '"><td>' + date + '</td><td>' + dataset.name + '</td></tr>');
+      });
+      $("#table_snap tbody tr").click(function (e) {
+        $(".row_element").removeClass("row_snap_selected");
+        $("#table_snap_nodes").find("tr:gt(0)").remove();
+        
+        $(this).addClass("row_snap_selected");
+        snap_selected = $(this).attr("id");
+        var dataset = jchaos.snapshot(snap_selected, "load", null, "", null);
+        dataset.forEach(function(elem){
+          var name;
+          if(elem.hasOwnProperty("input")){
+            name=elem.input.ndk_uid;
+          } else if(elem.hasOwnProperty("output")){
+            name=elem.output.ndk_uid;
+            
+          }
+          cu_name_to_saved[name]=elem;
+          
+          var desc=jchaos.getDesc(name,null);
+          var type=findImplementationName(desc[0].instance_description.control_unit_implementation);
+          $('#table_snap_nodes').append('<tr class="row_element" id="' + name + '"><td>' + name + '</td><td>' + type + '</td></tr>');
+          
+        });
+        $("#snap-apply").show();
+        $("#snap-show").show();
+        $("#snap-delete").show();
 
+        $("#snap_save_name").val(snap_selected);
+
+      });
+    }
+  }
+  function updateLog(cu) {
+    $("#table_logs").find("tr:gt(0)").remove();
+    var logtype= $( "input[name=log]:radio" );
+    /*
+    { "result_list" : [ { "seq" : 1618, "mdsndk_nl_lts" : 1513869648206, "mdsndk_nl_sid" : "BTF/QUADRUPOLE/QUATB001", "mdsndk_nl_ld" : "error", "mdsndk_nl_lsubj" : "mode", "mdsndk_nl_e_ed" : "", "mdsndk_nl_e_em" : "", "mdsndk_nl_e_ec" : 0 }, { "seq" : 1256, "mdsndk_nl_lts" : 1513869317995, "mdsndk_nl_sid" : "BTF/QUADRUPOLE/QUATB001", "mdsndk_nl_ld" : "error", "mdsndk_nl_lsubj" : "mode", "mdsndk_nl_e_ed" : "", "mdsndk_nl_e_em" : "", "mdsndk_nl_e_ec" : 0 }, { "seq" : 654, "mdsndk_nl_lts" : 1513869128475, "mdsndk_nl_sid" : "BTF/QUADRUPOLE/QUATB001", "mdsndk_nl_ld" : "error", "mdsndk_nl_lsubj" : "mode", "mdsndk_nl_e_ed" : "", "mdsndk_nl_e_em" : "", "mdsndk_nl_e_ec" : 0 }, { "seq" : 196, "mdsndk_nl_lts" : 1513869042637, "mdsndk_nl_sid" : "BTF/QUADRUPOLE/QUATB001", "mdsndk_nl_ld" : "error", "mdsndk_nl_lsubj" : "pola", "mdsndk_nl_e_ed" : "", "mdsndk_nl_e_em" : "", "mdsndk_nl_e_ec" : 0 } ] }
+    */
+    jchaos.log(cu_selected,"search","log",0,10000000,function(data){
+      if(data.hasOwnProperty("result_list")){
+        data.result_list.forEach(function(item){
+          var dat=toHHMMSS(item.mdsndk_nl_lts/1000);
+          var nam=item.mdsndk_nl_sid;
+          var msg=item.mdsndk_nl_l_m;
+          $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td>' + dat + '</td><td>' + nam + '</td><td>'+msg+'</td></tr>');
+          
+        });
+      }
+      
+    });  
+}
+  
   function updateSnapshotTable(cu) {
     $("#table_snap").find("tr:gt(0)").remove();
     $("#table_snap_nodes").find("tr:gt(0)").remove();
@@ -1312,7 +1461,7 @@
     $("#snap-save").show();
     $('#table_snap').hide();
     if(cu_multi_selected.length>0){
-      $("#list_snapshot").html("Snapshotting group...");
+      $("#list_snapshot").html("Snapshotting the following group:");
       
       cu_multi_selected.forEach(function(elem){
         var name=encodeName(elem);
@@ -1322,51 +1471,25 @@
         
       });
     } else {
+      var snap_list="";
       $('#table_snap').show();
+    if((cu == null) || (cu.length ==0)){
+      $("#list_snapshot").html("List All snapshots");
       
-      $("#list_snapshot").html("List snapshot of "+cu);
-    
+      jchaos.search("", "snapshots", false, function (snaplist) {
+        populateSnapList(snaplist);
+    });
+    }  else {
+    $("#list_snapshot").html("List snapshot of "+cu);
+      
     jchaos.search(cu, "snapshotsof", false, function (snaplist) {
-      if (snaplist.length > 0) {
-        var dataset;
-        snap_selected = "";
-        snaplist.forEach(function (dataset, index) {
-          var date = new Date(dataset.ts);
-          $('#table_snap').append('<tr class="row_element" id="' + dataset.name + '"><td>' + date + '</td><td>' + dataset.name + '</td></tr>');
-        });
-        $("#table_snap tbody tr").click(function (e) {
-          $(".row_element").removeClass("row_snap_selected");
-          $("#table_snap_nodes").find("tr:gt(0)").remove();
-          
-          $(this).addClass("row_snap_selected");
-          snap_selected = $(this).attr("id");
-          var dataset = jchaos.snapshot(snap_selected, "load", null, "", null);
-          dataset.forEach(function(elem){
-            var name;
-            if(elem.hasOwnProperty("input")){
-              name=elem.input.ndk_uid;
-             
-              
-            } else if(elem.hasOwnProperty("output")){
-              name=elem.output.ndk_uid;
-              
-            }
-            var desc=jchaos.getDesc(name,null);
-            var type=findImplementationName(desc[0].instance_description.control_unit_implementation);
-            $('#table_snap_nodes').append('<tr class="row_element" id="' + name + '"><td>' + name + '</td><td>' + type + '</td></tr>');
-            
-          });
-          $("#snap-apply").show();
-          $("#snap-show").show();
-          $("#snap-delete").show();
-
-          $("#snap_save_name").val(snap_selected);
-
-        });
-      }
+      populateSnapList(snaplist);
+      
     });
   }
   }
+}
+
   /**
    * jQuery plugin method
    * @param json: a javascript object
@@ -1402,8 +1525,8 @@
         health_time_stamp_old[elem]=0;
         off_line[elem]=false;
       });
-      cu_selected = cu_list[0];
-      
+     // cu_selected = cu_list[0];
+     cu_selected = null;
       var html = "";
       /*****
        * 
@@ -1526,6 +1649,8 @@
 
       $("#snap-close").on('click', function () {
         $("#mdl-snap").modal("hide");
+        cu_name_to_saved=[];
+        
       });
 
       $(this).on('click', 'a.show_snapshot', function () {
@@ -1562,6 +1687,12 @@
         if (snap_selected != "") {
           jchaos.snapshot(snap_selected, "restore", "", "", null);
         }
+      });
+
+      /********* LOG */
+      $(this).on('click', 'a.show_log', function () {
+        updateLog(cu_selected);
+        
       });
       /***********************/
 
@@ -1621,13 +1752,13 @@
           mainTableCommonHandling("main_table_magnets",e);
         });
 
-        $("div.specific-control").html(generatePSCmd(cu_selected));
+        $("div.specific-control").html(generatePSCmd());
      
       } else if((options.CUtype.indexOf("SCActuator") != -1)) {
         $("#main_table_scrapers tbody tr").click(function (e) {
           mainTableCommonHandling("main_table_scrapers",e);
         });
-        $("div.specific-control").html(generateScraperCmd(cu_selected));
+        $("div.specific-control").html(generateScraperCmd());
       }
 
       /************** 
@@ -1646,7 +1777,7 @@
         } else {
           cuselection=cu_selected;
         }
-        if(cu_selected!=null && cmd!=null){
+        if(cuselection!=null && cmd!=null){
           if(cmd=="bypasson"){
             jchaos.setBypass(cuselection,true,null);
             return;
@@ -1673,9 +1804,26 @@
       });
       var interval = setInterval(function () {
         cu_live_selected = jchaos.getChannel(cu_list, -1, null);
+
         if ($("div.cu-generic-control").is(':visible') == false) {
           clearInterval(interval);
         } else {
+
+            // update all generic
+            updateGenericTableDataset(cu_live_selected);
+            
+            if ($("#main_table_magnets").is(':visible')) {
+              // update 
+              
+              updatePStable(cu_live_selected);
+            //  $("div.ps-control").html(generatePSCmd(cu_live_selected[index]));
+            }
+            if ($("#main_table_scrapers").is(':visible')) {
+              // update 
+              
+              updateScraperTabletable(cu_live_selected);
+            //  $("div.ps-control").html(generatePSCmd(cu_live_selected[index]));
+            }
           if(cu_live_selected.length==0 || cu_selected == null || cu_name_to_index[cu_selected]==null){
             return;
           }
@@ -1694,21 +1842,7 @@
 
           }
           
-            // update all generic
-          updateGenericTableDataset(cu_live_selected);
           
-          if ($("#main_table_magnets").is(':visible')) {
-            // update 
-            
-            updatePStable(cu_live_selected);
-          //  $("div.ps-control").html(generatePSCmd(cu_live_selected[index]));
-          }
-          if ($("#main_table_scrapers").is(':visible')) {
-            // update 
-            
-            updateScraperTabletable(cu_live_selected);
-          //  $("div.ps-control").html(generatePSCmd(cu_live_selected[index]));
-          }
         }
 
       }, options.Interval);
@@ -1748,7 +1882,8 @@
         if ($("div.cu-generic-control").is(':visible') == false) {
           clearInterval(check_time_stamp_interval);
           
-        }          
+        }
+                
         cu_live_selected.forEach(function(elem,index){
           if(elem.hasOwnProperty("health")){
             var name=encodeName(elem.health.ndk_uid);
@@ -1767,12 +1902,10 @@
             }
             health_time_stamp_old[elem.health.ndk_uid]=elem.health.dpck_ats;
           } else {
-            if(elem.hasOwnProperty("output")&&elem.output.hasOwnProperty("ndk_uid")){
-              var name=encodeName(elem.output.ndk_uid);
-              $("#"+name).css('color', 'red');
-              off_line[elem.output.ndk_uid]=true;
-              
-            }
+            var id=cu_list[index];
+            var name=encodeName(id);
+            $("#"+name).css('color', 'red');
+            off_line[id]=true;
             
           }
 
