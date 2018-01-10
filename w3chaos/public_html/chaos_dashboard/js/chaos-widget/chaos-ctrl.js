@@ -283,7 +283,44 @@
     
     cu_selected = $(e.currentTarget).attr("cuname");
     cu_multi_selected=[];
+    
 
+    /******** Build Context menu *****/
+   
+
+
+    $.contextMenu({
+      selector: '.cuMenu',
+      build: function ($trigger,e){
+        var cuname=$(e.currentTarget).attr("cuname");
+        var cindex = cu_name_to_index[cuname];
+        var cuitem=updateCUMenu(cu_live_selected[cindex]);
+        cuitem['sep1']="---------";
+        
+        cuitem['quit']={name: "Quit", icon: function(){
+          return 'context-menu-icon context-menu-icon-quit';}};
+    
+        return {
+          
+          callback: function(cmd, options) {
+            if(cmd=="load"){
+              jchaos.loadUnload(cu_selected,true,null);
+              return;
+            }
+            if(cmd=="unload"){
+              jchaos.loadUnload(cu_selected,false,null);
+              return;
+            }
+           
+              jchaos.sendCUCmd(cu_selected,cmd,"",null);
+          },
+          items: cuitem
+        }
+      }
+      
+    
+  });
+    /***********************/
     /**
      * handling commands
      */ 
@@ -401,7 +438,7 @@
     html += '</thead> ';
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html+="<tr class='row_element' cuname='"+cu[i]+"' id='" + cuname + "'>";
+      html+="<tr class='row_element cuMenu' cuname='"+cu[i]+"' id='" + cuname + "'>";
       html+="<td class='name_element'>" + cu[i]+ "</td>";
       html+="<td id='" + cuname + "_health_status'></td>";
       html+="<td id='" + cuname + "_output_busy'></td>";
@@ -1161,10 +1198,10 @@
         html += '<span class="json-string">"' + json + '"</span>';
     }
     else if (typeof json === 'number') {
-      html += '<span class="json-literal">' + json + '</span>';
+      html += '<span class="json-literal" cuport="'+json+'">' + json + '</span>';
     }
     else if (typeof json === 'boolean') {
-      html += '<span class="json-literal">' + json + '</span> ';
+      html += '<span class="json-literal" cuport="'+json+'">' + json + '</span> ';
     }
     else if (json === null) {
       html += '<span class="json-literal">null</span>';
@@ -1313,6 +1350,37 @@
     html += "</div>";
     html += "</div>";
     return html;
+  }
+
+  function updateCUMenu(cu){
+    var items={};
+    
+    if (cu.hasOwnProperty('health')) {   //if el health
+      var status=cu.health.nh_status;
+      if (status == 'Start') {
+        items['stop']={name:"Stop",icon:"stop"};
+      } else if (status == 'Stop') {
+        items['start']={name:"Start",icon:"start"};
+        items['deinit']={name:"Deinit",icon:"deinit"};   
+      } else if (status == 'Init') {
+        items['start']={name:"Start",icon:"start"};        
+        items['deinit']={name:"Deinit",icon:"deinit"};   
+      } else if (status == 'Deinit') {
+        items['unload']={name:"Unload",icon:"unload"};
+        items['init']={name:"Init",icon:"init"};           
+      } else if (status == 'Recoverable Error') {
+        items['recover']={name:"Recover",icon:"recover"};   
+      } else if (status == "Unload") {
+        items['load']={name:"Load",icon:"load"};    
+      } else if (status == "Load") {
+        items['unload']={name:"Unload",icon:"unload"};    
+        items['init']={name:"Init",icon:"init"};   
+        
+      } else {
+        
+      }
+    }
+    return items;      
   }
   function updateGenericControl(cu) {
     if (cu.hasOwnProperty('health')) {   //if el health
@@ -1734,6 +1802,31 @@
         }
 
         $("#cu-dataset").html(jsonhtml);
+        $.contextMenu({
+          selector: '.json-literal',
+          build: function ($trigger,e){
+            var cuitem={};
+            var cuport=$(e.currentTarget).attr("cuport");
+            
+            cuitem['plot-tim']={name:"Plot vs time"};
+            cuitem['plot-xy']={name:"Plot XY"};
+            
+            cuitem['sep1']="---------";
+            
+            cuitem['quit']={name: "Quit", icon: function(){
+              return 'context-menu-icon context-menu-icon-quit';}};
+        
+            return {
+              
+              callback: function(cmd, options) {
+               
+              },
+              items: cuitem
+            }
+          }
+          
+        
+      });
       });
       $("#dataset-close").on('click', function () {
         $("#mdl-dataset").modal("hide");
@@ -1787,7 +1880,15 @@
         });
         $("div.specific-control").html(generateScraperCmd());
       }
-
+      /*****
+       * CONTEXT MENU
+       * Dataset \elemens
+       */
+     
+  
+    /*$('.cuMenu').on('click', function(e){
+        console.log('clicked', this);
+    })*/    
       /************** 
        * 
        * UPDATE DATASET

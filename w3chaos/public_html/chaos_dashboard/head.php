@@ -41,6 +41,9 @@
 			echo '<link id="ie9style" href="' .$main_dir. '/css/ie9.css" rel="stylesheet">';
 			
 			echo '<link href="' .$main_dir. '/css/custom_style.css" rel="stylesheet">';
+			echo '<link href="' .$main_dir. '/css/jquery.contextMenu.min.css" rel="stylesheet">';
+			
+			
 			echo '<link href="' .$main_dir. '/js/chaos-widget/chaos-ctrl.css" type="text/css" rel="stylesheet" />';;
 			
 			//link script
@@ -71,6 +74,9 @@
 			echo '<script src="'.$main_dir.'/js/retina.js"></script>';
 			echo '<script src="'.$main_dir.'/js/custom.js"></script>';
 			echo '<script src="'.$main_dir.'/js/jchaos.js"></script>';	
+			echo '<script src="'.$main_dir.'/js/jquery.contextMenu.min.js"></script>';
+			echo '<script src="'.$main_dir.'/js/jquery.ui.position.min.js"></script>';
+			
 			echo '<script src="'.$main_dir.'/js/json-viewer/jquery.json-viewer.js"></script>';			
 			echo '<script src="'.$main_dir.'/js/chaos-widget/chaos-ctrl.js"></script>';
 			
