@@ -39,6 +39,7 @@
 			echo '<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>';
 			//echo '<link id="ie-style" href="' .$main_dir. '/css/ie.css" rel="stylesheet">';
 			echo '<link id="ie9style" href="' .$main_dir. '/css/ie9.css" rel="stylesheet">';
+			echo '<link href="' .$main_dir. '/css/highcharts.css" rel="stylesheet">';
 			
 			echo '<link href="' .$main_dir. '/css/custom_style.css" rel="stylesheet">';
 			echo '<link href="' .$main_dir. '/css/jquery.contextMenu.min.css" rel="stylesheet">';
@@ -73,7 +74,10 @@
 			echo '<script src="'.$main_dir.'/js/counter.js"></script>';
 			echo '<script src="'.$main_dir.'/js/retina.js"></script>';
 			echo '<script src="'.$main_dir.'/js/custom.js"></script>';
-			echo '<script src="'.$main_dir.'/js/jchaos.js"></script>';	
+			echo '<script src="'.$main_dir.'/js/jchaos.js"></script>';
+			echo '<script src="'.$main_dir.'/js/highcharts.js"></script>';
+			echo '<script src="'.$main_dir.'/js/exporting.js"></script>';
+			
 			echo '<script src="'.$main_dir.'/js/jquery.contextMenu.min.js"></script>';
 			echo '<script src="'.$main_dir.'/js/jquery.ui.position.min.js"></script>';
 			

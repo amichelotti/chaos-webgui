@@ -3,75 +3,76 @@
  * @author: Andrea Michelotti <andrea.michelotti@lnf.infn.it>
  */
 (function ($) {
-  var selectedInterface="";
+  var selectedInterface = "";
   var snap_selected = "";
   var cu_selected = "";
   var cu_multi_selected = [];
-  
+
   var cu_live_selected = [{}];
   var cu_list = [];
   var cu_name_to_index = [];
   var cu_name_to_desc = [];
   var cu_name_to_saved = []; // cuname saved state if any
-  
-  var health_time_stamp_old=[];
-  var off_line=[];
-  var curr_cu_selected={};
-  var last_index_selected=-1;
+
+  var health_time_stamp_old = [];
+  var off_line = [];
+  var curr_cu_selected = {};
+  var last_index_selected = -1;
+  var active_plots = [];
 
 
-  function findImplementationName(type){
-    var implementation_map={"SCPowerSupplyControlUnit":"powersupply","SCActuatorControlUnit":"scraper"};
-    
-    var ret="uknown";
-    if(type !=null){
-      var r=type.lastIndexOf(":");
-      var tmp=type.substring(r+1);
+  function findImplementationName(type) {
+    var implementation_map = { "SCPowerSupplyControlUnit": "powersupply", "SCActuatorControlUnit": "scraper" };
 
-      if(implementation_map[tmp]!=null){
-        ret=implementation_map[tmp];
-      } else if(tmp!=null){
-        ret=tmp;
+    var ret = "uknown";
+    if (type != null) {
+      var r = type.lastIndexOf(":");
+      var tmp = type.substring(r + 1);
+
+      if (implementation_map[tmp] != null) {
+        ret = implementation_map[tmp];
+      } else if (tmp != null) {
+        ret = tmp;
       }
     }
     return ret;
 
   }
-  function retriveCurrentCmdArguments(alias){
-    var arglist=[];
-    if(cu_selected!=null && cu_name_to_desc[cu_selected].hasOwnProperty("cudk_ds_desc")&& cu_name_to_desc[cu_selected].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")){
-      var desc=cu_name_to_desc[cu_selected].cudk_ds_desc.cudk_ds_command_description;
-      desc.forEach(function(item){
-        if(item.bc_alias == alias){
-          var params=item.bc_parameters;
-          if((params==null) || (params.length==0)){
+  function retriveCurrentCmdArguments(alias) {
+    var arglist = [];
+    if (cu_selected != null && cu_name_to_desc[cu_selected].hasOwnProperty("cudk_ds_desc") && cu_name_to_desc[cu_selected].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
+      var desc = cu_name_to_desc[cu_selected].cudk_ds_desc.cudk_ds_command_description;
+      desc.forEach(function (item) {
+        if (item.bc_alias == alias) {
+          var params = item.bc_parameters;
+          if ((params == null) || (params.length == 0)) {
             return arglist;
           }
-          params.forEach(function(par){
-            var arg={};
-            arg['name']=par.bc_parameter_name;
-            arg['desc']=par.bc_parameter_description;
-            arg['optional']=(par.bc_parameter_flag==0);
-            arg['value']=null;
-            switch(par.bc_parameter_type){
+          params.forEach(function (par) {
+            var arg = {};
+            arg['name'] = par.bc_parameter_name;
+            arg['desc'] = par.bc_parameter_description;
+            arg['optional'] = (par.bc_parameter_flag == 0);
+            arg['value'] = null;
+            switch (par.bc_parameter_type) {
               case 0:
-              arg['type']="bool";
-              break;
+                arg['type'] = "bool";
+                break;
               case 1:
-              arg['type']="int32";
-              break;
+                arg['type'] = "int32";
+                break;
               case 2:
-              arg['type']="int64";
-              break;
+                arg['type'] = "int64";
+                break;
               case 4:
-              arg['type']="string";
-              break;
+                arg['type'] = "string";
+                break;
               case 3:
-              arg['type']="double";
-              break;
+                arg['type'] = "double";
+                break;
               case 5:
-              arg['type']="binary";
-              break;
+                arg['type'] = "binary";
+                break;
 
             }
             arglist.push(arg);
@@ -79,75 +80,75 @@
         }
       });
     }
-  return arglist;
-}
+    return arglist;
+  }
   // encode the arguments value as extended json
   // alias: command name
   // argument values arglist['name'] ...
   // return a filled argument list ready to be send
-  function buildCmdParams(arglist){
-    var cmdparam={};    
-    arglist.forEach(function(par){
-            var parname=par['name'];
-            var parvalue=par['value'];
-            var type=par['type'];
-            if(parvalue!=null){
-            switch(type){
-              case "bool":
-              //bool
-              if(parvalue == "true"){
-                cmdparam[parname]=true;
-                
-              } else  if(parvalue == "false"){
-                cmdparam[parname]=true;
-              } else {
-                cmdparam[parname]=parseInt(parvalue);
-                
-              }                    
-              break;
-              case "int32":
-                //integer
-                cmdparam[parname]=parseInt(parvalue);
-               break;
-              case "double":{
-                var d={};
-                if(typeof parvalue === 'string'){
-                  d['$numberDouble']=parvalue;
-                } else {
-                  d['$numberDouble']=parvalue.toString();
-                }
-                cmdparam[parname]=d;
-                break;
-                }
-                case "string":{
-                  cmdparam[parname]=parvalue;
-                  break;
-                }
-                case "int64":{
-                  var d={};
-                  if(typeof parvalue === 'string'){
-                    d['$numberLong']=parvalue;
-                  } else {
-                    d['$numberLong']=parvalue.toString();
-                  }
-                  cmdparam[parname]=d;
-                  break;
-                  }
-              
+  function buildCmdParams(arglist) {
+    var cmdparam = {};
+    arglist.forEach(function (par) {
+      var parname = par['name'];
+      var parvalue = par['value'];
+      var type = par['type'];
+      if (parvalue != null) {
+        switch (type) {
+          case "bool":
+            //bool
+            if (parvalue == "true") {
+              cmdparam[parname] = true;
+
+            } else if (parvalue == "false") {
+              cmdparam[parname] = true;
+            } else {
+              cmdparam[parname] = parseInt(parvalue);
+
             }
+            break;
+          case "int32":
+            //integer
+            cmdparam[parname] = parseInt(parvalue);
+            break;
+          case "double": {
+            var d = {};
+            if (typeof parvalue === 'string') {
+              d['$numberDouble'] = parvalue;
+            } else {
+              d['$numberDouble'] = parvalue.toString();
+            }
+            cmdparam[parname] = d;
+            break;
           }
-          });
-  return cmdparam;
-}
-  function cusWithInterface(culist,interface){
-    var retlist=[];
-    culist.forEach(function(name){
-      var desc=jchaos.getDesc(name,null);
-      cu_name_to_desc[name]=desc[0];
-      
-      if (desc[0].hasOwnProperty('instance_description') && desc[0].instance_description.hasOwnProperty("control_unit_implementation")&&(desc[0].instance_description.control_unit_implementation.indexOf(interface)!=-1)) {
+          case "string": {
+            cmdparam[parname] = parvalue;
+            break;
+          }
+          case "int64": {
+            var d = {};
+            if (typeof parvalue === 'string') {
+              d['$numberLong'] = parvalue;
+            } else {
+              d['$numberLong'] = parvalue.toString();
+            }
+            cmdparam[parname] = d;
+            break;
+          }
+
+        }
+      }
+    });
+    return cmdparam;
+  }
+  function cusWithInterface(culist, interface) {
+    var retlist = [];
+    culist.forEach(function (name) {
+      var desc = jchaos.getDesc(name, null);
+      cu_name_to_desc[name] = desc[0];
+
+      if (desc[0].hasOwnProperty('instance_description') && desc[0].instance_description.hasOwnProperty("control_unit_implementation") && (desc[0].instance_description.control_unit_implementation.indexOf(interface) != -1)) {
         retlist.push(name);
-    }
+      }
     });
     return retlist;
   }
@@ -165,32 +166,32 @@
     }, 10000);  /*** il setInterval è impostato a 6 secondi perché non può essere minore delq refresh cu ***/
   }
 
-    //var index = 0;
-    //38 up, 40down
-/*     $(document).keydown(function (e) {
-      
-              if (e.keyCode === 40) {
-                  if (num_row + 1 >= $(".row_element").length) {
-                      num_row = $(".row_element").length - 1;
-                  } else {
-                      num_row = num_row + 1;
-                  }
-                  $(".row_element").removeClass("row_selected");
-                  selectElement(num_row);
-                  return false;
-              }
-              if (e.keyCode === 38) {
-                  if (num_row == 0) {
-                      num_row = 0;
-                  } else {
-                      num_row = num_row - 1;
-                  }
-                  $(".row_element").removeClass("row_selected");
-                  selectElement(num_row);
-                  return false;
-              }
-          });
- */      
+  //var index = 0;
+  //38 up, 40down
+  /*     $(document).keydown(function (e) {
+        
+                if (e.keyCode === 40) {
+                    if (num_row + 1 >= $(".row_element").length) {
+                        num_row = $(".row_element").length - 1;
+                    } else {
+                        num_row = num_row + 1;
+                    }
+                    $(".row_element").removeClass("row_selected");
+                    selectElement(num_row);
+                    return false;
+                }
+                if (e.keyCode === 38) {
+                    if (num_row == 0) {
+                        num_row = 0;
+                    } else {
+                        num_row = num_row - 1;
+                    }
+                    $(".row_element").removeClass("row_selected");
+                    selectElement(num_row);
+                    return false;
+                }
+            });
+   */
   /**
    * Check if arg is either an array with at least 1 element, or a dict with at least 1 key
    * @return boolean
@@ -234,7 +235,7 @@
   }
 
   function show_cu_alarm(id) {
-    var dataset =cu_live_selected[cu_name_to_index[id]];
+    var dataset = cu_live_selected[cu_name_to_index[id]];
     if (dataset.hasOwnProperty("cu_alarms")) {
       decodeDeviceAlarm(dataset.cu_alarms);
     }
@@ -267,160 +268,163 @@
     var regexp = /^(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
     return regexp.test(string);
   }
-/******************
- * MAIN TABLE HANDLING
- * 
- */
-  function mainTableCommonHandling(id,e){
+  /******************
+   * MAIN TABLE HANDLING
+   * 
+   */
+  function mainTableCommonHandling(id, e) {
     $(".row_element").removeClass("row_snap_selected");
     $("#mdl-commands").modal("hide");
     $("#cu_full_commands").empty();
-    if(cu_selected == $(e.currentTarget).attr("cuname")){
+    if (cu_selected == $(e.currentTarget).attr("cuname")) {
       cu_selected = null;
       return;
     }
     $(e.currentTarget).addClass("row_snap_selected");
-    
+
     cu_selected = $(e.currentTarget).attr("cuname");
-    cu_multi_selected=[];
-    
+    cu_multi_selected = [];
+
 
     /******** Build Context menu *****/
-   
+
 
 
     $.contextMenu({
       selector: '.cuMenu',
-      build: function ($trigger,e){
-        var cuname=$(e.currentTarget).attr("cuname");
+      build: function ($trigger, e) {
+        var cuname = $(e.currentTarget).attr("cuname");
         var cindex = cu_name_to_index[cuname];
-        var cuitem=updateCUMenu(cu_live_selected[cindex]);
-        cuitem['sep1']="---------";
-        
-        cuitem['quit']={name: "Quit", icon: function(){
-          return 'context-menu-icon context-menu-icon-quit';}};
-    
+        var cuitem = updateCUMenu(cu_live_selected[cindex]);
+        cuitem['sep1'] = "---------";
+
+        cuitem['quit'] = {
+          name: "Quit", icon: function () {
+            return 'context-menu-icon context-menu-icon-quit';
+          }
+        };
+
         return {
-          
-          callback: function(cmd, options) {
-            if(cmd=="load"){
-              jchaos.loadUnload(cu_selected,true,null);
+
+          callback: function (cmd, options) {
+            if (cmd == "load") {
+              jchaos.loadUnload(cu_selected, true, null);
               return;
             }
-            if(cmd=="unload"){
-              jchaos.loadUnload(cu_selected,false,null);
+            if (cmd == "unload") {
+              jchaos.loadUnload(cu_selected, false, null);
               return;
             }
-           
-              jchaos.sendCUCmd(cu_selected,cmd,"",null);
+
+            jchaos.sendCUCmd(cu_selected, cmd, "", null);
           },
           items: cuitem
         }
       }
-      
-    
-  });
+
+
+    });
     /***********************/
     /**
      * handling commands
-     */ 
-    if(cu_name_to_desc[cu_selected] == null){
-      var desc=jchaos.getDesc(cu_selected,null);
-      cu_name_to_desc[cu_selected]=desc[0];
+     */
+    if (cu_name_to_desc[cu_selected] == null) {
+      var desc = jchaos.getDesc(cu_selected, null);
+      cu_name_to_desc[cu_selected] = desc[0];
     }
-    if(cu_selected!=null && cu_name_to_desc[cu_selected].hasOwnProperty("cudk_ds_desc")&& cu_name_to_desc[cu_selected].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")){
-      var desc=cu_name_to_desc[cu_selected].cudk_ds_desc.cudk_ds_command_description;
-      $("#cu_full_commands").add("<option>--Select--</option>"); 
-      
-      desc.forEach(function(item){
-        $("#cu_full_commands").append("<option value='"+item.bc_alias+"'>"+item.bc_alias+ " (\""+item.bc_description+"\")</option>");
-        });
+    if (cu_selected != null && cu_name_to_desc[cu_selected].hasOwnProperty("cudk_ds_desc") && cu_name_to_desc[cu_selected].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
+      var desc = cu_name_to_desc[cu_selected].cudk_ds_desc.cudk_ds_command_description;
+      $("#cu_full_commands").add("<option>--Select--</option>");
 
-        $("#cu_full_commands").change(function (e) {
-          //show the command
-          var cmdselected = $("#cu_full_commands option:selected").val();
-          var arguments=retriveCurrentCmdArguments(cmdselected);
-          var input_type="number";
-          if(arguments.length==0){
-            $("#list_command_argument").html("Command \""+cmdselected+"\" NO ARGUMENTS");
+      desc.forEach(function (item) {
+        $("#cu_full_commands").append("<option value='" + item.bc_alias + "'>" + item.bc_alias + " (\"" + item.bc_description + "\")</option>");
+      });
+
+      $("#cu_full_commands").change(function (e) {
+        //show the command
+        var cmdselected = $("#cu_full_commands option:selected").val();
+        var arguments = retriveCurrentCmdArguments(cmdselected);
+        var input_type = "number";
+        if (arguments.length == 0) {
+          $("#list_command_argument").html("Command \"" + cmdselected + "\" NO ARGUMENTS");
+        } else {
+          $("#list_command_argument").html("Command \"" + cmdselected + "\"");
+        }
+        $("#commands_argument_table").find("tr:gt(0)").remove();
+        arguments.forEach(function (item) {
+          if (item['type'] == "string") {
+            input_type = "text";
+          }
+          if (item["optional"]) {
+            $('#commands_argument_table').append('<tr class="row_element" ><td>' + item["name"] + '</td><td>' + item["desc"] + '</td><td>' + item["type"] + '</td><td><input class="input focused" id="' + cmdselected + '_' + item["name"] + '" type="' + input_type + '"></td></tr>');
           } else {
-            $("#list_command_argument").html("Command \""+cmdselected+"\"");
+            $('#commands_argument_table').append('<tr class="row_element" ><td><b>' + item["name"] + '</b></td><td>' + item["desc"] + '</td><td>' + item["type"] + '</td><td><input class="input focused" id="' + cmdselected + '_' + item["name"] + '" type="' + input_type + '"></td></tr>');
           }
-          $("#commands_argument_table").find("tr:gt(0)").remove();
-          arguments.forEach(function(item){
-          if(item['type']=="string"){
-            input_type="text";
-          }
-          if(item["optional"]){
-            $('#commands_argument_table').append('<tr class="row_element" ><td>' + item["name"] + '</td><td>' + item["desc"]+ '</td><td>' + item["type"]+ '</td><td><input class="input focused" id="'+cmdselected+'_'+item["name"]+'" type="'+input_type+'"></td></tr>');
-          } else {
-            $('#commands_argument_table').append('<tr class="row_element" ><td><b>' + item["name"] + '</b></td><td>' + item["desc"]+ '</td><td>' + item["type"]+ '</td><td><input class="input focused" id="'+cmdselected+'_'+item["name"]+'" type="'+input_type+'"></td></tr>');
-          }
-            
-          });
-          $("#mdl-commands").draggable();
-          
-          $("#mdl-commands").modal("show");
+
         });
+        $("#mdl-commands").draggable();
+
+        $("#mdl-commands").modal("show");
+      });
 
     }
-    $("#command-close").click(function(){
+    $("#command-close").click(function () {
       $("#mdl-commands").modal("hide");
-      
+
     });
 
-    $("#command-send").click(function(){
+    $("#command-send").click(function () {
       var cuselection;
       var cmdselected = $("#cu_full_commands option:selected").val();
-      var arguments=retriveCurrentCmdArguments(cmdselected);
-      arguments.forEach(function(item,index){
-        var value=$("#"+cmdselected+"_"+item["name"]).val();
-        if((value == null || value=="")&&(item["optional"]==false)){
-          alert("argument '"+item['name']+"' is required in command:'"+cmdselected+"'");
+      var arguments = retriveCurrentCmdArguments(cmdselected);
+      arguments.forEach(function (item, index) {
+        var value = $("#" + cmdselected + "_" + item["name"]).val();
+        if ((value == null || value == "") && (item["optional"] == false)) {
+          alert("argument '" + item['name'] + "' is required in command:'" + cmdselected + "'");
           return;
         }
-        item['value']=value;
+        item['value'] = value;
       });
-      var parm=buildCmdParams(arguments);
-      if(cu_multi_selected.length>0){
-        cuselection=cu_multi_selected;
+      var parm = buildCmdParams(arguments);
+      if (cu_multi_selected.length > 0) {
+        cuselection = cu_multi_selected;
       } else {
-        cuselection=cu_selected;
+        cuselection = cu_selected;
       }
-      jchaos.sendCUCmd(cuselection,cmdselected,parm);
+      jchaos.sendCUCmd(cuselection, cmdselected, parm);
     });
 
-    if(e.shiftKey){
-      var nrows=$(e.currentTarget).index();
-      if(last_index_selected!=-1){
-       //alert("selected shift:"+nrows+" interval:"+(nrows-last_index_selected));
-       if(nrows>last_index_selected){
-        //$('#main_table_cu tr:gt('+(last_index_selected)+'):lt('+(nrows)+')').addClass("row_snap_selected");
-        $("#"+id +" tr").slice(last_index_selected+1,nrows+1).addClass("row_snap_selected");
-         for(var cnt=last_index_selected;cnt<=nrows;cnt++){
-          cu_multi_selected.push(cu_list[cnt]);
-           
-         }
-         
-       }
+    if (e.shiftKey) {
+      var nrows = $(e.currentTarget).index();
+      if (last_index_selected != -1) {
+        //alert("selected shift:"+nrows+" interval:"+(nrows-last_index_selected));
+        if (nrows > last_index_selected) {
+          //$('#main_table_cu tr:gt('+(last_index_selected)+'):lt('+(nrows)+')').addClass("row_snap_selected");
+          $("#" + id + " tr").slice(last_index_selected + 1, nrows + 1).addClass("row_snap_selected");
+          for (var cnt = last_index_selected; cnt <= nrows; cnt++) {
+            cu_multi_selected.push(cu_list[cnt]);
+
+          }
+
+        }
       }
     }
-    last_index_selected=$(e.currentTarget).index();
-    
+    last_index_selected = $(e.currentTarget).index();
+
   }
   /********************* */
   function generateGenericTable(cu) {
     var html = '<div class="row-fluid" id="table-space">';
     html += '<div class="box span12">';
     html += '<div class="box-content span12">';
-    if(cu.length==0){
+    if (cu.length == 0) {
       html += '<p id="no-result-monitoring">No results match</p>';
-   
+
     } else {
       html += '<p id="no-result-monitoring"></p>';
-      
+
     }
-  
+
     html += '<table class="table table-bordered" id="main_table_cu">';
     html += '<thead class="box-header">';
     html += '<tr>';
@@ -433,24 +437,24 @@
     html += '<th colspan="2">Alarms dev/cu</th>';
     html += '<th>Push rate</th>';
     html += '</tr>';
-   
+
 
     html += '</thead> ';
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html+="<tr class='row_element cuMenu' cuname='"+cu[i]+"' id='" + cuname + "'>";
-      html+="<td class='name_element'>" + cu[i]+ "</td>";
-      html+="<td id='" + cuname + "_health_status'></td>";
-      html+="<td id='" + cuname + "_output_busy'></td>";
-      html+="<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
-      html+="<td id='" + cuname+ "_health_timestamp'></td>";
-      html+="<td id='" + cuname + "_health_uptime'></td>";
-      html+="<td id='" + cuname + "_health_systemtime'></td>";
-      html+="<td id='" + cuname+ "_health_usertime'></td>";
-      html+="<td id='" + cuname + "_system_command'></td>";
-      html+="<td title='Device alarms' id='"+cuname + "_output_device_alarm'></td>";
-      html+="<td title='Control Unit alarms' id='" + cuname + "_output_cu_alarm'></td>";
-      html+="<td id='" + cuname + "_system_prate'></td></tr>";
+      html += "<tr class='row_element cuMenu' cuname='" + cu[i] + "' id='" + cuname + "'>";
+      html += "<td class='name_element'>" + cu[i] + "</td>";
+      html += "<td id='" + cuname + "_health_status'></td>";
+      html += "<td id='" + cuname + "_output_busy'></td>";
+      html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
+      html += "<td id='" + cuname + "_health_timestamp'></td>";
+      html += "<td id='" + cuname + "_health_uptime'></td>";
+      html += "<td id='" + cuname + "_health_systemtime'></td>";
+      html += "<td id='" + cuname + "_health_usertime'></td>";
+      html += "<td id='" + cuname + "_system_command'></td>";
+      html += "<td title='Device alarms' id='" + cuname + "_output_device_alarm'></td>";
+      html += "<td title='Control Unit alarms' id='" + cuname + "_output_cu_alarm'></td>";
+      html += "<td id='" + cuname + "_system_prate'></td></tr>";
     });
 
     html += '</table>';
@@ -461,8 +465,8 @@
   }
 
   function generateUpdateGenericTable(cu) {
-   
-  
+
+
 
     //$("#main_table_cu").DataTable();
 
@@ -472,10 +476,10 @@
     } else {
       $("#table-scroll").css('height', '');
     }
-   
+
   }
 
- 
+
   function updateGenericTableDataset(cu) {
     cu.forEach(function (el) {  // cu forEach
       var name_device_db, name_id;
@@ -489,30 +493,30 @@
 
         el.tmUtm = toHHMMSS(el.health.nh_upt);
         status = el.health.nh_status;
-        $("#"+name_id+"_health_uptime").html(el.tmUtm);
-        $("#"+name_id+"_health_timestamp").html(new Date(el.tmStamp).toUTCString());
-        $("#"+name_id+"_health_usertime").html(el.usrTime);
-        $("#"+name_id+"_health_systemtime").html(el.systTime);
-        $("#"+name_id+"_health_prate").html(Number(el.health.cuh_dso_prate).toFixed(3));
-        if((off_line[name_device_db]==true) && (status !="Unload")){
-          status="Dead";
+        $("#" + name_id + "_health_uptime").html(el.tmUtm);
+        $("#" + name_id + "_health_timestamp").html(new Date(el.tmStamp).toUTCString());
+        $("#" + name_id + "_health_usertime").html(el.usrTime);
+        $("#" + name_id + "_health_systemtime").html(el.systTime);
+        $("#" + name_id + "_health_prate").html(Number(el.health.cuh_dso_prate).toFixed(3));
+        if ((off_line[name_device_db] == true) && (status != "Unload")) {
+          status = "Dead";
         }
-       
+
         if (status == 'Start') {
-          $("#"+name_id+"_health_status").html('<i class="material-icons verde">play_arrow</i>');
+          $("#" + name_id + "_health_status").html('<i class="material-icons verde">play_arrow</i>');
 
         } else if (status == 'Stop') {
-          $("#"+name_id+"_health_status").html('<i class="material-icons arancione">stop</i>');
+          $("#" + name_id + "_health_status").html('<i class="material-icons arancione">stop</i>');
         } else if (status == 'Init') {
-          $("#"+name_id+"_health_status").html('<i class="material-icons giallo">trending_up</i>');
-          
+          $("#" + name_id + "_health_status").html('<i class="material-icons giallo">trending_up</i>');
+
         } else if (status == 'Deinit') {
-          $("#"+name_id+"_health_status").html('<i class="material-icons rosso">trending_down</i>');
-          
+          $("#" + name_id + "_health_status").html('<i class="material-icons rosso">trending_down</i>');
+
         } else if (status == 'Fatal Error' || status == 'Recoverable Error') {
           //$("#status_" + name_id).html('<a id="fatalError_' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" onclick="return show_fatal_error(this.id);"><i style="cursor:pointer;" class="material-icons rosso">error</i></a>');
-          $("#"+name_id+"_health_status").html('<a id="Error-' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" ><i style="cursor:pointer;" class="material-icons rosso">cancel</i></a>');
-          
+          $("#" + name_id + "_health_status").html('<a id="Error-' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" ><i style="cursor:pointer;" class="material-icons rosso">cancel</i></a>');
+
           $("Error-" + name_id).on("click", function () {
             $("#name-FE-device").html(el.health.ndk_uid);
             $("#status_message").html(status);
@@ -521,30 +525,30 @@
             $("#error_domain").html(el.health.nh_led);
           });
         } else if (status == "Unload") {
-          $("#"+name_id+"_health_status").html('<i class="material-icons rosso">power</i>');
-          
-          
+          $("#" + name_id + "_health_status").html('<i class="material-icons rosso">power</i>');
+
+
         } else if (status == "Load") {
-          $("#"+name_id+"_health_status").html('<i class="material-icons verde">power</i>');
-          
+          $("#" + name_id + "_health_status").html('<i class="material-icons verde">power</i>');
+
         } else {
-          $("#"+name_id+"_health_status").html('<i class="material-icons red">block</i>');
-          
+          $("#" + name_id + "_health_status").html('<i class="material-icons red">block</i>');
+
         }
       }
-      $("#"+name_id+"_health_status").attr('title',"Device status:"+status);
-      if (el.hasOwnProperty('system')&& (status != "Dead")) {   //if el system
-        $("#" + name_id+"_system_command").html(el.system.dp_sys_que_cmd);
-       
-        
+      $("#" + name_id + "_health_status").attr('title', "Device status:" + status);
+      if (el.hasOwnProperty('system') && (status != "Dead")) {   //if el system
+        $("#" + name_id + "_system_command").html(el.system.dp_sys_que_cmd);
+
+
         if (el.system.cudk_bypass_state == false) {
-          $("#"+name_id+"_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">usb</i>');
-          $("#"+name_id+"_system_bypass").attr('title',"Bypass disabled")
-          
+          $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">usb</i>');
+          $("#" + name_id + "_system_bypass").attr('title', "Bypass disabled")
+
         } else {
-          $("#"+name_id+"_system_bypass").attr('title',"Bypass enabled")
-          
-          $("#"+name_id+"_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons yellow">cached</i>');
+          $("#" + name_id + "_system_bypass").attr('title', "Bypass enabled")
+
+          $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons yellow">cached</i>');
         }
       }
       if (el.hasOwnProperty('output')) {   //if el output
@@ -552,52 +556,52 @@
         var dev_alarm = $.trim(el.output.device_alarm);
         var cu_alarm = $.trim(el.output.cu_alarm);
         if (dev_alarm == 1) {
-          $("#"+name_id+"_output_device_alarm").attr('title',"Device Warning");
-          $("#"+name_id+"_output_device_alarm").html('<a id="device-alarm-butt-'+  name_id +'" cuname="'+name_device_db+'" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error</i></a>');
+          $("#" + name_id + "_output_device_alarm").attr('title', "Device Warning");
+          $("#" + name_id + "_output_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error</i></a>');
         } else if (dev_alarm == 2) {
-          $("#"+name_id+"_output_device_alarm").attr('title',"Device Error");
-          $("#"+name_id+"_output_device_alarm").html('<a id="device-alarm-butt-'+  name_id +'" cuname="'+name_device_db+'" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons rosso">error</i></a>');
+          $("#" + name_id + "_output_device_alarm").attr('title', "Device Error");
+          $("#" + name_id + "_output_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons rosso">error</i></a>');
         } else {
-          $("#"+name_id+"_output_device_alarm").html('');
+          $("#" + name_id + "_output_device_alarm").html('');
         }
 
         if (cu_alarm == 1) {
-          $("#"+name_id+"_output_cu_alarm").attr('title',"Control Unit Warning");
-          
-          $("#"+name_id+"_output_cu_alarm").html('<a id="cu-alarm-butt-'+  name_id +'" cuname="'+name_device_db+'" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error_outline</i></a>');
+          $("#" + name_id + "_output_cu_alarm").attr('title', "Control Unit Warning");
+
+          $("#" + name_id + "_output_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error_outline</i></a>');
         } else if (cu_alarm == 2) {
-          $("#"+name_id+"_output_cu_alarm").attr('title',"Control Unit Error");
-          
-          $("#"+name_id+"_output_cu_alarm").html('<a id="cu-alarm-butt-'+  name_id +'" cuname="'+name_device_db+'" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal"><i  class="material-icons rosso">error_outline</i></a>');
+          $("#" + name_id + "_output_cu_alarm").attr('title', "Control Unit Error");
+
+          $("#" + name_id + "_output_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal"><i  class="material-icons rosso">error_outline</i></a>');
         } else {
-          $("#"+name_id+"_output_cu_alarm").html('');
+          $("#" + name_id + "_output_cu_alarm").html('');
         }
-        $("a.device-alarm").click(function(e){
-          var id=$(this).attr("cuname");
+        $("a.device-alarm").click(function (e) {
+          var id = $(this).attr("cuname");
           show_dev_alarm(id);
         });
-        $("a.cu-alarm").click(function(e){
-          var id=$(this).attr("cuname");
-          
+        $("a.cu-alarm").click(function (e) {
+          var id = $(this).attr("cuname");
+
           show_cu_alarm(id);
         });
 
         if (busy == 'true') {
-          $("#"+name_id+"_output_busy").attr('title',"The device is busy command in queue:"+el.system.dp_sys_que_cmd);
-          if(el.output.dpck_seq_id&1){
-            $("#"+name_id+"_output_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_empty</i>');
+          $("#" + name_id + "_output_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd);
+          if (el.output.dpck_seq_id & 1) {
+            $("#" + name_id + "_output_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_empty</i>');
           } else {
-            $("#"+name_id+"_output_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_full</i>');
+            $("#" + name_id + "_output_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_full</i>');
           }
         } else {
-          $("#"+name_id+"_output_busy").html('');
+          $("#" + name_id + "_output_busy").html('');
         }
       }
     });
   }
 
-  function generateScraperTable(cu){
-    var html = '<div class="row-fluid">';		
+  function generateScraperTable(cu) {
+    var html = '<div class="row-fluid">';
     html += '<div class="box span12">';
     html += '<div class="box-content">';
     html += '<table class="table table-bordered" id="main_table_scrapers">';
@@ -610,20 +614,20 @@
     html += '<th colspan="5">Out In !</th>';
     html += '</tr>';
     html += '</thead>';
-    
-    
+
+
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html += "<tr class='row_element' cuname='"+cu[i]+"' id='" + cuname + "'><td class='name_element'>" +cu[i]
-      + "</td><td class='position_element' id='"+ cuname + "_output_position'></td><td class='position_element' id='"+ cuname
-      + "_input_position'></td><td id='"+ cuname + "_input_saved_position'></td><td id='"+ cuname + "_input_saved_status'></td><td id='"+ cuname + "_output_status'></td><td id='"+ cuname
-      + "_in'></td><td id='"+cuname + "_out'></td><td  title='Device alarms' id='"+ cuname + "_output_device_alarm'></td><td title='Control Unit alarms' id='"+ cuname+ "_cu_alarm'></td></tr>";
+      html += "<tr class='row_element' cuname='" + cu[i] + "' id='" + cuname + "'><td class='name_element'>" + cu[i]
+        + "</td><td class='position_element' id='" + cuname + "_output_position'></td><td class='position_element' id='" + cuname
+        + "_input_position'></td><td id='" + cuname + "_input_saved_position'></td><td id='" + cuname + "_input_saved_status'></td><td id='" + cuname + "_output_status'></td><td id='" + cuname
+        + "_in'></td><td id='" + cuname + "_out'></td><td  title='Device alarms' id='" + cuname + "_output_device_alarm'></td><td title='Control Unit alarms' id='" + cuname + "_cu_alarm'></td></tr>";
     });
-    
-    html += '</table>';            
+
+    html += '</table>';
     html += '</div>';
     html += '</div>';
-  
+
     html += '</div>';
 
     return html;
@@ -632,59 +636,59 @@
   function updateScraperTable(cu) {
     cu.forEach(function (elem) {
       if (elem.hasOwnProperty('health')) {   //if el health
-        
-      var cuname = encodeName(elem.health.ndk_uid);
 
-      $("#" + cuname + "_output_position").html(elem.output.position.toFixed(3));
-      $("#" + cuname + "_input_position").html(elem.input.position);
-      switch (elem.output.polarity) {
-        case 1:
-          $("#" + cuname + "_output_polarity").html('<i class="material-icons rosso">add_circle</i>');
-          break;
-        case -1:
-          $("#" + cuname + "_output_polarity").html('<i class="material-icons blu">remove_circle</i>');
-          break;
-        case 0:
-          $("#" + cuname + "_output_polarity").html('<i class="material-icons">radio_button_unchecked</i>');
-          break;
+        var cuname = encodeName(elem.health.ndk_uid);
 
-      }
+        $("#" + cuname + "_output_position").html(elem.output.position.toFixed(3));
+        $("#" + cuname + "_input_position").html(elem.input.position);
+        switch (elem.output.polarity) {
+          case 1:
+            $("#" + cuname + "_output_polarity").html('<i class="material-icons rosso">add_circle</i>');
+            break;
+          case -1:
+            $("#" + cuname + "_output_polarity").html('<i class="material-icons blu">remove_circle</i>');
+            break;
+          case 0:
+            $("#" + cuname + "_output_polarity").html('<i class="material-icons">radio_button_unchecked</i>');
+            break;
+
+        }
 
 
-      if (elem.output.powerOn == true) {
-        $("#" + cuname + "_output_status").html('<i class="material-icons verde">trending_down</i>');
-      } else if (elem.output.powerOn= false) {
-        $("#" + cuname + "_output_status").html('<i class="material-icons rosso">pause_circle_outline</i>');
+        if (elem.output.powerOn == true) {
+          $("#" + cuname + "_output_status").html('<i class="material-icons verde">trending_down</i>');
+        } else if (elem.output.powerOn = false) {
+          $("#" + cuname + "_output_status").html('<i class="material-icons rosso">pause_circle_outline</i>');
 
-      }
-        if ( elem.output.NegativeLimitSwitchActive == 'true') {
-          $("#" + cuname + "_out").html('<i id="out_icon_'+ cuname + '" class="icon-caret-left verde"></i>');
+        }
+        if (elem.output.NegativeLimitSwitchActive == 'true') {
+          $("#" + cuname + "_out").html('<i id="out_icon_' + cuname + '" class="icon-caret-left verde"></i>');
         } else if (out_neg_col[i] == 'false') {
           $("#" + cuname + "_out").remove();
         }
-        
-          
+
+
         if (elem.output.PositiveLimitSwitchActive == 'true') {
-            $("#" + cuname + "_in").html('<i id="in_icon_'+ cuname + '" class="icon-caret-right verde"></i>');
-        }  else if (in_pos_col[i] == 'false') {
+          $("#" + cuname + "_in").html('<i id="in_icon_' + cuname + '" class="icon-caret-right verde"></i>');
+        } else if (in_pos_col[i] == 'false') {
           $("#" + cuname + "_in").remove();
         }
-          
-     
 
 
-      if (elem.output.local == true) {
-        $("#" + cuname + "_output_local").html('<i class="material-icons rosso">vpn_key</i>');
-      } else if (elem.output.local == false) {
-        $("#" + cuname + "_output_local").remove();
+
+
+        if (elem.output.local == true) {
+          $("#" + cuname + "_output_local").html('<i class="material-icons rosso">vpn_key</i>');
+        } else if (elem.output.local == false) {
+          $("#" + cuname + "_output_local").remove();
+        }
       }
-    }
     });
 
-   
-    
+
+
   }
-  function generateScraperCmd(){
+  function generateScraperCmd() {
     var html = '<div class="row-fluid">';
     html += '<div class="box span12 box-cmd">';
     html += '<div class="box-header green">';
@@ -702,22 +706,22 @@
     html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_reset" cucmdid="rset" cucmdvalue=1>';
     html += '<i class="material-icons rosso">error</i>';
     html += '<p class="name-cmd">Reset</p>';
-    html += '</a>';    
+    html += '</a>';
     html += '<div class="span3 offset1" onTablet="span6" onDesktop="span3" id="input-value">';
     html += '<input class="input focused" id="mov_abs_offset_mm" type="number" value="[mm]">';
-    html += '</div>';  
+    html += '</div>';
     html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPosition" cucmdid="mov_abs">';
     html += '<p>Apply</p>';
     html += '</a>';
-        
+
     html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setStop" cucmdid="stopMotion">';
     html += '<p>Stop</p>';
-    html += '</a>'; 
+    html += '</a>';
     html += '<div class="span12 statbox" onTablet="span12" onDesktop="span12" id="box-cmd-due">';
     html += '<a class="quick-button-small span1 btn-cmd offset2 cucmd" id="scraper_in" cucmdid="mov_rel">';
     html += '<i class="icon-angle-left"></i>';
     html += '<p class="name-cmd">In</p>';
-    html += '</a>';							
+    html += '</a>';
     html += '<div class="span3" onTablet="span6" onDesktop="span3" id="input-value-due">';
     html += '<input class="input focused" id="mov_rel_offset_mm" type="number" value="&#916; [mm]">';
     html += '</div>';
@@ -725,15 +729,15 @@
     html += '<i class="icon-angle-right"></i>';
     html += '<p class="name-cmd">Out</p>';
     html += '</a>';
-          
+
     html += '<a href="#mdl-homing" role="button" class="quick-button-small span1 btn-cmd offset3 cucmd" cucmdid="stopMotion" cucmdvalue=1>';
     html += '<i class="icon-home"></i>';
     html += '<p class="name-cmd">Homing</p>';
     html += '</a>';
-    html += '</div>';          
     html += '</div>';
     html += '</div>';
-          
+    html += '</div>';
+
     html += '</div>';
 
     return html;
@@ -755,20 +759,20 @@
 
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html+="<tr class='row_element' cuname='"+cu[i]+"' id='" + cuname + "'>";
-      html+="<td class='td_element td_name'>" + cu[i] + "</td>";
-      html+="<td title='Readout current' class='td_element td_readout' id='" + cuname+ "_output_current'>NA</td>";
-      html+="<td class='td_element td_current' title='Setpoint current' id='" + cuname + "_input_current'>NA</td>";
-      html+="<td class='td_element' title='Restore setpoint current'  id='" + cuname+ "_input_saved_current'></td>";
-      html+="<td class='td_element' title='Restore Stanby/Operational' id='" + cuname+ "_input_saved_stby'></td>";
-      html+="<td class='td_element' title='Restore setpoint polarity' id='" + cuname+ "_input_saved_polarity'></td>";
-      html+="<td class='td_element' id='" + cuname+ "_output_stby'></td>";
-      html+="<td class='td_element' id='" + cuname+ "_output_polarity'></td>";
-      html+="<td class='td_element' title='Bypass Mode' id='" + cuname+ "_system_bypass'></td>";
-      html+="<td class='td_element' title='Local controlled' id='" + cuname+ "_output_local'></td>";
-      html+="<td class='td_element' id='" + cuname+ "_output_busy'></td>";
-      html+="<td class='td_element' title='Control Unit alarms' id='" + cuname+ "_output_cu_alarm'></td>";
-      html+="<td class='td_element' title='Device alarms' id='" + cuname+ "_output_device_alarm'></td></tr>";
+      html += "<tr class='row_element' cuname='" + cu[i] + "' id='" + cuname + "'>";
+      html += "<td class='td_element td_name'>" + cu[i] + "</td>";
+      html += "<td title='Readout current' class='td_element td_readout' id='" + cuname + "_output_current'>NA</td>";
+      html += "<td class='td_element td_current' title='Setpoint current' id='" + cuname + "_input_current'>NA</td>";
+      html += "<td class='td_element' title='Restore setpoint current'  id='" + cuname + "_input_saved_current'></td>";
+      html += "<td class='td_element' title='Restore Stanby/Operational' id='" + cuname + "_input_saved_stby'></td>";
+      html += "<td class='td_element' title='Restore setpoint polarity' id='" + cuname + "_input_saved_polarity'></td>";
+      html += "<td class='td_element' id='" + cuname + "_output_stby'></td>";
+      html += "<td class='td_element' id='" + cuname + "_output_polarity'></td>";
+      html += "<td class='td_element' title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
+      html += "<td class='td_element' title='Local controlled' id='" + cuname + "_output_local'></td>";
+      html += "<td class='td_element' id='" + cuname + "_output_busy'></td>";
+      html += "<td class='td_element' title='Control Unit alarms' id='" + cuname + "_output_cu_alarm'></td>";
+      html += "<td class='td_element' title='Device alarms' id='" + cuname + "_output_device_alarm'></td></tr>";
     });
     html += '</table>';
     html += '</div>';
@@ -778,73 +782,73 @@
     return html;
   }
   function updatePStable(cu) {
-    cu.forEach(function (elem,index) {
-      if(elem.hasOwnProperty("health")){
-        
-      
-      var id=elem.health.ndk_uid;
-      var cuname = encodeName(id);
-      if(!elem.output.hasOwnProperty("current")){
-        $("#" + cuname + "_output_current").html("NO DATASET");
-        $("#" + cuname + "_input_current").html("NO DATASET");
-        return;
-      }
-      $("#" + cuname + "_output_current").html(elem.output.current.toFixed(3));
-      $("#" + cuname + "_input_current").html(elem.input.current);
-      switch (elem.output.polarity) {
-        case 1:
-          $("#" + cuname + "_output_polarity").html('<i class="material-icons rosso">add_circle</i>');
-          break;
-        case -1:
-          $("#" + cuname + "_output_polarity").html('<i class="material-icons blu">remove_circle</i>');
-          break;
-        case 0:
-          $("#" + cuname + "_output_polarity").html('<i class="material-icons">radio_button_unchecked</i>');
-          break;
-
-      }
+    cu.forEach(function (elem, index) {
+      if (elem.hasOwnProperty("health")) {
 
 
-      if (elem.output.stby == false) {
-        $("#" + cuname + "_output_stby").html('<i class="material-icons verde">trending_down</i>');
-      } else if (elem.output.stby= true) {
-        $("#" + cuname + "_output_stby").html('<i class="material-icons rosso">pause_circle_outline</i>');
-
-      }
-
-
-
-      if (elem.output.local == true) {
-        $("#" + cuname + "_output_local").html('<i class="material-icons rosso">vpn_key</i>');
-      } else if (elem.output.local == false) {
-        $("#" + cuname + "_output_local").remove();
-      }
-
-      if((cu_name_to_saved!=null) && (cu_name_to_saved[elem.output.ndk_uid]!=null)){
-        var saved=cu_name_to_saved[elem.output.ndk_uid];
-        if (saved.input.stby == false) {
-          $("#" + cuname + "_input_saved_stby").attr('title',"from snapshot:"+snap_selected);
-          $("#" + cuname + "_input_saved_stby").html('<i class="material-icons verde">trending_down</i>');
-        } else if (saved.input.stby= true) {
-          $("#" + cuname + "_input_saved_stby").html('<i class="material-icons rosso">pause_circle_outline</i>');
+        var id = elem.health.ndk_uid;
+        var cuname = encodeName(id);
+        if (!elem.output.hasOwnProperty("current")) {
+          $("#" + cuname + "_output_current").html("NO DATASET");
+          $("#" + cuname + "_input_current").html("NO DATASET");
+          return;
         }
-        $("#" + cuname + "_input_saved_current").attr('title',"from snapshot:"+snap_selected);
-        $("#" + cuname + "_input_saved_current").html(saved.input.current);
-        $("#" + cuname + "_input_saved_polarity").attr('title',"from snapshot:"+snap_selected);
-        switch (saved.input.polarity) {
+        $("#" + cuname + "_output_current").html(elem.output.current.toFixed(3));
+        $("#" + cuname + "_input_current").html(elem.input.current);
+        switch (elem.output.polarity) {
           case 1:
-            $("#" + cuname + "_input_saved_polarity").html('<i class="material-icons rosso">add_circle</i>');
+            $("#" + cuname + "_output_polarity").html('<i class="material-icons rosso">add_circle</i>');
             break;
           case -1:
-            $("#" + cuname + "_input_saved_polarity").html('<i class="material-icons blu">remove_circle</i>');
+            $("#" + cuname + "_output_polarity").html('<i class="material-icons blu">remove_circle</i>');
             break;
           case 0:
-            $("#" + cuname + "_input_saved_polarity").html('<i class="material-icons">radio_button_unchecked</i>');
+            $("#" + cuname + "_output_polarity").html('<i class="material-icons">radio_button_unchecked</i>');
             break;
-  
+
+        }
+
+
+        if (elem.output.stby == false) {
+          $("#" + cuname + "_output_stby").html('<i class="material-icons verde">trending_down</i>');
+        } else if (elem.output.stby = true) {
+          $("#" + cuname + "_output_stby").html('<i class="material-icons rosso">pause_circle_outline</i>');
+
+        }
+
+
+
+        if (elem.output.local == true) {
+          $("#" + cuname + "_output_local").html('<i class="material-icons rosso">vpn_key</i>');
+        } else if (elem.output.local == false) {
+          $("#" + cuname + "_output_local").remove();
+        }
+
+        if ((cu_name_to_saved != null) && (cu_name_to_saved[elem.output.ndk_uid] != null)) {
+          var saved = cu_name_to_saved[elem.output.ndk_uid];
+          if (saved.input.stby == false) {
+            $("#" + cuname + "_input_saved_stby").attr('title', "from snapshot:" + snap_selected);
+            $("#" + cuname + "_input_saved_stby").html('<i class="material-icons verde">trending_down</i>');
+          } else if (saved.input.stby = true) {
+            $("#" + cuname + "_input_saved_stby").html('<i class="material-icons rosso">pause_circle_outline</i>');
+          }
+          $("#" + cuname + "_input_saved_current").attr('title', "from snapshot:" + snap_selected);
+          $("#" + cuname + "_input_saved_current").html(saved.input.current);
+          $("#" + cuname + "_input_saved_polarity").attr('title', "from snapshot:" + snap_selected);
+          switch (saved.input.polarity) {
+            case 1:
+              $("#" + cuname + "_input_saved_polarity").html('<i class="material-icons rosso">add_circle</i>');
+              break;
+            case -1:
+              $("#" + cuname + "_input_saved_polarity").html('<i class="material-icons blu">remove_circle</i>');
+              break;
+            case 0:
+              $("#" + cuname + "_input_saved_polarity").html('<i class="material-icons">radio_button_unchecked</i>');
+              break;
+
+          }
         }
       }
-    }
     });
 
     n = $('#main_table_magnets tr').size();
@@ -853,7 +857,7 @@
     } else {
       $("#table-scroll").css('height', '');
     }
-    
+
   }
   function generatePSCmd() {
     var html = '<div class="row-fluid">';
@@ -903,18 +907,202 @@
 
     return html;
   }
-  function generateSnapshotTable(cuid) {
 
+
+  function generateGraphTable() {
+    var html = '<div class="modal hide fade" id="mdl-graph">';
+    html += '<div class="modal-header">';
+    html += '<button type="button" class="close" data-dismiss="modal">×</button>';
+    html += '<h3>Graph options</h3>';
+    html += '</div>';
+    html += '<div class="modal-body">';
+    html += '<div class="row-fluid">';
+
+    html += '<div class="box span12">';
+    html += '<div class="box-content">';
+    html += '<h3 class="box-header">Graph options</h3>';
+
+    html += '<label class="label span3" >Graph name </label>';
+    html += '<input class="input-xlarge span9" id="graph_save_name" type="text" value="GraphName">';
+    html += '<label class="label span3" >Graph Type </label>';
+    html += '<select id="graphtype" class="span9">';
+    html += '<option value="line" selected="selected">Line</option>';
+    html += '<option value="column">Column</option>';
+    html += '<option value="histo">Histogram</option>';
+    html += '</select>';
+    html += '<label class="label span3">Graph update (ms) </label>';
+    html += '<input class="input-xlarge span9" id="graph_update" type="number" value="1000">';
+    html += '</div>';
+    html += '</div>';
+
+    html += '<div class="box span12">';
+    html += '<div class="box-content">';
+    html += '<h3 class="box-header">X-axis Options</h3>';
+
+    html += '<label class="label span3">Name </label>';
+    html += '<input class="input-xlarge focused span9" id="xname" type="text" value="X">';
+    html += '<label class="label span3">Max </label>';
+    html += '<input class="input-xlarge focused span9" id="xmax" type="text" value="Auto">';
+    html += '<label class="label span3">Min </label>';
+    html += '<input class="input-xlarge focused span9" id="xmin" type="text" value="Auto">';
+    html += '<label class="label span3" >Scale </label>';
+
+    html += '<select id="xtype" class="span9">';
+    html += '<option value="linear">Linear scale</option>';
+    html += '<option value="logarithmic">Logarithmic</option>';
+    html += '<option value="datetime" selected="selected">DateTime</option>';
+    html += '<option value="category">Category</option>';
+
+    html += '</select>';
+
+    html += '</div>';
+    html += '</div>';
+
+    html += '<div class="box span12">';
+    html += '<div class="box-content">';
+    html += '<h3 class="box-header">Y-axis Options</h3>';
+
+    html += '<label class="label span3">Name </label>';
+    html += '<input class="input-xlarge span9" id="yname" type="text" value="Y">';
+    html += '<label class="label span3">Max </label>';
+    html += '<input class="input-xlarge span9" id="ymax" type="text" value="Auto">';
+    html += '<label class="label span3">Min </label>';
+    html += '<input class="input-xlarge span9" id="ymin" type="text" value="Auto">';
+    html += '<label class="label span3" >Scale </label>';
+
+    html += '<select id="ytype" class="span9">';
+    html += '<option value="linear" selected="selected">Linear scale</option>';
+    html += '<option value="logarithmic">Logarithmic</option>';
+    html += '<option value="datetime">DateTime</option>';
+    html += '<option value="category">Category</option>';
+
+    html += '</select>';
+
+    html += '</div>';
+    html += '</div>';
+
+
+    html += '<div class="box span12">';
+    html += '<div class="box-content">';
+    html += '<table class="table table-bordered" id="table_graph_items">';
+    html += '<thead class="box-header">';
+    html += '<tr>';
+    html += '<th>Name</th>';
+    html += '<th>X-Axis</th>';
+    html += '<th>Y-Axis</th>';
+
+    html += '</tr>';
+    html += '</thead>';
+    html += '</table>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div>';
+    html += '</div>';
+    html += '<div class="modal-footer">';
+
+    html += '<a href="#" class="btn" id="graph-save">Save</a>';
+    html += '<a href="#" class="btn" id="graph-close">Close</a>';
+    html += '</div>';
+    html += '</div>';
+    return html;
+  }
+
+  function saveShowGraph() {
+    var graphtype = $("#graphtype option:selected").val();
+    var graphname = $("#graph_save_name").val();
+    var xname = $("#xname").val();
+    var xtype = $("#xtype").val();
+    var xmax = $("#xmax").val();
+    var xmin = $("#xmin").val();
+    if (xmax == "Auto") {
+      xmax = null;
+    }
+    if (xmin == "Auto") {
+      xmin = null;
+    }
+    if (ymax == "Auto") {
+      ymax = null;
+    }
+
+    if (ymin == "Auto") {
+      ymin = null;
+    }
+
+    var yname = $("#yname").val();
+    var ytype = $("#ytype").val();
+    var ymax = $("#ymax").val();
+    var ymin = $("#ymin").val();
+
+    var tmp = {
+      chart: {
+        type: graphtype
+      },
+      title: {
+        text: graphname
+      },
+      xAxis: {
+        type: xtype,
+        max: xmax,
+        min: xmin,
+        gridLineWidth: 1,
+        title: {
+          text: xname
+        }
+      },
+      yAxis: {
+        type: ytype,
+        max: ymax,
+        min: ymin,
+        title: {
+          text: yname
+        }
+      },
+      series: []
+    }
+    var count = 0;
+    for (k in active_plots) {
+      if (active_plots.hasOwnProperty(k)) count++;
+    }
+
+    if(count<10){
+      $("#dialog-"+count).dialog({
+        modal:true,
+        title:graphname + "-"+count,
+        width:600,
+        hright:450,
+        buttons: {
+          Close: function () {
+              $(this).dialog('close');
+          }
+      },
+      open: function () {
+        var chart=new Highcharts.chart("graph-"+count, tmp);
+        $("#dialog-"+count).attr(graphname,)
+        active_plots[graphname]={
+          graph:chart,
+          highchart_opt:tmp,
+          xcuvar:[],
+          ycuvar:[]
+        };
+      }
+  });
+  }
+}
+
+  function generateSnapshotTable(cuid) {
     var html = '<div class="modal hide fade" id="mdl-snap">';
+
     html += '<div class="modal-header">';
     html += '<button type="button" class="close" data-dismiss="modal">×</button>';
     html += '<h3 id="list_snapshot">List Snapshots</h3>';
     html += '</div>';
+
     html += '<div class="modal-body">';
     html += '<div class="row-fluid">';
     html += '<div class="box span12">';
     html += '<div class="box-content">';
-    
+
     html += '<table class="table table-bordered" id="table_snap_nodes">';
     html += '<thead class="box-header">';
     html += '<tr>';
@@ -923,7 +1111,7 @@
     html += '</tr>';
     html += '</thead>';
     html += '</table>';
-    
+
     html += '<table class="table table-bordered" id="table_snap">';
     html += '<thead class="box-header">';
     html += '<tr>';
@@ -934,15 +1122,14 @@
     html += '</table>';
     html += '</div>';
     html += '</div>';
+
+    html += '<label class="label span3" for="snap_save_name">Snapshot name</label>';
+    html += '<input class="input-xlarge focused span9" id="snap_save_name" type="text" value="name">';
+
     html += '</div>';
     html += '</div>';
+
     html += '<div class="modal-footer">';
-    html += '<div class="control-group">';
-    html += '<label class="control-label" for="nameDataset">Insert name</label>';
-    html += '<div class="controls">';
-    html += '<input class="input-xlarge focused" id="snap_save_name" type="text" value="name">';
-    html += '</div>';
-    html += '</div>';
     html += '<a href="#" class="btn" id="snap-show">Show</a>';
     html += '<a href="#" class="btn" id="snap-apply">Apply</a>';
     html += '<a href="#" class="btn" id="snap-delete">Delete</a>';
@@ -1000,7 +1187,7 @@
     html += '<div class="row-fluid">';
     html += '<div class="box span12">';
     html += '<div class="box-content">';
-    
+
     html += '<table class="table table-bordered" id="table_logs">';
     html += '<thead class="box-header">';
     html += '<tr>';
@@ -1010,7 +1197,7 @@
     html += '</tr>';
     html += '</thead>';
     html += '</table>';
-    
+
     html += '</div>';
     html += '</div>';
     html += '</div>';
@@ -1018,17 +1205,17 @@
 
     html += '<div class="modal-footer">';
     html += '<div class="control-group">';
-    
+
     html += '<div class="controls">';
-    
-    
+
+
     html += '<select id="logtype">';
     html += '<option value="all" selected="selected">All</option>';
     html += '<option value="Info">Informative</option>';
     html += '<option value="error">Error</option>';
     html += '<option value="warning">Warning</option>';
-    html += '</select>';    
-   
+    html += '</select>';
+
     html += '<input class="input-xlarge focused" id="log_search" type="text" value="Node search..">';
 
     html += '</div>';
@@ -1041,7 +1228,7 @@
     html += '</div>';
     return html;
   }
-  function generateCmdModal(){
+  function generateCmdModal() {
     var html = '<div class="modal hide fade" id="mdl-commands">';
     html += '<div class="modal-header">';
     html += '<button type="button" class="close" data-dismiss="modal">×</button>';
@@ -1065,9 +1252,9 @@
     html += '<a href="#" class="btn btn-primary" id="command-send">Send</a>';
     html += '<a href="#" class="btn btn-primary" id="command-close">Close</a>';
     html += '</div>';
-    
+
     html += '</div>';
-   return html;
+    return html;
   }
 
   function generateAlarms(cuid) {
@@ -1120,8 +1307,16 @@
     html += generateDescription(cuid);
     html += generateSnapshotTable(cuid);
     html += generateAlarms(cuid);
-    html +=generateCmdModal();
-    html +=generateLog();
+    html += generateCmdModal();
+    html += generateLog();
+    html += generateGraphTable();
+    for (var cnt = 0; cnt < 10; cnt++) {
+      html += '<div id="dialog-' + cnt + '" class="cugraph" grafname="'+cnt+'" style="display: none">';
+      html += '<div id="graph-' + cnt + '" style="height: 380px; width: 580px;">';
+      html += '</div>';
+      html += '</div>';
+    }
+
 
     return html;
   }
@@ -1171,7 +1366,7 @@
     html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Description</span>';
     html += '</a>';
     html += '</li>';
-    
+
     html += '<li class="green">';
     html += '<a href="#mdl-log" role="button" class="show_log" data-toggle="modal">';
     html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Logging</span>';
@@ -1198,10 +1393,10 @@
         html += '<span class="json-string">"' + json + '"</span>';
     }
     else if (typeof json === 'number') {
-      html += '<span class="json-literal" cuport="'+json+'">' + json + '</span>';
+      html += '<span class="json-literal" cuport="' + json + '">' + json + '</span>';
     }
     else if (typeof json === 'boolean') {
-      html += '<span class="json-literal" cuport="'+json+'">' + json + '</span> ';
+      html += '<span class="json-literal" cuport="' + json + '">' + json + '</span> ';
     }
     else if (json === null) {
       html += '<span class="json-literal">null</span>';
@@ -1291,101 +1486,101 @@
     return regexp.test(string);
   }
 
-  
+
 
   function generateGenericControl(cu) {
     var html = "";
     html += '<div class="row-fluid">';
     html += '<div class="box span12 box-cmd">';
 
-      html += '<div class="box-header green">';
-      html += '<h3 id="h3-generic-cmd">Generic Commands</h3>';
-      html += '</div>';
-      html += '<div class="box-content">';
+    html += '<div class="box-header green">';
+    html += '<h3 id="h3-generic-cmd">Generic Commands</h3>';
+    html += '</div>';
+    html += '<div class="box-content">';
 
-        html += '<div class="row-fluid">';
-        
-        html += "<div class='span3 statbox'>";
-        html += "<h3 id='scheduling_title'></h3>";
-        html += "<input type='text' class='setSchedule'>";
-        
-        html += "</div>";
+    html += '<div class="row-fluid">';
 
-       // html += "<div class='span3'>";
-       // html += "</div>";
+    html += "<div class='span3 statbox'>";
+    html += "<h3 id='scheduling_title'></h3>";
+    html += "<input type='text' class='setSchedule'>";
 
- 
-        html += "<div class='span8'>";
-        html += '<h2 class="span2">Available Commands</h2>';
-        html += '<select class="span6" id="cu_full_commands" data-toggle="modal"> </select>';
-        html += '</div>';
-        
-        html += "</div>";
+    html += "</div>";
 
-      
+    // html += "<div class='span3'>";
+    // html += "</div>";
 
 
-      html += '<div class="row-fluid">';
-      html += "<div class='span12'>";
-      html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-stop-start'><i class='material-icons verde'>pause</i><p class='name-cmd'>Stop</p></a>";
-      html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-init-deinit'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>";
+    html += "<div class='span8'>";
+    html += '<h2 class="span2">Available Commands</h2>';
+    html += '<select class="span6" id="cu_full_commands" data-toggle="modal"> </select>';
+    html += '</div>';
 
-      html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-recover-error'><i class='material-icons verde'>build</i><p class='name-cmd'>Recover Error</p></a>";
-      html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-load-unload'><i class='material-icons red'>power</i><p class='name-cmd'>Unload</p></a>";
-      html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-bypass-on-off'><i class='material-icons verde'>usb</i><p class='name-cmd'>BypassOFF</p></a>";
-      
-     // html += "<a class='quick-button-small span2 btn-cmd' id='cmd-bypassON-" + ctrlid + "'' onclick='jchaos.setBypass(\"" + cuid + "\",true,null);'><i class='material-icons verde'>cached</i><p class='name-cmd'>BypassON</p></a>";
-  //   html += '<div class="statbox purple" onTablet="span2" onDesktop="span3">';
-   //  html += '<h3>Available Commands</h3>';
-   //  html += '<select id="cu_full_commands" data-toggle="modal"> </select>';
-  //   html += '</div>';
+    html += "</div>";
 
-     
-     
-      html += "</div>";
-      html += "</div>";
-      html += "</div>";
 
-    
+
+
+    html += '<div class="row-fluid">';
+    html += "<div class='span12'>";
+    html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-stop-start'><i class='material-icons verde'>pause</i><p class='name-cmd'>Stop</p></a>";
+    html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-init-deinit'><i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p></a>";
+
+    html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-recover-error'><i class='material-icons verde'>build</i><p class='name-cmd'>Recover Error</p></a>";
+    html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-load-unload'><i class='material-icons red'>power</i><p class='name-cmd'>Unload</p></a>";
+    html += "<a class='quick-button-small span2 btn-cmd cucmdbase' id='cmd-bypass-on-off'><i class='material-icons verde'>usb</i><p class='name-cmd'>BypassOFF</p></a>";
+
+    // html += "<a class='quick-button-small span2 btn-cmd' id='cmd-bypassON-" + ctrlid + "'' onclick='jchaos.setBypass(\"" + cuid + "\",true,null);'><i class='material-icons verde'>cached</i><p class='name-cmd'>BypassON</p></a>";
+    //   html += '<div class="statbox purple" onTablet="span2" onDesktop="span3">';
+    //  html += '<h3>Available Commands</h3>';
+    //  html += '<select id="cu_full_commands" data-toggle="modal"> </select>';
+    //   html += '</div>';
+
+
+
+    html += "</div>";
+    html += "</div>";
+    html += "</div>";
+
+
     html += "</div>";
     html += "</div>";
     return html;
   }
 
-  function updateCUMenu(cu){
-    var items={};
-    
+  function updateCUMenu(cu) {
+    var items = {};
+
     if (cu.hasOwnProperty('health')) {   //if el health
-      var status=cu.health.nh_status;
+      var status = cu.health.nh_status;
       if (status == 'Start') {
-        items['stop']={name:"Stop",icon:"stop"};
+        items['stop'] = { name: "Stop", icon: "stop" };
       } else if (status == 'Stop') {
-        items['start']={name:"Start",icon:"start"};
-        items['deinit']={name:"Deinit",icon:"deinit"};   
+        items['start'] = { name: "Start", icon: "start" };
+        items['deinit'] = { name: "Deinit", icon: "deinit" };
       } else if (status == 'Init') {
-        items['start']={name:"Start",icon:"start"};        
-        items['deinit']={name:"Deinit",icon:"deinit"};   
+        items['start'] = { name: "Start", icon: "start" };
+        items['deinit'] = { name: "Deinit", icon: "deinit" };
       } else if (status == 'Deinit') {
-        items['unload']={name:"Unload",icon:"unload"};
-        items['init']={name:"Init",icon:"init"};           
+        items['unload'] = { name: "Unload", icon: "unload" };
+        items['init'] = { name: "Init", icon: "init" };
       } else if (status == 'Recoverable Error') {
-        items['recover']={name:"Recover",icon:"recover"};   
+        items['recover'] = { name: "Recover", icon: "recover" };
       } else if (status == "Unload") {
-        items['load']={name:"Load",icon:"load"};    
+        items['load'] = { name: "Load", icon: "load" };
       } else if (status == "Load") {
-        items['unload']={name:"Unload",icon:"unload"};    
-        items['init']={name:"Init",icon:"init"};   
-        
+        items['unload'] = { name: "Unload", icon: "unload" };
+        items['init'] = { name: "Init", icon: "init" };
+
       } else {
-        
+
       }
     }
-    return items;      
+    return items;
   }
   function updateGenericControl(cu) {
     if (cu.hasOwnProperty('health')) {   //if el health
       var name = cu.health.ndk_uid;
-      var status=cu.health.nh_status;
+      var status = cu.health.nh_status;
       $("#cmd-stop-start").hide();
       $("#cmd-init-deinit").hide();
       $("#cmd-load-unload").hide();
@@ -1398,76 +1593,76 @@
       $("#cmd-recover-error").children().remove();
       $("#cmd-bypass-on-off").children().remove();
       */
-      if((off_line[name]==true) && (status !="Unload")){
-        status="Dead";
+      if ((off_line[name] == true) && (status != "Unload")) {
+        status = "Dead";
       }
-      $("#h3-generic-cmd").html("Generic Controls:\""+name +"\" status:"+status);
-      
+      $("#h3-generic-cmd").html("Generic Controls:\"" + name + "\" status:" + status);
+
       if (status == 'Start') {
         $("#cmd-stop-start").html("<i class='material-icons verde'>pause</i><p class='name-cmd'>Stop</p>");
-        $("#cmd-stop-start").attr("cucmdid","stop");
+        $("#cmd-stop-start").attr("cucmdid", "stop");
         $("#cmd-stop-start").show();
       } else if (status == 'Stop') {
         $("#cmd-stop-start").html("<i class='material-icons verde'>play_arrow</i><p class='name-cmd'>Start</p>");
-        $("#cmd-stop-start").attr("cucmdid","start");
+        $("#cmd-stop-start").attr("cucmdid", "start");
         $("#cmd-init-deinit").html("<i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p>");
-        $("#cmd-init-deinit").attr("cucmdid","deinit");
+        $("#cmd-init-deinit").attr("cucmdid", "deinit");
         $("#cmd-stop-start").show();
         $("#cmd-init-deinit").show();
-        
+
       } else if (status == 'Init') {
         $("#cmd-init-deinit").html("<i class='material-icons verde'>trending_down</i><p class='name-cmd'>Deinit</p>");
-        $("#cmd-init-deinit").attr("cucmdid","deinit");
+        $("#cmd-init-deinit").attr("cucmdid", "deinit");
         $("#cmd-stop-start").html("<i class='material-icons verde'>play_arrow</i><p class='name-cmd'>Start</p>");
-        $("#cmd-stop-start").attr("cucmdid","start");
+        $("#cmd-stop-start").attr("cucmdid", "start");
         $("#cmd-stop-start").show();
         $("#cmd-init-deinit").show();
       } else if (status == 'Deinit') {
         $("#cmd-init-deinit").html("<i class='material-icons verde'>trending_up</i><p class='name-cmd'>Init</p>");
-        $("#cmd-init-deinit").attr("cucmdid","init");          
+        $("#cmd-init-deinit").attr("cucmdid", "init");
         $("#cmd-load-unload").html("<i class='material-icons red'>power</i><p class='name-cmd'>Unload</p>");
-        $("#cmd-load-unload").attr("cucmdid","unload");
+        $("#cmd-load-unload").attr("cucmdid", "unload");
         $("#cmd-init-deinit").show();
         $("#cmd-load-unload").show();
       } else if (status == 'Recoverable Error') {
-          $("#cmd-recover-error").html("<i class='material-icons red'>build</i><p class='name-cmd'>Recover Error</p>");
-          $("#cmd-recover-error").attr("cucmdid","recover");
-          $("#cmd-recover-error").show();
+        $("#cmd-recover-error").html("<i class='material-icons red'>build</i><p class='name-cmd'>Recover Error</p>");
+        $("#cmd-recover-error").attr("cucmdid", "recover");
+        $("#cmd-recover-error").show();
       } else if (status == "Unload") {
         $("#cmd-load-unload").html("<i class='material-icons green'>power</i><p class='name-cmd'>Load</p>");
-        $("#cmd-load-unload").attr("cucmdid","load");
+        $("#cmd-load-unload").attr("cucmdid", "load");
         $("#cmd-load-unload").show();
-        
+
       } else if (status == "Load") {
         $("#cmd-load-unload").html("<i class='material-icons red'>power</i><p class='name-cmd'>Unload</p>");
-        $("#cmd-load-unload").attr("cucmdid","unload");      
+        $("#cmd-load-unload").attr("cucmdid", "unload");
         $("#cmd-load-unload").show();
         $("#cmd-init-deinit").html("<i class='material-icons verde'>trending_up</i><p class='name-cmd'>Init</p>");
-        $("#cmd-init-deinit").attr("cucmdid","init");          
+        $("#cmd-init-deinit").attr("cucmdid", "init");
         $("#cmd-init-deinit").show();
-        
+
       } else {
-        
+
       }
     }
-    if (cu.hasOwnProperty('system')&& (status != "Dead")) {   //if el system
+    if (cu.hasOwnProperty('system') && (status != "Dead")) {   //if el system
       $("#scheduling_title").html("Actual scheduling (us):" + cu.system.cudk_thr_sch_delay);
-      
+
       if (cu.system.cudk_bypass_state == false) {
         $("#cmd-bypass-on-off").html("<i class='material-icons verde'>cached</i><p class='name-cmd'>Bypass</p>");
-        $("#cmd-bypass-on-off").attr("cucmdid","bypasson");
-        
-        
+        $("#cmd-bypass-on-off").attr("cucmdid", "bypasson");
+
+
       } else {
         $("#cmd-bypass-on-off").html("<i class='material-icons verde'>usb</i><p class='name-cmd'>No Bypass</p>");
-        $("#cmd-bypass-on-off").attr("cucmdid","bypassoff");
-        
+        $("#cmd-bypass-on-off").attr("cucmdid", "bypassoff");
+
       }
     }
-    
-  }    
 
-  function populateSnapList(snaplist){
+  }
+
+  function populateSnapList(snaplist) {
     if (snaplist.length > 0) {
       var dataset;
       snap_selected = "";
@@ -1478,24 +1673,24 @@
       $("#table_snap tbody tr").click(function (e) {
         $(".row_element").removeClass("row_snap_selected");
         $("#table_snap_nodes").find("tr:gt(0)").remove();
-        
+
         $(this).addClass("row_snap_selected");
         snap_selected = $(this).attr("id");
         var dataset = jchaos.snapshot(snap_selected, "load", null, "", null);
-        dataset.forEach(function(elem){
+        dataset.forEach(function (elem) {
           var name;
-          if(elem.hasOwnProperty("input")){
-            name=elem.input.ndk_uid;
-          } else if(elem.hasOwnProperty("output")){
-            name=elem.output.ndk_uid;
-            
+          if (elem.hasOwnProperty("input")) {
+            name = elem.input.ndk_uid;
+          } else if (elem.hasOwnProperty("output")) {
+            name = elem.output.ndk_uid;
+
           }
-          cu_name_to_saved[name]=elem;
-          
-          var desc=jchaos.getDesc(name,null);
-          var type=findImplementationName(desc[0].instance_description.control_unit_implementation);
+          cu_name_to_saved[name] = elem;
+
+          var desc = jchaos.getDesc(name, null);
+          var type = findImplementationName(desc[0].instance_description.control_unit_implementation);
           $('#table_snap_nodes').append('<tr class="row_element" id="' + name + '"><td>' + name + '</td><td>' + type + '</td></tr>');
-          
+
         });
         $("#snap-apply").show();
         $("#snap-show").show();
@@ -1509,71 +1704,71 @@
   function updateLog(cu) {
     $("#table_logs").find("tr:gt(0)").remove();
     //var logtype= $( "input[name=log]:radio" );
-    var logtype=$("#logtype option:selected").val();
+    var logtype = $("#logtype option:selected").val();
     /*
     { "result_list" : [ { "seq" : 1618, "mdsndk_nl_lts" : 1513869648206, "mdsndk_nl_sid" : "BTF/QUADRUPOLE/QUATB001", "mdsndk_nl_ld" : "error", "mdsndk_nl_lsubj" : "mode", "mdsndk_nl_e_ed" : "", "mdsndk_nl_e_em" : "", "mdsndk_nl_e_ec" : 0 }, { "seq" : 1256, "mdsndk_nl_lts" : 1513869317995, "mdsndk_nl_sid" : "BTF/QUADRUPOLE/QUATB001", "mdsndk_nl_ld" : "error", "mdsndk_nl_lsubj" : "mode", "mdsndk_nl_e_ed" : "", "mdsndk_nl_e_em" : "", "mdsndk_nl_e_ec" : 0 }, { "seq" : 654, "mdsndk_nl_lts" : 1513869128475, "mdsndk_nl_sid" : "BTF/QUADRUPOLE/QUATB001", "mdsndk_nl_ld" : "error", "mdsndk_nl_lsubj" : "mode", "mdsndk_nl_e_ed" : "", "mdsndk_nl_e_em" : "", "mdsndk_nl_e_ec" : 0 }, { "seq" : 196, "mdsndk_nl_lts" : 1513869042637, "mdsndk_nl_sid" : "BTF/QUADRUPOLE/QUATB001", "mdsndk_nl_ld" : "error", "mdsndk_nl_lsubj" : "pola", "mdsndk_nl_e_ed" : "", "mdsndk_nl_e_em" : "", "mdsndk_nl_e_ec" : 0 } ] }
     */
-    jchaos.log(cu,"search","log",0,10000000000000,function(data){
-      if(data.hasOwnProperty("result_list")){
-        data.result_list.forEach(function(item){
-          if((item.mdsndk_nl_ld==logtype)|| (logtype == "all")){
-            var dat=new Date(item.mdsndk_nl_lts).toString();
-            var nam=item.mdsndk_nl_sid;
-            var msg=item.mdsndk_nl_l_m;
-            if(logtype=="warning"){
-              $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td>' + dat + '</td><td>' + nam + '</td><td>'+msg+'</td></tr>').css('color', 'yellow');;
-          } else if(logtype =="error"){
-            $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td>' + dat + '</td><td>' + nam + '</td><td>'+msg+'</td></tr>').css('color', 'red');;
-          } else {
-            $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td>' + dat + '</td><td>' + nam + '</td><td>'+msg+'</td></tr>');
+    jchaos.log(cu, "search", "log", 0, 10000000000000, function (data) {
+      if (data.hasOwnProperty("result_list")) {
+        data.result_list.forEach(function (item) {
+          if ((item.mdsndk_nl_ld == logtype) || (logtype == "all")) {
+            var dat = new Date(item.mdsndk_nl_lts).toString();
+            var nam = item.mdsndk_nl_sid;
+            var msg = item.mdsndk_nl_l_m;
+            if (logtype == "warning") {
+              $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td>' + dat + '</td><td>' + nam + '</td><td>' + msg + '</td></tr>').css('color', 'yellow');;
+            } else if (logtype == "error") {
+              $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td>' + dat + '</td><td>' + nam + '</td><td>' + msg + '</td></tr>').css('color', 'red');;
+            } else {
+              $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td>' + dat + '</td><td>' + nam + '</td><td>' + msg + '</td></tr>');
 
+            }
           }
-        }
         });
       }
-      
-    });  
-}
-  
+
+    });
+  }
+
   function updateSnapshotTable(cu) {
     $("#table_snap").find("tr:gt(0)").remove();
     $("#table_snap_nodes").find("tr:gt(0)").remove();
     $("#table_snap_nodes").show();
-    
+
     $("#snap-apply").hide();
     $("#snap-show").hide();
     $("#snap-delete").hide();
     $("#snap-save").show();
     $('#table_snap').hide();
-    if(cu_multi_selected.length>0){
+    if (cu_multi_selected.length > 0) {
       $("#list_snapshot").html("Snapshotting the following group:");
-      
-      cu_multi_selected.forEach(function(elem){
-        var name=encodeName(elem);
-        var type=findImplementationName(cu_name_to_desc[elem].instance_description.control_unit_implementation);
-       
+
+      cu_multi_selected.forEach(function (elem) {
+        var name = encodeName(elem);
+        var type = findImplementationName(cu_name_to_desc[elem].instance_description.control_unit_implementation);
+
         $('#table_snap_nodes').append('<tr class="row_element" id="' + name + '"><td>' + name + '</td><td>' + type + '</td></tr>');
-        
+
       });
     } else {
-      var snap_list="";
+      var snap_list = "";
       $('#table_snap').show();
-    if((cu == null) || (cu.length ==0)){
-      $("#list_snapshot").html("List All snapshots");
-      
-      jchaos.search("", "snapshots", false, function (snaplist) {
-        populateSnapList(snaplist);
-    });
-    }  else {
-    $("#list_snapshot").html("List snapshot of "+cu);
-      
-    jchaos.search(cu, "snapshotsof", false, function (snaplist) {
-      populateSnapList(snaplist);
-      
-    });
+      if ((cu == null) || (cu.length == 0)) {
+        $("#list_snapshot").html("List All snapshots");
+
+        jchaos.search("", "snapshots", false, function (snaplist) {
+          populateSnapList(snaplist);
+        });
+      } else {
+        $("#list_snapshot").html("List snapshot of " + cu);
+
+        jchaos.search(cu, "snapshotsof", false, function (snaplist) {
+          populateSnapList(snaplist);
+
+        });
+      }
+    }
   }
-  }
-}
 
   /**
    * jQuery plugin method
@@ -1582,7 +1777,7 @@
    */
   $.fn.chaosDashboard = function (cuids, options) {
     options = options || {};
-    if(cuids == null){
+    if (cuids == null) {
       return;
     }
     var collapsed = options.collapsed;
@@ -1591,27 +1786,27 @@
       var notupdate_dataset = 1;
       /* Transform to HTML */
       // var html = chaosCtrl2html(cu, options, '');
-      
+
       if (!(cuids instanceof Array)) {
         cu_list = [cuids];
       } else {
         cu_list = cuids;
       }
-      if(options.CUtype==null){
-        options.CUtype="generic";
+      if (options.CUtype == null) {
+        options.CUtype = "generic";
       }
 
-      if( (options.CUtype!="generic") && (options.CUtype!="all") && (options.CUtype!="ALL")){
-        cu_list=cusWithInterface(cu_list,options.CUtype);
+      if ((options.CUtype != "generic") && (options.CUtype != "all") && (options.CUtype != "ALL")) {
+        cu_list = cusWithInterface(cu_list, options.CUtype);
       }
 
-      cu_list.forEach(function (elem,id) {
+      cu_list.forEach(function (elem, id) {
         cu_name_to_index[elem] = id;
-        health_time_stamp_old[elem]=0;
-        off_line[elem]=false;
+        health_time_stamp_old[elem] = 0;
+        off_line[elem] = false;
       });
-     // cu_selected = cu_list[0];
-     cu_selected = null;
+      // cu_selected = cu_list[0];
+      cu_selected = null;
       var html = "";
       /*****
        * 
@@ -1625,10 +1820,10 @@
 
       if ((options.CUtype.indexOf("SCPowerSupply") != -1)) {
         html += generatePStable(cu_list);
-      } else if((options.CUtype.indexOf("SCActuator") != -1)) {
-        html+=generateScraperTable(cu_list);
+      } else if ((options.CUtype.indexOf("SCActuator") != -1)) {
+        html += generateScraperTable(cu_list);
       } else {
-        html+=generateGenericTable(cu_list);
+        html += generateGenericTable(cu_list);
       }
       html += '<div class="specific-control"></div>';
       html += '<div class="cu-generic-control"></div>';
@@ -1640,9 +1835,9 @@
        * 
        * GENERIC TABLE
        */
-      
+
       $("#main_table_cu tbody tr").click(function (e) {
-        mainTableCommonHandling("main_table_cu",e);
+        mainTableCommonHandling("main_table_cu", e);
       });
       /******** */
       $(this).off('keypress');
@@ -1720,23 +1915,34 @@
        */
       $("#snap-save").on('click', function () {
         var value = $("#snap_save_name").val();
-        if(cu_multi_selected.length>1){        
+        if (cu_multi_selected.length > 1) {
           jchaos.snapshot(value, "create", cu_multi_selected, function () {
           });
-       
-      } else {
-        jchaos.snapshot(value, "create", cu_selected, function () {
-          updateSnapshotTable(cu);
 
-        });
-      }
+        } else {
+          jchaos.snapshot(value, "create", cu_selected, function () {
+            updateSnapshotTable(cu);
+
+          });
+        }
         //var snap_table = $(this).find('a.show_snapshot');
       });
 
       $("#snap-close").on('click', function () {
         $("#mdl-snap").modal("hide");
-        cu_name_to_saved=[];
-        
+        cu_name_to_saved = [];
+      });
+
+      $("#graph-close").on('click', function () {
+        $("#mdl-graph").modal("hide");
+
+      });
+
+      $("#graph-save").on('click', function () {
+
+        saveShowGraph();
+        $("#mdl-graph").modal("hide");
+
       });
 
       $(this).on('click', 'a.show_snapshot', function () {
@@ -1756,13 +1962,13 @@
       $("#snap-show").on('click', function (e) {
 
         if (snap_selected != "") {
-          var dataset = jchaos.snapshot(snap_selected, "load",null, "", null);
+          var dataset = jchaos.snapshot(snap_selected, "load", null, "", null);
           var jsonhtml = json2html(dataset, options, cu_selected);
           if (isCollapsable(dataset)) {
             jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
           }
           updateSnapshotTable(cu_selected);
-         
+
           $("#cu-description").html(jsonhtml);
           $("#desc_text").html("Snapshot " + snap_selected);
           $("#mdl-description").modal("show");
@@ -1781,12 +1987,12 @@
         //$("#mdl-log").modal("show");
       });
       $("#log-search-go").click(function () {
-        var sel=$("#log_search").val();
+        var sel = $("#log_search").val();
         updateLog(sel);
         //$("#mdl-log").modal("show");
       });
       $("#log-close").click(function () {
-          $("#mdl-log").modal("hide");
+        $("#mdl-log").modal("hide");
 
       });
       /***********************/
@@ -1803,30 +2009,40 @@
 
         $("#cu-dataset").html(jsonhtml);
         $.contextMenu({
-          selector: '.json-literal',
-          build: function ($trigger,e){
-            var cuitem={};
-            var cuport=$(e.currentTarget).attr("cuport");
+          selector: '.json-key',
+          build: function ($trigger, e) {
+            var cuitem = {};
+            var cuport = $(e.currentTarget).attr("cuport");
+            cuitem['create-graph'] = { name: "Create Graph..." };
             
-            cuitem['plot-tim']={name:"Plot vs time"};
-            cuitem['plot-xy']={name:"Plot XY"};
-            
-            cuitem['sep1']="---------";
-            
-            cuitem['quit']={name: "Quit", icon: function(){
-              return 'context-menu-icon context-menu-icon-quit';}};
-        
+            if (Object.keys(active_plots).length > 0) {
+              cuitem['plot-xy'] = { name: "Plot XY" };
+
+            }
+
+
+            cuitem['sep1'] = "---------";
+
+            cuitem['quit'] = {
+              name: "Quit", icon: function () {
+                return 'context-menu-icon context-menu-icon-quit';
+              }
+            };
+
             return {
-              
-              callback: function(cmd, options) {
-               
+
+              callback: function (cmd, options) {
+                if (cmd == "create-graph") {
+
+                  $("#mdl-graph").modal("show");
+                }
               },
               items: cuitem
             }
           }
-          
-        
-      });
+
+
+        });
       });
       $("#dataset-close").on('click', function () {
         $("#mdl-dataset").modal("hide");
@@ -1869,14 +2085,14 @@
        */
       if (options.CUtype.indexOf("SCPowerSupply") != -1) {
         $("#main_table_magnets tbody tr").click(function (e) {
-          mainTableCommonHandling("main_table_magnets",e);
+          mainTableCommonHandling("main_table_magnets", e);
         });
 
         $("div.specific-control").html(generatePSCmd());
-     
-      } else if((options.CUtype.indexOf("SCActuator") != -1)) {
+
+      } else if ((options.CUtype.indexOf("SCActuator") != -1)) {
         $("#main_table_scrapers tbody tr").click(function (e) {
-          mainTableCommonHandling("main_table_scrapers",e);
+          mainTableCommonHandling("main_table_scrapers", e);
         });
         $("div.specific-control").html(generateScraperCmd());
       }
@@ -1884,51 +2100,51 @@
        * CONTEXT MENU
        * Dataset \elemens
        */
-     
-  
-    /*$('.cuMenu').on('click', function(e){
-        console.log('clicked', this);
-    })*/    
+
+
+      /*$('.cuMenu').on('click', function(e){
+          console.log('clicked', this);
+      })*/
       /************** 
        * 
        * UPDATE DATASET
        * 
       */
-     
+
       $("div.cu-generic-control").html(generateGenericControl());
 
-      $(".cucmdbase").click(function(){
-        var cmd=$(this).attr("cucmdid");
+      $(".cucmdbase").click(function () {
+        var cmd = $(this).attr("cucmdid");
         var cuselection;
-        if(cu_multi_selected.length>0){
-          cuselection=cu_multi_selected;
+        if (cu_multi_selected.length > 0) {
+          cuselection = cu_multi_selected;
         } else {
-          cuselection=cu_selected;
+          cuselection = cu_selected;
         }
-        if(cuselection!=null && cmd!=null){
-          if(cmd=="bypasson"){
-            jchaos.setBypass(cuselection,true,null);
+        if (cuselection != null && cmd != null) {
+          if (cmd == "bypasson") {
+            jchaos.setBypass(cuselection, true, null);
             return;
           }
-          if(cmd=="bypassoff"){
-            jchaos.setBypass(cuselection,false,null);
+          if (cmd == "bypassoff") {
+            jchaos.setBypass(cuselection, false, null);
             return;
           }
-          if(cmd=="load"){
-            jchaos.loadUnload(cuselection,true,null);
+          if (cmd == "load") {
+            jchaos.loadUnload(cuselection, true, null);
             return;
           }
-          if(cmd=="unload"){
-            jchaos.loadUnload(cuselection,false,null);
+          if (cmd == "unload") {
+            jchaos.loadUnload(cuselection, false, null);
             return;
           }
-         
-            jchaos.sendCUCmd(cuselection,cmd,"",null);
-          
+
+          jchaos.sendCUCmd(cuselection, cmd, "", null);
+
         }
-          
-        
-        
+
+
+
       });
       var interval = setInterval(function () {
         cu_live_selected = jchaos.getChannel(cu_list, -1, null);
@@ -1937,29 +2153,29 @@
           clearInterval(interval);
         } else {
 
-            // update all generic
-            updateGenericTableDataset(cu_live_selected);
-            
-            if ($("#main_table_magnets").is(':visible')) {
-              // update 
-              
-              updatePStable(cu_live_selected);
+          // update all generic
+          updateGenericTableDataset(cu_live_selected);
+
+          if ($("#main_table_magnets").is(':visible')) {
+            // update 
+
+            updatePStable(cu_live_selected);
             //  $("div.ps-control").html(generatePSCmd(cu_live_selected[index]));
-            }
-            if ($("#main_table_scrapers").is(':visible')) {
-              // update 
-              
-              updateScraperTabletable(cu_live_selected);
+          }
+          if ($("#main_table_scrapers").is(':visible')) {
+            // update 
+
+            updateScraperTabletable(cu_live_selected);
             //  $("div.ps-control").html(generatePSCmd(cu_live_selected[index]));
-            }
-          if(cu_live_selected.length==0 || cu_selected == null || cu_name_to_index[cu_selected]==null){
+          }
+          if (cu_live_selected.length == 0 || cu_selected == null || cu_name_to_index[cu_selected] == null) {
             return;
           }
-          
+
           var index = cu_name_to_index[cu_selected];
-          curr_cu_selected=cu_live_selected[index];
+          curr_cu_selected = cu_live_selected[index];
           updateGenericControl(curr_cu_selected);
-        //  $("div.cu-generic-control").html(chaosGenericControl(cu_live_selected[index]));
+          //  $("div.cu-generic-control").html(chaosGenericControl(cu_live_selected[index]));
           if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
             var jsonhtml = json2html(curr_cu_selected, options, cu_selected);
             if (isCollapsable(curr_cu_selected)) {
@@ -1969,76 +2185,76 @@
             $("#cu-dataset").html(jsonhtml);
 
           }
-          
-          
+
+
         }
 
       }, options.Interval);
-      for(var i=1;i<interval;i++){
+      for (var i = 1; i < interval; i++) {
         clearInterval(i);
       }
-      $(".cucmd").click(function(){
-        var alias=$(this).attr("cucmdid");
-        var parvalue=$(this).attr("cucmdvalue");
-        var arglist=retriveCurrentCmdArguments(alias);
+      $(".cucmd").click(function () {
+        var alias = $(this).attr("cucmdid");
+        var parvalue = $(this).attr("cucmdvalue");
+        var arglist = retriveCurrentCmdArguments(alias);
         var cuselection;
-        var cmdparam={};
-          var arguments={};
-          arglist.forEach(function(item,index){
-            // search for values
-            if(parvalue==null){
-              parvalue=$("#"+alias+"_"+item['name']).val();
-            } 
-            if((parvalue == null) && (item['optional'] == false)) {
-              alert("argument '"+item['name']+"' is required in command:'"+alias+"'");
-              return;
-            }
+        var cmdparam = {};
+        var arguments = {};
+        arglist.forEach(function (item, index) {
+          // search for values
+          if (parvalue == null) {
+            parvalue = $("#" + alias + "_" + item['name']).val();
+          }
+          if ((parvalue == null) && (item['optional'] == false)) {
+            alert("argument '" + item['name'] + "' is required in command:'" + alias + "'");
+            return;
+          }
 
-            item['value']=parvalue;
-          });
-         
-        cmdparam=buildCmdParams(arglist);
-        if(cu_multi_selected.length>0){
-          cuselection=cu_multi_selected;
+          item['value'] = parvalue;
+        });
+
+        cmdparam = buildCmdParams(arglist);
+        if (cu_multi_selected.length > 0) {
+          cuselection = cu_multi_selected;
         } else {
-          cuselection=cu_selected;
+          cuselection = cu_selected;
         }
-        jchaos.sendCUCmd(cuselection,alias,cmdparam);
-        
+        jchaos.sendCUCmd(cuselection, alias, cmdparam);
+
       });
-      var check_time_stamp_interval=setInterval(function(){
+      var check_time_stamp_interval = setInterval(function () {
         if ($("div.cu-generic-control").is(':visible') == false) {
           clearInterval(check_time_stamp_interval);
-          
+
         }
-                
-        cu_live_selected.forEach(function(elem,index){
-          if(elem.hasOwnProperty("health")){
-            var name=encodeName(elem.health.ndk_uid);
-            var diff =(elem.health.dpck_ats - health_time_stamp_old[elem.health.ndk_uid]);
-            if(diff>0){
-              $("#"+name).css('color', 'green');
-              $("#"+name).find('td').css('color', 'green');
-              
-              off_line[elem.health.ndk_uid]=false;
-              
+
+        cu_live_selected.forEach(function (elem, index) {
+          if (elem.hasOwnProperty("health")) {
+            var name = encodeName(elem.health.ndk_uid);
+            var diff = (elem.health.dpck_ats - health_time_stamp_old[elem.health.ndk_uid]);
+            if (diff > 0) {
+              $("#" + name).css('color', 'green');
+              $("#" + name).find('td').css('color', 'green');
+
+              off_line[elem.health.ndk_uid] = false;
+
             } else {
-              $("#"+name).css('color', 'black');
-              $("#"+name).find('td').css('color', 'black');
-              off_line[elem.health.ndk_uid]=true;
-              
+              $("#" + name).css('color', 'black');
+              $("#" + name).find('td').css('color', 'black');
+              off_line[elem.health.ndk_uid] = true;
+
             }
-            health_time_stamp_old[elem.health.ndk_uid]=elem.health.dpck_ats;
+            health_time_stamp_old[elem.health.ndk_uid] = elem.health.dpck_ats;
           } else {
-            var id=cu_list[index];
-            var name=encodeName(id);
-            $("#"+name).css('color', 'red');
-            off_line[id]=true;
-            
+            var id = cu_list[index];
+            var name = encodeName(id);
+            $("#" + name).css('color', 'red');
+            off_line[id] = true;
+
           }
 
         });
-      },7000);
+      }, 7000);
     });
   };
 })(jQuery);

@@ -3006,3 +3006,8 @@ ul.messagesList li span.date {
 .navbar .brand{
 	font-size: 30px;
 }
+.control-label {
+	color:"red";
+	font-size: 12px;
+	
+}
