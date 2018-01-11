@@ -937,7 +937,7 @@
 
     html += '<div class="box span12">';
     html += '<div class="box-content">';
-    html += '<h3 class="box-header">X-axis Options</h3>';
+    html += '<h3 class="box-header" id="X-axis">X-axis Options</h3>';
 
     html += '<label class="label span3">Name </label>';
     html += '<input class="input-xlarge focused span9" id="xname" type="text" value="X">';
@@ -981,15 +981,31 @@
     html += '</div>';
     html += '</div>';
 
+    html += '<div class="box span12">';
+    html += '<div class="box-content">';
+    html += '<h3 class="box-header">Trace Options</h3>';
+
+    html += '<label class="label span2">Name </label>';
+    html += '<input class="input-xlarge span10" id="trace-name" type="text" value="tracename">';
+    html += '<label class="label span1">X:</label>';
+    html += '<pre class="span10" id="xvar"></pre>';
+    html += '<label class="label span1">Y:</label>';
+    html += '<pre class="span10" id="yvar"></pre>';
+    html += '<a href="#" class="btn span5" id="graph-add">Add Trace</a>';
+    html += '<a href="#" class="btn span5" id="graph-rem">Remove Trace</a>';
+
+    html += '</div>';
+    html += '</div>';
+
 
     html += '<div class="box span12">';
     html += '<div class="box-content">';
     html += '<table class="table table-bordered" id="table_graph_items">';
     html += '<thead class="box-header">';
     html += '<tr>';
-    html += '<th>Name</th>';
-    html += '<th>X-Axis</th>';
-    html += '<th>Y-Axis</th>';
+    html += '<th>Trace Name</th>';
+    html += '<th id="X-axis">X-Axis</th>';
+    html += '<th id="Y-axis">Y-Axis</th>';
 
     html += '</tr>';
     html += '</thead>';
@@ -1000,7 +1016,7 @@
     html += '</div>';
     html += '</div>';
     html += '<div class="modal-footer">';
-
+    html += '<input class="input-xlarge" id="trace-name" type="text" value="TraceName">';
     html += '<a href="#" class="btn" id="graph-save">Save</a>';
     html += '<a href="#" class="btn" id="graph-close">Close</a>';
     html += '</div>';
@@ -1855,6 +1871,8 @@
       $("#mdl-dataset").draggable();
       $("#mdl-description").draggable();
       $("#mdl-snap").draggable();
+      $("#mdl-graph").draggable();
+
       $("#mdl-log").draggable();
 
       /*** 
@@ -2008,6 +2026,27 @@
         }
 
         $("#cu-dataset").html(jsonhtml);
+        $(".json-key").draggable(
+          {
+
+            cursor:'move',
+            helper:'clone',
+            containment: 'window'
+          }
+        );
+        $("#X-axis").droppable({
+          drop: function(e,ui){
+              var draggable = ui.draggable;
+              alert( 'Something X "' + draggable.attr('id') + '" was dropped onto me!' );
+          }
+        } );
+
+        $("#Y-axis").droppable({
+          drop: function(e,ui){
+              var draggable = ui.draggable;
+              alert( 'Something Y "' + draggable.attr('id') + '" was dropped onto me!' );
+          
+        }} );
         $.contextMenu({
           selector: '.json-key',
           build: function ($trigger, e) {
