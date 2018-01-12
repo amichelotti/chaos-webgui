@@ -1058,8 +1058,8 @@
       $("#dialog-" + count).dialog({
         modal: true,
         title: opt.name + "-" + count,
-        width: 600,
-        hright: 450,
+        width: opt.width,
+        hright: opt.height,
         buttons: {
           Close: function () {
             $(this).dialog('close');
@@ -1086,6 +1086,8 @@
     var xtype = $("#xtype").val();
     var xmax = $("#xmax").val();
     var xmin = $("#xmin").val();
+    var width_= $("#graph-width").val();
+    var height_= $("#graph-high").val();
     if (xmax == "Auto") {
       xmax = null;
     }
@@ -1138,6 +1140,8 @@
     if(high_graphs instanceof Object){
       high_graphs[graphname]={
         name:graphname,
+        width:width_,
+        height:height_,
         highchart_opt: tmp,
         trace: trace_list
       };
@@ -1146,6 +1150,8 @@
     } else {
       high_graphs[graphname]={
         name:graphname,
+        width:width_,
+        height:height_,
         highchart_opt: tmp,
         trace: trace_list
       };
@@ -2069,16 +2075,16 @@
 
       $("#graph-save").on('click', function () {
 
-        saveShowGraph();
-        $("#mdl-graph").modal("hide");
+        saveGraph();
+      
 
       });
+      
       $("#graph-run").on('click', function () {
         
-          saveShowGraph();
-        $("#mdl-graph").modal("hide");
-        
-              });
+        runGraph($("#graph_save_name").val());
+              
+      });
         
       $(this).on('click', 'a.show_snapshot', function () {
 
