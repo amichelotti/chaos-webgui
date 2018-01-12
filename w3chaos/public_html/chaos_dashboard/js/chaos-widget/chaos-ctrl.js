@@ -19,8 +19,23 @@
   var curr_cu_selected = {};
   var last_index_selected = -1;
   var active_plots = [];
-
-
+  var trace_selected;
+  var trace_list = {};
+  var high_graphs; // highchart graphs
+  
+  function decodeCUPath(cupath) {
+    var regex = /(.*)\/(.*)\/(.*)$/;
+    var tmp;
+    var match = regex.exec(cupath);
+    if (match != null) {
+      tmp = {
+        cu: match[1],
+        dir: match[2],
+        var: match[3]
+      };
+    }
+    return tmp;
+  }
   function findImplementationName(type) {
     var implementation_map = { "SCPowerSupplyControlUnit": "powersupply", "SCActuatorControlUnit": "scraper" };
 
@@ -921,9 +936,11 @@
     html += '<div class="box span12">';
     html += '<div class="box-content">';
     html += '<h3 class="box-header">Graph options</h3>';
-
-    html += '<label class="label span3" >Graph name </label>';
-    html += '<input class="input-xlarge span9" id="graph_save_name" type="text" value="GraphName">';
+    html += '<label class="label span3">Width </label>';
+    html += '<input class="input-xlarge focused span9" id="graph-width" title="Width px" type="number" value="640">';
+    html += '<label class="label span3">High </label>';
+    html += '<input class="input-xlarge focused span9" id="graph-high" title="High px" type="number" value="480">';
+    
     html += '<label class="label span3" >Graph Type </label>';
     html += '<select id="graphtype" class="span9">';
     html += '<option value="line" selected="selected">Line</option>';
@@ -942,9 +959,9 @@
     html += '<label class="label span3">Name </label>';
     html += '<input class="input-xlarge focused span9" id="xname" type="text" value="X">';
     html += '<label class="label span3">Max </label>';
-    html += '<input class="input-xlarge focused span9" id="xmax" type="text" value="Auto">';
+    html += '<input class="input-xlarge focused span9" id="xmax" title="Max X Scale" type="text" value="Auto">';
     html += '<label class="label span3">Min </label>';
-    html += '<input class="input-xlarge focused span9" id="xmin" type="text" value="Auto">';
+    html += '<input class="input-xlarge focused span9" id="xmin" title="Min X Scale" type="text" value="Auto">';
     html += '<label class="label span3" >Scale </label>';
 
     html += '<select id="xtype" class="span9">';
@@ -965,9 +982,9 @@
     html += '<label class="label span3">Name </label>';
     html += '<input class="input-xlarge span9" id="yname" type="text" value="Y">';
     html += '<label class="label span3">Max </label>';
-    html += '<input class="input-xlarge span9" id="ymax" type="text" value="Auto">';
+    html += '<input class="input-xlarge span9" id="ymax" type="text" title="Max Y Scale" value="Auto">';
     html += '<label class="label span3">Min </label>';
-    html += '<input class="input-xlarge span9" id="ymin" type="text" value="Auto">';
+    html += '<input class="input-xlarge span9" id="ymin" type="text" title="Min Y Scale" value="Auto">';
     html += '<label class="label span3" >Scale </label>';
 
     html += '<select id="ytype" class="span9">';
@@ -986,13 +1003,13 @@
     html += '<h3 class="box-header">Trace Options</h3>';
 
     html += '<label class="label span2">Name </label>';
-    html += '<input class="input-xlarge span10" id="trace-name" type="text" value="tracename">';
+    html += '<input class="input-xlarge span10" id="trace-name" title="Name of the trace" type="text" value="">';
     html += '<label class="label span1">X:</label>';
-    html += '<pre class="span10" id="xvar"></pre>';
+    html += '<input class="input-xlarge span11" type="text" title="port path to plot on X" id="xvar" value="" readonly>';
     html += '<label class="label span1">Y:</label>';
-    html += '<pre class="span10" id="yvar"></pre>';
-    html += '<a href="#" class="btn span5" id="graph-add">Add Trace</a>';
-    html += '<a href="#" class="btn span5" id="graph-rem">Remove Trace</a>';
+    html += '<input class="input-xlarge span11" type="text" id="yvar" title="port path to plot on Y" value="" readonly>';
+    html += '<a href="#" class="btn span5" id="trace-add" title="Add the following trace to the Graph" >Add Trace</a>';
+    html += '<a href="#" class="btn span5" id="trace-rem" title="Remove the selected trace" >Remove Trace</a>';
 
     html += '</div>';
     html += '</div>';
@@ -1016,15 +1033,53 @@
     html += '</div>';
     html += '</div>';
     html += '<div class="modal-footer">';
-    html += '<input class="input-xlarge" id="trace-name" type="text" value="TraceName">';
+    
+    html += '<input class="input-xlarge" id="graph_save_name" title="Graph Name" type="text" value="">';
+    html += '<a href="#" class="btn" id="graph-run">Run</a>';
     html += '<a href="#" class="btn" id="graph-save">Save</a>';
     html += '<a href="#" class="btn" id="graph-close">Close</a>';
     html += '</div>';
     html += '</div>';
     return html;
   }
+  function runGraph(name) {
+    var opt=high_graphs[name];
+    if(!(opt instanceof Object)){
+      alert("\""+name+"\" not a valid graph ");
+      return;
+    }
 
-  function saveShowGraph() {
+    var count = 0;
+    for (k in active_plots) {
+      if (active_plots.hasOwnProperty(k)) count++;
+    }
+
+    if (count < 10) {
+      $("#dialog-" + count).dialog({
+        modal: true,
+        title: opt.name + "-" + count,
+        width: 600,
+        hright: 450,
+        buttons: {
+          Close: function () {
+            $(this).dialog('close');
+          }
+        },
+        open: function () {
+          var chart = new Highcharts.chart("graph-" + count, opt.highchart_opt);
+          $("#dialog-" + count).attr(graphname, )
+          active_plots[graphname] = {
+            graphname:graphname,
+            graph: chart,
+            highchart_opt: opt.highchart_opt
+          };
+         
+        }
+        
+      });
+    }
+  }
+  function saveGraph() {
     var graphtype = $("#graphtype option:selected").val();
     var graphname = $("#graph_save_name").val();
     var xname = $("#xname").val();
@@ -1049,7 +1104,10 @@
     var ytype = $("#ytype").val();
     var ymax = $("#ymax").val();
     var ymin = $("#ymin").val();
-
+    var serie=[];
+    for (var key in trace_list) {
+      serie.push({name:key});
+  }
     var tmp = {
       chart: {
         type: graphtype
@@ -1074,37 +1132,27 @@
           text: yname
         }
       },
-      series: []
+      series:serie
     }
-    var count = 0;
-    for (k in active_plots) {
-      if (active_plots.hasOwnProperty(k)) count++;
+    high_graphs=jchaos.variable("highcharts","get",null,null);
+    if(high_graphs instanceof Object){
+      high_graphs[graphname]={
+        name:graphname,
+        highchart_opt: tmp,
+        trace: trace_list
+      };
+      jchaos.variable("highcharts","set",high_graphs,null);
+      
+    } else {
+      high_graphs[graphname]={
+        name:graphname,
+        highchart_opt: tmp,
+        trace: trace_list
+      };
+      jchaos.variable("highcharts","set",high_graphs,null);
+      
     }
-
-    if(count<10){
-      $("#dialog-"+count).dialog({
-        modal:true,
-        title:graphname + "-"+count,
-        width:600,
-        hright:450,
-        buttons: {
-          Close: function () {
-              $(this).dialog('close');
-          }
-      },
-      open: function () {
-        var chart=new Highcharts.chart("graph-"+count, tmp);
-        $("#dialog-"+count).attr(graphname,)
-        active_plots[graphname]={
-          graph:chart,
-          highchart_opt:tmp,
-          xcuvar:[],
-          ycuvar:[]
-        };
-      }
-  });
   }
-}
 
   function generateSnapshotTable(cuid) {
     var html = '<div class="modal hide fade" id="mdl-snap">';
@@ -1327,7 +1375,7 @@
     html += generateLog();
     html += generateGraphTable();
     for (var cnt = 0; cnt < 10; cnt++) {
-      html += '<div id="dialog-' + cnt + '" class="cugraph" grafname="'+cnt+'" style="display: none">';
+      html += '<div id="dialog-' + cnt + '" class="cugraph" grafname="' + cnt + '" style="display: none">';
       html += '<div id="graph-' + cnt + '" style="height: 380px; width: 580px;">';
       html += '</div>';
       html += '</div>';
@@ -1386,6 +1434,12 @@
     html += '<li class="green">';
     html += '<a href="#mdl-log" role="button" class="show_log" data-toggle="modal">';
     html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Logging</span>';
+    html += '</a>';
+    html += '</li>';
+
+    html += '<li class="red">';
+    html += '<a href="#mdl-graph" role="button" class="show_graph" data-toggle="modal">';
+    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Graph</span>';
     html += '</a>';
     html += '</li>';
 
@@ -1453,7 +1507,7 @@
               keyclass = "json-key";
             }
             var keyRepr = options.withQuotes ?
-              '<span class="' + keyclass + '" id=' + pather + '-' + key + '>"' + key + '"</span>' : key;
+              '<span class="' + keyclass + '" id=' + pather + '-' + key + ' portdir="' + pather + '" portname="' + key + '">"' + key + '"</span>' : key;
             /* Add toggle button if item is collapsable */
             if (isCollapsable(json[key])) {
               html += '<a href class="json-toggle">' + keyRepr + '</a>';
@@ -1871,10 +1925,67 @@
       $("#mdl-dataset").draggable();
       $("#mdl-description").draggable();
       $("#mdl-snap").draggable();
-      $("#mdl-graph").draggable();
 
       $("#mdl-log").draggable();
+      /** GRAPH CONFIGUATION */
+      $("#mdl-graph").draggable();
+      $("#mdl-graph").css('width', 800);
+      $("#mdl-graph").on("hover", function () {
+        if (($("#trace-name").val() != "") && (($("#xvar").val() != "") || ($("#yvar").val() != ""))) {
+          $("#trace-add").attr('title', "Add Trace");
+          $("#trace-add").removeAttr('disabled');
+        } else {
+          $("#trace-add").attr('title', "You must specify a valid trace name and at least a X/Y path");
+          $("#trace-add").attr('disabled', true);
 
+        }
+        var rowCount = $('#table_graph_items tr').length;
+        if (rowCount > 1) {
+          $("#graph-save").removeAttr('disabled');
+          $("#graph-save").attr('title', "Save current Trace");
+
+        } else {
+          $("#graph-save").attr('disabled', true);
+          $("#graph-save").attr('title', "At least one trace must be present");
+        }
+
+      });
+
+      $("#trace-add").click(function () {
+        var tracename = $("#trace-name").val();
+        var xpath = $("#xvar").val();
+        var ypath = $("#yvar").val();
+        var tmpx, tmpy;
+        if (xpath == "") {
+          xpath = "timestamp";
+        } else {
+          tmpx = decodeCUPath(xpath);
+        }
+        if (ypath == "") {
+          ypath = "timestamp";
+        } else {
+          tmpy = decodeCUPath(ypath);
+        }
+        $("#table_graph_items").append('<tr class="row_element" id="graph-' + tracename + '"><td>' + tracename + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
+
+        trace_list[tracename] = {
+          x: tmpx,
+          y: tmpy
+        }
+      });
+
+      $("#table_graph_items tbody tr").click(function (e) {
+        $(".row_element").removeClass("row_snap_selected");
+        $(this).addClass("row_snap_selected");
+        trace_selected = $(this).attr("id");
+      }
+      );
+
+      $("#trace-remove").click(function () {
+        if (trace_selected != null) {
+          $("#" + trace_selected).remove();
+        }
+      });
       /*** 
        * 
        * JSON EVENTS
@@ -1962,7 +2073,13 @@
         $("#mdl-graph").modal("hide");
 
       });
-
+      $("#graph-run").on('click', function () {
+        
+          saveShowGraph();
+        $("#mdl-graph").modal("hide");
+        
+              });
+        
       $(this).on('click', 'a.show_snapshot', function () {
 
         updateSnapshotTable(cu_selected);
@@ -2029,36 +2146,37 @@
         $(".json-key").draggable(
           {
 
-            cursor:'move',
-            helper:'clone',
+            cursor: 'move',
+            helper: 'clone',
             containment: 'window'
           }
         );
         $("#X-axis").droppable({
-          drop: function(e,ui){
-              var draggable = ui.draggable;
-              alert( 'Something X "' + draggable.attr('id') + '" was dropped onto me!' );
+          drop: function (e, ui) {
+            var draggable = ui.draggable;
+            alert('Something X "' + draggable.attr('id') + '" was dropped onto me!');
           }
-        } );
+        });
 
         $("#Y-axis").droppable({
-          drop: function(e,ui){
-              var draggable = ui.draggable;
-              alert( 'Something Y "' + draggable.attr('id') + '" was dropped onto me!' );
-          
-        }} );
+          drop: function (e, ui) {
+            var draggable = ui.draggable;
+            alert('Something Y "' + draggable.attr('id') + '" was dropped onto me!');
+
+          }
+        });
         $.contextMenu({
           selector: '.json-key',
           build: function ($trigger, e) {
             var cuitem = {};
-            var cuport = $(e.currentTarget).attr("cuport");
+            var portdir = $(e.currentTarget).attr("portdir");
+            var portname = $(e.currentTarget).attr("portname");
             cuitem['create-graph'] = { name: "Create Graph..." };
-            
-            if (Object.keys(active_plots).length > 0) {
-              cuitem['plot-xy'] = { name: "Plot XY" };
+            if ($("#mdl-graph").is(':visible')) {
+              cuitem['plot-x'] = { name: "Plot " + portdir + "/" + portname + " on X" };
+              cuitem['plot-y'] = { name: "Plot " + portdir + "/" + portname + " on Y" };
 
             }
-
 
             cuitem['sep1'] = "---------";
 
@@ -2074,6 +2192,13 @@
                 if (cmd == "create-graph") {
 
                   $("#mdl-graph").modal("show");
+                } else if (cmd == "plot-x") {
+                  var fullname = cu_selected + "/" + portdir + "/" + portname;
+                  $("#xvar").val(fullname);
+                } else if (cmd == "plot-y") {
+                  var fullname = cu_selected + "/" + portdir + "/" + portname;
+                  $("#yvar").val(fullname);
+
                 }
               },
               items: cuitem
