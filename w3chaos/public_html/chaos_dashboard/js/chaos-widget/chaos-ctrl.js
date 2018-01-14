@@ -22,16 +22,26 @@
   var trace_selected;
   var trace_list = {};
   var high_graphs; // highchart graphs
-  
+  var graph_selected;
   function decodeCUPath(cupath) {
     var regex = /(.*)\/(.*)\/(.*)$/;
     var tmp;
+    if ($.isNumeric(cupath)) {
+      tmp = {
+        cu: null,
+        dir: null,
+        var: null,
+        const: Number(cupath)
+      };
+      return tmp;
+    }
     var match = regex.exec(cupath);
     if (match != null) {
       tmp = {
         cu: match[1],
         dir: match[2],
-        var: match[3]
+        var: match[3],
+        const: null
       };
     }
     return tmp;
@@ -923,7 +933,55 @@
     return html;
   }
 
+  function generateGraphList() {
+    var html = '<div class="modal hide fade" id="mdl-graph-list">';
 
+    html += '<div class="modal-header">';
+    html += '<button type="button" class="close" data-dismiss="modal">×</button>';
+    html += '<h3 id="list_graphs">List Graphs</h3>';
+    html += '</div>';
+
+    html += '<div class="modal-body">';
+    html += '<div class="row-fluid">';
+    html += '<div class="box span12">';
+    html += '<div class="box-content">';
+
+    html += '<table class="table table-bordered" id="table_graph">';
+    html += '<thead class="box-header">';
+    html += '<tr>';
+    html += '<th>Name</th>';
+    html += '<th>Date</th>';
+    html += '<th>Type</th>';
+
+    html += '</tr>';
+    html += '</thead>';
+    html += '</table>';
+
+    html += '<table class="table table-bordered" id="table_trace">';
+    html += '<thead class="box-header">';
+    html += '<tr>';
+    html += '<th>Name</th>';
+    html += '<th>X</th>';
+    html += '<th>Y</th>';
+    html += '</tr>';
+    html += '</thead>';
+    html += '</table>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '<div class="modal-footer">';
+    html += '<a href="#" class="btn" id="graph-list-run">Run</a>';
+    html += '<a href="#" class="btn" id="graph-delete">Delete</a>';
+
+    html += '<a href="#" class="btn" id="graph-list-close">Close</a>';
+    html += '</div>';
+    html += '</div>';
+    return html;
+
+
+  }
   function generateGraphTable() {
     var html = '<div class="modal hide fade" id="mdl-graph">';
     html += '<div class="modal-header">';
@@ -940,7 +998,7 @@
     html += '<input class="input-xlarge focused span9" id="graph-width" title="Width px" type="number" value="640">';
     html += '<label class="label span3">High </label>';
     html += '<input class="input-xlarge focused span9" id="graph-high" title="High px" type="number" value="480">';
-    
+
     html += '<label class="label span3" >Graph Type </label>';
     html += '<select id="graphtype" class="span9">';
     html += '<option value="line" selected="selected">Line</option>';
@@ -948,7 +1006,10 @@
     html += '<option value="histo">Histogram</option>';
     html += '</select>';
     html += '<label class="label span3">Graph update (ms) </label>';
-    html += '<input class="input-xlarge span9" id="graph_update" type="number" value="1000">';
+    html += '<input class="input-xlarge span9" id="graph-update" type="number" value="1000">';
+    html += '<label class="label span3">Graph keep seconds (s) </label>';
+    html += '<input class="input-xlarge span9" id="graph-keepseconds" type="number" value="3600">';
+
     html += '</div>';
     html += '</div>';
 
@@ -963,7 +1024,6 @@
     html += '<label class="label span3">Min </label>';
     html += '<input class="input-xlarge focused span9" id="xmin" title="Min X Scale" type="text" value="Auto">';
     html += '<label class="label span3" >Scale </label>';
-
     html += '<select id="xtype" class="span9">';
     html += '<option value="linear">Linear scale</option>';
     html += '<option value="logarithmic">Logarithmic</option>';
@@ -986,7 +1046,6 @@
     html += '<label class="label span3">Min </label>';
     html += '<input class="input-xlarge span9" id="ymin" type="text" title="Min Y Scale" value="Auto">';
     html += '<label class="label span3" >Scale </label>';
-
     html += '<select id="ytype" class="span9">';
     html += '<option value="linear" selected="selected">Linear scale</option>';
     html += '<option value="logarithmic">Logarithmic</option>';
@@ -1004,10 +1063,16 @@
 
     html += '<label class="label span2">Name </label>';
     html += '<input class="input-xlarge span10" id="trace-name" title="Name of the trace" type="text" value="">';
+    html += '<label class="label span3" >Trace Type </label>';
+    html += '<select id="trace-type" class="span9">';
+    html += '<option value="multi" selected="multi">Multiple Independent Traces</option>';
+    html += '<option value="single">Single Trace</option>';
+    html += '</select>';
+
     html += '<label class="label span1">X:</label>';
-    html += '<input class="input-xlarge span11" type="text" title="port path to plot on X" id="xvar" value="" readonly>';
+    html += '<input class="input-xlarge span11" type="text" title="port path to plot on X" id="xvar" value="timestamp">';
     html += '<label class="label span1">Y:</label>';
-    html += '<input class="input-xlarge span11" type="text" id="yvar" title="port path to plot on Y" value="" readonly>';
+    html += '<input class="input-xlarge span11" type="text" id="yvar" title="port path to plot on Y" value="">';
     html += '<a href="#" class="btn span5" id="trace-add" title="Add the following trace to the Graph" >Add Trace</a>';
     html += '<a href="#" class="btn span5" id="trace-rem" title="Remove the selected trace" >Remove Trace</a>';
 
@@ -1033,7 +1098,7 @@
     html += '</div>';
     html += '</div>';
     html += '<div class="modal-footer">';
-    
+
     html += '<input class="input-xlarge" id="graph_save_name" title="Graph Name" type="text" value="">';
     html += '<a href="#" class="btn" id="graph-run">Run</a>';
     html += '<a href="#" class="btn" id="graph-save">Save</a>';
@@ -1042,10 +1107,31 @@
     html += '</div>';
     return html;
   }
-  function runGraph(name) {
-    var opt=high_graphs[name];
-    if(!(opt instanceof Object)){
-      alert("\""+name+"\" not a valid graph ");
+  function getValueFromCUList(culist, path) {
+    for (var cnt = 0; cnt < culist.length; cnt++) {
+      var item = culist[cnt];
+      if (path.cu == item.health.ndk_uid) {
+        if (path.dir == "output") {
+          if (item.output.hasOwnProperty(path.var)) {
+            return item.output[path.var];
+          }
+        }
+        if (path.dir == "input") {
+          if (item.input.hasOwnProperty(path.var)) {
+            return item.input[path.var];
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  function runGraph(graphname) {
+    if (graphname == null || graphname == "")
+      return;
+    var opt = high_graphs[graphname];
+    if (!(opt instanceof Object)) {
+      alert("\"" + graphname + "\" not a valid graph ");
       return;
     }
 
@@ -1057,37 +1143,92 @@
     if (count < 10) {
       $("#dialog-" + count).dialog({
         modal: true,
+        draggable: true,
+        closeOnEscape: false,
         title: opt.name + "-" + count,
         width: opt.width,
         hright: opt.height,
         buttons: {
+
           Close: function () {
+            clearInterval(active_plots[graphname].interval);
+            delete active_plots[graphname];
             $(this).dialog('close');
           }
         },
         open: function () {
+          var start_time = (new Date()).getTime();
           var chart = new Highcharts.chart("graph-" + count, opt.highchart_opt);
-          $("#dialog-" + count).attr(graphname, )
+          $("#dialog-" + count).attr("graphname", graphname);
+          var refresh = setInterval(function () {
+            var data = jchaos.getChannel(opt.culist, -1, null);
+            var set=[];
+            var x, y;
+            var cnt = 0;
+            var tr = opt.trace;
+            var enable_shift = false;
+            for (k in tr) {
+              if (tr[k].x == null) {
+                x = (new Date()).getTime(); // current time
+                if (opt.highchart_opt.shift && ((x - start_time) > opt.highchart_opt['timebuffer'])) {
+                  enable_shift = true;
+                }
+              } else if (tr[k].x.const != null) {
+                x = tr[k].x.const;
+              } else {
+                x = getValueFromCUList(data, tr[k].x);
+              }
+              if (tr[k].y == null) {
+                y = (new Date()).getTime(); // current time
+              } else if (tr[k].y.const != null) {
+                y = tr[k].y.const;
+              } else {
+                y = getValueFromCUList(data, tr[k].y);
+
+              }
+              if(opt.highchart_opt['tracetype']=="multi"){
+                chart.series[cnt++].addPoint([x, y], false, enable_shift);
+              } else {
+                set.push({x,y});
+              }
+            }
+            if(opt.highchart_opt['tracetype']=="single"){
+              chart.series[0].setData(set,true,true,true);
+            } 
+            chart.redraw();
+          }, opt.update);
           active_plots[graphname] = {
-            graphname:graphname,
+            graphname: graphname,
             graph: chart,
-            highchart_opt: opt.highchart_opt
+            highchart_opt: opt.highchart_opt,
+            dialog: count,
+            interval: refresh
           };
-         
+
         }
-        
+
       });
     }
   }
   function saveGraph() {
     var graphtype = $("#graphtype option:selected").val();
+    var tracetype = $("#trace-type option:selected").val();
+
     var graphname = $("#graph_save_name").val();
+    if(graphname==""){
+      alert("must specify a valid graph name");
+      return;
+    }
     var xname = $("#xname").val();
     var xtype = $("#xtype").val();
     var xmax = $("#xmax").val();
     var xmin = $("#xmin").val();
-    var width_= $("#graph-width").val();
-    var height_= $("#graph-high").val();
+    var ymax = $("#ymax").val();
+    var ymin = $("#ymin").val();
+    var width_ = $("#graph-width").val();
+    var height_ = $("#graph-high").val();
+    var gupdate = $("#graph-update").val();
+    var keepseconds = Number($("#graph-keepseconds").val());
     if (xmax == "Auto") {
       xmax = null;
     }
@@ -1104,12 +1245,27 @@
 
     var yname = $("#yname").val();
     var ytype = $("#ytype").val();
-    var ymax = $("#ymax").val();
-    var ymin = $("#ymin").val();
-    var serie=[];
-    for (var key in trace_list) {
-      serie.push({name:key});
-  }
+    var serie = [];
+    var tracecuo = {};
+    var tracecu = [];
+    if(tracetype=="single"){
+      serie.push({ name: graphname });
+    }
+    for (key in trace_list) {
+      if(tracetype=="multi"){
+        serie.push({ name: key });
+      }
+      if ((trace_list[key].x != null) && trace_list[key].x.hasOwnProperty("cu") && trace_list[key].x.cu != null) {
+        tracecuo[trace_list[key].x.cu] = "1";
+      }
+      if ((trace_list[key].y != null) && trace_list[key].y.hasOwnProperty("cu") && trace_list[key].y.cu != null) {
+        tracecuo[trace_list[key].y.cu] = "1";
+      }
+    }
+    for (key in tracecuo) {
+      // unique cu
+      tracecu.push(key);
+    }
     var tmp = {
       chart: {
         type: graphtype
@@ -1134,30 +1290,49 @@
           text: yname
         }
       },
-      series:serie
+      series: serie
     }
-    high_graphs=jchaos.variable("highcharts","get",null,null);
-    if(high_graphs instanceof Object){
-      high_graphs[graphname]={
-        name:graphname,
-        width:width_,
-        height:height_,
-        highchart_opt: tmp,
-        trace: trace_list
-      };
-      jchaos.variable("highcharts","set",high_graphs,null);
-      
-    } else {
-      high_graphs[graphname]={
-        name:graphname,
-        width:width_,
-        height:height_,
-        highchart_opt: tmp,
-        trace: trace_list
-      };
-      jchaos.variable("highcharts","set",high_graphs,null);
-      
+    tmp['tracetype']=tracetype;
+    tmp['shift'] = false;
+    tmp['timebuffer'] = keepseconds * 1000;
+    if (xtype == "datetime") {
+      tmp.chart['zoomType'] = "X";
+      tmp['shift'] = true;
+      tmp['rangeSelector'] = {
+        buttons: [{
+          count: 1,
+          type: 'minute',
+          text: '1min'
+        }, {
+          count: 5,
+          type: 'minute',
+          text: '5min'
+        }, {
+          count: 1,
+          type: 'hour',
+          text: '1hour'
+        }, {
+          type: 'all',
+          text: 'All'
+        }],
+        inputEnabled: false,
+        selected: 0
+      }
     }
+
+    high_graphs = jchaos.variable("highcharts", "get", null, null);
+    var tempo = (new Date()).toString();
+    high_graphs[graphname] = {
+      name: graphname,
+      width: width_,
+      height: height_,
+      update: gupdate,
+      highchart_opt: tmp,
+      trace: trace_list,
+      culist: tracecu,
+      time: tempo
+    };
+    jchaos.variable("highcharts", "set", high_graphs, null);
   }
 
   function generateSnapshotTable(cuid) {
@@ -1380,6 +1555,8 @@
     html += generateCmdModal();
     html += generateLog();
     html += generateGraphTable();
+    html += generateGraphList();
+
     for (var cnt = 0; cnt < 10; cnt++) {
       html += '<div id="dialog-' + cnt + '" class="cugraph" grafname="' + cnt + '" style="display: none">';
       html += '<div id="graph-' + cnt + '" style="height: 380px; width: 580px;">';
@@ -1444,8 +1621,8 @@
     html += '</li>';
 
     html += '<li class="red">';
-    html += '<a href="#mdl-graph" role="button" class="show_graph" data-toggle="modal">';
-    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Graph</span>';
+    html += '<a href="#mdl-graph-list" role="button" class="show_graph" data-toggle="modal">';
+    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Graphs</span>';
     html += '</a>';
     html += '</li>';
 
@@ -1805,6 +1982,51 @@
 
     });
   }
+  function updateGraph() {
+    high_graphs = jchaos.variable("highcharts", "get", null, null);
+    $("#table_graph").find("tr:gt(0)").remove();
+
+    for (g in high_graphs) {
+      $('#table_graph').append('<tr class="row_element" id="' + g + '"><td>' + g + '</td><td>' + high_graphs[g].time + '</td><td>' + high_graphs[g].highchart_opt.chart.type + '</td></tr>');
+
+    }
+
+    $("#table_graph tbody tr").click(function (e) {
+      $(".row_element").removeClass("row_snap_selected");
+      $("#table_trace").find("tr:gt(0)").remove();
+
+      $(this).addClass("row_snap_selected");
+      graph_selected = $(this).attr("id");
+      $(list_graphs).html("Graph Selected \"" + graph_selected + "\"");
+      var graph_tr = high_graphs[graph_selected].trace;
+      var xp, yp;
+      for (g in graph_tr) {
+        if (graph_tr[g].x == null) {
+          xp = "timestamp";
+        } else if (graph_tr[g].x.const != null) {
+          xp = graph_tr[g].x.const;
+        } else {
+          xp = graph_tr[g].x.cu + "/" + graph_tr[g].x.dir + "/" + graph_tr[g].x.var;
+        }
+        if (graph_tr[g].y == null) {
+          yp = "timestamp";
+        } else if (graph_tr[g].y.const != null) {
+          yp = graph_tr[g].y.const;
+        } else {
+          yp = graph_tr[g].y.cu + "/" + graph_tr[g].y.dir + "/" + graph_tr[g].y.var;
+        }
+        var tname = encodeName(g);
+        $('#table_trace').append('<tr class="row_element" id=trace_"' + tname + '"><td>' + g + '</td><td>' + xp + '</td><td>' + yp + '</td></tr>');
+
+      }
+      /*$("#table_trace tbody tr").click(function (e) {
+        $(".row_element").removeClass("row_snap_selected");
+        $(this).addClass("row_snap_selected");
+        trace_selected = $(this).attr("id");
+      });*/
+    });
+
+  }
 
   function updateSnapshotTable(cu) {
     $("#table_snap").find("tr:gt(0)").remove();
@@ -1933,9 +2155,72 @@
       $("#mdl-snap").draggable();
 
       $("#mdl-log").draggable();
-      /** GRAPH CONFIGUATION */
+      /**
+       * 
+       *  GRAPH CONFIGUATION 
+       * 
+       * 
+       * 
+      */
       $("#mdl-graph").draggable();
+      $("#mdl-graph-list").draggable();
+
+      $('#mdl-graph').on('shown.bs.modal', function () {
+        if((graph_selected!=null)&&(high_graphs[graph_selected]!=null)){
+          // initialize with the value of selected graph
+          //$("#graphtype option:selected").val()
+        }
+     });
       $("#mdl-graph").css('width', 800);
+      $("#mdl-graph-list").css('width', 800);
+
+      $("#graph-save").attr('disabled', true);
+      $("#graph-run").attr('disabled', true);
+
+      $("#graph-close").on('click', function () {
+        $("#mdl-graph").modal("hide");
+
+      });
+      $("xtype").on("change", function () {
+        if ($("#xtype:selected").val() == "datetime") {
+          $("#xvar").val("timestamp");
+        }
+      });
+      $("ytype").on("change", function () {
+        if ($("#ytype:selected").val() == "datetime") {
+          $("#yvar").val("timestamp");
+        }
+      });
+      $("#graph-list-close").on('click', function () {
+        $("#mdl-graph-list").modal("hide");
+
+      });
+
+      $("#graph-save").on('click', function () {
+        saveGraph();
+        $("#graph-run").removeAttr('disabled');
+      });
+
+      $("#graph-run").on('click', function () {
+
+        runGraph($("#graph_save_name").val());
+        $("#mdl-graph").modal("hide");
+
+      });
+
+      $("#graph-list-run").on('click', function () {
+
+        runGraph(graph_selected);
+        $("#mdl-graph-list").modal("hide");
+
+
+      });
+      $("#graph-delete").on('click', function () {
+        delete high_graphs[graph_selected];
+        jchaos.variable("highcharts", "set", high_graphs, null);
+        updateGraph();
+      });
+
       $("#mdl-graph").on("hover", function () {
         if (($("#trace-name").val() != "") && (($("#xvar").val() != "") || ($("#yvar").val() != ""))) {
           $("#trace-add").attr('title', "Add Trace");
@@ -1945,18 +2230,34 @@
           $("#trace-add").attr('disabled', true);
 
         }
-        var rowCount = $('#table_graph_items tr').length;
-        if (rowCount > 1) {
-          $("#graph-save").removeAttr('disabled');
-          $("#graph-save").attr('title', "Save current Trace");
-
-        } else {
-          $("#graph-save").attr('disabled', true);
-          $("#graph-save").attr('title', "At least one trace must be present");
+        if (($("#xvar").val() == "") && ($("#xtype:selected").val() == "datetime")) {
+          $("#xvar").val("timestamp")
+        }
+        if (($("#yvar").val() == "") && ($("#ytype:selected").val() == "datetime")) {
+          $("#yvar").val("timestamp")
         }
 
       });
 
+
+      $("#graph_save_name").on("keypress", function () {
+        if ($("#graph_save_name").val() != "") {
+          var rowCount = $('#table_graph_items tr').length;
+          if (rowCount > 1) {
+            $("#graph-save").removeAttr('disabled');
+            $("#graph-save").attr('title', "Save current Trace");
+
+          } else {
+            $("#graph-save").attr('disabled', true);
+            $("#graph-save").attr('title', "At least one trace must be present ");
+          }
+
+        } else {
+          $("#graph-save").attr('title', "Must specify a valid Graph name");
+          $("#graph-save").attr('disabled', true);
+
+        }
+      });
       $("#trace-add").click(function () {
         var tracename = $("#trace-name").val();
         var xpath = $("#xvar").val();
@@ -1972,22 +2273,26 @@
         } else {
           tmpy = decodeCUPath(ypath);
         }
-        $("#table_graph_items").append('<tr class="row_element" id="graph-' + tracename + '"><td>' + tracename + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
-
+        var tname=encodeName(tracename);
+        $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '"><td>' + tracename + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
+        if (tmpx == null && tmpy == null) {
+          alert("INVALID scale type options");
+        }
         trace_list[tracename] = {
           x: tmpx,
           y: tmpy
         }
+        $("#table_graph_items tbody tr").click(function (e) {
+          $(".row_element").removeClass("row_snap_selected");
+          $(this).addClass("row_snap_selected");
+          trace_selected = $(this).attr("id");
+        }
+        );
       });
 
-      $("#table_graph_items tbody tr").click(function (e) {
-        $(".row_element").removeClass("row_snap_selected");
-        $(this).addClass("row_snap_selected");
-        trace_selected = $(this).attr("id");
-      }
-      );
 
-      $("#trace-remove").click(function () {
+
+      $("#trace-rem").click(function () {
         if (trace_selected != null) {
           $("#" + trace_selected).remove();
         }
@@ -2048,6 +2353,10 @@
       /*** 
        * Snapshot handling
        */
+      $(this).on('click', 'a.show_graph', function () {
+        updateGraph();
+        //$("#mdl-log").modal("show");
+      });
       $("#snap-save").on('click', function () {
         var value = $("#snap_save_name").val();
         if (cu_multi_selected.length > 1) {
@@ -2068,24 +2377,7 @@
         cu_name_to_saved = [];
       });
 
-      $("#graph-close").on('click', function () {
-        $("#mdl-graph").modal("hide");
 
-      });
-
-      $("#graph-save").on('click', function () {
-
-        saveGraph();
-      
-
-      });
-      
-      $("#graph-run").on('click', function () {
-        
-        runGraph($("#graph_save_name").val());
-              
-      });
-        
       $(this).on('click', 'a.show_snapshot', function () {
 
         updateSnapshotTable(cu_selected);
@@ -2177,12 +2469,11 @@
             var cuitem = {};
             var portdir = $(e.currentTarget).attr("portdir");
             var portname = $(e.currentTarget).attr("portname");
-            cuitem['create-graph'] = { name: "Create Graph..." };
-            if ($("#mdl-graph").is(':visible')) {
-              cuitem['plot-x'] = { name: "Plot " + portdir + "/" + portname + " on X" };
-              cuitem['plot-y'] = { name: "Plot " + portdir + "/" + portname + " on Y" };
+            cuitem['show-graph'] = { name: "Show Graphs.." };
+            cuitem['plot-x'] = { name: "Plot " + portdir + "/" + portname + " on X" };
+            cuitem['plot-y'] = { name: "Plot " + portdir + "/" + portname + " on Y" };
 
-            }
+            
 
             cuitem['sep1'] = "---------";
 
@@ -2195,13 +2486,18 @@
             return {
 
               callback: function (cmd, options) {
-                if (cmd == "create-graph") {
+                if (cmd == "show-graph") {
 
-                  $("#mdl-graph").modal("show");
+                  $("#mdl-graph-list").modal("show");
                 } else if (cmd == "plot-x") {
+                  $("#mdl-graph").modal("show");
+
                   var fullname = cu_selected + "/" + portdir + "/" + portname;
+                  $("#trace-name").val(cu_selected);
                   $("#xvar").val(fullname);
                 } else if (cmd == "plot-y") {
+                  $("#mdl-graph").modal("show");
+                  $("#trace-name").val(cu_selected);
                   var fullname = cu_selected + "/" + portdir + "/" + portname;
                   $("#yvar").val(fullname);
 
