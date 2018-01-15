@@ -545,8 +545,8 @@
 			result.Y.push(ele.val);
 			}*/
 					datav.data.forEach(function (ele) {
-						result.X.push(Number(ele.dpck_ats.$numberLong));
-						result.Y.push(ele.val);
+						result.X.push(Number(ele.dpck_ats));
+						result.Y.push(ele);
 					});
 
 				}

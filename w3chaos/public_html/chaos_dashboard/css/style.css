@@ -3011,3 +3011,7 @@ ul.messagesList li span.date {
 	font-size: 12px;
 	
 }
+.ui-dialog{ z-index:1000 !important;}
+.ui-dialog-titlebar-close {
+    visibility: hidden;
+}
