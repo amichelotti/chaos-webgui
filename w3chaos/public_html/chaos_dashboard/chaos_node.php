@@ -61,8 +61,8 @@ require_once('header.php');
 $('#main-dashboard').chaosDashboard({
                 collapsed: true,
 				withQuotes: true,
-				template:"cu",
-                Interval: 800
+				template:"node",
+                Interval: 2000
 
             });
 </script>

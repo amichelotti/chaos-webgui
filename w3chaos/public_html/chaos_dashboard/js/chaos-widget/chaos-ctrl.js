@@ -16,7 +16,7 @@
   var cu_name_to_saved = []; // cuname saved state if any
   var cu_list_interval; // update interval of the CU list
   var cu_list_check; // update interval for CU check live
-
+  var main_dom;
   var health_time_stamp_old = [];
   var off_line = [];
   var curr_cu_selected = {};
@@ -27,7 +27,7 @@
   var high_graphs; // highchart graphs
   var graph_selected;
   var search_string;
-  var notupdate_dataset=1;
+  var notupdate_dataset = 1;
   var implementation_map = { "powersupply": "SCPowerSupply", "scraper": "SCActuator" };
 
   function encodeCUPath(path) {
@@ -311,7 +311,7 @@
   }
 
 
-  function buildBody() {
+  function buildCUBody() {
     var html = '<div class="row-fluid">';
 
     html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
@@ -336,7 +336,7 @@
     html += '<div class="span3">'
     html += '<label for="search-alive">Search Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
     html += '</div>'
-   // html += '<h3 class="span3">Search</h3>';
+    // html += '<h3 class="span3">Search</h3>';
 
     html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
     html += '</div>';
@@ -345,6 +345,103 @@
 
     return html;
   }
+  function buildNodeBody() {
+    var html = '<div class="row-fluid">';
+    html += '<div class="statbox purple" onTablet="span4" onDesktop="span3">'
+    html += '<h3>Class</h3>';
+    html += '<select id="classe" size="auto"></select>';
+    html += '</div>';
+
+    html += '<div class="statbox purple row-fluid" onTablet="span4" onDesktop="span3">'
+    html += '<div class="span6">'
+    html += '<label for="search-alive">Search All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
+    html += '</div>'
+    html += '<div class="span6">'
+    html += '<label for="search-alive">Search Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
+    html += '</div>'
+    // html += '<h3 class="span3">Search</h3>';
+
+    html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
+    html += '</div>';
+    html += '</div>';
+
+    return html;
+  }
+
+  function generateNodeTable(cu) {
+    var html = '<div class="row-fluid" id="table-space">';
+
+    html += '<div class="box span12" id="container-main-table">';
+    html += '<div class="box-content span12">';
+
+    html += '<table class="table table-bordered" id="main_table">';
+    html += '<thead class="box-header">';
+    html += '<tr>';
+    html += '<th>Node</th>';
+    html += '<th>Type</th>';
+    html += '<th>Registration Timestamp</th>';
+    html += '<th>Hostname</th>';
+    html += '<th>(RPC) address</th>';
+    html += '</tr>';
+
+
+    html += '</thead> ';
+    $(cu).each(function (i) {
+      var cuname = encodeName(cu[i]);
+      html += "<tr class='row_element cuMenu' cuname='" + cu[i] + "' id='" + cuname + "'>";
+      html += "<td class='name_element'>" + cu[i] + "</td>";
+      html += "<td id='" + cuname + "_timestamp'></td>";
+      html += "<td id='" + cuname + "_type'></td>";
+      html += "<td id='" + cuname + "_hostname'></td>";
+      html += "<td id='" + cuname + "_rpcaddress'></td>";
+    });
+
+    html += '</table>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '<div class="box span6 hide" id="container-table-helper">';
+    html += '<div class="box-content span12">';
+
+    html += '<table class="table table-bordered" id="main_table_helper">';
+    html += '<thead class="box-header">';
+    html += '<tr>';
+    html += '<th>Name Node</th>';
+    html += '<th>Status</th>';
+    html += '<th>Timestamp</th>';
+    html += '<th>Uptime</th>';
+    html += '<th>Host</th>';
+    html += '<th colspan="2">Alarms dev/cu</th>';
+    html += '</tr>';
+
+
+    html += '</thead> ';
+
+    html += '</table>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div>';
+
+    return html;
+
+  }
+  function updateNodeTable(cu) {
+    cu.forEach(function (elem, index) {
+      if (elem.hasOwnProperty("ndk_uid")) {
+        var id = elem.ndk_uid;
+        var cuname = encodeName(id);
+
+        $("#" + cuname + "_timestamp").html(elem.ndk_heartbeat.$date);
+        $("#" + cuname + "_type").html(elem.ndk_type);
+
+        $("#" + cuname + "_hostname").html(elem.ndk_host_name);
+        $("#" + cuname + "_rpcaddress").html(elem.ndk_rpc_addr);
+
+      }
+    });
+  }
+
   function element_sel(field, arr, add_all) {
     $(field).empty();
     $(field).append("<option>--Select--</option>");
@@ -418,7 +515,7 @@
         var dataset = jchaos.snapshot(snap_selected, "load", null, "", null);
         var jsonhtml = json2html(dataset, options, cu_selected);
         if (isCollapsable(dataset)) {
-          jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
+          jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
         }
         updateSnapshotTable(cu_selected);
 
@@ -450,9 +547,9 @@
       var dataset = jchaos.getDesc(cu_selected, null);
       var jsonhtml = json2html(dataset, options, cu_selected);
       if (isCollapsable(dataset)) {
-        jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
+        jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
       }
-      $("#desc_text").html("Description of " + cu_selected);      
+      $("#desc_text").html("Description of " + cu_selected);
       $("#cu-description").html(jsonhtml);
     });
 
@@ -466,10 +563,11 @@
       var dataset = jchaos.getChannel(cu_selected, -1, null);
       var jsonhtml = json2html(dataset[0], options, cu_selected);
       if (isCollapsable(dataset[0])) {
-        jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
+        jsonhtml = '<a class="json-toggle"></a>' + jsonhtml;
       }
 
       $("#cu-dataset").html(jsonhtml);
+
       $(".json-key").draggable(
         {
 
@@ -539,6 +637,7 @@
 
       });
     });
+
     $("#dataset-close").on('click', function () {
       $("#mdl-dataset").modal("hide");
     });
@@ -565,9 +664,7 @@
 
   function jsonSetup() {
     var collapsed = options.collapsed;
-    
-    $(this).off('click');
-    $("a.json-toggle").click(function () {
+    $(main_dom).on("click", "a.json-toggle", function () {
       var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
       target.toggle();
       if (target.is(':visible')) {
@@ -582,7 +679,7 @@
     });
 
 
-    $("span.json-key").click(function () {
+    $(main_dom).on("click", "span.json-key", function () {
       var id = this.id;
       var attr = id.split("-")[1];
 
@@ -591,7 +688,8 @@
       return false;
     });
 
-    $("input.json-keyinput").keypress(function (e) {
+    //$("input.json-keyinput").keypress(function (e) {
+    $(main_dom).on("keypress", "input.json-keyinput", function (e) {
       if (e.keyCode == 13) {
         var id = this.id;
         var attr = id.split("-")[1];
@@ -603,8 +701,9 @@
       return this;
     });
     /* Simulate click on toggle button when placeholder is clicked */
-    $("a.json-placeholder").click(function () {
-      $(this).siblings('a.json-toggle').click();
+    //$("a.json-placeholder").click(function () {
+    $(main_dom).on("click", "a.json-placeholder", function () {
+      $(main_dom).siblings('a.json-toggle').click();
       return false;
     });
     /* Trigger click to collapse all nodes */
@@ -684,13 +783,14 @@
 
         };
       }
-      $("#table_graph_items tbody tr").click(function (e) {
-        $(".row_element").removeClass("row_snap_selected");
-        $(this).addClass("row_snap_selected");
-        trace_selected = $(this).attr("id");
-      }
-      );
+
     });
+    $(main_dom).on("click", "#table_graph_items tbody tr", function (e) {
+      $(".row_element").removeClass("row_snap_selected");
+      $(this).addClass("row_snap_selected");
+      trace_selected = $(this).attr("id");
+    }
+    );
     $("#mdl-graph").css('width', 800);
     $("#mdl-graph-list").css('width', 800);
 
@@ -813,10 +913,10 @@
   */
   // the interface has all the main elements
   function setupCU() {
-    $("#main_table_cu tbody tr").click(function (e) {
-      mainTableCommonHandling("main_table_cu", e);
+    $("#main_table tbody tr").click(function (e) {
+      mainTableCommonHandling("main_table", e);
     });
-    n = $('#main_table_cu tr').size();
+    n = $('#main_table tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
       $("#table-scroll").css('height', '280px');
     } else {
@@ -894,6 +994,92 @@
 
       }
     });
+    $("#command-send").click(function () {
+      var cuselection;
+      var cmdselected = $("#cu_full_commands option:selected").val();
+      var arguments = retriveCurrentCmdArguments(cmdselected);
+      arguments.forEach(function (item, index) {
+        var value = $("#" + cmdselected + "_" + item["name"]).val();
+        if ((value == null || value == "") && (item["optional"] == false)) {
+          alert("argument '" + item['name'] + "' is required in command:'" + cmdselected + "'");
+          return;
+        }
+        item['value'] = value;
+      });
+      var parm = buildCmdParams(arguments);
+      if (cu_multi_selected.length > 0) {
+        cuselection = cu_multi_selected;
+      } else {
+        cuselection = cu_selected;
+      }
+      jchaos.sendCUCmd(cuselection, cmdselected, parm);
+    });
+    $("#command-close").click(function () {
+      $("#mdl-commands").modal("hide");
+
+    });
+
+    $("#cu_full_commands").change(function (e) {
+      //show the command
+      var cmdselected = $("#cu_full_commands option:selected").val();
+      var arguments = retriveCurrentCmdArguments(cmdselected);
+      var input_type = "number";
+      if (arguments.length == 0) {
+        $("#list_command_argument").html("Command \"" + cmdselected + "\" NO ARGUMENTS");
+      } else {
+        $("#list_command_argument").html("Command \"" + cmdselected + "\"");
+      }
+      $("#commands_argument_table").find("tr:gt(0)").remove();
+      arguments.forEach(function (item) {
+        if (item['type'] == "string") {
+          input_type = "text";
+        }
+        if (item["optional"]) {
+          $('#commands_argument_table').append('<tr class="row_element" ><td>' + item["name"] + '</td><td>' + item["desc"] + '</td><td>' + item["type"] + '</td><td><input class="input focused" id="' + cmdselected + '_' + item["name"] + '" type="' + input_type + '"></td></tr>');
+        } else {
+          $('#commands_argument_table').append('<tr class="row_element" ><td><b>' + item["name"] + '</b></td><td>' + item["desc"] + '</td><td>' + item["type"] + '</td><td><input class="input focused" id="' + cmdselected + '_' + item["name"] + '" type="' + input_type + '"></td></tr>');
+        }
+
+      });
+      $("#mdl-commands").draggable();
+
+      $("#mdl-commands").modal("show");
+    });
+    $.contextMenu({
+      selector: '.cuMenu',
+      build: function ($trigger, e) {
+        var cuname = $(e.currentTarget).attr("cuname");
+        var cindex = cu_name_to_index[cuname];
+        var cuitem = updateCUMenu(cu_live_selected[cindex]);
+        cuitem['sep1'] = "---------";
+
+        cuitem['quit'] = {
+          name: "Quit", icon: function () {
+            return 'context-menu-icon context-menu-icon-quit';
+          }
+        };
+
+        return {
+
+          callback: function (cmd, options) {
+            if (cmd == "load") {
+
+              jchaos.loadUnload(cu_multi_selected, true, null);
+              return;
+            }
+            if (cmd == "unload") {
+              jchaos.loadUnload(cu_multi_selected, false, null);
+              return;
+            }
+
+            jchaos.sendCUCmd(cu_multi_selected, cmd, "", null);
+          },
+          items: cuitem
+        }
+      }
+
+
+    });
     $("#mdl-dataset").draggable();
     $("#mdl-description").draggable();
     $("#mdl-snap").draggable();
@@ -902,7 +1088,7 @@
 
   }
   function buildCUInterface(cuids, cutype) {
-    if(cuids == null){
+    if (cuids == null) {
       alert("NO CU given!");
       return;
     }
@@ -939,17 +1125,17 @@
     if ((cutype.indexOf("SCPowerSupply") != -1)) {
       htmlt = generatePStable(cu_list);
       htmlc = generatePSCmd();
-      updateTableFn=updatePStable;
+      updateTableFn = updatePStable;
 
     } else if ((cutype.indexOf("SCActuator") != -1)) {
       htmlt = generateScraperTable(cu_list);
       htmlc = generateScraperCmd();
-      updateTableFn=updateScraperTable;
-      
+      updateTableFn = updateScraperTable;
+
     } else {
       htmlt = generateGenericTable(cu_list);
       htmlc = generateGenericControl();
-      updateTableFn=updateGenericControl;
+      updateTableFn = updateGenericControl;
     }
 
     $("div.specific-table").html(htmlt);
@@ -968,7 +1154,7 @@
       // update all generic
       updateGenericTableDataset(cu_live_selected);
       updateTableFn(cu_live_selected);
-      
+
       if (cu_live_selected.length == 0 || cu_selected == null || cu_name_to_index[cu_selected] == null) {
         return;
       }
@@ -980,7 +1166,7 @@
       if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
         var jsonhtml = json2html(curr_cu_selected, options, cu_selected);
         if (isCollapsable(curr_cu_selected)) {
-          jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
+          jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
         }
 
         $("#cu-dataset").html(jsonhtml);
@@ -990,7 +1176,7 @@
 
 
 
-    }, options.Interval,updateTableFn);
+    }, options.Interval, updateTableFn);
 
     if (cu_list_check != null) {
       clearInterval(cu_list_check)
@@ -1026,9 +1212,108 @@
 
   }
 
+
+  function buildNodeInterface(nodes, cutype) {
+    if (nodes == null) {
+      alert("NO Nodes given!");
+      return;
+    }
+    if (!(nodes instanceof Array)) {
+      cu_list = [nodes];
+    } else {
+      cu_list = nodes;
+    }
+
+    cu_list.forEach(function (elem, id) {
+      cu_name_to_index[elem] = id;
+      health_time_stamp_old[elem] = 0;
+      off_line[elem] = false;
+    });
+    // cu_selected = cu_list[0];
+    cu_selected = null;
+    var htmlt, htmlc, htmlg;
+    var updateTableFn = new Function;
+    /*****
+     * 
+     * clear all interval interrupts
+     */
+    /**
+     * fixed part
+     */
+
+    if ((cutype.indexOf("us") != -1)) {
+      htmlt = generateNodeTable(cu_list);
+      updateTableFn = updateNodeTable;
+
+    } else if ((cutype.indexOf("agent") != -1)) {
+      htmlt = generateNodeTable(cu_list);
+      updateTableFn = updateNodeTable;
+
+    }
+
+    $("div.specific-table").html(htmlt);
+    // $("div.specific-control").html(htmlc);
+
+    //setupNode();
+
+    if (cu_list_interval != null) {
+      clearInterval(cu_list_interval);
+    }
+    cu_list_interval = setInterval(function () {
+      cu_live_selected = [];
+      cu_list.forEach(function (item) {
+        cu_live_selected.push(jchaos.node(item, "desc", cutype));
+      })
+
+      // update all generic
+      updateTableFn(cu_live_selected);
+
+      if (cu_live_selected.length == 0 || cu_selected == null || cu_name_to_index[cu_selected] == null) {
+        return;
+      }
+
+
+
+
+    }, options.Interval, updateTableFn);
+
+    /*if (cu_list_check != null) {
+      clearInterval(cu_list_check)
+    }
+    cu_list_check = setInterval(function () {
+      cu_live_selected.forEach(function (elem, index) {
+        if (elem.hasOwnProperty("health")) {
+          var name = encodeName(elem.health.ndk_uid);
+          var diff = (elem.health.dpck_ats - health_time_stamp_old[elem.health.ndk_uid]);
+          if (diff > 0) {
+            $("#" + name).css('color', 'green');
+            $("#" + name).find('td').css('color', 'green');
+
+            off_line[elem.health.ndk_uid] = false;
+
+          } else {
+            $("#" + name).css('color', 'black');
+            $("#" + name).find('td').css('color', 'black');
+            off_line[elem.health.ndk_uid] = true;
+
+          }
+          health_time_stamp_old[elem.health.ndk_uid] = elem.health.dpck_ats;
+        } else {
+          var id = cu_list[index];
+          var name = encodeName(id);
+          $("#" + name).css('color', 'red');
+          off_line[id] = true;
+
+        }
+
+      });
+    }, 7000);
+*/
+  }
+
   function mainCU() {
-    var list_cu;
-    var classe=["powersupply","scraper"];
+    var list_cu = [];
+    var classe = ["powersupply", "scraper"];
     var $radio = $("input:radio[name=search-alive]");
     if ($radio.is(":checked") === false) {
       $radio.filter("[value=true]").prop('checked', true);
@@ -1036,37 +1321,44 @@
     jchaos.search("", "zone", true, function (zones) {
       element_sel('#zones', zones, 1);
     });
-    
-    element_sel('#classe',classe,1);
+
+    element_sel('#classe', classe, 1);
     $("#zones").change(function () {
       var zone_selected;
       zone_selected = $("#zones option:selected").val();
-      search_string=zone_selected;
+      search_string = zone_selected;
       if (zone_selected == "--Select--") {        //Disabilito la select dei magneti se non � selezionata la zona
         $("#elements").attr('disabled', 'disabled');
       } else {
         $("#elements").removeAttr('disabled');
       }
       if (zone_selected == "ALL") {
-        search_string="";
-        var alive=$("[input=search-alive]:checked").val()
-        jchaos.search(search_string, "class", (alive=="true"), function (ll) {
+        search_string = "";
+        var alive = $("[input=search-alive]:checked").val()
+        jchaos.search(search_string, "class", (alive == "true"), function (ll) {
           element_sel('#elements', ll, 1);
         });
 
       } else {
+        search_string = zone_selected;
+
         jchaos.search(zone_selected, "class", true, function (ll) {
           element_sel('#elements', ll, 1);
         });
       }
       $("#search-chaos").val(search_string);
-      
+      var alive = $("input[type=radio][name=search-alive]:checked").val()
+      var interface = $("#classe option:selected").val();
+
+      list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
+
+      buildCUInterface(list_cu, implementation_map[interface]);
     });
 
     $("#elements").change(function () {
       var element_selected = $("#elements option:selected").val();
       var zone_selected = $("#zones option:selected").val();
-      search_string="";
+      search_string = "";
       if ((zone_selected != "ALL") && (zone_selected != "--Select--")) {
         search_string = zone_selected;
       }
@@ -1083,9 +1375,9 @@
 
       }
       $("#search-chaos").val(search_string);
-      var alive=$("input[type=radio][name=search-alive]:checked").val()
-      
-      list_cu = jchaos.search(search_string, "cu", (alive=="true"), false);
+      var alive = $("input[type=radio][name=search-alive]:checked").val()
+
+      list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
       var interface = $("#classe option:selected").val();
 
       buildCUInterface(list_cu, implementation_map[interface]);
@@ -1093,96 +1385,108 @@
     });
     $("#classe").change(function () {
       var interface = $("#classe option:selected").val();
-      var alive=$("input[type=radio][name=search-alive]:checked").val()
-      
-      list_cu = jchaos.search(search_string, "cu", (alive=="true"), false);
-      
+      var alive = $("input[type=radio][name=search-alive]:checked").val()
+
+      list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
+
       buildCUInterface(list_cu, implementation_map[interface]);
 
     });
     $("#search-chaos").keypress(function (e) {
       if (e.keyCode == 13) {
         var interface = $("#classe option:selected").val();
-        search_string=$(this).val();
-        var alive=$("input[type=radio][name=search-alive]:checked").val()
-        
-        list_cu = jchaos.search(search_string, "cu", (alive=="true"), false);
+        search_string = $(this).val();
+        var alive = $("input[type=radio][name=search-alive]:checked").val()
+
+        list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
         buildCUInterface(list_cu, implementation_map[interface]);
-        
+
       }
       //var tt =prompt('type value');
     });
 
-    $("input[type=radio][name=search-alive]").change(function(e){
-      var alive=$("input[type=radio][name=search-alive]:checked").val()
-      list_cu = jchaos.search(search_string, "cu", (alive=="true"), false);
+    $("input[type=radio][name=search-alive]").change(function (e) {
+      var alive = $("input[type=radio][name=search-alive]:checked").val()
+      list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
       var interface = $("#classe option:selected").val();
-      
+
       buildCUInterface(list_cu, implementation_map[interface]);
     });
 
 
+  }
+
+
+
+  function mainNode() {
+    var list_cu = [];
+    search_string = "";
+    var $radio = $("input:radio[name=search-alive]");
+    if ($radio.is(":checked") === false) {
+      $radio.filter("[value=true]").prop('checked', true);
+    }
+
+    element_sel('#classe', ["us", "agent"], 1);
+
+
+    $("#search-chaos").keypress(function (e) {
+      if (e.keyCode == 13) {
+        var interface = $("#classe option:selected").val();
+        search_string = $(this).val();
+        var alive = $("input[type=radio][name=search-alive]:checked").val()
+        if ((interface != "agent") && (interface != "us")) {
+          var node = jchaos.search(search_string, "us", (alive == "true"), false);
+          node.forEach(function (item) {
+            list_cu.push(item);
+          });
+          node = jchaos.search(search_string, "agent", (alive == "true"), false);
+          node.forEach(function (item) {
+            list_cu.push(item);
+          });          
+          /*node = jchaos.search(search_string, "cu", (alive == "true"), false);
+          node.forEach(function (item) {
+            list_cu.push(item);
+          });*/
+        } else {
+          list_cu = jchaos.search(search_string, interface, (alive == "true"), false);
+        }
+        buildNodeInterface(list_cu, interface);
+
+      }
+      //var tt =prompt('type value');
+    });
+
+    $("input[type=radio][name=search-alive]").change(function (e) {
+      var alive = $("input[type=radio][name=search-alive]:checked").val()
+      var interface = $("#classe option:selected").val();
+
+      list_cu = jchaos.search(search_string, interface, (alive == "true"), false);
+
+      buildNodeInterface(list_cu, interface);
+    });
   }
   /******************
    * MAIN TABLE HANDLING
    * 
    */
   function mainTableCommonHandling(id, e) {
-    $(".row_element").removeClass("row_snap_selected");
+
     $("#mdl-commands").modal("hide");
     $("#cu_full_commands").empty();
     if (cu_selected == $(e.currentTarget).attr("cuname")) {
+      $(".row_element").removeClass("row_snap_selected");
+      cu_multi_selected = [];
       cu_selected = null;
       return;
     }
-    $(e.currentTarget).addClass("row_snap_selected");
 
     cu_selected = $(e.currentTarget).attr("cuname");
-    cu_multi_selected = [];
-
-
-    /******** Build Context menu *****/
-
-
-
-    $.contextMenu({
-      selector: '.cuMenu',
-      build: function ($trigger, e) {
-        var cuname = $(e.currentTarget).attr("cuname");
-        var cindex = cu_name_to_index[cuname];
-        var cuitem = updateCUMenu(cu_live_selected[cindex]);
-        cuitem['sep1'] = "---------";
-
-        cuitem['quit'] = {
-          name: "Quit", icon: function () {
-            return 'context-menu-icon context-menu-icon-quit';
-          }
-        };
-
-        return {
-
-          callback: function (cmd, options) {
-            if (cmd == "load") {
-              jchaos.loadUnload(cu_selected, true, null);
-              return;
-            }
-            if (cmd == "unload") {
-              jchaos.loadUnload(cu_selected, false, null);
-              return;
-            }
-
-            jchaos.sendCUCmd(cu_selected, cmd, "", null);
-          },
-          items: cuitem
-        }
-      }
-
-
-    });
-    /***********************/
-    /**
-     * handling commands
-     */
+    if (!e.ctrlKey) {
+      $(".row_element").removeClass("row_snap_selected");
+      cu_multi_selected = [];
+      cu_multi_selected.push(cu_selected);
+    }
+    $(e.currentTarget).addClass("row_snap_selected");
     if (cu_name_to_desc[cu_selected] == null) {
       var desc = jchaos.getDesc(cu_selected, null);
       cu_name_to_desc[cu_selected] = desc[0];
@@ -1194,75 +1498,25 @@
       desc.forEach(function (item) {
         $("#cu_full_commands").append("<option value='" + item.bc_alias + "'>" + item.bc_alias + " (\"" + item.bc_description + "\")</option>");
       });
-
-      $("#cu_full_commands").change(function (e) {
-        //show the command
-        var cmdselected = $("#cu_full_commands option:selected").val();
-        var arguments = retriveCurrentCmdArguments(cmdselected);
-        var input_type = "number";
-        if (arguments.length == 0) {
-          $("#list_command_argument").html("Command \"" + cmdselected + "\" NO ARGUMENTS");
-        } else {
-          $("#list_command_argument").html("Command \"" + cmdselected + "\"");
-        }
-        $("#commands_argument_table").find("tr:gt(0)").remove();
-        arguments.forEach(function (item) {
-          if (item['type'] == "string") {
-            input_type = "text";
-          }
-          if (item["optional"]) {
-            $('#commands_argument_table').append('<tr class="row_element" ><td>' + item["name"] + '</td><td>' + item["desc"] + '</td><td>' + item["type"] + '</td><td><input class="input focused" id="' + cmdselected + '_' + item["name"] + '" type="' + input_type + '"></td></tr>');
-          } else {
-            $('#commands_argument_table').append('<tr class="row_element" ><td><b>' + item["name"] + '</b></td><td>' + item["desc"] + '</td><td>' + item["type"] + '</td><td><input class="input focused" id="' + cmdselected + '_' + item["name"] + '" type="' + input_type + '"></td></tr>');
-          }
-
-        });
-        $("#mdl-commands").draggable();
-
-        $("#mdl-commands").modal("show");
-      });
-
     }
-    $("#command-close").click(function () {
-      $("#mdl-commands").modal("hide");
-
-    });
-
-    $("#command-send").click(function () {
-      var cuselection;
-      var cmdselected = $("#cu_full_commands option:selected").val();
-      var arguments = retriveCurrentCmdArguments(cmdselected);
-      arguments.forEach(function (item, index) {
-        var value = $("#" + cmdselected + "_" + item["name"]).val();
-        if ((value == null || value == "") && (item["optional"] == false)) {
-          alert("argument '" + item['name'] + "' is required in command:'" + cmdselected + "'");
-          return;
-        }
-        item['value'] = value;
-      });
-      var parm = buildCmdParams(arguments);
-      if (cu_multi_selected.length > 0) {
-        cuselection = cu_multi_selected;
-      } else {
-        cuselection = cu_selected;
-      }
-      jchaos.sendCUCmd(cuselection, cmdselected, parm);
-    });
 
     if (e.shiftKey) {
       var nrows = $(e.currentTarget).index();
       if (last_index_selected != -1) {
         //alert("selected shift:"+nrows+" interval:"+(nrows-last_index_selected));
         if (nrows > last_index_selected) {
-          //$('#main_table_cu tr:gt('+(last_index_selected)+'):lt('+(nrows)+')').addClass("row_snap_selected");
+          //$('#main_table tr:gt('+(last_index_selected)+'):lt('+(nrows)+')').addClass("row_snap_selected");
           $("#" + id + " tr").slice(last_index_selected + 1, nrows + 1).addClass("row_snap_selected");
-          for (var cnt = last_index_selected; cnt <= nrows; cnt++) {
+          for (var cnt = last_index_selected + 1; cnt <= nrows; cnt++) {
             cu_multi_selected.push(cu_list[cnt]);
 
           }
 
         }
       }
+    } else if (e.ctrlKey) {
+      var nrows = $(e.currentTarget).index();
+      cu_multi_selected.push(cu_list[nrows])
     }
     last_index_selected = $(e.currentTarget).index();
 
@@ -1280,7 +1534,7 @@
 
     }
 
-    html += '<table class="table table-bordered" id="main_table_cu">';
+    html += '<table class="table table-bordered" id="main_table">';
     html += '<thead class="box-header">';
     html += '<tr>';
     html += '<th>Name CU</th>';
@@ -1444,7 +1698,7 @@
     var html = '<div class="row-fluid">';
     html += '<div class="box span12">';
     html += '<div class="box-content">';
-    html += '<table class="table table-bordered" id="main_table_cu">';
+    html += '<table class="table table-bordered" id="main_table">';
     html += '<thead class="box-header">';
     html += '<tr>';
     html += '<th>Element</th>';
@@ -1586,7 +1840,7 @@
     var html = '<div class="row-fluid">';
     html += '<div class="box span12">';
     html += '<div class="box-content">';
-    html += '<table class="table table-bordered" id="main_table_cu">';
+    html += '<table class="table table-bordered" id="main_table">';
     html += '<thead class="box-header">';
     html += '<tr>';
     html += '<th>Element</th>';
@@ -1691,7 +1945,7 @@
       }
     });
 
-   
+
 
   }
   function generatePSCmd() {
@@ -2021,15 +2275,16 @@
         dialogClass: 'no-close',
         open: function () {
 
-          var start_time = (new Date()).getTime();
           var chart = new Highcharts.chart("graph-" + count, opt.highchart_opt);
           $("#dialog-" + count).attr("graphname", graphname);
+          var start_time = (new Date()).getTime();
 
           active_plots[graphname] = {
             graphname: graphname,
             graph: chart,
             highchart_opt: opt.highchart_opt,
             dialog: count,
+            start_time: start_time
           };
 
         },
@@ -2038,6 +2293,7 @@
             id: "dialog-live",
             text: "Live",
             click: function (e) {
+
               if (active_plots[graphname].hasOwnProperty('interval')) {
                 clearInterval(active_plots[graphname].interval);
                 delete active_plots[graphname].interval;
@@ -2057,7 +2313,7 @@
                 for (k in tr) {
                   if (tr[k].x == null) {
                     x = (new Date()).getTime(); // current time
-                    if (opt.highchart_opt.shift && ((x - start_time) > opt.highchart_opt['timebuffer'])) {
+                    if (opt.highchart_opt.shift && ((x - opt.start_time) > opt.highchart_opt['timebuffer'])) {
                       enable_shift = true;
                     }
                   } else if (tr[k].x.const != null) {
@@ -2522,28 +2778,28 @@
     html += '</div>';
     html += '<div class="box-content">';
     html += '<ul class="dashboard-list metro">';
- 
-    
+
 
 
     html += '<li class="black">';
-    html += '<a href="./unitserver.php" role="button" class="show_unitserver" data-toggle="modal">';
-    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">UnitServer</span>';
+    html += '<a href="./index.php" role="button" class="show_agent" data-toggle="modal">';
+    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">CU Mangement</span>';
     html += '</a>';
     html += '</li>';
 
     html += '<li class="black">';
-    html += '<a href="./agent.pgp" role="button" class="show_agent" data-toggle="modal">';
-    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Agent</span>';
+    html += '<a href="./chaos_node.php" role="button" class="show_unitserver" data-toggle="modal">';
+    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Chaos Node Management</span>';
     html += '</a>';
     html += '</li>';
+
 
     html += '<li class="black">';
     html += '<a href="./orbit.php" role="button" class="show_orbit" data-toggle="modal">';
     html += '<i class="icon-file red"></i><span class="opt-menu hidden-tablet">Orbit</span>';
     html += '</a>';
     html += '</li>';
-    
+
     html += '</ul>';
     html += '</div>';
     html += '</div>';
@@ -2643,7 +2899,7 @@
           html += '<li>';
           /* Add toggle button if item is collapsable */
           if (isCollapsable(json[i])) {
-            html += '<a href class="json-toggle"></a>';
+            html += '<a  class="json-toggle"></a>';
           }
           html += json2html(json[i], options, key);
           /* Add comma if item is not last */
@@ -2675,7 +2931,7 @@
               '<span class="' + keyclass + '" id=' + pather + '-' + key + ' portdir="' + pather + '" portname="' + key + '">"' + key + '"</span>' : key;
             /* Add toggle button if item is collapsable */
             if (isCollapsable(json[key])) {
-              html += '<a href class="json-toggle">' + keyRepr + '</a>';
+              html += '<a  class="json-toggle">' + keyRepr + '</a>';
             }
             else {
               html += keyRepr;
@@ -3008,11 +3264,11 @@
     $("#snap-delete").hide();
     $("#snap-save").show();
     $('#table_snap').hide();
-    var tosnapshot=[];
-    if(cu_multi_selected.length > 0){
-      tosnapshot=cu_multi_selected;
+    var tosnapshot = [];
+    if (cu_multi_selected.length > 0) {
+      tosnapshot = cu_multi_selected;
     } else {
-      if(cu_selected){
+      if (cu_selected) {
         tosnapshot.push(cu_selected);
       }
     }
@@ -3022,13 +3278,13 @@
       tosnapshot.forEach(function (elem) {
         var type;
         var name = encodeName(elem);
-        if(cu_name_to_desc[elem]==null){
+        if (cu_name_to_desc[elem] == null) {
           var desc = jchaos.getDesc(elem, null);
           cu_name_to_desc[elem] = desc[0];
-          
+
         }
-        if(cu_name_to_desc[elem]==null){
-          type="NA";
+        if (cu_name_to_desc[elem] == null) {
+          type = "NA";
         } else {
           type = findImplementationName(cu_name_to_desc[elem].instance_description.control_unit_implementation);
         }
@@ -3061,37 +3317,46 @@
    * @param options: an optional options hash
    */
   $.fn.chaosDashboard = function (opt) {
+    main_dom = this;
     options = opt || {};
-    
+
     /* jQuery chaining */
     return this.each(function () {
       var notupdate_dataset = 1;
       /* Transform to HTML */
       // var html = chaosCtrl2html(cu, options, '');
-      if (options.template = "CU") {
-        var html="";
-        html += buildBody();
+      if (options.template == "cu") {
+        var html = "";
+        html += buildCUBody();
         html += generateModalActions();
         html += '<div class="specific-table"></div>';
         html += '<div class="specific-control"></div>';
         /*** */
-      /* Insert HTML in target DOM element */
+        /* Insert HTML in target DOM element */
         $(this).html(html);
         graphSetup();
         snapSetup();
         datasetSetup();
         descriptionSetup();
         logSetup();
-        //jsonSetup();
         mainCU();
         $("#menu-dashboard").html(generateMenuBox());
+      } else if (options.template == "node") {
+        var html = "";
+        html += buildNodeBody();
+        html += '<div class="specific-table"></div>';
+
+        $(this).html(html);
+        mainNode();
+
       }
+      jsonSetup();
 
 
 
-      
 
-      
+
+
 
     });
   };
