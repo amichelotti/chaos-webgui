@@ -1,3 +1,4 @@
+
 /**
  * jQuery chaos widget
  * @author: Andrea Michelotti <andrea.michelotti@lnf.infn.it>
@@ -7,12 +8,14 @@
   var snap_selected = "";
   var cu_selected = "";
   var cu_multi_selected = [];
-
+  var options;
   var cu_live_selected = [{}];
   var cu_list = [];
   var cu_name_to_index = [];
   var cu_name_to_desc = [];
   var cu_name_to_saved = []; // cuname saved state if any
+  var cu_list_interval; // update interval of the CU list
+  var cu_list_check; // update interval for CU check live
 
   var health_time_stamp_old = [];
   var off_line = [];
@@ -23,15 +26,18 @@
   var trace_list = {};
   var high_graphs; // highchart graphs
   var graph_selected;
+  var search_string;
+  var notupdate_dataset=1;
+  var implementation_map = { "powersupply": "SCPowerSupply", "scraper": "SCActuator" };
 
-  function encodeCUPath(path){
-    if(path==null){
+  function encodeCUPath(path) {
+    if (path == null) {
       return "timestamp";
     }
-    if(path.const){
+    if (path.const) {
       return path.const;
     }
-    return path.cu+"/"+path.dir+"/"+path.var;
+    return path.cu + "/" + path.dir + "/" + path.var;
   }
 
   function decodeCUPath(cupath) {
@@ -58,7 +64,6 @@
     return tmp;
   }
   function findImplementationName(type) {
-    var implementation_map = { "SCPowerSupplyControlUnit": "powersupply", "SCActuatorControlUnit": "scraper" };
 
     var ret = "uknown";
     if (type != null) {
@@ -304,6 +309,820 @@
     var regexp = /^(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
     return regexp.test(string);
   }
+
+
+  function buildBody() {
+    var html = '<div class="row-fluid">';
+
+    html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
+    html += '<h3>Zones</h3>';
+    html += '<select id="zones"></select>';
+    html += '</div>';
+
+    html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
+    html += '<h3>Elements</h3>';
+    html += '<select id="elements"></select>';
+    html += '</div>';
+
+    html += '<div class="statbox purple" onTablet="span4" onDesktop="span2">'
+    html += '<h3>Class</h3>';
+    html += '<select id="classe"></select>';
+    html += '</div>';
+
+    html += '<div class="statbox purple row-fluid" onTablet="span4" onDesktop="span3">'
+    html += '<div class="span3">'
+    html += '<label for="search-alive">Search All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
+    html += '</div>'
+    html += '<div class="span3">'
+    html += '<label for="search-alive">Search Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
+    html += '</div>'
+   // html += '<h3 class="span3">Search</h3>';
+
+    html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
+    html += '</div>';
+    html += generateActionBox();
+    html += '</div>';
+
+    return html;
+  }
+  function element_sel(field, arr, add_all) {
+    $(field).empty();
+    $(field).append("<option>--Select--</option>");
+    //$(field).append("<option value='ALL'>ALL</option>");
+
+    if (add_all == 1) {
+      $(field).append("<option value='ALL'>ALL</option>");
+
+    }
+    $(arr).each(function (i) {
+      $(field).append("<option value='" + arr[i] + "'>" + arr[i] + "</option>");
+
+    });
+
+  }
+
+  function logSetup() {
+    $("a.show_log").click(function () {
+      updateLog(cu_selected);
+      //$("#mdl-log").modal("show");
+    });
+    $("#log-search-go").click(function () {
+      var sel = $("#log_search").val();
+      updateLog(sel);
+      //$("#mdl-log").modal("show");
+    });
+    $("#log-close").click(function () {
+      $("#mdl-log").modal("hide");
+
+    });
+  }
+  function snapSetup() {
+    $("#snap-save").on('click', function () {
+      var value = $("#snap_save_name").val();
+      if (cu_multi_selected.length > 1) {
+        jchaos.snapshot(value, "create", cu_multi_selected, function () {
+        });
+
+      } else {
+        jchaos.snapshot(value, "create", cu_selected, function () {
+          updateSnapshotTable(cu);
+
+        });
+      }
+      //var snap_table = $(this).find('a.show_snapshot');
+    });
+
+    $("#snap-close").on('click', function () {
+      $("#mdl-snap").modal("hide");
+      cu_name_to_saved = [];
+    });
+
+
+    $(this).on('click', 'a.show_snapshot', function () {
+
+      updateSnapshotTable(cu_selected);
+    });
+
+    $("#snap-delete").on('click', function (e) {
+      if (snap_selected != "") {
+        jchaos.snapshot(snap_selected, "delete", "", "", function () {
+          updateSnapshotTable(cu_selected);
+
+        });
+
+      }
+    });
+    $("#snap-show").on('click', function (e) {
+
+      if (snap_selected != "") {
+        var dataset = jchaos.snapshot(snap_selected, "load", null, "", null);
+        var jsonhtml = json2html(dataset, options, cu_selected);
+        if (isCollapsable(dataset)) {
+          jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
+        }
+        updateSnapshotTable(cu_selected);
+
+        $("#cu-description").html(jsonhtml);
+        $("#desc_text").html("Snapshot " + snap_selected);
+        $("#mdl-description").modal("show");
+
+      }
+    });
+    $("#snap-apply").on('click', function (e) {
+      if (snap_selected != "") {
+        jchaos.snapshot(snap_selected, "restore", "", "", null);
+      }
+    });
+
+  }
+
+
+  /**
+   * Setup CU Description
+   */
+
+  function descriptionSetup() {
+    $("#description-close").on('click', function () {
+      $("#mdl-description").modal("hide");
+    });
+
+    $("a.show_description").click(function () {
+      var dataset = jchaos.getDesc(cu_selected, null);
+      var jsonhtml = json2html(dataset, options, cu_selected);
+      if (isCollapsable(dataset)) {
+        jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
+      }
+      $("#desc_text").html("Description of " + cu_selected);      
+      $("#cu-description").html(jsonhtml);
+    });
+
+  }
+  /***
+   * Setup CU Dataset
+   * **/
+
+  function datasetSetup() {
+    $("a.show_dataset").on('click', function () {
+      var dataset = jchaos.getChannel(cu_selected, -1, null);
+      var jsonhtml = json2html(dataset[0], options, cu_selected);
+      if (isCollapsable(dataset[0])) {
+        jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
+      }
+
+      $("#cu-dataset").html(jsonhtml);
+      $(".json-key").draggable(
+        {
+
+          cursor: 'move',
+          helper: 'clone',
+          containment: 'window'
+        }
+      );
+      $("#X-axis").droppable({
+        drop: function (e, ui) {
+          var draggable = ui.draggable;
+          alert('Something X "' + draggable.attr('id') + '" was dropped onto me!');
+        }
+      });
+
+      $("#Y-axis").droppable({
+        drop: function (e, ui) {
+          var draggable = ui.draggable;
+          alert('Something Y "' + draggable.attr('id') + '" was dropped onto me!');
+
+        }
+      });
+      $.contextMenu({
+        selector: '.json-key',
+        build: function ($trigger, e) {
+          var cuitem = {};
+          var portdir = $(e.currentTarget).attr("portdir");
+          var portname = $(e.currentTarget).attr("portname");
+          cuitem['show-graph'] = { name: "Show Graphs.." };
+          cuitem['plot-x'] = { name: "Plot " + portdir + "/" + portname + " on X" };
+          cuitem['plot-y'] = { name: "Plot " + portdir + "/" + portname + " on Y" };
+
+
+
+          cuitem['sep1'] = "---------";
+
+          cuitem['quit'] = {
+            name: "Quit", icon: function () {
+              return 'context-menu-icon context-menu-icon-quit';
+            }
+          };
+
+          return {
+
+            callback: function (cmd, options) {
+              if (cmd == "show-graph") {
+
+                $("#mdl-graph-list").modal("show");
+              } else if (cmd == "plot-x") {
+                $("#mdl-graph").modal("show");
+
+                var fullname = cu_selected + "/" + portdir + "/" + portname;
+                $("#trace-name").val(cu_selected);
+                $("#xvar").val(fullname);
+              } else if (cmd == "plot-y") {
+                $("#mdl-graph").modal("show");
+                $("#trace-name").val(cu_selected);
+                var fullname = cu_selected + "/" + portdir + "/" + portname;
+                $("#yvar").val(fullname);
+
+              }
+            },
+            items: cuitem
+          }
+        }
+
+
+      });
+    });
+    $("#dataset-close").on('click', function () {
+      $("#mdl-dataset").modal("hide");
+    });
+    if (notupdate_dataset) {
+      $("#dataset-update").html('Update');
+    } else {
+      $("#dataset-update").html('Pause');
+    }
+    $("#dataset-update").on('click', function () {
+      notupdate_dataset = !notupdate_dataset;
+      if (notupdate_dataset) {
+        $("#dataset-update").html('Update');
+      } else {
+        $("#dataset-update").html('Pause');
+      }
+    });
+  }
+
+
+  /**
+   * 
+   * JSON SETUP
+   */
+
+  function jsonSetup() {
+    var collapsed = options.collapsed;
+    
+    $(this).off('click');
+    $(this).on('click', 'a.json-toggle', function () {
+      var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
+      target.toggle();
+      if (target.is(':visible')) {
+        target.siblings('.json-placeholder').remove();
+      }
+      else {
+        var count = target.children('li').length;
+        var placeholder = count + (count > 1 ? ' items' : ' item');
+        target.after('<a href class="json-placeholder">' + placeholder + '</a>');
+      }
+      return false;
+    });
+
+
+    $(this).on('click', 'span.json-key', function () {
+      var id = this.id;
+      var attr = id.split("-")[1];
+
+      $("#attr-" + attr).toggle();
+      //var tt =prompt('type value');
+      return false;
+    });
+
+    $(this).on('keypress', 'input.json-keyinput', function (e) {
+      if (e.keyCode == 13) {
+        var id = this.id;
+        var attr = id.split("-")[1];
+        jchaos.setAttribute(cu_selected, attr, this.value);
+        $("#" + this.id).toggle();
+        return false;
+      }
+      //var tt =prompt('type value');
+      return this;
+    });
+    /* Simulate click on toggle button when placeholder is clicked */
+    $(this).on('click', 'a.json-placeholder', function () {
+      $(this).siblings('a.json-toggle').click();
+      return false;
+    });
+
+    if (options.collapsed == true) {
+      /* Trigger click to collapse all nodes */
+      $(this).find('a.json-toggle').click();
+    }
+
+  }
+  /*
+  * 
+  * Setup Graphs
+  */
+  function graphSetup() {
+    $("#mdl-graph").draggable();
+    $("#mdl-graph-list").draggable();
+    $('#mdl-graph-list').on('shown.bs.modal', function () {
+      graph_selected = null;
+    });
+
+    $('#mdl-graph').on('shown.bs.modal', function () {
+      var $radio = $("input:radio[name=graph-shift]");
+      if ($radio.is(":checked") === false) {
+        $radio.filter("[value=false]").prop('checked', true);
+      }
+      if (($("#trace-name").val() != "") && (($("#xvar").val() != "") || ($("#yvar").val() != ""))) {
+        $("#trace-add").attr('title', "Add Trace");
+        $("#trace-add").removeAttr('disabled');
+      } else {
+        $("#trace-add").attr('title', "You must specify a valid trace name and at least a X/Y path");
+        $("#trace-add").attr('disabled', true);
+
+      }
+      if (($("#xvar").val() == "") && ($("#xtype:selected").val() == "datetime")) {
+        $("#xvar").val("timestamp")
+      }
+      if (($("#yvar").val() == "") && ($("#ytype:selected").val() == "datetime")) {
+        $("#yvar").val("timestamp")
+      }
+
+      if ((graph_selected != null) && (high_graphs[graph_selected] != null)) {
+        // initialize with the value of selected graph
+        var info = high_graphs[graph_selected].highchart_opt;
+        $("#graph_save_name").val(graph_selected);
+        $("#xname").val(info.xAxis.title.text);
+        $("#xtype").val(info.xAxis.type);
+        $("#xmax").val(info.xAxis.max);
+        $("#xmin").val(info.xAxis.min);
+        $("#xname").val(info.yAxis.title.text);
+
+        $("#ytype").val(info.yAxis.type);
+
+        $("#ymax").val(info.yAxis.max);
+        $("#ymin").val(info.yAxis.min);
+        $("#graph-width").val(high_graphs[graph_selected].width);
+        $("#graph-high").val(high_graphs[graph_selected].height);
+        $("#graph-update").val();
+        $("#graph-keepseconds").val(info.timebuffer);
+        if (info.shift) {
+          $radio.filter("[value=true]").prop('checked', true);
+
+        } else {
+          $radio.filter("[value=false]").prop('checked', true);
+
+        }
+
+        $("#trace-type").val(info.tracetype);
+        $("#graphtype").val(graph_selected);
+        $("#table_graph_items").find("tr:gt(0)").remove();
+        var trace = high_graphs[graph_selected].trace;
+        for (var k in trace) {
+          var tname = encodeName(k);
+          var xpath, ypath;
+          xpath = encodeCUPath(trace[k].x);
+          ypath = encodeCUPath(trace[k].y);
+          $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '"><td>' + k + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
+
+        };
+      }
+      $("#table_graph_items tbody tr").click(function (e) {
+        $(".row_element").removeClass("row_snap_selected");
+        $(this).addClass("row_snap_selected");
+        trace_selected = $(this).attr("id");
+      }
+      );
+    });
+    $("#mdl-graph").css('width', 800);
+    $("#mdl-graph-list").css('width', 800);
+
+    $("#graph-save").attr('disabled', true);
+    $("#graph-run").attr('disabled', true);
+
+    $("#graph-close").on('click', function () {
+      $("#mdl-graph").modal("hide");
+
+    });
+    $("xtype").on("change", function () {
+      if ($("#xtype:selected").val() == "datetime") {
+        $("#xvar").val("timestamp");
+      }
+    });
+    $("ytype").on("change", function () {
+      if ($("#ytype:selected").val() == "datetime") {
+        $("#yvar").val("timestamp");
+      }
+    });
+    $("#graph-list-close").on('click', function () {
+      $("#mdl-graph-list").modal("hide");
+
+    });
+
+    $("#graph-save").on('click', function () {
+      saveGraph();
+      $("#graph-run").removeAttr('disabled');
+    });
+
+    $("#graph-run").on('click', function () {
+
+      runGraph($("#graph_save_name").val());
+      $("#mdl-graph").modal("hide");
+
+    });
+
+    $("#graph-list-run").on('click', function () {
+      runGraph(graph_selected);
+      $("#mdl-graph-list").modal("hide");
+
+    });
+    $("#graph-list-edit").on('click', function () {
+      if (graph_selected != null) {
+        $("#mdl-graph-list").modal("hide");
+        $("#mdl-graph").modal("show");
+      }
+    });
+    $("#graph-delete").on('click', function () {
+      delete high_graphs[graph_selected];
+      jchaos.variable("highcharts", "set", high_graphs, null);
+      updateGraph();
+    });
+
+
+
+
+    $("#graph_save_name").on("keypress", function () {
+      if ($("#graph_save_name").val() != "") {
+        var rowCount = $('#table_graph_items tr').length;
+        if (rowCount > 1) {
+          $("#graph-save").removeAttr('disabled');
+          $("#graph-save").attr('title', "Save current Trace");
+
+        } else {
+          $("#graph-save").attr('disabled', true);
+          $("#graph-save").attr('title', "At least one trace must be present ");
+        }
+
+      } else {
+        $("#graph-save").attr('title', "Must specify a valid Graph name");
+        $("#graph-save").attr('disabled', true);
+
+      }
+    });
+    $("#trace-add").click(function () {
+      var tracename = $("#trace-name").val();
+      var xpath = $("#xvar").val();
+      var ypath = $("#yvar").val();
+      var tmpx, tmpy;
+      if (xpath == "") {
+        xpath = "timestamp";
+      } else {
+        tmpx = decodeCUPath(xpath);
+      }
+      if (ypath == "") {
+        ypath = "timestamp";
+      } else {
+        tmpy = decodeCUPath(ypath);
+      }
+      var tname = encodeName(tracename);
+      $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '"><td>' + tracename + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
+      if (tmpx == null && tmpy == null) {
+        alert("INVALID scale type options");
+      }
+      trace_list[tracename] = {
+        x: tmpx,
+        y: tmpy
+      }
+
+    });
+
+
+
+    $("#trace-rem").click(function () {
+      if (trace_selected != null) {
+        $("#" + trace_selected).remove();
+      }
+    });
+
+    $("a.show_graph").on('click', function () {
+      updateGraph();
+      //$("#mdl-log").modal("show");
+    });
+  }
+  /****
+   * 
+   * Setup CU Interface
+   * 
+  */
+  // the interface has all the main elements
+  function setupCU() {
+    $("#main_table_cu tbody tr").click(function (e) {
+      mainTableCommonHandling("main_table_cu", e);
+    });
+    n = $('#main_table_cu tr').size();
+    if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
+      $("#table-scroll").css('height', '280px');
+    } else {
+      $("#table-scroll").css('height', '');
+    }
+
+    $(this).off('keypress');
+    $(this).on('keypress', function (event) {
+      var t = $(event.target);
+
+      if ((event.which == 13) && (t.attr('class') == "setSchedule")) {
+        //  var name = $(t).attr("cuname");
+        var value = $(t).attr("value");
+        jchaos.setSched(cu_selected, value);
+
+      }
+    });
+    $(".cucmd").click(function () {
+      var alias = $(this).attr("cucmdid");
+      var parvalue = $(this).attr("cucmdvalue");
+      var arglist = retriveCurrentCmdArguments(alias);
+      var cuselection;
+      var cmdparam = {};
+      var arguments = {};
+      arglist.forEach(function (item, index) {
+        // search for values
+        if (parvalue == null) {
+          parvalue = $("#" + alias + "_" + item['name']).val();
+        }
+        if ((parvalue == null) && (item['optional'] == false)) {
+          alert("argument '" + item['name'] + "' is required in command:'" + alias + "'");
+          return;
+        }
+
+        item['value'] = parvalue;
+      });
+
+      cmdparam = buildCmdParams(arglist);
+      if (cu_multi_selected.length > 0) {
+        cuselection = cu_multi_selected;
+      } else {
+        cuselection = cu_selected;
+      }
+      jchaos.sendCUCmd(cuselection, alias, cmdparam);
+
+    });
+
+    $(".cucmdbase").click(function () {
+      var cmd = $(this).attr("cucmdid");
+      var cuselection;
+      if (cu_multi_selected.length > 0) {
+        cuselection = cu_multi_selected;
+      } else {
+        cuselection = cu_selected;
+      }
+      if (cuselection != null && cmd != null) {
+        if (cmd == "bypasson") {
+          jchaos.setBypass(cuselection, true, null);
+          return;
+        }
+        if (cmd == "bypassoff") {
+          jchaos.setBypass(cuselection, false, null);
+          return;
+        }
+        if (cmd == "load") {
+          jchaos.loadUnload(cuselection, true, null);
+          return;
+        }
+        if (cmd == "unload") {
+          jchaos.loadUnload(cuselection, false, null);
+          return;
+        }
+
+        jchaos.sendCUCmd(cuselection, cmd, "", null);
+
+      }
+    });
+    $("#mdl-dataset").draggable();
+    $("#mdl-description").draggable();
+    $("#mdl-snap").draggable();
+    $("#mdl-log").draggable();
+
+
+  }
+  function buildCUInterface(cuids, cutype) {
+    if(cuids == null){
+      alert("NO CU given!");
+      return;
+    }
+    if (!(cuids instanceof Array)) {
+      cu_list = [cuids];
+    } else {
+      cu_list = cuids;
+    }
+    if (cutype == null) {
+      cutype = "generic";
+    }
+
+    if ((cutype != "generic") && (cutype != "all") && (cutype != "ALL")) {
+      cu_list = cusWithInterface(cu_list, cutype);
+    }
+
+    cu_list.forEach(function (elem, id) {
+      cu_name_to_index[elem] = id;
+      health_time_stamp_old[elem] = 0;
+      off_line[elem] = false;
+    });
+    // cu_selected = cu_list[0];
+    cu_selected = null;
+    var htmlt, htmlc, htmlg;
+    var updateTableFn = new Function;
+    /*****
+     * 
+     * clear all interval interrupts
+     */
+    /**
+     * fixed part
+     */
+
+    if ((cutype.indexOf("SCPowerSupply") != -1)) {
+      htmlt = generatePStable(cu_list);
+      htmlc = generatePSCmd();
+      updateTableFn=updatePStable;
+
+    } else if ((cutype.indexOf("SCActuator") != -1)) {
+      htmlt = generateScraperTable(cu_list);
+      htmlc = generateScraperCmd();
+      updateTableFn=updateScraperTable;
+      
+    } else {
+      htmlt = generateGenericTable(cu_list);
+      htmlc = generateGenericControl();
+      updateTableFn=updateGenericControl;
+    }
+
+    $("div.specific-table").html(htmlt);
+    $("div.specific-control").html(htmlc);
+    setupCU();
+
+    if (cu_list_interval != null) {
+      clearInterval(cu_list_interval);
+
+    }
+    cu_list_interval = setInterval(function () {
+      cu_live_selected = jchaos.getChannel(cu_list, -1, null);
+
+
+
+      // update all generic
+      updateGenericTableDataset(cu_live_selected);
+      updateTableFn(cu_live_selected);
+      
+      if (cu_live_selected.length == 0 || cu_selected == null || cu_name_to_index[cu_selected] == null) {
+        return;
+      }
+
+      var index = cu_name_to_index[cu_selected];
+      curr_cu_selected = cu_live_selected[index];
+      updateGenericControl(curr_cu_selected);
+      //  $("div.cu-generic-control").html(chaosGenericControl(cu_live_selected[index]));
+      if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
+        var jsonhtml = json2html(curr_cu_selected, options, cu_selected);
+        if (isCollapsable(curr_cu_selected)) {
+          jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
+        }
+
+        $("#cu-dataset").html(jsonhtml);
+
+      }
+
+
+
+
+    }, options.Interval,updateTableFn);
+
+    if (cu_list_check != null) {
+      clearInterval(cu_list_check)
+    }
+    cu_list_check = setInterval(function () {
+      cu_live_selected.forEach(function (elem, index) {
+        if (elem.hasOwnProperty("health")) {
+          var name = encodeName(elem.health.ndk_uid);
+          var diff = (elem.health.dpck_ats - health_time_stamp_old[elem.health.ndk_uid]);
+          if (diff > 0) {
+            $("#" + name).css('color', 'green');
+            $("#" + name).find('td').css('color', 'green');
+
+            off_line[elem.health.ndk_uid] = false;
+
+          } else {
+            $("#" + name).css('color', 'black');
+            $("#" + name).find('td').css('color', 'black');
+            off_line[elem.health.ndk_uid] = true;
+
+          }
+          health_time_stamp_old[elem.health.ndk_uid] = elem.health.dpck_ats;
+        } else {
+          var id = cu_list[index];
+          var name = encodeName(id);
+          $("#" + name).css('color', 'red');
+          off_line[id] = true;
+
+        }
+
+      });
+    }, 7000);
+
+  }
+
+  function mainCU() {
+    var list_cu;
+    var classe=["powersupply","scraper"];
+    var $radio = $("input:radio[name=search-alive]");
+    if ($radio.is(":checked") === false) {
+      $radio.filter("[value=true]").prop('checked', true);
+    }
+    jchaos.search("", "zone", true, function (zones) {
+      element_sel('#zones', zones, 1);
+    });
+    
+    element_sel('#classe',classe,1);
+    $("#zones").change(function () {
+      var zone_selected;
+      zone_selected = $("#zones option:selected").val();
+      search_string=zone_selected;
+      if (zone_selected == "--Select--") {        //Disabilito la select dei magneti se non � selezionata la zona
+        $("#elements").attr('disabled', 'disabled');
+      } else {
+        $("#elements").removeAttr('disabled');
+      }
+      if (zone_selected == "ALL") {
+        search_string="";
+        var alive=$("[input=search-alive]:checked").val()
+        jchaos.search(search_string, "class", (alive=="true"), function (ll) {
+          element_sel('#elements', ll, 1);
+        });
+
+      } else {
+        jchaos.search(zone_selected, "class", true, function (ll) {
+          element_sel('#elements', ll, 1);
+        });
+      }
+      $("#search-chaos").val(search_string);
+      
+    });
+
+    $("#elements").change(function () {
+      var element_selected = $("#elements option:selected").val();
+      var zone_selected = $("#zones option:selected").val();
+      search_string="";
+      if ((zone_selected != "ALL") && (zone_selected != "--Select--")) {
+        search_string = zone_selected;
+      }
+      if ((element_selected != "ALL") && (cu_selected != "--Select--")) {
+        search_string += "/" + element_selected;
+      }
+
+
+      if (element_selected == "--Select--" || zone_selected == "--Select--") {
+        $(".btn-main-function").hasClass("disabled");
+
+      } else {
+        $(".btn-main-function").removeClass("disabled");
+
+      }
+      $("#search-chaos").val(search_string);
+      var alive=$("input[type=radio][name=search-alive]:checked").val()
+      
+      list_cu = jchaos.search(search_string, "cu", (alive=="true"), false);
+      var interface = $("#classe option:selected").val();
+
+      buildCUInterface(list_cu, implementation_map[interface]);
+
+    });
+    $("#classe").change(function () {
+      var interface = $("#classe option:selected").val();
+      var alive=$("input[type=radio][name=search-alive]:checked").val()
+      
+      list_cu = jchaos.search(search_string, "cu", (alive=="true"), false);
+      
+      buildCUInterface(list_cu, implementation_map[interface]);
+
+    });
+    $("#search-chaos").keypress(function (e) {
+      if (e.keyCode == 13) {
+        var interface = $("#classe option:selected").val();
+        search_string=$(this).val();
+        var alive=$("input[type=radio][name=search-alive]:checked").val()
+        
+        list_cu = jchaos.search(search_string, "cu", (alive=="true"), false);
+        buildCUInterface(list_cu, implementation_map[interface]);
+        
+      }
+      //var tt =prompt('type value');
+    });
+
+    $("input[type=radio][name=search-alive]").change(function(e){
+      var alive=$("input[type=radio][name=search-alive]:checked").val()
+      list_cu = jchaos.search(search_string, "cu", (alive=="true"), false);
+      var interface = $("#classe option:selected").val();
+      
+      buildCUInterface(list_cu, implementation_map[interface]);
+    });
+
+
+  }
   /******************
    * MAIN TABLE HANDLING
    * 
@@ -490,7 +1309,7 @@
       html += "<td id='" + cuname + "_system_command'></td>";
       html += "<td title='Device alarms' id='" + cuname + "_output_device_alarm'></td>";
       html += "<td title='Control Unit alarms' id='" + cuname + "_output_cu_alarm'></td>";
-      html += "<td id='" + cuname + "_system_prate'></td></tr>";
+      html += "<td id='" + cuname + "_health_prate'></td></tr>";
     });
 
     html += '</table>';
@@ -498,21 +1317,6 @@
     html += '</div>';
     html += '</div>';
     return html;
-  }
-
-  function generateUpdateGenericTable(cu) {
-
-
-
-    //$("#main_table_cu").DataTable();
-
-    n = $('#main_table_cu tr').size();
-    if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
-      $("#table-scroll").css('height', '280px');
-    } else {
-      $("#table-scroll").css('height', '');
-    }
-
   }
 
 
@@ -640,7 +1444,7 @@
     var html = '<div class="row-fluid">';
     html += '<div class="box span12">';
     html += '<div class="box-content">';
-    html += '<table class="table table-bordered" id="main_table_scrapers">';
+    html += '<table class="table table-bordered" id="main_table_cu">';
     html += '<thead class="box-header">';
     html += '<tr>';
     html += '<th>Element</th>';
@@ -782,7 +1586,7 @@
     var html = '<div class="row-fluid">';
     html += '<div class="box span12">';
     html += '<div class="box-content">';
-    html += '<table class="table table-bordered" id="main_table_magnets">';
+    html += '<table class="table table-bordered" id="main_table_cu">';
     html += '<thead class="box-header">';
     html += '<tr>';
     html += '<th>Element</th>';
@@ -887,12 +1691,7 @@
       }
     });
 
-    n = $('#main_table_magnets tr').size();
-    if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
-      $("#table-scroll").css('height', '280px');
-    } else {
-      $("#table-scroll").css('height', '');
-    }
+   
 
   }
   function generatePSCmd() {
@@ -983,11 +1782,11 @@
     html += '</div>';
 
     html += '<div class="modal-footer">';
-    
+
     html += '<a href="#" class="btn" id="graph-delete">Delete</a>';
     html += '<a href="#" class="btn" id="graph-list-run">Run</a>';
     html += '<a href="#" class="btn" id="graph-list-edit">Edit..</a>';
-    
+
     html += '<a href="#" class="btn" id="graph-list-close">Close</a>';
     html += '</div>';
     html += '</div>';
@@ -995,14 +1794,14 @@
 
 
   }
-  function generateQueryTable(){
-    var html = '<div class="modal hide fade" id="mdl-query">';
-    
+  function generateQueryTable() {
+    var html = '<div class="modal hide fade draggable" id="mdl-query">';
+
     html += '<div class="modal-header">';
     html += '<button type="button" class="close" data-dismiss="modal">×</button>';
     html += '<h3>Query History</h3>';
     html += '</div>';
-    
+
     html += '<div class="modal-body">';
     html += '<div class="row-fluid">';
 
@@ -1013,7 +1812,7 @@
     html += '<input class="input-xlarge focused span9" id="query-start" title="Start of the query (epoch in ms or hhmmss offset )" type="text" value="">';
     html += '<label class="label span3">Stop </label>';
     html += '<input class="input-xlarge focused span9" id="query-stop" title="End of the query (empty means: now)" type="text" value="NOW">';
-    
+
     html += '<label class="label span3">Page </label>';
     html += '<input class="input-xlarge focused span9" id="query-page" title="page length" type="number" value="100">';
     html += '</div>';
@@ -1055,7 +1854,7 @@
     html += '</select>';
     html += '<label class="label span3">Graph update (ms) </label>';
     html += '<input class="input-xlarge span9" id="graph-update" type="number" value="1000">';
-  
+
     html += '<label class="label span3">Graph Scroll </label>';
     html += '<div class="span3">'
     html += '<label for="graph-shift">enable scroll</label><input class="input-xlarge" id="shift-true" title="ENABLE scroll graph whenever keep seconds are reached" name="graph-shift" type="radio" value="true">';
@@ -1192,18 +1991,18 @@
       return;
     }
     /// fix things before
-    
-    if(!$.isNumeric(opt.highchart_opt.xAxis.max)){
-      opt.highchart_opt.xAxis.max=null;
+
+    if (!$.isNumeric(opt.highchart_opt.xAxis.max)) {
+      opt.highchart_opt.xAxis.max = null;
     }
-    if(!$.isNumeric(opt.highchart_opt.xAxis.min)){
-      opt.highchart_opt.xAxis.min=null;
+    if (!$.isNumeric(opt.highchart_opt.xAxis.min)) {
+      opt.highchart_opt.xAxis.min = null;
     }
-    if(!$.isNumeric(opt.highchart_opt.yAxis.max)){
-      opt.highchart_opt.yAxis.max=null;
+    if (!$.isNumeric(opt.highchart_opt.yAxis.max)) {
+      opt.highchart_opt.yAxis.max = null;
     }
-    if(!$.isNumeric(opt.highchart_opt.yAxis.min)){
-      opt.highchart_opt.yAxis.min=null;
+    if (!$.isNumeric(opt.highchart_opt.yAxis.min)) {
+      opt.highchart_opt.yAxis.min = null;
     }
     var count = 0;
     for (k in active_plots) {
@@ -1218,14 +2017,14 @@
         title: opt.name + "-" + count,
         width: opt.width,
         hright: opt.height,
-        resizable:true,
+        resizable: true,
         dialogClass: 'no-close',
         open: function () {
-          
+
           var start_time = (new Date()).getTime();
           var chart = new Highcharts.chart("graph-" + count, opt.highchart_opt);
           $("#dialog-" + count).attr("graphname", graphname);
-          
+
           active_plots[graphname] = {
             graphname: graphname,
             graph: chart,
@@ -1236,119 +2035,119 @@
         },
         buttons: [
           {
-            id:"dialog-live",
-            text:"Live",
-            click:function(e){
-            if(active_plots[graphname].hasOwnProperty('interval')){
-              clearInterval(active_plots[graphname].interval);
-              delete active_plots[graphname].interval;
-              $(e.target).html("Continue Live");
-              return;
-            }
-            $(e.target).html("Pause Live");
-            var chart=active_plots[graphname]['graph'];
-            
-            var refresh = setInterval(function () {
-              var data = jchaos.getChannel(opt.culist, -1, null);
-              var set=[];
-              var x, y;
-              var cnt = 0;
-              var tr = opt.trace;
-              var enable_shift = false;
-              for (k in tr) {
-                if (tr[k].x == null) {
-                  x = (new Date()).getTime(); // current time
-                  if (opt.highchart_opt.shift && ((x - start_time) > opt.highchart_opt['timebuffer'])) {
-                    enable_shift = true;
-                  }
-                } else if (tr[k].x.const != null) {
-                  x = tr[k].x.const;
-                } else {
-                  x = getValueFromCUList(data, tr[k].x);
-                }
-                if (tr[k].y == null) {
-                  y = (new Date()).getTime(); // current time
-                } else if (tr[k].y.const != null) {
-                  y = tr[k].y.const;
-                } else {
-                  y = getValueFromCUList(data, tr[k].y);
-  
-                }
-                if(opt.highchart_opt['tracetype']=="multi"){
-                  chart.series[cnt++].addPoint([x, y], false, enable_shift);
-                } else {
-                  set.push({x,y});
-                }
+            id: "dialog-live",
+            text: "Live",
+            click: function (e) {
+              if (active_plots[graphname].hasOwnProperty('interval')) {
+                clearInterval(active_plots[graphname].interval);
+                delete active_plots[graphname].interval;
+                $(e.target).html("Continue Live");
+                return;
               }
-              if(opt.highchart_opt['tracetype']=="single"){
-                chart.series[0].setData(set,true,true,true);
-              } 
-              chart.redraw();
-            }, opt.update);
-            active_plots[graphname]['interval']=refresh;
-            
-          }
-        },
-        {
-          id:"dialog-history",
-          text:"History",
-          click:function(){
-            if(opt.highchart_opt.xAxis.type!="datetime"){
-              alert("X axis must be configured as datetime, for history plots!")
-              return;
-            }
-            if(opt.highchart_opt.yAxis.type=="datetime"){
-              alert("Y axis cannot be as datetime!")
-              return;
-            }
-            $("#mdl-query").modal("show");
-            $("#query-run").on("click",function(){
-              $("#mdl-query").modal("hide");
-              
-              var qstart=$("#query-start").val();
-              var qstop=$("#query-stop").val();
-              var page=$("#query-page").val();
-              jchaos.options.history_page_len=Number(page);
-              jchaos.options.updateEachCall=true;
+              $(e.target).html("Pause Live");
+              var chart = active_plots[graphname]['graph'];
 
-              if(qstop=="" || qstop=="NOW"){
-                qstop = (new Date()).getTime();
-              }
-              clearInterval(active_plots[graphname].interval);
-              delete active_plots[graphname].interval;
-              var tr = opt.trace;
-              var chart=active_plots[graphname]['graph'];
-              opt.culist.forEach(function(item){
-                jchaos.getHistory(item, 0, qstart, qstop, "", function(data){
-                  var cnt=0,ele_count=0;
-                  for (k in tr) {
-                    if(tr[k].y.cu===item){
-                      //iterate on the datasets
-                      var variable=tr[k].y.var;
-                      var ts=data.X[ele_count++];
-                      data.Y.forEach(function(ds){
-                        if(ds.hasOwnProperty(variable)){
-                          chart.series[cnt].addPoint([ts, ds[variable]], false, false);
-                        }
-                      });
+              var refresh = setInterval(function () {
+                var data = jchaos.getChannel(opt.culist, -1, null);
+                var set = [];
+                var x, y;
+                var cnt = 0;
+                var tr = opt.trace;
+                var enable_shift = false;
+                for (k in tr) {
+                  if (tr[k].x == null) {
+                    x = (new Date()).getTime(); // current time
+                    if (opt.highchart_opt.shift && ((x - start_time) > opt.highchart_opt['timebuffer'])) {
+                      enable_shift = true;
                     }
-                    cnt++;
+                  } else if (tr[k].x.const != null) {
+                    x = tr[k].x.const;
+                  } else {
+                    x = getValueFromCUList(data, tr[k].x);
                   }
-                  chart.redraw();                  
+                  if (tr[k].y == null) {
+                    y = (new Date()).getTime(); // current time
+                  } else if (tr[k].y.const != null) {
+                    y = tr[k].y.const;
+                  } else {
+                    y = getValueFromCUList(data, tr[k].y);
+
+                  }
+                  if (opt.highchart_opt['tracetype'] == "multi") {
+                    chart.series[cnt++].addPoint([x, y], false, enable_shift);
+                  } else {
+                    set.push({ x, y });
+                  }
+                }
+                if (opt.highchart_opt['tracetype'] == "single") {
+                  chart.series[0].setData(set, true, true, true);
+                }
+                chart.redraw();
+              }, opt.update);
+              active_plots[graphname]['interval'] = refresh;
+
+            }
+          },
+          {
+            id: "dialog-history",
+            text: "History",
+            click: function () {
+              if (opt.highchart_opt.xAxis.type != "datetime") {
+                alert("X axis must be configured as datetime, for history plots!")
+                return;
+              }
+              if (opt.highchart_opt.yAxis.type == "datetime") {
+                alert("Y axis cannot be as datetime!")
+                return;
+              }
+              $("#mdl-query").modal("show");
+              $("#query-run").on("click", function () {
+                $("#mdl-query").modal("hide");
+
+                var qstart = $("#query-start").val();
+                var qstop = $("#query-stop").val();
+                var page = $("#query-page").val();
+                jchaos.options.history_page_len = Number(page);
+                jchaos.options.updateEachCall = true;
+
+                if (qstop == "" || qstop == "NOW") {
+                  qstop = (new Date()).getTime();
+                }
+                clearInterval(active_plots[graphname].interval);
+                delete active_plots[graphname].interval;
+                var tr = opt.trace;
+                var chart = active_plots[graphname]['graph'];
+                opt.culist.forEach(function (item) {
+                  jchaos.getHistory(item, 0, qstart, qstop, "", function (data) {
+                    var cnt = 0, ele_count = 0;
+                    for (k in tr) {
+                      if (tr[k].y.cu === item) {
+                        //iterate on the datasets
+                        var variable = tr[k].y.var;
+                        var ts = data.X[ele_count++];
+                        data.Y.forEach(function (ds) {
+                          if (ds.hasOwnProperty(variable)) {
+                            chart.series[cnt].addPoint([ts, ds[variable]], false, false);
+                          }
+                        });
+                      }
+                      cnt++;
+                    }
+                    chart.redraw();
+                  });
                 });
-              });
-          })
-        }
-      },{
-        text:"Close",
-        click: function () {
-            clearInterval(active_plots[graphname].interval);
-            delete active_plots[graphname];
-            $(this).dialog('close');
-          }
-        }],
-        
-      
+              })
+            }
+          }, {
+            text: "Close",
+            click: function () {
+              clearInterval(active_plots[graphname].interval);
+              delete active_plots[graphname];
+              $(this).dialog('close');
+            }
+          }],
+
+
 
       });
     }
@@ -1358,7 +2157,7 @@
     var tracetype = $("#trace-type option:selected").val();
 
     var graphname = $("#graph_save_name").val();
-    if(graphname==""){
+    if (graphname == "") {
       alert("must specify a valid graph name");
       return;
     }
@@ -1372,10 +2171,10 @@
     var height_ = $("#graph-high").val();
     var gupdate = $("#graph-update").val();
     var keepseconds = Number($("#graph-keepseconds").val());
-    if (!$.isNumeric(xmax )) {
+    if (!$.isNumeric(xmax)) {
       xmax = null;
     }
-    if (!$.isNumeric(xmin )) {
+    if (!$.isNumeric(xmin)) {
       xmin = null;
     }
     if (!$.isNumeric(ymax)) {
@@ -1391,12 +2190,12 @@
     var serie = [];
     var tracecuo = {};
     var tracecu = [];
-    var shift_true=$("[input=graph-shift]:checked").val();
-    if(tracetype=="single"){
+    var shift_true = $("input[type=radio][name=graph-shift]:checked").val();
+    if (tracetype == "single") {
       serie.push({ name: graphname });
     }
     for (key in trace_list) {
-      if(tracetype=="multi"){
+      if (tracetype == "multi") {
         serie.push({ name: key });
       }
       if ((trace_list[key].x != null) && trace_list[key].x.hasOwnProperty("cu") && trace_list[key].x.cu != null) {
@@ -1413,7 +2212,7 @@
     var tmp = {
       chart: {
         type: graphtype,
-        zoomType:"xy"
+        zoomType: "xy"
       },
       title: {
         text: graphname
@@ -1437,10 +2236,10 @@
       },
       series: serie
     }
-    tmp['tracetype']=tracetype;
+    tmp['tracetype'] = tracetype;
     tmp['shift'] = shift_true;
     tmp['timebuffer'] = keepseconds * 1000;
-    
+
     if (xtype == "datetime") {
       tmp['rangeSelector'] = {
         buttons: [{
@@ -1528,14 +2327,14 @@
     html += '</div>';
     return html;
   }
-  function generateDataSet(cuid) {
+  function generateDataSet() {
     // var cu=jchaos.getChannel(cuid, -1,null);
     // var desc=jchaos.getDesc(cuid,null);
 
     var html = '<div class="modal hide fade " id="mdl-dataset">';
     html += '<div class="modal-header">';
     html += '<button type="button" class="close" data-dismiss="modal">×</button>';
-    html += '<h3>DATASET ' + cuid + '</h3>';
+    html += '<h3>DATASET</h3>';
     html += '</div>';
     html += '<div class="modal-body">';
     html += '<div id="cu-dataset" class="json-dataset"></div>';
@@ -1548,14 +2347,14 @@
     return html;
   }
 
-  function generateDescription(cuid) {
+  function generateDescription() {
     // var cu=jchaos.getChannel(cuid, -1,null);
     // var desc=jchaos.getDesc(cuid,null);
 
     var html = '<div class="modal hide fade " id="mdl-description">';
     html += '<div class="modal-header">';
     html += '<button type="button" class="close" data-dismiss="modal">×</button>';
-    html += '<h3 id="desc_text">Description ' + cuid + '</h3>';
+    html += '<h3 id="desc_text"></h3>';
     html += '</div>';
     html += '<div class="modal-body">';
     html += '<div id="cu-description" class="json-dataset"></div>';
@@ -1691,31 +2490,68 @@
 
     return html;
   }
-  function generateModalActions(cuid) {
-    var html="";
+  function generateModalActions() {
+    var html = "";
     for (var cnt = 0; cnt < 10; cnt++) {
-      html += '<div id="dialog-' + cnt + '" class="cugraph" grafname="' + cnt + '" style="z-index: 1000;">';
+      html += '<div id="dialog-' + cnt + '" class="cugraph hide" grafname="' + cnt + '" style="z-index: 1000;">';
       html += '<div id="graph-' + cnt + '" style="height: 380px; width: 580px;z-index: 1000;">';
       html += '</div>';
       html += '</div>';
     }
 
-    html += generateDataSet(cuid);
-    html += generateDescription(cuid);
-    html += generateSnapshotTable(cuid);
-    html += generateAlarms(cuid);
+    html += generateDataSet();
+    html += generateDescription();
+    html += generateSnapshotTable();
+    html += generateAlarms();
     html += generateCmdModal();
     html += generateLog();
     html += generateGraphTable();
     html += generateGraphList();
     html += generateQueryTable();
-   
+
 
     return html;
   }
+  function generateMenuBox() {
+    var html = '<div class="box black">';
+    html += '<div class="box-header">';
+    html += '<h2><i class="halflings-icon white list"></i><span class="break"></span>Menu</h2>';
+    html += '<div class="box-icon">';
+    html += '<a href="#" class="btn-minimize"><i class="halflings-icon white chevron-up"></i></a>';
+    html += '</div>';
+    html += '</div>';
+    html += '<div class="box-content">';
+    html += '<ul class="dashboard-list metro">';
+ 
+    
 
-  function generateActionBox(cuid) {
-    var html = '<div class="box black span3 offset9" onTablet="span4" onDesktop="span4">';
+
+    html += '<li class="black">';
+    html += '<a href="./unitserver.php" role="button" class="show_unitserver" data-toggle="modal">';
+    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">UnitServer</span>';
+    html += '</a>';
+    html += '</li>';
+
+    html += '<li class="black">';
+    html += '<a href="./agent.pgp" role="button" class="show_agent" data-toggle="modal">';
+    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Agent</span>';
+    html += '</a>';
+    html += '</li>';
+
+    html += '<li class="black">';
+    html += '<a href="./orbit.php" role="button" class="show_orbit" data-toggle="modal">';
+    html += '<i class="icon-file red"></i><span class="opt-menu hidden-tablet">Orbit</span>';
+    html += '</a>';
+    html += '</li>';
+    
+    html += '</ul>';
+    html += '</div>';
+    html += '</div>';
+    return html;
+  }
+
+  function generateActionBox() {
+    var html = '<div class="box black span3" onTablet="span4" onDesktop="span4">';
     html += '<div class="box-header">';
     html += '<h2><i class="halflings-icon white list"></i><span class="break"></span>Actions</h2>';
     html += '<div class="box-icon">';
@@ -1887,7 +2723,7 @@
 
 
 
-  function generateGenericControl(cu) {
+  function generateGenericControl() {
     var html = "";
     html += '<div class="row-fluid">';
     html += '<div class="box span12 box-cmd">';
@@ -2207,702 +3043,39 @@
    * @param json: a javascript object
    * @param options: an optional options hash
    */
-  $.fn.chaosDashboard = function (cuids, options) {
-    options = options || {};
-    if (cuids == null) {
-      return;
-    }
-    var collapsed = options.collapsed;
+  $.fn.chaosDashboard = function (opt) {
+    options = opt || {};
+    
     /* jQuery chaining */
     return this.each(function () {
       var notupdate_dataset = 1;
       /* Transform to HTML */
       // var html = chaosCtrl2html(cu, options, '');
-
-      if (!(cuids instanceof Array)) {
-        cu_list = [cuids];
-      } else {
-        cu_list = cuids;
-      }
-      if (options.CUtype == null) {
-        options.CUtype = "generic";
-      }
-
-      if ((options.CUtype != "generic") && (options.CUtype != "all") && (options.CUtype != "ALL")) {
-        cu_list = cusWithInterface(cu_list, options.CUtype);
-      }
-
-      cu_list.forEach(function (elem, id) {
-        cu_name_to_index[elem] = id;
-        health_time_stamp_old[elem] = 0;
-        off_line[elem] = false;
-      });
-      // cu_selected = cu_list[0];
-      cu_selected = null;
-      var html = "";
-      /*****
-       * 
-       * clear all interval interrupts
-       */
-      /**
-       * fixed part
-       */
-      html += generateActionBox("");
-      
-      if ((options.CUtype.indexOf("SCPowerSupply") != -1)) {
-        html += generatePStable(cu_list);
-      } else if ((options.CUtype.indexOf("SCActuator") != -1)) {
-        html += generateScraperTable(cu_list);
-      } else {
-        html += generateGenericTable(cu_list);
-      }
-      html += '<div class="specific-control"></div>';
-      html += '<div class="cu-generic-control"></div>';
-
-      html += generateModalActions("");
-
-      /*** */
+      if (options.template = "CU") {
+        var html="";
+        html += buildBody();
+        html += generateModalActions();
+        html += '<div class="specific-table"></div>';
+        html += '<div class="specific-control"></div>';
+        /*** */
       /* Insert HTML in target DOM element */
-      $(this).html(html);
-      /*****
-       * 
-       * GENERIC TABLE
-       */
+        $(this).html(html);
+        graphSetup();
+        snapSetup();
+        datasetSetup();
+        descriptionSetup();
+        logSetup();
+        jsonSetup();
+        mainCU();
+        $("#menu-dashboard").html(generateMenuBox());
+      }
 
-      $("#main_table_cu tbody tr").click(function (e) {
-        mainTableCommonHandling("main_table_cu", e);
-      });
-      /******** */
-      $(this).off('keypress');
-      $(this).on('keypress', function (event) {
-        var t = $(event.target);
 
-        if ((event.which == 13) && (t.attr('class') == "setSchedule")) {
-          //  var name = $(t).attr("cuname");
-          var value = $(t).attr("value");
-          jchaos.setSched(cu_selected, value);
 
-        }
-
-      });
-      $("#mdl-dataset").draggable();
-      $("#mdl-description").draggable();
-      $("#mdl-snap").draggable();
-
-      $("#mdl-log").draggable();
-      /**
-       * 
-       *  GRAPH CONFIGUATION 
-       * 
-       * 
-       * 
-      */
-      $("#mdl-graph").draggable();
-      $("#mdl-graph-list").draggable();
       
-      $('#mdl-graph-list').on('shown.bs.modal', function () {
-        graph_selected=null;
-      });
 
-      $('#mdl-graph').on('shown.bs.modal', function () {
-        var $radio=$("input:radio[name=graph-shift]");
-        if($radio.is(":checked")===false){
-          $radio.filter("[value=false]").prop('checked',true);
-        }
-        if (($("#trace-name").val() != "") && (($("#xvar").val() != "") || ($("#yvar").val() != ""))) {
-          $("#trace-add").attr('title', "Add Trace");
-          $("#trace-add").removeAttr('disabled');
-        } else {
-          $("#trace-add").attr('title', "You must specify a valid trace name and at least a X/Y path");
-          $("#trace-add").attr('disabled', true);
+      
 
-        }
-        if (($("#xvar").val() == "") && ($("#xtype:selected").val() == "datetime")) {
-          $("#xvar").val("timestamp")
-        }
-        if (($("#yvar").val() == "") && ($("#ytype:selected").val() == "datetime")) {
-          $("#yvar").val("timestamp")
-        }
-
-        if((graph_selected!=null)&&(high_graphs[graph_selected]!=null)){
-          // initialize with the value of selected graph
-          var info=high_graphs[graph_selected].highchart_opt;
-          $("#graph_save_name").val(graph_selected);
-          $("#xname").val(info.xAxis.title.text);
-          $("#xtype").val(info.xAxis.type);
-          $("#xmax").val(info.xAxis.max);
-          $("#xmin").val(info.xAxis.min);
-          $("#xname").val(info.yAxis.title.text);
-          
-          $("#ytype").val(info.yAxis.type);
-          
-          $("#ymax").val(info.yAxis.max);
-          $("#ymin").val(info.yAxis.min);
-          $("#graph-width").val(high_graphs[graph_selected].width);
-          $("#graph-high").val(high_graphs[graph_selected].height);
-          $("#graph-update").val();
-          $("#graph-keepseconds").val(info.timebuffer);
-          if(info.shift){
-            $radio.filter("[value=true]").prop('checked',true);
-                        
-          } else {
-            $radio.filter("[value=false]").prop('checked',true);
-            
-          }
-          
-          $("#trace-type").val(info.tracetype);
-          $("#graphtype").val(graph_selected);
-          $("#table_graph_items").find("tr:gt(0)").remove();
-          var trace=high_graphs[graph_selected].trace;
-          for(var k in trace){
-            var tname=encodeName(k);
-            var xpath,ypath;
-            xpath=encodeCUPath(trace[k].x);
-            ypath=encodeCUPath(trace[k].y);
-            $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '"><td>' + k + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
-            
-          };
-        }
-        $("#table_graph_items tbody tr").click(function (e) {
-          $(".row_element").removeClass("row_snap_selected");
-          $(this).addClass("row_snap_selected");
-          trace_selected = $(this).attr("id");
-        }
-        );
-     });
-      $("#mdl-graph").css('width', 800);
-      $("#mdl-graph-list").css('width', 800);
-
-      $("#graph-save").attr('disabled', true);
-      $("#graph-run").attr('disabled', true);
-
-      $("#graph-close").on('click', function () {
-        $("#mdl-graph").modal("hide");
-
-      });
-      $("xtype").on("change", function () {
-        if ($("#xtype:selected").val() == "datetime") {
-          $("#xvar").val("timestamp");
-        }
-      });
-      $("ytype").on("change", function () {
-        if ($("#ytype:selected").val() == "datetime") {
-          $("#yvar").val("timestamp");
-        }
-      });
-      $("#graph-list-close").on('click', function () {
-        $("#mdl-graph-list").modal("hide");
-
-      });
-
-      $("#graph-save").on('click', function () {
-        saveGraph();
-        $("#graph-run").removeAttr('disabled');
-      });
-
-      $("#graph-run").on('click', function () {
-
-        runGraph($("#graph_save_name").val());
-        $("#mdl-graph").modal("hide");
-
-      });
-
-      $("#graph-list-run").on('click', function () {
-        runGraph(graph_selected);
-        $("#mdl-graph-list").modal("hide");
-
-      });
-      $("#graph-list-edit").on('click', function () {
-        if(graph_selected!=null){
-          $("#mdl-graph-list").modal("hide");
-          $("#mdl-graph").modal("show");
-        }  
-      });
-      $("#graph-delete").on('click', function () {
-        delete high_graphs[graph_selected];
-        jchaos.variable("highcharts", "set", high_graphs, null);
-        updateGraph();
-      });
-
-     
-
-
-      $("#graph_save_name").on("keypress", function () {
-        if ($("#graph_save_name").val() != "") {
-          var rowCount = $('#table_graph_items tr').length;
-          if (rowCount > 1) {
-            $("#graph-save").removeAttr('disabled');
-            $("#graph-save").attr('title', "Save current Trace");
-
-          } else {
-            $("#graph-save").attr('disabled', true);
-            $("#graph-save").attr('title', "At least one trace must be present ");
-          }
-
-        } else {
-          $("#graph-save").attr('title', "Must specify a valid Graph name");
-          $("#graph-save").attr('disabled', true);
-
-        }
-      });
-      $("#trace-add").click(function () {
-        var tracename = $("#trace-name").val();
-        var xpath = $("#xvar").val();
-        var ypath = $("#yvar").val();
-        var tmpx, tmpy;
-        if (xpath == "") {
-          xpath = "timestamp";
-        } else {
-          tmpx = decodeCUPath(xpath);
-        }
-        if (ypath == "") {
-          ypath = "timestamp";
-        } else {
-          tmpy = decodeCUPath(ypath);
-        }
-        var tname=encodeName(tracename);
-        $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '"><td>' + tracename + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
-        if (tmpx == null && tmpy == null) {
-          alert("INVALID scale type options");
-        }
-        trace_list[tracename] = {
-          x: tmpx,
-          y: tmpy
-        }
-        
-      });
-
-
-
-      $("#trace-rem").click(function () {
-        if (trace_selected != null) {
-          $("#" + trace_selected).remove();
-        }
-      });
-      /*** 
-       * 
-       * JSON EVENTS
-       * */
-      $(this).off('click');
-      $(this).on('click', 'a.json-toggle', function () {
-        var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
-        target.toggle();
-        if (target.is(':visible')) {
-          target.siblings('.json-placeholder').remove();
-        }
-        else {
-          var count = target.children('li').length;
-          var placeholder = count + (count > 1 ? ' items' : ' item');
-          target.after('<a href class="json-placeholder">' + placeholder + '</a>');
-        }
-        return false;
-      });
-
-
-      $(this).on('click', 'span.json-key', function () {
-        var id = this.id;
-        var attr = id.split("-")[1];
-
-        $("#attr-" + attr).toggle();
-        //var tt =prompt('type value');
-        return false;
-      });
-
-      $(this).on('keypress', 'input.json-keyinput', function (e) {
-        if (e.keyCode == 13) {
-          var id = this.id;
-          var attr = id.split("-")[1];
-          jchaos.setAttribute(cu_selected, attr, this.value);
-          $("#" + this.id).toggle();
-          return false;
-        }
-        //var tt =prompt('type value');
-        return this;
-      });
-      /* Simulate click on toggle button when placeholder is clicked */
-      $(this).on('click', 'a.json-placeholder', function () {
-        $(this).siblings('a.json-toggle').click();
-        return false;
-      });
-
-      if (options.collapsed == true) {
-        /* Trigger click to collapse all nodes */
-        $(this).find('a.json-toggle').click();
-      }
-
-      /****************************/
-      ///******* control buttons */
-      /*** 
-       * Snapshot handling
-       */
-      $(this).on('click', 'a.show_graph', function () {
-        updateGraph();
-        //$("#mdl-log").modal("show");
-      });
-      $("#snap-save").on('click', function () {
-        var value = $("#snap_save_name").val();
-        if (cu_multi_selected.length > 1) {
-          jchaos.snapshot(value, "create", cu_multi_selected, function () {
-          });
-
-        } else {
-          jchaos.snapshot(value, "create", cu_selected, function () {
-            updateSnapshotTable(cu);
-
-          });
-        }
-        //var snap_table = $(this).find('a.show_snapshot');
-      });
-
-      $("#snap-close").on('click', function () {
-        $("#mdl-snap").modal("hide");
-        cu_name_to_saved = [];
-      });
-
-
-      $(this).on('click', 'a.show_snapshot', function () {
-
-        updateSnapshotTable(cu_selected);
-      });
-
-      $("#snap-delete").on('click', function (e) {
-        if (snap_selected != "") {
-          jchaos.snapshot(snap_selected, "delete", "", "", function () {
-            updateSnapshotTable(cu_selected);
-
-          });
-
-        }
-      });
-      $("#snap-show").on('click', function (e) {
-
-        if (snap_selected != "") {
-          var dataset = jchaos.snapshot(snap_selected, "load", null, "", null);
-          var jsonhtml = json2html(dataset, options, cu_selected);
-          if (isCollapsable(dataset)) {
-            jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
-          }
-          updateSnapshotTable(cu_selected);
-
-          $("#cu-description").html(jsonhtml);
-          $("#desc_text").html("Snapshot " + snap_selected);
-          $("#mdl-description").modal("show");
-
-        }
-      });
-      $("#snap-apply").on('click', function (e) {
-        if (snap_selected != "") {
-          jchaos.snapshot(snap_selected, "restore", "", "", null);
-        }
-      });
-
-      /********* LOG */
-      $(this).on('click', 'a.show_log', function () {
-        updateLog(cu_selected);
-        //$("#mdl-log").modal("show");
-      });
-      $("#log-search-go").click(function () {
-        var sel = $("#log_search").val();
-        updateLog(sel);
-        //$("#mdl-log").modal("show");
-      });
-      $("#log-close").click(function () {
-        $("#mdl-log").modal("hide");
-
-      });
-      /***********************/
-
-      /*
-      * DATASET HANDLING 
-       */
-      $(this).on('click', 'a.show_dataset', function () {
-        var dataset = jchaos.getChannel(cu_selected, -1, null);
-        var jsonhtml = json2html(dataset[0], options, cu_selected);
-        if (isCollapsable(dataset[0])) {
-          jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
-        }
-
-        $("#cu-dataset").html(jsonhtml);
-        $(".json-key").draggable(
-          {
-
-            cursor: 'move',
-            helper: 'clone',
-            containment: 'window'
-          }
-        );
-        $("#X-axis").droppable({
-          drop: function (e, ui) {
-            var draggable = ui.draggable;
-            alert('Something X "' + draggable.attr('id') + '" was dropped onto me!');
-          }
-        });
-
-        $("#Y-axis").droppable({
-          drop: function (e, ui) {
-            var draggable = ui.draggable;
-            alert('Something Y "' + draggable.attr('id') + '" was dropped onto me!');
-
-          }
-        });
-        $.contextMenu({
-          selector: '.json-key',
-          build: function ($trigger, e) {
-            var cuitem = {};
-            var portdir = $(e.currentTarget).attr("portdir");
-            var portname = $(e.currentTarget).attr("portname");
-            cuitem['show-graph'] = { name: "Show Graphs.." };
-            cuitem['plot-x'] = { name: "Plot " + portdir + "/" + portname + " on X" };
-            cuitem['plot-y'] = { name: "Plot " + portdir + "/" + portname + " on Y" };
-
-            
-
-            cuitem['sep1'] = "---------";
-
-            cuitem['quit'] = {
-              name: "Quit", icon: function () {
-                return 'context-menu-icon context-menu-icon-quit';
-              }
-            };
-
-            return {
-
-              callback: function (cmd, options) {
-                if (cmd == "show-graph") {
-
-                  $("#mdl-graph-list").modal("show");
-                } else if (cmd == "plot-x") {
-                  $("#mdl-graph").modal("show");
-
-                  var fullname = cu_selected + "/" + portdir + "/" + portname;
-                  $("#trace-name").val(cu_selected);
-                  $("#xvar").val(fullname);
-                } else if (cmd == "plot-y") {
-                  $("#mdl-graph").modal("show");
-                  $("#trace-name").val(cu_selected);
-                  var fullname = cu_selected + "/" + portdir + "/" + portname;
-                  $("#yvar").val(fullname);
-
-                }
-              },
-              items: cuitem
-            }
-          }
-
-
-        });
-      });
-      $("#dataset-close").on('click', function () {
-        $("#mdl-dataset").modal("hide");
-      });
-      if (notupdate_dataset) {
-        $("#dataset-update").html('Update');
-      } else {
-        $("#dataset-update").html('Pause');
-      }
-      $("#dataset-update").on('click', function () {
-        notupdate_dataset = !notupdate_dataset;
-        if (notupdate_dataset) {
-          $("#dataset-update").html('Update');
-        } else {
-          $("#dataset-update").html('Pause');
-        }
-      });
-      /********************/
-      /*********
-       * DESCRIPTION HANDLING
-       */
-      $("#description-close").on('click', function () {
-        $("#mdl-description").modal("hide");
-      });
-
-      $(this).on('click', 'a.show_description', function () {
-        var dataset = jchaos.getDesc(cu_selected, null);
-        var jsonhtml = json2html(dataset, options, cu_selected);
-        if (isCollapsable(dataset)) {
-          jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
-        }
-
-        $("#cu-description").html(jsonhtml);
-      });
-
-
-      /**
-       * 
-       * POWER SUPPLY HANDLING
-       */
-      if (options.CUtype.indexOf("SCPowerSupply") != -1) {
-        $("#main_table_magnets tbody tr").click(function (e) {
-          mainTableCommonHandling("main_table_magnets", e);
-        });
-
-        $("div.specific-control").html(generatePSCmd());
-
-      } else if ((options.CUtype.indexOf("SCActuator") != -1)) {
-        $("#main_table_scrapers tbody tr").click(function (e) {
-          mainTableCommonHandling("main_table_scrapers", e);
-        });
-        $("div.specific-control").html(generateScraperCmd());
-      }
-      /*****
-       * CONTEXT MENU
-       * Dataset \elemens
-       */
-
-
-      /*$('.cuMenu').on('click', function(e){
-          console.log('clicked', this);
-      })*/
-      /************** 
-       * 
-       * UPDATE DATASET
-       * 
-      */
-
-      $("div.cu-generic-control").html(generateGenericControl());
-
-      $(".cucmdbase").click(function () {
-        var cmd = $(this).attr("cucmdid");
-        var cuselection;
-        if (cu_multi_selected.length > 0) {
-          cuselection = cu_multi_selected;
-        } else {
-          cuselection = cu_selected;
-        }
-        if (cuselection != null && cmd != null) {
-          if (cmd == "bypasson") {
-            jchaos.setBypass(cuselection, true, null);
-            return;
-          }
-          if (cmd == "bypassoff") {
-            jchaos.setBypass(cuselection, false, null);
-            return;
-          }
-          if (cmd == "load") {
-            jchaos.loadUnload(cuselection, true, null);
-            return;
-          }
-          if (cmd == "unload") {
-            jchaos.loadUnload(cuselection, false, null);
-            return;
-          }
-
-          jchaos.sendCUCmd(cuselection, cmd, "", null);
-
-        }
-
-
-
-      });
-      var interval = setInterval(function () {
-        cu_live_selected = jchaos.getChannel(cu_list, -1, null);
-
-        if ($("div.cu-generic-control").is(':visible') == false) {
-          clearInterval(interval);
-        } else {
-
-          // update all generic
-          updateGenericTableDataset(cu_live_selected);
-
-          if ($("#main_table_magnets").is(':visible')) {
-            // update 
-
-            updatePStable(cu_live_selected);
-            //  $("div.ps-control").html(generatePSCmd(cu_live_selected[index]));
-          }
-          if ($("#main_table_scrapers").is(':visible')) {
-            // update 
-
-            updateScraperTabletable(cu_live_selected);
-            //  $("div.ps-control").html(generatePSCmd(cu_live_selected[index]));
-          }
-          if (cu_live_selected.length == 0 || cu_selected == null || cu_name_to_index[cu_selected] == null) {
-            return;
-          }
-
-          var index = cu_name_to_index[cu_selected];
-          curr_cu_selected = cu_live_selected[index];
-          updateGenericControl(curr_cu_selected);
-          //  $("div.cu-generic-control").html(chaosGenericControl(cu_live_selected[index]));
-          if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
-            var jsonhtml = json2html(curr_cu_selected, options, cu_selected);
-            if (isCollapsable(curr_cu_selected)) {
-              jsonhtml = '<a href class="json-toggle"></a>' + jsonhtml;
-            }
-
-            $("#cu-dataset").html(jsonhtml);
-
-          }
-
-
-        }
-
-      }, options.Interval);
-      for (var i = 1; i < interval; i++) {
-        clearInterval(i);
-      }
-      $(".cucmd").click(function () {
-        var alias = $(this).attr("cucmdid");
-        var parvalue = $(this).attr("cucmdvalue");
-        var arglist = retriveCurrentCmdArguments(alias);
-        var cuselection;
-        var cmdparam = {};
-        var arguments = {};
-        arglist.forEach(function (item, index) {
-          // search for values
-          if (parvalue == null) {
-            parvalue = $("#" + alias + "_" + item['name']).val();
-          }
-          if ((parvalue == null) && (item['optional'] == false)) {
-            alert("argument '" + item['name'] + "' is required in command:'" + alias + "'");
-            return;
-          }
-
-          item['value'] = parvalue;
-        });
-
-        cmdparam = buildCmdParams(arglist);
-        if (cu_multi_selected.length > 0) {
-          cuselection = cu_multi_selected;
-        } else {
-          cuselection = cu_selected;
-        }
-        jchaos.sendCUCmd(cuselection, alias, cmdparam);
-
-      });
-      var check_time_stamp_interval = setInterval(function () {
-        if ($("div.cu-generic-control").is(':visible') == false) {
-          clearInterval(check_time_stamp_interval);
-
-        }
-
-        cu_live_selected.forEach(function (elem, index) {
-          if (elem.hasOwnProperty("health")) {
-            var name = encodeName(elem.health.ndk_uid);
-            var diff = (elem.health.dpck_ats - health_time_stamp_old[elem.health.ndk_uid]);
-            if (diff > 0) {
-              $("#" + name).css('color', 'green');
-              $("#" + name).find('td').css('color', 'green');
-
-              off_line[elem.health.ndk_uid] = false;
-
-            } else {
-              $("#" + name).css('color', 'black');
-              $("#" + name).find('td').css('color', 'black');
-              off_line[elem.health.ndk_uid] = true;
-
-            }
-            health_time_stamp_old[elem.health.ndk_uid] = elem.health.dpck_ats;
-          } else {
-            var id = cu_list[index];
-            var name = encodeName(id);
-            $("#" + name).css('color', 'red');
-            off_line[id] = true;
-
-          }
-
-        });
-      }, 7000);
     });
   };
 })(jQuery);

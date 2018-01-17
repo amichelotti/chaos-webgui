@@ -766,7 +766,7 @@ ul.messages li .message {
 
 .statbox {
 	height: 80px;
-	padding: 3px 8px 8px 8px;
+	padding: 1px 1px 1px 3px;
 	position: relative;
 	margin-bottom: 28px;
 }

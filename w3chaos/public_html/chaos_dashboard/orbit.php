@@ -1,13 +1,15 @@
 <!DOCTYPE HTML>
 <html>
-<?php require_once('../../head.php'); 
-$curr_page = "orbit-accumulator";
+<?php
+require_once('head.php');
+
+$curr_page = "Orbit";
 
 ?>
 <body>
-	
+
 <?php
-require_once('../../header.php');
+require_once('header.php');
 ?>
 
 	
@@ -18,7 +20,7 @@ require_once('../../header.php');
 			<div id="sidebar-left" class="span2">
 				<div class="nav-collapse sidebar-nav">
 					<ul class="nav nav-tabs nav-stacked main-menu">
-						<?php require_once('../../menu.php'); ?>	
+						<?php require_once('menu.php'); ?>	
 					</ul>
 				</div>
 			</div>
@@ -273,84 +275,17 @@ require_once('../../header.php');
 	
 	<div class="clearfix"></div>
 	
-	<footer><?php require_once('../../footer.php');?></footer>
+	<footer><?php require_once('footer.php');?></footer>
 
-	
-	<!--footer>
-
-		<p>
-			<span style="text-align:left;float:left">&copy; 2016 <a href="http://chaos.infn.it/" alt="logo-!CHAOS" target="_blank">!CHAOS</a></span>
-			
-		</p>
-
-	</footer-->
-	
-	<!-- start: JavaScript-->
-
-		<!--script src="./js/jquery-1.9.1.min.js"></script>
-	<script src="./js/jquery-migrate-1.0.0.min.js"></script>
-	
-		<script src="./js/jquery-ui-1.10.0.custom.min.js"></script>
-	
-		<script src="./js/jquery.ui.touch-punch.js"></script>
-	
-		<script src="./js/modernizr.js"></script>
-	
-		<script src="./js/bootstrap.min.js"></script>
-	
-	
-		<script src='./js/fullcalendar.min.js'></script>
-	
-		<script src='./js/jquery.dataTables.min.js'></script>
-
-		<script src="./js/excanvas.js"></script>
-	<script src="./js/jquery.flot.js"></script>
-	<script src="./js/jquery.flot.pie.js"></script>
-	<script src="./js/jquery.flot.stack.js"></script>
-	<script src="./js/jquery.flot.resize.min.js"></script>
-	
-		<script src="./js/jquery.chosen.min.js"></script>
-	
-		<script src="./js/jquery.uniform.min.js"></script>
 		
-		<script src="./js/jquery.cleditor.min.js"></script>
-	
-		<script src="./js/jquery.noty.js"></script>
-	
-		<script src="./js/jquery.elfinder.min.js"></script>
-	
-		<script src="./js/jquery.raty.min.js"></script>
-	
-		<script src="./js/jquery.iphone.toggle.js"></script>
-	
-		<script src="./js/jquery.uploadify-3.1.min.js"></script>
-	
-		<script src="./js/jquery.gritter.min.js"></script>
-	
-		<script src="./js/jquery.imagesloaded.js"></script>
-	
-		<script src="./js/jquery.masonry.min.js"></script>
-	
-		<script src="./js/jquery.knob.modified.js"></script>
-	
-		<script src="./js/jquery.sparkline.min.js"></script>
-	
-		<script src="./js/counter.js"></script>
-	
-		<script src="./js/retina.js"></script>
-
-	
-		<script src="./js/custom.js"></script-->
-		
-		<script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://code.highcharts.com/modules/exporting.js"></script>
-
+	<!-- 	<script src="https://code.highcharts.com/highcharts.js"></script>
+	<script src="https://code.highcharts.com/modules/exporting.js"></script>
+ -->
 		
 		<!--script src="./js/accumulator.js"></script-->
-		<script src="js/accumulator.js"></script>
+		<script src="js/chaos-widget/accumulator.js"></script>
 
 		
-		<script src="../../js/jchaos.js"></script>
 
 		<script>
                 jchaos.setOptions({"uri":location.host});
