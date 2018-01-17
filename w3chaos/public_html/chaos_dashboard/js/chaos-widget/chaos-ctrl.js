@@ -316,17 +316,17 @@
 
     html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
     html += '<h3>Zones</h3>';
-    html += '<select id="zones"></select>';
+    html += '<select id="zones" size="auto"></select>';
     html += '</div>';
 
     html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
     html += '<h3>Elements</h3>';
-    html += '<select id="elements"></select>';
+    html += '<select id="elements" size="auto"></select>';
     html += '</div>';
 
     html += '<div class="statbox purple" onTablet="span4" onDesktop="span2">'
     html += '<h3>Class</h3>';
-    html += '<select id="classe"></select>';
+    html += '<select id="classe" size="auto"></select>';
     html += '</div>';
 
     html += '<div class="statbox purple row-fluid" onTablet="span4" onDesktop="span3">'
@@ -398,7 +398,7 @@
     });
 
 
-    $(this).on('click', 'a.show_snapshot', function () {
+    $("a.show_snapshot").click(function () {
 
       updateSnapshotTable(cu_selected);
     });
@@ -567,7 +567,7 @@
     var collapsed = options.collapsed;
     
     $(this).off('click');
-    $(this).on('click', 'a.json-toggle', function () {
+    $("a.json-toggle").click(function () {
       var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
       target.toggle();
       if (target.is(':visible')) {
@@ -582,7 +582,7 @@
     });
 
 
-    $(this).on('click', 'span.json-key', function () {
+    $("span.json-key").click(function () {
       var id = this.id;
       var attr = id.split("-")[1];
 
@@ -591,7 +591,7 @@
       return false;
     });
 
-    $(this).on('keypress', 'input.json-keyinput', function (e) {
+    $("input.json-keyinput").keypress(function (e) {
       if (e.keyCode == 13) {
         var id = this.id;
         var attr = id.split("-")[1];
@@ -603,15 +603,15 @@
       return this;
     });
     /* Simulate click on toggle button when placeholder is clicked */
-    $(this).on('click', 'a.json-placeholder', function () {
+    $("a.json-placeholder").click(function () {
       $(this).siblings('a.json-toggle').click();
       return false;
     });
+    /* Trigger click to collapse all nodes */
 
-    if (options.collapsed == true) {
-      /* Trigger click to collapse all nodes */
+    /*if (options.collapsed == true) {
       $(this).find('a.json-toggle').click();
-    }
+    }*/
 
   }
   /*
@@ -3008,13 +3008,30 @@
     $("#snap-delete").hide();
     $("#snap-save").show();
     $('#table_snap').hide();
-    if (cu_multi_selected.length > 0) {
+    var tosnapshot=[];
+    if(cu_multi_selected.length > 0){
+      tosnapshot=cu_multi_selected;
+    } else {
+      if(cu_selected){
+        tosnapshot.push(cu_selected);
+      }
+    }
+    if (tosnapshot.length > 0) {
       $("#list_snapshot").html("Snapshotting the following group:");
 
-      cu_multi_selected.forEach(function (elem) {
+      tosnapshot.forEach(function (elem) {
+        var type;
         var name = encodeName(elem);
-        var type = findImplementationName(cu_name_to_desc[elem].instance_description.control_unit_implementation);
-
+        if(cu_name_to_desc[elem]==null){
+          var desc = jchaos.getDesc(elem, null);
+          cu_name_to_desc[elem] = desc[0];
+          
+        }
+        if(cu_name_to_desc[elem]==null){
+          type="NA";
+        } else {
+          type = findImplementationName(cu_name_to_desc[elem].instance_description.control_unit_implementation);
+        }
         $('#table_snap_nodes').append('<tr class="row_element" id="' + name + '"><td>' + name + '</td><td>' + type + '</td></tr>');
 
       });
@@ -3065,7 +3082,7 @@
         datasetSetup();
         descriptionSetup();
         logSetup();
-        jsonSetup();
+        //jsonSetup();
         mainCU();
         $("#menu-dashboard").html(generateMenuBox());
       }
