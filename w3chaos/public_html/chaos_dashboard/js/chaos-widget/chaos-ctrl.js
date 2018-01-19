@@ -4,6 +4,7 @@
  * @author: Andrea Michelotti <andrea.michelotti@lnf.infn.it>
  */
 (function ($) {
+  var checkRegistration =0;
   var selectedInterface = "";
   var snap_selected = "";
   var cu_selected = "";
@@ -21,6 +22,7 @@
   var off_line = [];
   var curr_cu_selected = {};
   var last_index_selected = -1;
+  var node_name_to_desc = [];
   var active_plots = [];
   var trace_selected;
   var trace_list = {};
@@ -78,6 +80,39 @@
     }
     return ret;
 
+  }
+  function installCheckLive(){
+    if (cu_list_check != null) {
+      clearInterval(cu_list_check)
+    }
+    cu_list_check = setInterval(function () {
+      cu_live_selected.forEach(function (elem, index) {
+        if (elem.hasOwnProperty("health")) {
+          var name = encodeName(elem.health.ndk_uid);
+          var diff = (elem.health.dpck_ats - health_time_stamp_old[elem.health.ndk_uid]);
+          if (diff > 0) {
+            $("#" + name).css('color', 'green');
+            $("#" + name).find('td').css('color', 'green');
+
+            off_line[elem.health.ndk_uid] = false;
+
+          } else {
+            $("#" + name).css('color', 'black');
+            $("#" + name).find('td').css('color', 'black');
+            off_line[elem.health.ndk_uid] = true;
+
+          }
+          health_time_stamp_old[elem.health.ndk_uid] = elem.health.dpck_ats;
+        } else {
+          var id = cu_list[index];
+          var name = encodeName(id);
+          $("#" + name).css('color', 'red');
+          off_line[id] = true;
+
+        }
+
+      });
+    }, 7000);
   }
   function retriveCurrentCmdArguments(alias) {
     var arglist = [];
@@ -382,18 +417,28 @@
     html += '<th>Registration Timestamp</th>';
     html += '<th>Hostname</th>';
     html += '<th>(RPC) address</th>';
+    html += '<th>Status</th>';
+    html += '<th>TimeStamp</th>';
+    html += '<th>Uptime</th>';
+    html += '<th>System Time</th>';
+    html += '<th>User Time</th>';   
     html += '</tr>';
 
 
     html += '</thead> ';
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html += "<tr class='row_element cuMenu' cuname='" + cu[i] + "' id='" + cuname + "'>";
+      html += "<tr class='row_element nodeMenu' cuname='" + cu[i] + "' id='" + cuname + "'>";
       html += "<td class='name_element'>" + cu[i] + "</td>";
       html += "<td id='" + cuname + "_timestamp'></td>";
       html += "<td id='" + cuname + "_type'></td>";
       html += "<td id='" + cuname + "_hostname'></td>";
       html += "<td id='" + cuname + "_rpcaddress'></td>";
+      html += "<td id='" + cuname + "_health_status'></td>";
+      html += "<td id='" + cuname + "_health_timestamp'></td>";
+      html += "<td id='" + cuname + "_health_uptime'></td>";
+      html += "<td id='" + cuname + "_health_systemtime'></td>";
+      html += "<td id='" + cuname + "_health_usertime'></td>";
     });
 
     html += '</table>';
@@ -974,23 +1019,33 @@
       }
       if (cuselection != null && cmd != null) {
         if (cmd == "bypasson") {
-          jchaos.setBypass(cuselection, true, null);
+          jchaos.setBypass(cuselection, true, function (data) {
+
+          });
           return;
         }
         if (cmd == "bypassoff") {
-          jchaos.setBypass(cuselection, false, null);
+          jchaos.setBypass(cuselection, false, function (data) {
+
+          });
           return;
         }
         if (cmd == "load") {
-          jchaos.loadUnload(cuselection, true, null);
+          jchaos.loadUnload(cuselection, true, function (data) {
+
+          });
           return;
         }
         if (cmd == "unload") {
-          jchaos.loadUnload(cuselection, false, null);
+          jchaos.loadUnload(cuselection, false, function (data) {
+
+          });
           return;
         }
 
-        jchaos.sendCUCmd(cuselection, cmd, "", null);
+        jchaos.sendCUCmd(cuselection, cmd, "", function (data) {
+
+        });
 
       }
     });
@@ -1178,41 +1233,56 @@
 
     }, options.Interval, updateTableFn);
 
-    if (cu_list_check != null) {
-      clearInterval(cu_list_check)
-    }
-    cu_list_check = setInterval(function () {
-      cu_live_selected.forEach(function (elem, index) {
-        if (elem.hasOwnProperty("health")) {
-          var name = encodeName(elem.health.ndk_uid);
-          var diff = (elem.health.dpck_ats - health_time_stamp_old[elem.health.ndk_uid]);
-          if (diff > 0) {
-            $("#" + name).css('color', 'green');
-            $("#" + name).find('td').css('color', 'green');
-
-            off_line[elem.health.ndk_uid] = false;
-
-          } else {
-            $("#" + name).css('color', 'black');
-            $("#" + name).find('td').css('color', 'black');
-            off_line[elem.health.ndk_uid] = true;
-
-          }
-          health_time_stamp_old[elem.health.ndk_uid] = elem.health.dpck_ats;
-        } else {
-          var id = cu_list[index];
-          var name = encodeName(id);
-          $("#" + name).css('color', 'red');
-          off_line[id] = true;
-
-        }
-
-      });
-    }, 7000);
-
+    installCheckLive();
   }
 
+  function setupNode(){
+    $("#main_table tbody tr").click(function (e) {
+      mainTableCommonHandling("main_table", e);
+    });
+    n = $('#main_table tr').size();
+    if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
+      $("#table-scroll").css('height', '280px');
+    } else {
+      $("#table-scroll").css('height', '');
+    }
 
+    $.contextMenu({
+      selector: '.nodeMenu',
+      build: function ($trigger, e) {
+        var cuname = $(e.currentTarget).attr("cuname");
+        var cindex = cu_name_to_index[cuname];
+        var cuitem = updateCUMenu(cu_live_selected[cindex]);
+        cuitem['sep1'] = "---------";
+
+        cuitem['quit'] = {
+          name: "Quit", icon: function () {
+            return 'context-menu-icon context-menu-icon-quit';
+          }
+        };
+
+        return {
+
+          callback: function (cmd, options) {
+            if (cmd == "load") {
+
+              jchaos.loadUnload(cu_multi_selected, true, null);
+              return;
+            }
+            if (cmd == "unload") {
+              jchaos.loadUnload(cu_multi_selected, false, null);
+              return;
+            }
+
+            jchaos.sendCUCmd(cu_multi_selected, cmd, "", null);
+          },
+          items: cuitem
+        }
+      }
+
+
+    });
+  }
   function buildNodeInterface(nodes, cutype) {
     if (nodes == null) {
       alert("NO Nodes given!");
@@ -1240,33 +1310,53 @@
     /**
      * fixed part
      */
+    htmlt = generateNodeTable(cu_list);
+    updateTableFn = updateNodeTable;
 
-    if ((cutype.indexOf("us") != -1)) {
-      htmlt = generateNodeTable(cu_list);
-      updateTableFn = updateNodeTable;
-
-    } else if ((cutype.indexOf("agent") != -1)) {
-      htmlt = generateNodeTable(cu_list);
-      updateTableFn = updateNodeTable;
-
-    }
-
+   
     $("div.specific-table").html(htmlt);
     // $("div.specific-control").html(htmlc);
+    checkRegistration=0;
+    jchaos.node(cu_list, "desc", cutype,null,null, function (data) {
+      var cnt = 0;
+      cu_list.forEach(function (elem, index) {
+        node_name_to_desc[elem] = data[index];
+      });
 
-    //setupNode();
+    });
 
+    setupNode();
+    
     if (cu_list_interval != null) {
       clearInterval(cu_list_interval);
     }
-    cu_list_interval = setInterval(function () {
-      cu_live_selected = [];
+    cu_list_interval = setInterval(function (e) {
+      var start_time = (new Date()).getTime();
+      if ((start_time- checkRegistration ) > 60000) {
+        checkRegistration = start_time;
+        jchaos.node(cu_list, "desc", cutype, null,null,function (data) {
+          var cnt = 0;
+          cu_list.forEach(function (elem, index) {
+            node_name_to_desc[elem] = data[index];
+          });
+          updateTableFn(data);
+
+        });
+      }
+      jchaos.node(cu_list, "health", cutype,null,null,function(data){
+        cu_live_selected = data;
+        updateGenericTableDataset(cu_live_selected);
+
+      });
+      
+
+      /*
       cu_list.forEach(function (item) {
         cu_live_selected.push(jchaos.node(item, "desc", cutype));
       })
+      */
 
       // update all generic
-      updateTableFn(cu_live_selected);
 
       if (cu_live_selected.length == 0 || cu_selected == null || cu_name_to_index[cu_selected] == null) {
         return;
@@ -1277,38 +1367,9 @@
 
     }, options.Interval, updateTableFn);
 
-    /*if (cu_list_check != null) {
-      clearInterval(cu_list_check)
-    }
-    cu_list_check = setInterval(function () {
-      cu_live_selected.forEach(function (elem, index) {
-        if (elem.hasOwnProperty("health")) {
-          var name = encodeName(elem.health.ndk_uid);
-          var diff = (elem.health.dpck_ats - health_time_stamp_old[elem.health.ndk_uid]);
-          if (diff > 0) {
-            $("#" + name).css('color', 'green');
-            $("#" + name).find('td').css('color', 'green');
+    installCheckLive();
 
-            off_line[elem.health.ndk_uid] = false;
 
-          } else {
-            $("#" + name).css('color', 'black');
-            $("#" + name).find('td').css('color', 'black');
-            off_line[elem.health.ndk_uid] = true;
-
-          }
-          health_time_stamp_old[elem.health.ndk_uid] = elem.health.dpck_ats;
-        } else {
-          var id = cu_list[index];
-          var name = encodeName(id);
-          $("#" + name).css('color', 'red');
-          off_line[id] = true;
-
-        }
-
-      });
-    }, 7000);
-*/
   }
 
   function mainCU() {
@@ -1426,7 +1487,7 @@
       $radio.filter("[value=true]").prop('checked', true);
     }
 
-    element_sel('#classe', ["us", "agent"], 1);
+    element_sel('#classe', ["us", "agent","cu"], 1);
 
 
     $("#search-chaos").keypress(function (e) {
@@ -1434,7 +1495,7 @@
         var interface = $("#classe option:selected").val();
         search_string = $(this).val();
         var alive = $("input[type=radio][name=search-alive]:checked").val()
-        if ((interface != "agent") && (interface != "us")) {
+        if ((interface != "agent") && (interface != "us")&&(interface!="cu")) {
           var node = jchaos.search(search_string, "us", (alive == "true"), false);
           node.forEach(function (item) {
             list_cu.push(item);
@@ -1442,15 +1503,18 @@
           node = jchaos.search(search_string, "agent", (alive == "true"), false);
           node.forEach(function (item) {
             list_cu.push(item);
-          });          
-          /*node = jchaos.search(search_string, "cu", (alive == "true"), false);
+          });
+          node = jchaos.search(search_string, "cu", (alive == "true"), false);
           node.forEach(function (item) {
             list_cu.push(item);
-          });*/
+          });
+          buildNodeInterface(list_cu, "us");
+
         } else {
           list_cu = jchaos.search(search_string, interface, (alive == "true"), false);
+          buildNodeInterface(list_cu, interface);
+
         }
-        buildNodeInterface(list_cu, interface);
 
       }
       //var tt =prompt('type value');
@@ -1572,6 +1636,7 @@
     html += '</div>';
     return html;
   }
+
 
 
   function updateGenericTableDataset(cu) {
