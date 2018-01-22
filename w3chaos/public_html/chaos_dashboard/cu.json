@@ -1,0 +1,82 @@
+{
+    "title":"CU",
+    "type":"object",
+	"id":"editor-cu",
+	"format":"tab",
+    "properties": {
+	"ndk_uid": {
+		"type": "string",
+		"required": true,
+	    "description":"CU Unique Identifier ZONE/TYPE/ID"
+	},
+	"ndk_parent": {
+	    "type": "string",
+		"description":"US owner",
+		"watch":{
+			"fname":"editor-us.ndk_uid"
+		}
+	},
+	"control_unit_implementation": {
+	    "type": "string",
+	    "description":"C++ Class that implements the CU"
+	},
+	"auto_load": {
+	    "type": "boolean",
+	    "description":"Load automatically on registration"
+	},
+	"auto_init": {
+	    "type": "boolean",
+	    "description":"Initialize automatically on registration"
+	},
+	"auto_start": {
+	    "type": "boolean",
+	    "description":"start automatically on registration"
+	},
+	"cudk_load_param": {
+	    "type": "string",
+	    "description":"Parameters given in load"
+	},
+	"cudk_thr_sch_delay" : {
+		"type":"integer",
+		"default":1000000
+
+	},
+	"dsndk_storage_type" : {
+		"type":"integer",
+		"default":2
+
+	},
+	"dsndk_storage_history_ageing" : {
+		"type":"integer",
+		"default":36000
+
+	},
+	"dsndk_storage_live_time" : {
+		"type":"integer",
+		"default":0
+
+	},
+	"cudk_driver_description":{
+		"type":"array",
+		"format": "tab",
+		"title": "Driver Description",
+		"items":{
+		    "$ref":"cu-driver.json",
+		    "title":"Drivers"
+		}
+	},
+	"attribute_value_descriptions":
+	{
+		"type":"array",
+		"format": "tab",
+		"title": "Attribute Description",
+		
+		"items":{
+		    "$ref":"cu-attribute.json",
+		    "title":"Attributes"
+		}
+	}
+	
+	}
+}
+    

@@ -1,0 +1,24 @@
+{
+    "title":"driver",
+    "type":"object",
+	"id":"editor-driver",
+	"format":"tab",
+
+    "properties": {
+		"cudk_driver_description_name" :{
+			"type": "string",
+			"description":"Driver Class Name that Abstract the driver"
+		},
+		"cudk_driver_description_version" :{
+			"type": "string",
+			"description":"Version of the driver"
+		},
+		"cudk_driver_description_init_parameter" :{
+			"type": "string",
+			"description":"Initialization String can be JSON"
+		}
+	}
+}
+    
+    
+    

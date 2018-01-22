@@ -4,7 +4,10 @@
  * @author: Andrea Michelotti <andrea.michelotti@lnf.infn.it>
  */
 (function ($) {
-  var checkRegistration =0;
+  var json_editor;
+  var editorFn = new Function;
+
+  var checkRegistration = 0;
   var selectedInterface = "";
   var snap_selected = "";
   var node_selected = "";
@@ -80,13 +83,13 @@
     return ret;
 
   }
-  function installCheckLive(){
+  function installCheckLive() {
     if (node_list_check != null) {
       clearInterval(node_list_check)
     }
     node_list_check = setInterval(function () {
       node_live_selected.forEach(function (elem, index) {
-        if (elem.hasOwnProperty("health")) {
+        if (elem.hasOwnProperty("health")&& elem.health.hasOwnProperty("ndk_uid")) {
           var name = encodeName(elem.health.ndk_uid);
           var diff = (elem.health.dpck_ats - health_time_stamp_old[name]);
           if (diff > 0) {
@@ -115,10 +118,10 @@
   }
   function retriveCurrentCmdArguments(alias) {
     var arglist = [];
-    if(node_selected==null){
+    if (node_selected == null) {
       return arglist;
     }
-    var name=encodeName(node_selected);
+    var name = encodeName(node_selected);
     if (node_selected != null && node_name_to_desc[name].hasOwnProperty("cudk_ds_desc") && node_name_to_desc[name].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
       var desc = node_name_to_desc[name].cudk_ds_desc.cudk_ds_command_description;
       desc.forEach(function (item) {
@@ -424,7 +427,7 @@
     html += '<th>TimeStamp</th>';
     html += '<th>Uptime</th>';
     html += '<th>System Time</th>';
-    html += '<th>User Time</th>';   
+    html += '<th>User Time</th>';
     html += '</tr>';
 
 
@@ -448,24 +451,8 @@
     html += '</div>';
     html += '</div>';
 
-    html += '<div class="box span6 hide" id="container-table-helper">';
-    html += '<div class="box-content span12">';
-
-    html += '<table class="table table-bordered" id="main_table_helper">';
-    html += '<thead class="box-header">';
-    html += '<tr>';
-    html += '<th>Name Node</th>';
-    html += '<th>Status</th>';
-    html += '<th>Timestamp</th>';
-    html += '<th>Uptime</th>';
-    html += '<th>Host</th>';
-    html += '<th colspan="2">Alarms dev/cu</th>';
-    html += '</tr>';
-
-
-    html += '</thead> ';
-
-    html += '</table>';
+    html += '<div class="box span12 hide" id="container-table-helper">';
+    html += '<div class="box-content-helper span12">';
     html += '</div>';
     html += '</div>';
 
@@ -479,14 +466,14 @@
       if (elem.hasOwnProperty("ndk_uid")) {
         var id = elem.ndk_uid;
         var cuname = encodeName(id);
-        if(elem.hasOwnProperty("ndk_heartbeat")){
-            $("#" + cuname + "_timestamp").html(elem.ndk_heartbeat.$date);
+        if (elem.hasOwnProperty("ndk_heartbeat")) {
+          $("#" + cuname + "_timestamp").html(elem.ndk_heartbeat.$date);
         } else {
           $("#" + cuname + "_timestamp").html("NA");
         }
         $("#" + cuname + "_type").html(elem.ndk_type);
-        if(elem.hasOwnProperty("ndk_host_name")){
-         $("#" + cuname + "_hostname").html(elem.ndk_host_name);
+        if (elem.hasOwnProperty("ndk_host_name")) {
+          $("#" + cuname + "_hostname").html(elem.ndk_host_name);
         } else {
           $("#" + cuname + "_hostname").html("NA");
 
@@ -495,6 +482,42 @@
 
       }
     });
+  }
+  function unitServerSave(json){
+   
+    if((json!=null) && json.hasOwnProperty("ndk_uid")){
+      var name=json.ndk_uid;
+      json.cu_desc.forEach(function(item){
+        item.ndk_parent=name;
+      });
+      jchaos.node(json.ndk_uid,"set","us","",json,function(data){
+        console.log("unitServer save: \""+node_selected+"\" value:"+JSON.stringify(json));
+     }); 
+    } else {
+      alert("No ndk_uid field found");
+    } 
+  }
+  /***
+   * JSON EDITOR
+   */
+  function jsonEdit(jsontemp, jsonin) {
+    var element = $("#json-edit");
+    var jopt = {
+      // Enable fetching schemas via ajax
+      // The schema for the editor
+      theme: 'bootstrap2',
+      ajax:true,
+      schema: jsontemp,
+
+      // Seed the form with a starting value
+      startval: jsonin
+    };
+    $("#json-edit").empty();
+    if(json_editor!=null){
+      delete json_editor;
+    }
+    json_editor = new JSONEditor(element.get(0), jopt);
+    $("#mdl-jsonedit").modal("show");
   }
 
   function element_sel(field, arr, add_all) {
@@ -1171,7 +1194,7 @@
     }
 
     node_list.forEach(function (elem, id) {
-      var name=encodeName(elem);
+      var name = encodeName(elem);
       node_name_to_index[name] = id;
       health_time_stamp_old[name] = 0;
       off_line[name] = false;
@@ -1247,7 +1270,7 @@
     installCheckLive();
   }
 
-  function setupNode(){
+  function setupNode() {
     $("#main_table tbody tr").click(function (e) {
       mainTableCommonHandling("main_table", e);
     });
@@ -1257,6 +1280,26 @@
     } else {
       $("#table-scroll").css('height', '');
     }
+    $("#save-jsonedit").click(function () {
+      // editor validation
+      var errors = json_editor.validate();
+
+      if (errors.length) {
+        alert("JSON NOT VALID");
+        console.log(errors);
+      }
+      else {
+        // It's valid!
+        var json_editor_value=json_editor.getValue();
+        editorFn(json_editor_value);
+        $("#mdl-jsonedit").modal("hide");
+
+      }
+    });
+
+    $("#close-jsonclose").click(function () {
+      $("#mdl-jsonedit").modal("hide");
+    });
 
     $.contextMenu({
       selector: '.nodeMenu',
@@ -1274,23 +1317,40 @@
         return {
 
           callback: function (cmd, options) {
-            if(cmd=="edit-nt_agent"){
+            if (cmd == "edit-nt_agent") {
 
             }
-            if(cmd=="edit-nt_control_unit"){
+            if (cmd == "edit-nt_control_unit") {
+             
+            }
+            if (cmd == "edit-nt_unit_server") {
+              var templ = {
+                $ref: "us.json",
+                format: "tabs"
+              }
+              jchaos.node(node_selected,"get","us","",null,function(data){
+                if(data.hasOwnProperty("us_desc")){
+                  editorFn=unitServerSave;   
+                  jsonEdit(templ,data.us_desc);
+                }
+              });
+              
 
             }
-            if(cmd=="edit-nt_unit_server"){
+            if (cmd == "new-nt_unit_server") {
+              var templ = {
+                $ref: "us.json",
+                format: "tabs"
+              }
+              editorFn=unitServerSave;   
+              jsonEdit(templ,null);
 
             }
-            if(cmd=="new"){
-
+            if (cmd == "del") {
             }
-            if(cmd=="del"){
+            if (cmd == "copy") {
             }
-            if(cmd=="copy"){
-            }
-            if(cmd=="paste"){
+            if (cmd == "paste") {
             }
             return;
           },
@@ -1313,7 +1373,7 @@
     }
 
     node_list.forEach(function (elem, id) {
-      var name=encodeName(elem);
+      var name = encodeName(elem);
       node_name_to_index[name] = id;
       health_time_stamp_old[name] = 0;
       off_line[name] = false;
@@ -1332,11 +1392,11 @@
     htmlt = generateNodeTable(node_list);
     updateTableFn = updateNodeTable;
 
-   
+
     $("div.specific-table").html(htmlt);
     // $("div.specific-control").html(htmlc);
-    checkRegistration=0;
-    jchaos.node(node_list, "desc", cutype,null,null, function (data) {
+    checkRegistration = 0;
+    jchaos.node(node_list, "desc", cutype, null, null, function (data) {
       var cnt = 0;
       node_list.forEach(function (elem, index) {
         node_name_to_desc[encodeName(elem)] = data[index];
@@ -1345,15 +1405,15 @@
     });
 
     setupNode();
-    
+
     if (node_list_interval != null) {
       clearInterval(node_list_interval);
     }
     node_list_interval = setInterval(function (e) {
       var start_time = (new Date()).getTime();
-      if ((start_time- checkRegistration ) > 60000) {
+      if ((start_time - checkRegistration) > 60000) {
         checkRegistration = start_time;
-        jchaos.node(node_list, "desc", cutype, null,null,function (data) {
+        jchaos.node(node_list, "desc", cutype, null, null, function (data) {
           var cnt = 0;
           node_list.forEach(function (elem, index) {
             node_name_to_desc[encodeName(elem)] = data[index];
@@ -1362,12 +1422,12 @@
 
         });
       }
-      jchaos.node(node_list, "health", cutype,null,null,function(data){
+      jchaos.node(node_list, "health", cutype, null, null, function (data) {
         node_live_selected = data;
         updateGenericTableDataset(node_live_selected);
 
       });
-      
+
 
       /*
       cu_list.forEach(function (item) {
@@ -1506,7 +1566,7 @@
       $radio.filter("[value=true]").prop('checked', true);
     }
 
-    element_sel('#classe', ["us", "agent","cu"], 1);
+    element_sel('#classe', ["us", "agent", "cu"], 1);
 
 
     $("#search-chaos").keypress(function (e) {
@@ -1514,7 +1574,7 @@
         var interface = $("#classe option:selected").val();
         search_string = $(this).val();
         var alive = $("input[type=radio][name=search-alive]:checked").val()
-        if ((interface != "agent") && (interface != "us")&&(interface!="cu")) {
+        if ((interface != "agent") && (interface != "us") && (interface != "cu")) {
           var node = jchaos.search(search_string, "us", (alive == "true"), false);
           node.forEach(function (item) {
             list_cu.push(item);
@@ -1553,7 +1613,7 @@
    * 
    */
   function mainTableCommonHandling(id, e) {
-    
+
     $("#mdl-commands").modal("hide");
     $("#cu_full_commands").empty();
     if (node_selected == $(e.currentTarget).attr("cuname")) {
@@ -1563,7 +1623,7 @@
       return;
     }
     node_selected = $(e.currentTarget).attr("cuname");
-    var name=encodeName(node_selected);
+    var name = encodeName(node_selected);
 
     if (!e.ctrlKey) {
       $(".row_element").removeClass("row_snap_selected");
@@ -1573,7 +1633,7 @@
     $(e.currentTarget).addClass("row_snap_selected");
     if (node_name_to_desc[name] == null) {
       var desc = jchaos.getDesc(node_selected, null);
-      if(desc!=null){
+      if (desc != null) {
         node_name_to_desc[name] = desc[0];
       }
     }
@@ -1665,7 +1725,7 @@
     cu.forEach(function (el) {  // cu forEach
       var name_device_db, name_id;
       var status;
-      if (el.hasOwnProperty('health')) {   //if el health
+      if (el.hasOwnProperty('health') && (el.health.hasOwnProperty("ndk_uid")) ){   //if el health
         name_device_db = el.health.ndk_uid;
         name_id = encodeName(name_device_db);
         el.systTime = Number(el.health.nh_st).toFixed(3);
@@ -1816,7 +1876,7 @@
 
   function updateScraperTable(cu) {
     cu.forEach(function (elem) {
-      if (elem.hasOwnProperty('health')) {   //if el health
+      if (elem.hasOwnProperty('health')&& elem.health.hasOwnProperty("ndk_uid")) {   //if el health
 
         var cuname = encodeName(elem.health.ndk_uid);
 
@@ -1964,7 +2024,7 @@
   }
   function updatePStable(cu) {
     cu.forEach(function (elem, index) {
-      if (elem.hasOwnProperty("health")) {
+      if (elem.hasOwnProperty("health")&& elem.health.hasOwnProperty("ndk_uid")) {
 
 
         var id = elem.health.ndk_uid;
@@ -2689,6 +2749,25 @@
     html += '</div>';
     return html;
   }
+  function generateEditJson() {
+    // var cu=jchaos.getChannel(cuid, -1,null);
+    // var desc=jchaos.getDesc(cuid,null);
+
+    var html = '<div class="modal hide fade resizable draggable" id="mdl-jsonedit">';
+    html += '<div class="modal-header">';
+    html += '<button type="button" class="close" data-dismiss="modal">×</button>';
+    html += '<h3>Editor</h3>';
+    html += '</div>';
+    html += '<div class="modal-body">';
+    html += '<div id="json-edit" class="json-edit"></div>';
+    html += '</div>';
+    html += '<div class="modal-footer">';
+    html += '<a href="#" class="btn btn-primary" id="save-jsonedit">Save</a>';
+    html += '<a href="#" class="btn btn-primary" id="close-jsonclose">Close</a>';
+    html += '</div>';
+    html += '</div>';
+    return html;
+  }
 
   function generateDescription() {
     // var cu=jchaos.getChannel(cuid, -1,null);
@@ -3127,29 +3206,29 @@
 
   function updateNodeMenu(node) {
     var items = {};
-    node_type=node.ndk_type;
-    items['edit-'+node_type] = {name:"Edit "+node_type+" ..."};
+    node_type = node.ndk_type;
+    items['edit-' + node_type] = { name: "Edit " + node_type + " ..." };
 
-    if(node_type=="nt_agent"){
-      items['start-node'] = {name:"Start Node ..."};
-      items['stop-node'] = {name:"Stop Node ..."};
-      items['kill-node'] = {name:"Kill Node ..."};
+    if (node_type == "nt_agent") {
+      items['start-node'] = { name: "Start Node ..." };
+      items['stop-node'] = { name: "Stop Node ..." };
+      items['kill-node'] = { name: "Kill Node ..." };
 
     } else {
-      items['edit-'+node_type] = {name:"Edit  "+node_type+ " ..."};
-      items['new-'+node_type] = {name:"New  "+node_type+ " ..."};
-      items['del-'+node_type] = {name:"Del "+node_type};
-      items['copy-'+node_type] = {name:"Copy "+node_type};
-      items['paste-'+node_type] = {name:"Paste "+node_type};
+      items['edit-' + node_type] = { name: "Edit  " + node_type + " ..." };
+      items['new-' + node_type] = { name: "New  " + node_type + " ..." };
+      items['del-' + node_type] = { name: "Del " + node_type };
+      items['copy-' + node_type] = { name: "Copy " + node_type };
+      items['paste-' + node_type] = { name: "Paste " + node_type };
     }
-    
+
     return items;
   }
 
   function updateCUMenu(cu) {
     var items = {};
 
-    if (cu.hasOwnProperty('health')) {   //if el health
+    if (cu.hasOwnProperty('health')&& elem.health.hasOwnProperty("nh_status")) {   //if el health
       var status = cu.health.nh_status;
       if (status == 'Start') {
         items['stop'] = { name: "Stop", icon: "stop" };
@@ -3177,7 +3256,7 @@
     return items;
   }
   function updateGenericControl(cu) {
-    if (cu.hasOwnProperty('health')) {   //if el health
+    if (cu.hasOwnProperty('health')&& elem.health.hasOwnProperty("ndk_uid")) {   //if el health
       var name = cu.health.ndk_uid;
       var status = cu.health.nh_status;
       $("#cmd-stop-start").hide();
@@ -3437,6 +3516,7 @@
         var html = "";
         html += buildCUBody();
         html += generateModalActions();
+
         html += '<div class="specific-table"></div>';
         html += '<div class="specific-control"></div>';
         /*** */
@@ -3452,6 +3532,8 @@
       } else if (options.template == "node") {
         var html = "";
         html += buildNodeBody();
+        html += generateEditJson();
+
         html += '<div class="specific-table"></div>';
 
         $(this).html(html);

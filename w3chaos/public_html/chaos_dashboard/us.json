@@ -1,0 +1,27 @@
+{
+    "title":"US",
+    "type":"object",
+	"id":"editor-us",
+	"format":"tab",
+    "properties": {
+	"ndk_uid": {
+		"type": "string",
+		"required": true,
+	    "description":"Unique Identifier"
+	},
+	"cu_desc":{
+		"type":"array",
+		"format": "tab",
+		"title": "CU",
+		"items":{
+		    "$ref":"cu.json",
+		    "title":"CUS"
+		}
+	    }
+	}
+	
+    
+}
+    
+    
+    
