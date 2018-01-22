@@ -7,22 +7,21 @@
   var checkRegistration =0;
   var selectedInterface = "";
   var snap_selected = "";
-  var cu_selected = "";
-  var cu_multi_selected = [];
+  var node_selected = "";
+  var node_multi_selected = [];
   var options;
-  var cu_live_selected = [{}];
-  var cu_list = [];
-  var cu_name_to_index = [];
-  var cu_name_to_desc = [];
+  var node_live_selected = [{}];
+  var node_list = [];
+  var node_name_to_index = [];
+  var node_name_to_desc = [];
   var cu_name_to_saved = []; // cuname saved state if any
-  var cu_list_interval; // update interval of the CU list
-  var cu_list_check; // update interval for CU check live
+  var node_list_interval; // update interval of the CU list
+  var node_list_check; // update interval for CU check live
   var main_dom;
   var health_time_stamp_old = [];
   var off_line = [];
   var curr_cu_selected = {};
   var last_index_selected = -1;
-  var node_name_to_desc = [];
   var active_plots = [];
   var trace_selected;
   var trace_list = {};
@@ -82,14 +81,14 @@
 
   }
   function installCheckLive(){
-    if (cu_list_check != null) {
-      clearInterval(cu_list_check)
+    if (node_list_check != null) {
+      clearInterval(node_list_check)
     }
-    cu_list_check = setInterval(function () {
-      cu_live_selected.forEach(function (elem, index) {
+    node_list_check = setInterval(function () {
+      node_live_selected.forEach(function (elem, index) {
         if (elem.hasOwnProperty("health")) {
           var name = encodeName(elem.health.ndk_uid);
-          var diff = (elem.health.dpck_ats - health_time_stamp_old[elem.health.ndk_uid]);
+          var diff = (elem.health.dpck_ats - health_time_stamp_old[name]);
           if (diff > 0) {
             $("#" + name).css('color', 'green');
             $("#" + name).find('td').css('color', 'green');
@@ -99,12 +98,12 @@
           } else {
             $("#" + name).css('color', 'black');
             $("#" + name).find('td').css('color', 'black');
-            off_line[elem.health.ndk_uid] = true;
+            off_line[name] = true;
 
           }
-          health_time_stamp_old[elem.health.ndk_uid] = elem.health.dpck_ats;
+          health_time_stamp_old[name] = elem.health.dpck_ats;
         } else {
-          var id = cu_list[index];
+          var id = node_list[index];
           var name = encodeName(id);
           $("#" + name).css('color', 'red');
           off_line[id] = true;
@@ -116,8 +115,12 @@
   }
   function retriveCurrentCmdArguments(alias) {
     var arglist = [];
-    if (cu_selected != null && cu_name_to_desc[cu_selected].hasOwnProperty("cudk_ds_desc") && cu_name_to_desc[cu_selected].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
-      var desc = cu_name_to_desc[cu_selected].cudk_ds_desc.cudk_ds_command_description;
+    if(node_selected==null){
+      return arglist;
+    }
+    var name=encodeName(node_selected);
+    if (node_selected != null && node_name_to_desc[name].hasOwnProperty("cudk_ds_desc") && node_name_to_desc[name].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
+      var desc = node_name_to_desc[name].cudk_ds_desc.cudk_ds_command_description;
       desc.forEach(function (item) {
         if (item.bc_alias == alias) {
           var params = item.bc_parameters;
@@ -220,7 +223,7 @@
     var retlist = [];
     culist.forEach(function (name) {
       var desc = jchaos.getDesc(name, null);
-      cu_name_to_desc[name] = desc[0];
+      node_name_to_desc[name] = desc[0];
 
       if (desc[0].hasOwnProperty('instance_description') && desc[0].instance_description.hasOwnProperty("control_unit_implementation") && (desc[0].instance_description.control_unit_implementation.indexOf(interface) != -1)) {
         retlist.push(name);
@@ -276,7 +279,7 @@
     return arg instanceof Object && Object.keys(arg).length > 0;
   }
   function encodeName(str) {
-    var tt = str.replace(/\//g, "_");
+    var tt = str.replace(/[\/\:\.]/g, "_");
     return tt;
   }
   function toHHMMSS(sec_num) {
@@ -304,14 +307,14 @@
   }
 
   function show_dev_alarm(id) {
-    var dataset = cu_live_selected[cu_name_to_index[id]];
+    var dataset = node_live_selected[node_name_to_index[id]];
     if (dataset.hasOwnProperty("device_alarms")) {
       decodeDeviceAlarm(dataset.device_alarms);
     }
   }
 
   function show_cu_alarm(id) {
-    var dataset = cu_live_selected[cu_name_to_index[id]];
+    var dataset = node_live_selected[node_name_to_index[id]];
     if (dataset.hasOwnProperty("cu_alarms")) {
       decodeDeviceAlarm(dataset.cu_alarms);
     }
@@ -476,11 +479,18 @@
       if (elem.hasOwnProperty("ndk_uid")) {
         var id = elem.ndk_uid;
         var cuname = encodeName(id);
-
-        $("#" + cuname + "_timestamp").html(elem.ndk_heartbeat.$date);
+        if(elem.hasOwnProperty("ndk_heartbeat")){
+            $("#" + cuname + "_timestamp").html(elem.ndk_heartbeat.$date);
+        } else {
+          $("#" + cuname + "_timestamp").html("NA");
+        }
         $("#" + cuname + "_type").html(elem.ndk_type);
+        if(elem.hasOwnProperty("ndk_host_name")){
+         $("#" + cuname + "_hostname").html(elem.ndk_host_name);
+        } else {
+          $("#" + cuname + "_hostname").html("NA");
 
-        $("#" + cuname + "_hostname").html(elem.ndk_host_name);
+        }
         $("#" + cuname + "_rpcaddress").html(elem.ndk_rpc_addr);
 
       }
@@ -505,7 +515,7 @@
 
   function logSetup() {
     $("a.show_log").click(function () {
-      updateLog(cu_selected);
+      updateLog(node_selected);
       //$("#mdl-log").modal("show");
     });
     $("#log-search-go").click(function () {
@@ -521,12 +531,12 @@
   function snapSetup() {
     $("#snap-save").on('click', function () {
       var value = $("#snap_save_name").val();
-      if (cu_multi_selected.length > 1) {
-        jchaos.snapshot(value, "create", cu_multi_selected, function () {
+      if (node_multi_selected.length > 1) {
+        jchaos.snapshot(value, "create", node_multi_selected, function () {
         });
 
       } else {
-        jchaos.snapshot(value, "create", cu_selected, function () {
+        jchaos.snapshot(value, "create", node_selected, function () {
           updateSnapshotTable(cu);
 
         });
@@ -542,13 +552,13 @@
 
     $("a.show_snapshot").click(function () {
 
-      updateSnapshotTable(cu_selected);
+      updateSnapshotTable(node_selected);
     });
 
     $("#snap-delete").on('click', function (e) {
       if (snap_selected != "") {
         jchaos.snapshot(snap_selected, "delete", "", "", function () {
-          updateSnapshotTable(cu_selected);
+          updateSnapshotTable(node_selected);
 
         });
 
@@ -558,11 +568,11 @@
 
       if (snap_selected != "") {
         var dataset = jchaos.snapshot(snap_selected, "load", null, "", null);
-        var jsonhtml = json2html(dataset, options, cu_selected);
+        var jsonhtml = json2html(dataset, options, node_selected);
         if (isCollapsable(dataset)) {
           jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
         }
-        updateSnapshotTable(cu_selected);
+        updateSnapshotTable(node_selected);
 
         $("#cu-description").html(jsonhtml);
         $("#desc_text").html("Snapshot " + snap_selected);
@@ -589,12 +599,12 @@
     });
 
     $("a.show_description").click(function () {
-      var dataset = jchaos.getDesc(cu_selected, null);
-      var jsonhtml = json2html(dataset, options, cu_selected);
+      var dataset = jchaos.getDesc(node_selected, null);
+      var jsonhtml = json2html(dataset, options, node_selected);
       if (isCollapsable(dataset)) {
         jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
       }
-      $("#desc_text").html("Description of " + cu_selected);
+      $("#desc_text").html("Description of " + node_selected);
       $("#cu-description").html(jsonhtml);
     });
 
@@ -605,8 +615,8 @@
 
   function datasetSetup() {
     $("a.show_dataset").on('click', function () {
-      var dataset = jchaos.getChannel(cu_selected, -1, null);
-      var jsonhtml = json2html(dataset[0], options, cu_selected);
+      var dataset = jchaos.getChannel(node_selected, -1, null);
+      var jsonhtml = json2html(dataset[0], options, node_selected);
       if (isCollapsable(dataset[0])) {
         jsonhtml = '<a class="json-toggle"></a>' + jsonhtml;
       }
@@ -664,13 +674,13 @@
               } else if (cmd == "plot-x") {
                 $("#mdl-graph").modal("show");
 
-                var fullname = cu_selected + "/" + portdir + "/" + portname;
-                $("#trace-name").val(cu_selected);
+                var fullname = node_selected + "/" + portdir + "/" + portname;
+                $("#trace-name").val(node_selected);
                 $("#xvar").val(fullname);
               } else if (cmd == "plot-y") {
                 $("#mdl-graph").modal("show");
-                $("#trace-name").val(cu_selected);
-                var fullname = cu_selected + "/" + portdir + "/" + portname;
+                $("#trace-name").val(node_selected);
+                var fullname = node_selected + "/" + portdir + "/" + portname;
                 $("#yvar").val(fullname);
 
               }
@@ -738,7 +748,7 @@
       if (e.keyCode == 13) {
         var id = this.id;
         var attr = id.split("-")[1];
-        jchaos.setAttribute(cu_selected, attr, this.value);
+        jchaos.setAttribute(node_selected, attr, this.value);
         $("#" + this.id).toggle();
         return false;
       }
@@ -975,7 +985,7 @@
       if ((event.which == 13) && (t.attr('class') == "setSchedule")) {
         //  var name = $(t).attr("cuname");
         var value = $(t).attr("value");
-        jchaos.setSched(cu_selected, value);
+        jchaos.setSched(node_selected, value);
 
       }
     });
@@ -1000,10 +1010,10 @@
       });
 
       cmdparam = buildCmdParams(arglist);
-      if (cu_multi_selected.length > 0) {
-        cuselection = cu_multi_selected;
+      if (node_multi_selected.length > 0) {
+        cuselection = node_multi_selected;
       } else {
-        cuselection = cu_selected;
+        cuselection = node_selected;
       }
       jchaos.sendCUCmd(cuselection, alias, cmdparam);
 
@@ -1012,10 +1022,10 @@
     $(".cucmdbase").click(function () {
       var cmd = $(this).attr("cucmdid");
       var cuselection;
-      if (cu_multi_selected.length > 0) {
-        cuselection = cu_multi_selected;
+      if (node_multi_selected.length > 0) {
+        cuselection = node_multi_selected;
       } else {
-        cuselection = cu_selected;
+        cuselection = node_selected;
       }
       if (cuselection != null && cmd != null) {
         if (cmd == "bypasson") {
@@ -1062,10 +1072,10 @@
         item['value'] = value;
       });
       var parm = buildCmdParams(arguments);
-      if (cu_multi_selected.length > 0) {
-        cuselection = cu_multi_selected;
+      if (node_multi_selected.length > 0) {
+        cuselection = node_multi_selected;
       } else {
-        cuselection = cu_selected;
+        cuselection = node_selected;
       }
       jchaos.sendCUCmd(cuselection, cmdselected, parm);
     });
@@ -1103,9 +1113,9 @@
     $.contextMenu({
       selector: '.cuMenu',
       build: function ($trigger, e) {
-        var cuname = $(e.currentTarget).attr("cuname");
-        var cindex = cu_name_to_index[cuname];
-        var cuitem = updateCUMenu(cu_live_selected[cindex]);
+        var cuname = $(e.currentTarget).attr("id");
+        var cindex = node_name_to_index[cuname];
+        var cuitem = updateCUMenu(node_live_selected[cindex]);
         cuitem['sep1'] = "---------";
 
         cuitem['quit'] = {
@@ -1119,15 +1129,15 @@
           callback: function (cmd, options) {
             if (cmd == "load") {
 
-              jchaos.loadUnload(cu_multi_selected, true, null);
+              jchaos.loadUnload(node_multi_selected, true, null);
               return;
             }
             if (cmd == "unload") {
-              jchaos.loadUnload(cu_multi_selected, false, null);
+              jchaos.loadUnload(node_multi_selected, false, null);
               return;
             }
 
-            jchaos.sendCUCmd(cu_multi_selected, cmd, "", null);
+            jchaos.sendCUCmd(node_multi_selected, cmd, "", null);
           },
           items: cuitem
         }
@@ -1148,25 +1158,26 @@
       return;
     }
     if (!(cuids instanceof Array)) {
-      cu_list = [cuids];
+      node_list = [cuids];
     } else {
-      cu_list = cuids;
+      node_list = cuids;
     }
     if (cutype == null) {
       cutype = "generic";
     }
 
     if ((cutype != "generic") && (cutype != "all") && (cutype != "ALL")) {
-      cu_list = cusWithInterface(cu_list, cutype);
+      node_list = cusWithInterface(node_list, cutype);
     }
 
-    cu_list.forEach(function (elem, id) {
-      cu_name_to_index[elem] = id;
-      health_time_stamp_old[elem] = 0;
-      off_line[elem] = false;
+    node_list.forEach(function (elem, id) {
+      var name=encodeName(elem);
+      node_name_to_index[name] = id;
+      health_time_stamp_old[name] = 0;
+      off_line[name] = false;
     });
     // cu_selected = cu_list[0];
-    cu_selected = null;
+    node_selected = null;
     var htmlt, htmlc, htmlg;
     var updateTableFn = new Function;
     /*****
@@ -1178,17 +1189,17 @@
      */
 
     if ((cutype.indexOf("SCPowerSupply") != -1)) {
-      htmlt = generatePStable(cu_list);
+      htmlt = generatePStable(node_list);
       htmlc = generatePSCmd();
       updateTableFn = updatePStable;
 
     } else if ((cutype.indexOf("SCActuator") != -1)) {
-      htmlt = generateScraperTable(cu_list);
+      htmlt = generateScraperTable(node_list);
       htmlc = generateScraperCmd();
       updateTableFn = updateScraperTable;
 
     } else {
-      htmlt = generateGenericTable(cu_list);
+      htmlt = generateGenericTable(node_list);
       htmlc = generateGenericControl();
       updateTableFn = updateGenericControl;
     }
@@ -1197,29 +1208,29 @@
     $("div.specific-control").html(htmlc);
     setupCU();
 
-    if (cu_list_interval != null) {
-      clearInterval(cu_list_interval);
+    if (node_list_interval != null) {
+      clearInterval(node_list_interval);
 
     }
-    cu_list_interval = setInterval(function () {
-      cu_live_selected = jchaos.getChannel(cu_list, -1, null);
+    node_list_interval = setInterval(function () {
+      node_live_selected = jchaos.getChannel(node_list, -1, null);
 
 
 
       // update all generic
-      updateGenericTableDataset(cu_live_selected);
-      updateTableFn(cu_live_selected);
+      updateGenericTableDataset(node_live_selected);
+      updateTableFn(node_live_selected);
 
-      if (cu_live_selected.length == 0 || cu_selected == null || cu_name_to_index[cu_selected] == null) {
+      if (node_live_selected.length == 0 || node_selected == null || node_name_to_index[encodeName(node_selected)] == null) {
         return;
       }
 
-      var index = cu_name_to_index[cu_selected];
-      curr_cu_selected = cu_live_selected[index];
+      var index = node_name_to_index[encodeName(node_selected)];
+      curr_cu_selected = node_live_selected[index];
       updateGenericControl(curr_cu_selected);
       //  $("div.cu-generic-control").html(chaosGenericControl(cu_live_selected[index]));
       if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
-        var jsonhtml = json2html(curr_cu_selected, options, cu_selected);
+        var jsonhtml = json2html(curr_cu_selected, options, node_selected);
         if (isCollapsable(curr_cu_selected)) {
           jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
         }
@@ -1250,9 +1261,8 @@
     $.contextMenu({
       selector: '.nodeMenu',
       build: function ($trigger, e) {
-        var cuname = $(e.currentTarget).attr("cuname");
-        var cindex = cu_name_to_index[cuname];
-        var cuitem = updateCUMenu(cu_live_selected[cindex]);
+        var cuname = $(e.currentTarget).attr("id");
+        var cuitem = updateNodeMenu(node_name_to_desc[cuname]);
         cuitem['sep1'] = "---------";
 
         cuitem['quit'] = {
@@ -1264,17 +1274,25 @@
         return {
 
           callback: function (cmd, options) {
-            if (cmd == "load") {
+            if(cmd=="edit-nt_agent"){
 
-              jchaos.loadUnload(cu_multi_selected, true, null);
-              return;
             }
-            if (cmd == "unload") {
-              jchaos.loadUnload(cu_multi_selected, false, null);
-              return;
-            }
+            if(cmd=="edit-nt_control_unit"){
 
-            jchaos.sendCUCmd(cu_multi_selected, cmd, "", null);
+            }
+            if(cmd=="edit-nt_unit_server"){
+
+            }
+            if(cmd=="new"){
+
+            }
+            if(cmd=="del"){
+            }
+            if(cmd=="copy"){
+            }
+            if(cmd=="paste"){
+            }
+            return;
           },
           items: cuitem
         }
@@ -1289,18 +1307,19 @@
       return;
     }
     if (!(nodes instanceof Array)) {
-      cu_list = [nodes];
+      node_list = [nodes];
     } else {
-      cu_list = nodes;
+      node_list = nodes;
     }
 
-    cu_list.forEach(function (elem, id) {
-      cu_name_to_index[elem] = id;
-      health_time_stamp_old[elem] = 0;
-      off_line[elem] = false;
+    node_list.forEach(function (elem, id) {
+      var name=encodeName(elem);
+      node_name_to_index[name] = id;
+      health_time_stamp_old[name] = 0;
+      off_line[name] = false;
     });
     // cu_selected = cu_list[0];
-    cu_selected = null;
+    node_selected = null;
     var htmlt, htmlc, htmlg;
     var updateTableFn = new Function;
     /*****
@@ -1310,42 +1329,42 @@
     /**
      * fixed part
      */
-    htmlt = generateNodeTable(cu_list);
+    htmlt = generateNodeTable(node_list);
     updateTableFn = updateNodeTable;
 
    
     $("div.specific-table").html(htmlt);
     // $("div.specific-control").html(htmlc);
     checkRegistration=0;
-    jchaos.node(cu_list, "desc", cutype,null,null, function (data) {
+    jchaos.node(node_list, "desc", cutype,null,null, function (data) {
       var cnt = 0;
-      cu_list.forEach(function (elem, index) {
-        node_name_to_desc[elem] = data[index];
+      node_list.forEach(function (elem, index) {
+        node_name_to_desc[encodeName(elem)] = data[index];
       });
 
     });
 
     setupNode();
     
-    if (cu_list_interval != null) {
-      clearInterval(cu_list_interval);
+    if (node_list_interval != null) {
+      clearInterval(node_list_interval);
     }
-    cu_list_interval = setInterval(function (e) {
+    node_list_interval = setInterval(function (e) {
       var start_time = (new Date()).getTime();
       if ((start_time- checkRegistration ) > 60000) {
         checkRegistration = start_time;
-        jchaos.node(cu_list, "desc", cutype, null,null,function (data) {
+        jchaos.node(node_list, "desc", cutype, null,null,function (data) {
           var cnt = 0;
-          cu_list.forEach(function (elem, index) {
-            node_name_to_desc[elem] = data[index];
+          node_list.forEach(function (elem, index) {
+            node_name_to_desc[encodeName(elem)] = data[index];
           });
           updateTableFn(data);
 
         });
       }
-      jchaos.node(cu_list, "health", cutype,null,null,function(data){
-        cu_live_selected = data;
-        updateGenericTableDataset(cu_live_selected);
+      jchaos.node(node_list, "health", cutype,null,null,function(data){
+        node_live_selected = data;
+        updateGenericTableDataset(node_live_selected);
 
       });
       
@@ -1358,7 +1377,7 @@
 
       // update all generic
 
-      if (cu_live_selected.length == 0 || cu_selected == null || cu_name_to_index[cu_selected] == null) {
+      if (node_live_selected.length == 0 || node_selected == null || node_name_to_index[node_selected] == null) {
         return;
       }
 
@@ -1423,7 +1442,7 @@
       if ((zone_selected != "ALL") && (zone_selected != "--Select--")) {
         search_string = zone_selected;
       }
-      if ((element_selected != "ALL") && (cu_selected != "--Select--")) {
+      if ((element_selected != "ALL") && (node_selected != "--Select--")) {
         search_string += "/" + element_selected;
       }
 
@@ -1534,29 +1553,32 @@
    * 
    */
   function mainTableCommonHandling(id, e) {
-
+    
     $("#mdl-commands").modal("hide");
     $("#cu_full_commands").empty();
-    if (cu_selected == $(e.currentTarget).attr("cuname")) {
+    if (node_selected == $(e.currentTarget).attr("cuname")) {
       $(".row_element").removeClass("row_snap_selected");
-      cu_multi_selected = [];
-      cu_selected = null;
+      node_multi_selected = [];
+      node_selected = null;
       return;
     }
+    node_selected = $(e.currentTarget).attr("cuname");
+    var name=encodeName(node_selected);
 
-    cu_selected = $(e.currentTarget).attr("cuname");
     if (!e.ctrlKey) {
       $(".row_element").removeClass("row_snap_selected");
-      cu_multi_selected = [];
-      cu_multi_selected.push(cu_selected);
+      node_multi_selected = [];
+      node_multi_selected.push(node_selected);
     }
     $(e.currentTarget).addClass("row_snap_selected");
-    if (cu_name_to_desc[cu_selected] == null) {
-      var desc = jchaos.getDesc(cu_selected, null);
-      cu_name_to_desc[cu_selected] = desc[0];
+    if (node_name_to_desc[name] == null) {
+      var desc = jchaos.getDesc(node_selected, null);
+      if(desc!=null){
+        node_name_to_desc[name] = desc[0];
+      }
     }
-    if (cu_selected != null && cu_name_to_desc[cu_selected].hasOwnProperty("cudk_ds_desc") && cu_name_to_desc[cu_selected].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
-      var desc = cu_name_to_desc[cu_selected].cudk_ds_desc.cudk_ds_command_description;
+    if (node_selected != null && node_name_to_desc[name].hasOwnProperty("cudk_ds_desc") && node_name_to_desc[name].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
+      var desc = node_name_to_desc[name].cudk_ds_desc.cudk_ds_command_description;
       $("#cu_full_commands").add("<option>--Select--</option>");
 
       desc.forEach(function (item) {
@@ -1572,7 +1594,7 @@
           //$('#main_table tr:gt('+(last_index_selected)+'):lt('+(nrows)+')').addClass("row_snap_selected");
           $("#" + id + " tr").slice(last_index_selected + 1, nrows + 1).addClass("row_snap_selected");
           for (var cnt = last_index_selected + 1; cnt <= nrows; cnt++) {
-            cu_multi_selected.push(cu_list[cnt]);
+            node_multi_selected.push(node_list[cnt]);
 
           }
 
@@ -1580,7 +1602,7 @@
       }
     } else if (e.ctrlKey) {
       var nrows = $(e.currentTarget).index();
-      cu_multi_selected.push(cu_list[nrows])
+      node_multi_selected.push(node_list[nrows])
     }
     last_index_selected = $(e.currentTarget).index();
 
@@ -2854,7 +2876,7 @@
 
     html += '<li class="black">';
     html += '<a href="./chaos_node.php" role="button" class="show_unitserver" data-toggle="modal">';
-    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Chaos Node Management</span>';
+    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Node Management</span>';
     html += '</a>';
     html += '</li>';
 
@@ -3103,6 +3125,27 @@
     return html;
   }
 
+  function updateNodeMenu(node) {
+    var items = {};
+    node_type=node.ndk_type;
+    items['edit-'+node_type] = {name:"Edit "+node_type+" ..."};
+
+    if(node_type=="nt_agent"){
+      items['start-node'] = {name:"Start Node ..."};
+      items['stop-node'] = {name:"Stop Node ..."};
+      items['kill-node'] = {name:"Kill Node ..."};
+
+    } else {
+      items['edit-'+node_type] = {name:"Edit  "+node_type+ " ..."};
+      items['new-'+node_type] = {name:"New  "+node_type+ " ..."};
+      items['del-'+node_type] = {name:"Del "+node_type};
+      items['copy-'+node_type] = {name:"Copy "+node_type};
+      items['paste-'+node_type] = {name:"Paste "+node_type};
+    }
+    
+    return items;
+  }
+
   function updateCUMenu(cu) {
     var items = {};
 
@@ -3330,11 +3373,11 @@
     $("#snap-save").show();
     $('#table_snap').hide();
     var tosnapshot = [];
-    if (cu_multi_selected.length > 0) {
-      tosnapshot = cu_multi_selected;
+    if (node_multi_selected.length > 0) {
+      tosnapshot = node_multi_selected;
     } else {
-      if (cu_selected) {
-        tosnapshot.push(cu_selected);
+      if (node_selected) {
+        tosnapshot.push(node_selected);
       }
     }
     if (tosnapshot.length > 0) {
@@ -3343,15 +3386,15 @@
       tosnapshot.forEach(function (elem) {
         var type;
         var name = encodeName(elem);
-        if (cu_name_to_desc[elem] == null) {
+        if (node_name_to_desc[elem] == null) {
           var desc = jchaos.getDesc(elem, null);
-          cu_name_to_desc[elem] = desc[0];
+          node_name_to_desc[elem] = desc[0];
 
         }
-        if (cu_name_to_desc[elem] == null) {
+        if (node_name_to_desc[elem] == null) {
           type = "NA";
         } else {
-          type = findImplementationName(cu_name_to_desc[elem].instance_description.control_unit_implementation);
+          type = findImplementationName(node_name_to_desc[elem].instance_description.control_unit_implementation);
         }
         $('#table_snap_nodes').append('<tr class="row_element" id="' + name + '"><td>' + name + '</td><td>' + type + '</td></tr>');
 
