@@ -11,10 +11,8 @@
 	},
 	"ndk_parent": {
 	    "type": "string",
-		"description":"US owner",
-		"watch":{
-			"fname":"editor-us.ndk_uid"
-		}
+		"description":"US owner"
+		
 	},
 	"control_unit_implementation": {
 	    "type": "string",
