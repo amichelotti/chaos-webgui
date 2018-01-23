@@ -89,7 +89,7 @@
     }
     node_list_check = setInterval(function () {
       node_live_selected.forEach(function (elem, index) {
-        if (elem.hasOwnProperty("health")&& elem.health.hasOwnProperty("ndk_uid")) {
+        if (elem.hasOwnProperty("health") && elem.health.hasOwnProperty("ndk_uid")) {
           var name = encodeName(elem.health.ndk_uid);
           var diff = (elem.health.dpck_ats - health_time_stamp_old[name]);
           if (diff > 0) {
@@ -483,19 +483,19 @@
       }
     });
   }
-  function unitServerSave(json){
-   
-    if((json!=null) && json.hasOwnProperty("ndk_uid")){
-      var name=json.ndk_uid;
-      json.cu_desc.forEach(function(item){
-        item.ndk_parent=name;
+  function unitServerSave(json) {
+
+    if ((json != null) && json.hasOwnProperty("ndk_uid")) {
+      var name = json.ndk_uid;
+      json.cu_desc.forEach(function (item) {
+        item.ndk_parent = name;
       });
-      jchaos.node(json.ndk_uid,"set","us","",json,function(data){
-        console.log("unitServer save: \""+node_selected+"\" value:"+JSON.stringify(json));
-     }); 
+      jchaos.node(json.ndk_uid, "set", "us", "", json, function (data) {
+        console.log("unitServer save: \"" + node_selected + "\" value:" + JSON.stringify(json));
+      });
     } else {
       alert("No ndk_uid field found");
-    } 
+    }
   }
   /***
    * JSON EDITOR
@@ -506,14 +506,14 @@
       // Enable fetching schemas via ajax
       // The schema for the editor
       theme: 'bootstrap2',
-      ajax:true,
+      ajax: true,
       schema: jsontemp,
 
       // Seed the form with a starting value
       startval: jsonin
     };
     $("#json-edit").empty();
-    if(json_editor!=null){
+    if (json_editor != null) {
       delete json_editor;
     }
     json_editor = new JSONEditor(element.get(0), jopt);
@@ -1290,7 +1290,7 @@
       }
       else {
         // It's valid!
-        var json_editor_value=json_editor.getValue();
+        var json_editor_value = json_editor.getValue();
         editorFn(json_editor_value);
         $("#mdl-jsonedit").modal("hide");
 
@@ -1321,20 +1321,20 @@
 
             }
             if (cmd == "edit-nt_control_unit") {
-             
+
             }
             if (cmd == "edit-nt_unit_server") {
               var templ = {
                 $ref: "us.json",
                 format: "tabs"
               }
-              jchaos.node(node_selected,"get","us","",null,function(data){
-                if(data.hasOwnProperty("us_desc")){
-                  editorFn=unitServerSave;   
-                  jsonEdit(templ,data.us_desc);
+              jchaos.node(node_selected, "get", "us", "", null, function (data) {
+                if (data.hasOwnProperty("us_desc")) {
+                  editorFn = unitServerSave;
+                  jsonEdit(templ, data.us_desc);
                 }
               });
-              
+
 
             }
             if (cmd == "new-nt_unit_server") {
@@ -1342,11 +1342,25 @@
                 $ref: "us.json",
                 format: "tabs"
               }
-              editorFn=unitServerSave;   
-              jsonEdit(templ,null);
+              editorFn = unitServerSave;
+              jsonEdit(templ, null);
 
             }
-            if (cmd == "del") {
+            if (cmd == "del-nt_unit_server") {
+
+              confirm("Your are deleting US: "+node_selected,function(){
+               jchaos.node(node_selected,"del","us",null,null);
+              });
+            }
+
+            if (cmd == "del-nt_control_unit") {
+            var desc = jchaos.getDesc(node_selected, null); 
+              if(desc[0] !=null && desc[0].hasOwnProperty("instance_description")){
+                var parent=desc[0].instance_description.ndk_parent;
+                confirm("Your are deleting CU: \""+node_selected +"\"("+parent+")" ,function(){
+               jchaos.node(node_selected,"del","cu",parent,null);
+              });
+              }
             }
             if (cmd == "copy") {
             }
@@ -1725,7 +1739,7 @@
     cu.forEach(function (el) {  // cu forEach
       var name_device_db, name_id;
       var status;
-      if (el.hasOwnProperty('health') && (el.health.hasOwnProperty("ndk_uid")) ){   //if el health
+      if (el.hasOwnProperty('health') && (el.health.hasOwnProperty("ndk_uid"))) {   //if el health
         name_device_db = el.health.ndk_uid;
         name_id = encodeName(name_device_db);
         el.systTime = Number(el.health.nh_st).toFixed(3);
@@ -1876,7 +1890,7 @@
 
   function updateScraperTable(cu) {
     cu.forEach(function (elem) {
-      if (elem.hasOwnProperty('health')&& elem.health.hasOwnProperty("ndk_uid")) {   //if el health
+      if (elem.hasOwnProperty('health') && elem.health.hasOwnProperty("ndk_uid")) {   //if el health
 
         var cuname = encodeName(elem.health.ndk_uid);
 
@@ -2024,7 +2038,7 @@
   }
   function updatePStable(cu) {
     cu.forEach(function (elem, index) {
-      if (elem.hasOwnProperty("health")&& elem.health.hasOwnProperty("ndk_uid")) {
+      if (elem.hasOwnProperty("health") && elem.health.hasOwnProperty("ndk_uid")) {
 
 
         var id = elem.health.ndk_uid;
@@ -3203,7 +3217,29 @@
     html += "</div>";
     return html;
   }
+  function confirm(msg,okhandle) {
+    var ret=true;
+    $('<div></div>').appendTo('body')
+  .html('<div><h6>Yes or No?</h6></div>')
+  .dialog({
+      modal: true, title: msg, zIndex: 10000, autoOpen: true,
+      width: 'auto', resizable: false,
+      buttons: {
+          Yes: function () {
+              okhandle();
+              $(this).dialog("close");
+          },
+          No: function () {
+              ret=false;
+              $(this).dialog("close");
+          }
+      },
+      close: function (event, ui) {
+          $(this).remove();
+      }
+});
 
+  }
   function updateNodeMenu(node) {
     var items = {};
     node_type = node.ndk_type;
@@ -3228,7 +3264,7 @@
   function updateCUMenu(cu) {
     var items = {};
 
-    if (cu.hasOwnProperty('health')&& elem.health.hasOwnProperty("nh_status")) {   //if el health
+    if (cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) {   //if el health
       var status = cu.health.nh_status;
       if (status == 'Start') {
         items['stop'] = { name: "Stop", icon: "stop" };
@@ -3256,7 +3292,7 @@
     return items;
   }
   function updateGenericControl(cu) {
-    if (cu.hasOwnProperty('health')&& elem.health.hasOwnProperty("ndk_uid")) {   //if el health
+    if (cu.hasOwnProperty('health') && cu.health.hasOwnProperty("ndk_uid")) {   //if el health
       var name = cu.health.ndk_uid;
       var status = cu.health.nh_status;
       $("#cmd-stop-start").hide();
