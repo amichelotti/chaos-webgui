@@ -497,6 +497,18 @@
       alert("No ndk_uid field found");
     }
   }
+  function cuSave(json) {
+
+    if ((json != null) && json.hasOwnProperty("ndk_uid")) {
+      var name = json.ndk_uid;
+      ;
+      jchaos.node(json.ndk_uid, "set", "cu", "", json, function (data) {
+        console.log("cu save: \"" + node_selected + "\" value:" + JSON.stringify(json));
+      });
+    } else {
+      alert("No ndk_uid field found");
+    }
+  }
   /***
    * JSON EDITOR
    */
@@ -1321,7 +1333,16 @@
 
             }
             if (cmd == "edit-nt_control_unit") {
-
+              var templ = {
+                $ref: "cu.json",
+                format: "tabs"
+              }
+              jchaos.node(node_selected, "get", "cu", "", null, function (data) {
+                if (data!=null) {
+                  editorFn = cuSave;
+                  jsonEdit(templ, data);
+                }
+              });
             }
             if (cmd == "edit-nt_unit_server") {
               var templ = {
@@ -1410,6 +1431,9 @@
     $("div.specific-table").html(htmlt);
     // $("div.specific-control").html(htmlc);
     checkRegistration = 0;
+    if(node_list.length==0){
+      return;
+    }
     jchaos.node(node_list, "desc", cutype, null, null, function (data) {
       var cnt = 0;
       node_list.forEach(function (elem, index) {
