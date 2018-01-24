@@ -351,11 +351,17 @@
 		}
 
 		jchaos.loadUnload = function (dev, value, handleFunc) {
+
 			var opt = {
-				"name": dev,
+				
 				"type": "cu",
 				"what": value ? "load" : "unload",
 			};
+			if(dev instanceof Array){
+				opt['names']=dev;
+			} else {
+				opt['name']=dev;
+			}
 			jchaos.mdsBase("node", opt, handleFunc);
 		}
 		jchaos.forceState = function (devs, state, handleFunc) {
