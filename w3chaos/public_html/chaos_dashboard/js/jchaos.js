@@ -172,6 +172,9 @@
 		jchaos.node = function (_name, _what, _type, _parent, value_, handleFunc) {
 			var opt = {};
 			if (_name instanceof Array) {
+				if(_name.length==0){
+					return [];
+				}
 				opt['names'] = _name;
 			} else {
 				opt['name'] = _name;

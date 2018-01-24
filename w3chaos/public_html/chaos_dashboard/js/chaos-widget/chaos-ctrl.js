@@ -8,6 +8,9 @@
   var editorFn = new Function;
 
   var checkRegistration = 0;
+  var interface;// interface we are looking for
+  var cu_copied;
+  var us_copied;
   var selectedInterface = "";
   var snap_selected = "";
   var node_selected = "";
@@ -105,7 +108,7 @@
 
           }
           health_time_stamp_old[name] = elem.health.dpck_ats;
-        } else {
+        } else if(node_list.length>0){
           var id = node_list[index];
           var name = encodeName(id);
           $("#" + name).css('color', 'red');
@@ -417,7 +420,7 @@
 
     html += '<table class="table table-bordered" id="main_table">';
     html += '<thead class="box-header">';
-    html += '<tr>';
+    html += '<tr class="nodeMenu">';
     html += '<th>Node</th>';
     html += '<th>Type</th>';
     html += '<th>Registration Timestamp</th>';
@@ -501,8 +504,11 @@
 
     if ((json != null) && json.hasOwnProperty("ndk_uid")) {
       var name = json.ndk_uid;
-      ;
-      jchaos.node(json.ndk_uid, "set", "cu", "", json, function (data) {
+      if(!json.hasOwnProperty("ndk_parent")){
+        alert("CU parent not defined");
+        return
+      }
+      jchaos.node(json.ndk_uid, "set", "cu",json.ndk_parent , json, function (data) {
         console.log("cu save: \"" + node_selected + "\" value:" + JSON.stringify(json));
       });
     } else {
@@ -1369,23 +1375,38 @@
             }
             if (cmd == "del-nt_unit_server") {
 
-              confirm("Your are deleting US: "+node_selected,function(){
+              confirm("Delete US","Your are deleting US: "+node_selected,"Ok",function(){
                jchaos.node(node_selected,"del","us",null,null);
-              });
+              },"Cancel");
             }
 
             if (cmd == "del-nt_control_unit") {
             var desc = jchaos.getDesc(node_selected, null); 
               if(desc[0] !=null && desc[0].hasOwnProperty("instance_description")){
                 var parent=desc[0].instance_description.ndk_parent;
-                confirm("Your are deleting CU: \""+node_selected +"\"("+parent+")" ,function(){
+                confirm("Delete CU","Your are deleting CU: \""+node_selected +"\"("+parent+")" ,"Ok",function(){
                jchaos.node(node_selected,"del","cu",parent,null);
-              });
+              },"Cancel");
               }
             }
-            if (cmd == "copy") {
+            if (cmd == "copy-nt_control_unit") {
+              jchaos.node(node_selected, "get", "cu", "", null, function (data) {
+                if (data!=null) {
+                  cu_copied=data;
+                }
+              });
             }
-            if (cmd == "paste") {
+            if (cmd == "paste-nt_control_unit") {
+            }
+            if (cmd == "copy-nt_unit_server") {
+              jchaos.node(node_selected, "get", "us", "", null, function (data) {
+                if (data.hasOwnProperty("us_desc")) {
+                  us_copied=data.us_desc;
+                }
+              });
+            }
+            if (cmd == "paste-nt_unit_server") {
+
             }
             return;
           },
@@ -1406,7 +1427,7 @@
     } else {
       node_list = nodes;
     }
-
+   
     node_list.forEach(function (elem, id) {
       var name = encodeName(elem);
       node_name_to_index[name] = id;
@@ -1431,9 +1452,7 @@
     $("div.specific-table").html(htmlt);
     // $("div.specific-control").html(htmlc);
     checkRegistration = 0;
-    if(node_list.length==0){
-      return;
-    }
+   
     jchaos.node(node_list, "desc", cutype, null, null, function (data) {
       var cnt = 0;
       node_list.forEach(function (elem, index) {
@@ -1595,6 +1614,27 @@
   }
 
 
+  function interface2NodeList(inter,alive){
+    var tmp=[];
+    if ((inter != "agent") && (inter != "us") && (inter != "cu")) {
+      var node = jchaos.search(search_string, "us", (alive == "true"), false);
+      node.forEach(function (item) {
+        tmp.push(item);
+      });
+      node = jchaos.search(search_string, "agent", (alive == "true"), false);
+      node.forEach(function (item) {
+        tmp.push(item);
+      });
+      node = jchaos.search(search_string, "cu", (alive == "true"), false);
+      node.forEach(function (item) {
+        tmp.push(item);
+      });
+    } else {
+      tmp = jchaos.search(search_string, inter, (alive == "true"), false);
+
+    }
+      return tmp;
+}
 
   function mainNode() {
     var list_cu = [];
@@ -1609,39 +1649,20 @@
 
     $("#search-chaos").keypress(function (e) {
       if (e.keyCode == 13) {
-        var interface = $("#classe option:selected").val();
+        interface = $("#classe option:selected").val();
         search_string = $(this).val();
         var alive = $("input[type=radio][name=search-alive]:checked").val()
-        if ((interface != "agent") && (interface != "us") && (interface != "cu")) {
-          var node = jchaos.search(search_string, "us", (alive == "true"), false);
-          node.forEach(function (item) {
-            list_cu.push(item);
-          });
-          node = jchaos.search(search_string, "agent", (alive == "true"), false);
-          node.forEach(function (item) {
-            list_cu.push(item);
-          });
-          node = jchaos.search(search_string, "cu", (alive == "true"), false);
-          node.forEach(function (item) {
-            list_cu.push(item);
-          });
+          list_cu=interface2NodeList(interface,alive);
           buildNodeInterface(list_cu, "us");
-
-        } else {
-          list_cu = jchaos.search(search_string, interface, (alive == "true"), false);
-          buildNodeInterface(list_cu, interface);
-
-        }
-
       }
       //var tt =prompt('type value');
     });
 
     $("input[type=radio][name=search-alive]").change(function (e) {
       var alive = $("input[type=radio][name=search-alive]:checked").val()
-      var interface = $("#classe option:selected").val();
+      interface = $("#classe option:selected").val();
 
-      list_cu = jchaos.search(search_string, interface, (alive == "true"), false);
+      list_cu=interface2NodeList(interface,alive);
 
       buildNodeInterface(list_cu, interface);
     });
@@ -2791,7 +2812,7 @@
     // var cu=jchaos.getChannel(cuid, -1,null);
     // var desc=jchaos.getDesc(cuid,null);
 
-    var html = '<div class="modal hide fade resizable draggable" id="mdl-jsonedit">';
+    var html = '<div class="modal hide fade draggable" id="mdl-jsonedit">';
     html += '<div class="modal-header">';
     html += '<button type="button" class="close" data-dismiss="modal">×</button>';
     html += '<h3>Editor</h3>';
@@ -3241,33 +3262,75 @@
     html += "</div>";
     return html;
   }
-  function confirm(msg,okhandle) {
+  function confirm(hmsg,msg,butyes,yeshandle,butno,nohandle) {
     var ret=true;
     $('<div></div>').appendTo('body')
-  .html('<div><h6>Yes or No?</h6></div>')
+  .html('<div><h6>'+msg+'</h6></div>')
   .dialog({
-      modal: true, title: msg, zIndex: 10000, autoOpen: true,
+      modal: true, title: hmsg, zIndex: 10000, autoOpen: true,
       width: 'auto', resizable: false,
-      buttons: {
-          Yes: function () {
-              okhandle();
-              $(this).dialog("close");
-          },
-          No: function () {
-              ret=false;
-              $(this).dialog("close");
+      buttons:[
+        {
+          id: "confirm-yes",
+          text: butyes,
+          click: function (e) {
+            if(typeof yeshandle === "function"){
+              yeshandle();
+            }
+            $(this).dialog("close");
+
+
           }
-      },
+        },
+        {
+          id: "confirm-no",
+          text: butno,
+          click: function (e) {
+            if(typeof nohandle === "function"){
+              nohandle();
+            }
+            $(this).dialog("close");
+          }
+        }],
       close: function (event, ui) {
           $(this).remove();
       }
 });
 
   }
+  function type2Alias(t){
+    switch(t){
+      case "nt_agent":
+          return "Agent";
+      case "nt_control_unit":
+        return "Control Unit";
+        case "nt_unit_server":
+          return "Unit Server";
+
+    }
+  }
   function updateNodeMenu(node) {
     var items = {};
+    if(interface=="cu"){
+        items['new-nt_control_unit'] = { name: "New  Control Unit..." };
+      } else if(interface=="us"){
+        items['new-nt_unit_server'] = { name: "New  Unit Server..." };
+        if((us_copied!=null) && us_copied.hasOwnProperty("ndk_uid")){
+          items['paste-nt_unit_server'] = { name: "Paste " + us_copied.ndk_uid };
+        }
+      } else {
+        items['new-nt_control_unit'] = { name: "New  Control Unit..." };
+        items['new-nt_unit_server'] = { name: "New  Unit Server..." };
+        if((us_copied!=null) && us_copied.hasOwnProperty("ndk_uid")){
+          items['paste-nt_unit_server'] = { name: "Paste " + us_copied.ndk_uid };
+        }
+      }
+      if(node==null){
+        return items;
+      }
+    
     node_type = node.ndk_type;
-    items['edit-' + node_type] = { name: "Edit " + node_type + " ..." };
+    items['edit-' + node_type] = { name: "Edit ..." };
 
     if (node_type == "nt_agent") {
       items['start-node'] = { name: "Start Node ..." };
@@ -3275,11 +3338,22 @@
       items['kill-node'] = { name: "Kill Node ..." };
 
     } else {
-      items['edit-' + node_type] = { name: "Edit  " + node_type + " ..." };
-      items['new-' + node_type] = { name: "New  " + node_type + " ..." };
-      items['del-' + node_type] = { name: "Del " + node_type };
-      items['copy-' + node_type] = { name: "Copy " + node_type };
-      items['paste-' + node_type] = { name: "Paste " + node_type };
+      items['del-' + node_type] = { name: "Del " + node_selected };
+      if(node_type=="nt_unit_server") {
+        items['copy-' + node_type] = { name: "Copy " + node_selected };
+        if((cu_copied!=null) && cu_copied.hasOwnProperty("ndk_uid")){
+          items['paste-' + node_type] = { name: "Paste/Move \"" + cu_copied.ndk_uid };
+        }        
+      }
+      if((us_copied!=null) && us_copied.hasOwnProperty("ndk_uid")){
+        items['paste-nt_unit_server'] = { name: "Paste " + us_copied.ndk_uid };
+      }
+      
+      if(node_type=="nt_control_unit") {
+        items['copy-' + node_type] = { name: "Copy " + node_selected };
+
+        
+      }
     }
 
     return items;
