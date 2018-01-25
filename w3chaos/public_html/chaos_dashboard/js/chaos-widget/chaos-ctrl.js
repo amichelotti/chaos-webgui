@@ -53,11 +53,12 @@
   });
   }
   function copyToClipboard(testo) {
-    /*var $temp = $("<input>");
-    $("#inputClipBoard").val(testo).select();
-    $("#inputClipBoard").focus();
-    document.execCommand("copy");
-    */
+   // $("#inputClipBoard").focus();
+    $("#inputClipBoard").val(testo);
+    $("#inputClipBoard").select();
+    document.execCommand("Copy");
+    
+      /*
       var $temp = $("<div>");
       $("body").append($temp);
       $temp.attr("contenteditable", true)
@@ -69,7 +70,7 @@
 
           }).focus();
       $temp.remove();
-    
+    */
 //    instantMessage("Copy","copied to clipboard",900);
   }
   function encodeCUPath(path) {
@@ -3455,7 +3456,7 @@
       items['copy-' + node_type] = { name: "Copy " + node_selected };
 
       if ((cu_copied != null) && cu_copied.hasOwnProperty("ndk_uid")) {
-        items['paste-' + node_type] = { name: "Paste/Move \"" + cu_copied.ndk_uid };
+        items['paste-nt_control_unit'] = { name: "Paste/Move \"" + cu_copied.ndk_uid };
       }
 
       items['start-node'] = { name: "Start Node ..." };
@@ -3776,7 +3777,7 @@
         var html = "";
         html += buildNodeBody();
         html += generateEditJson();
-        html += '<input type="text" class="hide" id="inputClipBoard" value=""/>';
+        html += '<input type="text" id="inputClipBoard" value=" "/>';
 
         html += '<div class="specific-table"></div>';
 
