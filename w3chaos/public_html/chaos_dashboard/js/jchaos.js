@@ -107,21 +107,42 @@
 			return parseInt(obj[key].$numberLong);
 		}
 		jchaos.setLongLong = function (obj, key, val) {
-			obj[key].$numberLong = val.toString();
+                       if (!obj.hasOwnProperty(key)) {
+                               jchaos.addLongKey(obj, key, val.toString());
+                               return;
+                       }
+
 		}
+               jchaos.normalizeDataset = function (obj) {
+                       jchaos.addLongKey(obj, 'dpck_hr_ats', "0");
+                       jchaos.addLongKey(obj, 'dpck_ats', "0");
+                       jchaos.addLongKey(obj, 'dpck_seq_id', "0");
+               }
+	    
 		jchaos.registerCU = function (cuid, obj, handleFunc) {
 			var str_url_cu = "/api/v1/producer/jsonregister/" + cuid;
-			var dd = Date.now();
-			jchaos.addLongKey(obj, 'dpck_ats', dd.toString());
-			jchaos.addLongKey(obj, 'dpck_seq_id', "0");
+		    var dd = Date.now();
+		    jchaos.normalizeDataset(obj);
+
+
 			jchaos.basicPost(str_url_cu, JSON.stringify(obj), function (datav) { handleFunc(datav); });
 		}
 
 		jchaos.pushCU = function (cuid, obj, handleFunc) {
 			var str_url_cu = "/api/v1/producer/jsoninsert/" + cuid;
 			var dd = Date.now();
-			jchaos.setLongLong(obj, 'dpck_seq_id', jchaos.getLongLong(obj, 'dpck_seq_id') + 1);
-			jchaos.basicPost(str_url_cu, JSON.stringify(obj), function (datav) { handleFunc(datav); });
+		    jchaos.setLongLong(obj, 'dpck_seq_id', jchaos.getLongLong(obj, 'dpck_seq_id') + 1);
+		    -                       jchaos.setLongLong(obj, 'dpck_ats', dd);
+                       jchaos.setLongLong(obj, 'dpck_hr_ats', dd * 1000);
+
+                       if (typeof handleFunc !== "function") {
+                               jchaos.basicPost(str_url_cu, JSON.stringify(obj), null);
+                               return;
+
+                       }
+
+		    jchaos.basicPost(str_url_cu, JSON.stringify(obj), function (datav) { handleFunc(datav); });
+		    
 		}
 		jchaos.mdsBase = function (cmd, opt, handleFunc) {
 			var param = "cmd=" + cmd + "&parm=" + JSON.stringify(opt);
@@ -587,9 +608,12 @@
 				jchaos.getChannel(elem, -1, function (data) {
 					//console.log(" - "+elem+ " ->"+JSON.stringify(data));
 					if (checkFunc(data[0])) {
-						tot_ok++;
+					    tot_ok++;
+					    console.log("\t+ " + data[0].health.ndk_uid + " ok " + tot_ok + "/" + devlist.length);
+					} else {
+					    console.log("\t- " + data[0].health.ndk_uid + " NOT YET " + tot_ok + "/" + devlist.length);
 					}
-					console.log("\t- " + data[0].health.ndk_uid + " ok " + tot_ok + "/" + devlist.length);
+					
 
 
 				});
