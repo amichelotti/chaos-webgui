@@ -569,6 +569,14 @@
       json.andk_node_associated.forEach(function (item) {
         jchaos.node(node_selected, "set", "agent", null, item, function (data) {
           console.log("agent save: \"" + node_selected + "\" value:" + JSON.stringify(json));
+          if (item.node_log_at_launch) {
+            jchaos.node(item.ndk_uid, "enablelog", "agent", null, null, function (data) {
+            });
+          } else {
+            jchaos.node(item.ndk_uid, "disablelog", "agent", null, null, function (data) {
+
+            });
+          }
         });
       });
     } else {
@@ -1480,7 +1488,7 @@
       alert("Not Implemented, try with Edit.. ");
       return;
     }
-    
+
     if (cmd == "start-node") {
       jchaos.node(node_selected, "start", "us", function () {
         instantMessage("US START", "Starting " + node_selected + " via agent", 500);
@@ -1493,6 +1501,12 @@
 
       });
       return;
+    }
+    if(cmd=="log-node"){
+      jchaos.node(node_selected, "enablelog", "agent", null, null, function (data) {
+        logNode(node_selected);
+
+      });
     }
     if (cmd == "kill-node") {
       confirm("Do you want to KILL?", "Pay attention ANY CU will be killed as well", "Kill",
@@ -1584,6 +1598,14 @@
       $("#mdl-jsonedit").modal("hide");
     });
 
+    $("#cuname").draggable(
+      {
+
+        cursor: 'move',
+        helper: 'clone',
+        containment: 'window'
+      }
+    );
     $.contextMenu({
       selector: '.nodeMenu',
       build: function ($trigger, e) {
@@ -1660,11 +1682,11 @@
             }
           });
         } else if ((type == "nt_unit_server")) {
-          var par=jchaos.node(elem, "parent", "us", null, null);
-          if(par.hasOwnProperty("ndk_uid")&& par.ndk_uid!=""){
+          var par = jchaos.node(elem, "parent", "us", null, null);
+          if (par.hasOwnProperty("ndk_uid") && par.ndk_uid != "") {
             node_name_to_desc[elem].parent = par.ndk_uid;
           }
-        
+
         }
       });
 
@@ -3475,13 +3497,14 @@
   }
   var updateLogInterval;
 
-  function logNode(name){
+  function logNode(name) {
     $('<div></div>').appendTo('body')
       .html('<div><p id="culog"></p></div>')
       .dialog({
         modal: true, title: name, zIndex: 10000, autoOpen: true,
-        width: 'auto', resizable: false,
-        buttons: [   
+        width: 320,
+        height: 240, resizable: true, draggable: true,
+        buttons: [
           {
             id: "confirm-no",
             text: "Close",
@@ -3493,10 +3516,12 @@
           clearInterval(updateLogInterval);
           $(this).remove();
         },
-        open:function(event,ui){
-          updateLogInterval=setInterval(function(){
-            jc
-          },1000);
+        open: function (event, ui) {
+          updateLogInterval = setInterval(function () {
+            jchaos.node(name, "getlog", "agent", null, function (data) {
+              $("#culog").append(JSON.stringify(data));
+            });
+          }, 1000);
         }
       });
 
@@ -3582,10 +3607,13 @@
       var associated = jchaos.node(node_selected, "parent", "us", null, null);
       if (associated != null && associated.hasOwnProperty("ndk_uid") && associated.ndk_uid != "") {
         items['sep5'] = "---------";
+
         items['start-node'] = { name: "Start US ..." };
         items['stop-node'] = { name: "Stop US ..." };
         items['restart-node'] = { name: "Restart US ..." };
         items['kill-node'] = { name: "Kill US ..." };
+        items['log-node'] = { name: "Log US ..." };
+
 
 
         items['sep6'] = "---------";

@@ -30,7 +30,8 @@
 	},
 	"node_log_at_launch": {
 	    "type": "boolean",
-	    "description":"Node Keep Alive"
+		"description":"Node Keep Alive",
+		"default":true
 	}
 }
 	
