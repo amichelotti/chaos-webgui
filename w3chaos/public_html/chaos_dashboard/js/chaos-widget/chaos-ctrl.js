@@ -11,6 +11,7 @@
   var interface;// interface we are looking for
   var cu_copied;
   var us_copied;
+  var save_obj;
   var selectedInterface = "";
   var snap_selected = "";
   var node_selected = "";
@@ -679,6 +680,7 @@
       if (snap_selected != "") {
         var dataset = jchaos.snapshot(snap_selected, "load", null, "", null);
         var jsonhtml = json2html(dataset, options, node_selected);
+        save_obj=dataset;
         if (isCollapsable(dataset)) {
           jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
         }
@@ -711,6 +713,7 @@
     $("a.show_description").click(function () {
       var dataset = jchaos.getDesc(node_selected, null);
       var jsonhtml = json2html(dataset, options, node_selected);
+      save_obj=dataset;
       if (isCollapsable(dataset)) {
         jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
       }
@@ -727,6 +730,7 @@
     $("a.show_dataset").on('click', function () {
       var dataset = jchaos.getChannel(node_selected, -1, null);
       var jsonhtml = json2html(dataset[0], options, node_selected);
+      save_obj=dataset[0];
       if (isCollapsable(dataset[0])) {
         jsonhtml = '<a class="json-toggle"></a>' + jsonhtml;
       }
@@ -3035,6 +3039,7 @@
     html += '<div id="cu-dataset" class="json-dataset"></div>';
     html += '</div>';
     html += '<div class="modal-footer">';
+    html += '<a href="#" class="btn btn-primary savetofile" filename="dataset" extension="json">Save</a>';
     html += '<a href="#" class="btn btn-primary" id="dataset-update">Pause</a>';
     html += '<a href="#" class="btn btn-primary" id="dataset-close">Close</a>';
     html += '</div>';
@@ -3074,6 +3079,7 @@
     html += '<div id="cu-description" class="json-dataset"></div>';
     html += '</div>';
     html += '<div class="modal-footer">';
+    html += '<a href="#" class="btn btn-primary savetofile" filename="description" extension="json">Save</a>';
     html += '<a href="#" class="btn btn-primary" id="description-close">Close</a>';
     html += '</div>';
     html += '</div>';
@@ -3956,7 +3962,17 @@
       $("#menu-dashboard").html(generateMenuBox());
 
       jsonSetup();
+      $(".savetofile").on("click",function(e){
+        var t = $(e.target);
+        var fname=$(t).attr("filename");
+        var fext=$(t).attr("extension");
 
+        $.savefile({
+          'filename':fname,
+          'extension': fext,
+          'content': JSON.stringify(save_obj)
+        })
+      });
 
 
 
