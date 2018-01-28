@@ -680,7 +680,11 @@
       if (snap_selected != "") {
         var dataset = jchaos.snapshot(snap_selected, "load", null, "", null);
         var jsonhtml = json2html(dataset, options, node_selected);
-        save_obj=dataset;
+        save_obj = {
+          obj: dataset,
+          fname: "snapshot_"+snap_selected,
+          fext: "json"
+        };
         if (isCollapsable(dataset)) {
           jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
         }
@@ -713,7 +717,11 @@
     $("a.show_description").click(function () {
       var dataset = jchaos.getDesc(node_selected, null);
       var jsonhtml = json2html(dataset, options, node_selected);
-      save_obj=dataset;
+      save_obj = {
+        obj: dataset,
+        fname: "description_"+encodeName(node_selected),
+        fext: "json"
+      };
       if (isCollapsable(dataset)) {
         jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
       }
@@ -730,7 +738,12 @@
     $("a.show_dataset").on('click', function () {
       var dataset = jchaos.getChannel(node_selected, -1, null);
       var jsonhtml = json2html(dataset[0], options, node_selected);
-      save_obj=dataset[0];
+      save_obj = {
+        obj: dataset[0],
+        fname: "dataset_"+encodeName(node_selected),
+        fext: "json"
+      };
+
       if (isCollapsable(dataset[0])) {
         jsonhtml = '<a class="json-toggle"></a>' + jsonhtml;
       }
@@ -1506,7 +1519,7 @@
       });
       return;
     }
-    if(cmd=="log-node"){
+    if (cmd == "log-node") {
       jchaos.node(node_selected, "enablelog", "agent", null, null, function (data) {
         logNode(node_selected);
 
@@ -2977,6 +2990,44 @@
     jchaos.variable("highcharts", "set", high_graphs, null);
   }
 
+  function saveFullConfig(name){
+    //find all US
+    var obj={};
+    obj['agents']=[];
+    var agent_list=jchaos.search("","agent",false,false);
+    agent_list.forEach(function(item){
+      var agent={
+        "name":item,
+      };
+      var info=jchaos.node(item, "info", "agent", "", null);
+      agent['info']=info;
+      obj['agents'].push(agent);
+      ;
+    });
+    obj['us']=[];
+    var us_list=jchaos.search("","us",false,false);
+    us_list.forEach(function(item){
+      var data=jchaos.node(item, "get", "us", "", null);
+      obj['us'].push(data);
+
+    });
+    // snapshots
+    obj['snapshots']=[];
+    var snaplist=jchaos.search("", "snapshots", false);
+    snaplist.forEach(function (item){
+        var snap={
+          snap:item,
+        };
+        var dataset=jchaos.snapshot(item.name, "load", null, "");
+        snap['dataset']=dataset;
+        obj['snapshots'].push(snap);
+        });
+    // graphs
+    obj['graphs']=high_graphs;
+    var blob = new Blob([JSON.stringify(obj)], { type: "json;charset=utf-8" });
+    saveAs(blob, "configuration.json");
+  }
+
   function generateSnapshotTable(cuid) {
     var html = '<div class="modal hide fade" id="mdl-snap">';
 
@@ -3232,7 +3283,7 @@
 
     return html;
   }
-  function generateMenuBox() {
+   function generateMenuBox() {
     var html = '<div class="box black">';
     html += '<div class="box-header">';
     html += '<h2><i class="halflings-icon white list"></i><span class="break"></span>Menu</h2>';
@@ -3243,13 +3294,31 @@
     html += '<div class="box-content">';
     html += '<ul class="dashboard-list metro">';
 
-
+    html += '<li class="black">';
+    html += '<a href="./configuration.php" role="button" class="show_agent" data-toggle="modal">';
+    html += '<i class="icon-gear green"></i><span class="opt-menu hidden-tablet">Configuration</span>';
+    html += '</a>';
+    html += '</li>';
 
     html += '<li class="black">';
     html += '<a href="./index.php" role="button" class="show_agent" data-toggle="modal">';
-    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">CU</span>';
+    html += '<i class="icon-search green"></i><span class="opt-menu hidden-tablet">CU</span>';
     html += '</a>';
     html += '</li>';
+/*
+    html += '<li class="black">';
+    html += '<a href="#">';
+    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Configuration</span>';
+    html += '</a>'
+
+    html += '<ul class="dashboard-list metro">';
+    html += '<li class="black">';
+    html += '<a href="./chaos_node.php" role="button" class="show_unitserver" data-toggle="modal">';
+    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Node</span>';
+    html += '</a>';
+    html += '</li>';
+    html += '</ul>';
+*/
 
     html += '<li class="black">';
     html += '<a href="./chaos_node.php" role="button" class="show_unitserver" data-toggle="modal">';
@@ -3269,6 +3338,8 @@
     html += '</div>';
     return html;
   }
+
+
 
   function generateActionBox() {
     var html = '<div class="box black span3" onTablet="span4" onDesktop="span4">';
@@ -3923,6 +3994,12 @@
    * @param json: a javascript object
    * @param options: an optional options hash
    */
+  $.fn.generateMenuBox=function(){
+    $(this).html(generateMenuBox());
+  }
+  $.fn.saveFullConfig=function(){
+    saveFullConfig();
+  }
   $.fn.chaosDashboard = function (opt) {
     main_dom = this;
     options = opt || {};
@@ -3962,16 +4039,15 @@
       $("#menu-dashboard").html(generateMenuBox());
 
       jsonSetup();
-      $(".savetofile").on("click",function(e){
+      $(".savetofile").on("click", function (e) {
         var t = $(e.target);
-        var fname=$(t).attr("filename");
-        var fext=$(t).attr("extension");
+        if (save_obj instanceof Object) {
+          if (save_obj.fext == "json") {
+            var blob = new Blob([JSON.stringify(save_obj.obj)], { type: "json;charset=utf-8" });
+            saveAs(blob, save_obj.fname + "." + save_obj.fext);
+          }
+        }
 
-        $.savefile({
-          'filename':fname,
-          'extension': fext,
-          'content': JSON.stringify(save_obj)
-        })
       });
 
 
