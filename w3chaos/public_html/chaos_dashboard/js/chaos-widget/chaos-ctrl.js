@@ -31,13 +31,30 @@
   var last_index_selected = -1;
   var active_plots = [];
   var trace_selected;
-  var trace_list = {};
+  var trace_list = [];
   var high_graphs; // highchart graphs
   var graph_selected;
   var search_string;
   var notupdate_dataset = 1;
   var implementation_map = { "powersupply": "SCPowerSupply", "scraper": "SCActuator" };
 
+  function removeElementByName(name,tlist){
+    for(var cnt=0;cnt<tlist.length;cnt++){
+      if(tlist.name==name){
+        tlist.splice(cnt,1);
+        return;
+      }
+    }
+    return;
+  }
+  function getElementByName(name,tlist){
+    for(var cnt=0;cnt<tlist.length;cnt++){
+      if(tlist.name==name){
+        return tlist[cnt];
+      }
+    }
+    return null;
+  }
   function instantMessage(msghead, msg, tim) {
     var instant = $('<div></div>').html(msg).dialog({
       width: 150,
@@ -86,13 +103,14 @@
 
   function decodeCUPath(cupath) {
     var regex = /(.*)\/(.*)\/(.*)$/;
-    var tmp;
+    var tmp=cupath;
     if ($.isNumeric(cupath)) {
       tmp = {
         cu: null,
         dir: null,
         var: null,
-        const: Number(cupath)
+        const: Number(cupath),
+        origin:cupath
       };
       return tmp;
     }
@@ -102,7 +120,8 @@
         cu: match[1],
         dir: match[2],
         var: match[3],
-        const: null
+        const: null,
+        origin:cupath
       };
     }
     return tmp;
@@ -543,7 +562,7 @@
         item.ndk_parent = name;
       });
       jchaos.node(json.ndk_uid, "set", "us", "", json, function (data) {
-        console.log("unitServer save: \"" + node_selected + "\" value:" + JSON.stringify(json));
+        console.log("unitServer save: \"" +name + "\" value:" + JSON.stringify(json));
       });
     } else {
       alert("No ndk_uid field found");
@@ -961,7 +980,7 @@
           var xpath, ypath;
           xpath = encodeCUPath(trace[k].x);
           ypath = encodeCUPath(trace[k].y);
-          $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '"><td>' + k + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
+          $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '" tracename="'+k+'""><td>' + k + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
 
         };
       }
@@ -969,7 +988,12 @@
     });
     $(main_dom).on("click", "#table_graph_items tbody tr", function (e) {
       $(".row_element").removeClass("row_snap_selected");
+      var tname=$(this).attr("tracename");
       $(this).addClass("row_snap_selected");
+      $("#trace-name").val(tname);
+      var tlist=getElementByName(tname,trace_list);
+      $("#xvar").val(encodeCUPath(tlist.x));
+      $("#yvar").val(encodeCUPath(tlist.y));
       trace_selected = $(this).attr("id");
     }
     );
@@ -1068,18 +1092,50 @@
       if (tmpx == null && tmpy == null) {
         alert("INVALID scale type options");
       }
-      trace_list[tracename] = {
+      var telem={
+        name:tracename,
         x: tmpx,
         y: tmpy
-      }
+      };
+      trace_list.push(telem);
 
     });
 
+    $("#trace-up").click(function(e){
+      var tname=$("#" + trace_selected);
+      var prev=$(tname).prev();
+      var index=$(tname).index();
+      var index_prev=$(prev).index();
 
+      $(tname).insertBefore(prev);
+     
+      if(index>index_prev){
+        var elem=trace_list[index-1];
+        trace_list[index-1]=trace_list[index];
+        trace_list[index]=elem;
+      }
+      
+    });
+    $("#trace-down").click(function(e){
+      var tname=$("#" + trace_selected);
+      var next=$(tname).next();
+      var index=$(tname).index();
+      var index_after=$(next).index();
 
+      $(tname).insertAfter(next);
+      if(index_after>index){
+        var elem=trace_list[index_after];
+        trace_list[index_after]=trace_list[index];
+        trace_list[index]=elem;
+      }
+      
+    });
     $("#trace-rem").click(function () {
       if (trace_selected != null) {
+        var tname=$("#" + trace_selected).attr("tracename");
         $("#" + trace_selected).remove();
+        removeElementByName(tname,trace_list);
+        
       }
     });
 
@@ -1352,34 +1408,34 @@
 
     }
     node_list_interval = setInterval(function () {
-      node_live_selected = jchaos.getChannel(node_list, -1, null);
+      jchaos.getChannel(node_list, -1, function(dat){
+        node_live_selected = dat;
+        updateGenericTableDataset(node_live_selected);
+        updateTableFn(node_live_selected);
+  
+        if (node_live_selected.length == 0 || node_selected == null || node_name_to_index[encodeName(node_selected)] == null) {
+          return;
+        }
+  
+        var index = node_name_to_index[encodeName(node_selected)];
+        curr_cu_selected = node_live_selected[index];
+        updateGenericControl(curr_cu_selected);
+        //  $("div.cu-generic-control").html(chaosGenericControl(cu_live_selected[index]));
+        if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
+          var jsonhtml = json2html(curr_cu_selected, options, node_selected);
+          if (isCollapsable(curr_cu_selected)) {
+            jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+          }
+  
+          $("#cu-dataset").html(jsonhtml);
+  
+        }  
+      });
 
 
 
       // update all generic
-      updateGenericTableDataset(node_live_selected);
-      updateTableFn(node_live_selected);
-
-      if (node_live_selected.length == 0 || node_selected == null || node_name_to_index[encodeName(node_selected)] == null) {
-        return;
-      }
-
-      var index = node_name_to_index[encodeName(node_selected)];
-      curr_cu_selected = node_live_selected[index];
-      updateGenericControl(curr_cu_selected);
-      //  $("div.cu-generic-control").html(chaosGenericControl(cu_live_selected[index]));
-      if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
-        var jsonhtml = json2html(curr_cu_selected, options, node_selected);
-        if (isCollapsable(curr_cu_selected)) {
-          jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
-        }
-
-        $("#cu-dataset").html(jsonhtml);
-
-      }
-
-
-
+   
 
     }, options.Interval, updateTableFn);
 
@@ -1428,11 +1484,11 @@
         if (data.hasOwnProperty("us_desc")) {
           editorFn = unitServerSave;
           jsonEdit(templ, data.us_desc);
-          if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
+         if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
             data.us_desc.cu_desc.forEach(function (item) {
               if ((off_line[item.ndk_uid] != null) && (off_line[item])) {
                 jchaos.node(item.ndk_uid, "del", "cu", node_selected, null);
-              }
+              } 
             });
           }
         }
@@ -1455,13 +1511,15 @@
     }
 
     if (cmd == "del-nt_control_unit") {
-      var desc = jchaos.getDesc(node_selected, null);
+      node_multi_selected.forEach(function (nod){
+      var desc = jchaos.getDesc(nod, null);
       if (desc[0] != null && desc[0].hasOwnProperty("instance_description")) {
         var parent = desc[0].instance_description.ndk_parent;
-        confirm("Delete CU", "Your are deleting CU: \"" + node_selected + "\"(" + parent + ")", "Ok", function () {
-          jchaos.node(node_selected, "del", "cu", parent, null);
+        confirm("Delete CU", "Your are deleting CU: \"" + nod + "\"(" + parent + ")", "Ok", function () {
+          jchaos.node(nod, "del", "cu", parent, null);
         }, "Cancel");
       }
+    });
     }
     if (cmd == "copy-nt_control_unit") {
 
@@ -2576,6 +2634,12 @@
     html += '<label class="label span3">Graph keep seconds (s) </label>';
     html += '<input class="input-xlarge span9" id="graph-keepseconds" type="number" value="3600">';
 
+    html += '<label class="label span3" >Trace Type </label>';
+    html += '<select id="trace-type" class="span9">';
+    html += '<option value="multi" selected="multi">Multiple Independent Traces</option>';
+    html += '<option value="single">Single Trace</option>';
+    html += '</select>';
+
     html += '</div>';
     html += '</div>';
 
@@ -2629,18 +2693,16 @@
 
     html += '<label class="label span2">Name </label>';
     html += '<input class="input-xlarge span10" id="trace-name" title="Name of the trace" type="text" value="">';
-    html += '<label class="label span3" >Trace Type </label>';
-    html += '<select id="trace-type" class="span9">';
-    html += '<option value="multi" selected="multi">Multiple Independent Traces</option>';
-    html += '<option value="single">Single Trace</option>';
-    html += '</select>';
-
+    
     html += '<label class="label span1">X:</label>';
     html += '<input class="input-xlarge span11" type="text" title="port path to plot on X" id="xvar" value="timestamp">';
     html += '<label class="label span1">Y:</label>';
     html += '<input class="input-xlarge span11" type="text" id="yvar" title="port path to plot on Y" value="">';
-    html += '<a href="#" class="btn span5" id="trace-add" title="Add the following trace to the Graph" >Add Trace</a>';
-    html += '<a href="#" class="btn span5" id="trace-rem" title="Remove the selected trace" >Remove Trace</a>';
+    html += '<a href="#" class="btn span3" id="trace-add" title="Add the following trace to the Graph" >Add Trace</a>';
+    html += '<a href="#" class="btn span3" id="trace-rem" title="Remove the selected trace" >Remove Trace</a>';
+    html += '<a href="#" class="btn span2" id="trace-up" title="Move Trace up" >Trace UP</a>';
+    html += '<a href="#" class="btn span2" id="trace-down" title="Move Trace down" >Trace Down</a>';
+
 
     html += '</div>';
     html += '</div>';
@@ -2906,15 +2968,15 @@
     if (tracetype == "single") {
       serie.push({ name: graphname });
     }
-    for (key in trace_list) {
+    for (var cnt=0;cnt<trace_list.length;cnt++) {
       if (tracetype == "multi") {
-        serie.push({ name: key });
+        serie.push({ name: trace_list[cnt].name });
       }
-      if ((trace_list[key].x != null) && trace_list[key].x.hasOwnProperty("cu") && trace_list[key].x.cu != null) {
-        tracecuo[trace_list[key].x.cu] = "1";
+      if ((trace_list[cnt].x != null) && trace_list[cnt].x.hasOwnProperty("cu") && trace_list[cnt].x.cu != null) {
+        tracecuo[trace_list[cnt].x.cu] = "1";
       }
-      if ((trace_list[key].y != null) && trace_list[key].y.hasOwnProperty("cu") && trace_list[key].y.cu != null) {
-        tracecuo[trace_list[key].y.cu] = "1";
+      if ((trace_list[cnt].y != null) && trace_list[cnt].y.hasOwnProperty("cu") && trace_list[cnt].y.cu != null) {
+        tracecuo[trace_list[cnt].y.cu] = "1";
       }
     }
     for (key in tracecuo) {
@@ -2990,6 +3052,47 @@
     jchaos.variable("highcharts", "set", high_graphs, null);
   }
 
+  function restoreFullConfig(config,configToRestore){
+    if (! (configToRestore instanceof Array)){
+      return;
+    }
+    configToRestore.forEach(function(sel){
+
+    if((sel=="us")&& config.hasOwnProperty('us')&& (config.us instanceof Array)){
+      config.us.forEach(function(data){
+        confirm("US "+data.us_desc.ndk_uid, "Erase Or Join configuration", "Erase", function () {
+          if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
+            data.us_desc.cu_desc.forEach(function (item) {
+            jchaos.node(item.ndk_uid, "del", "cu", item.ndk_parent, null);       
+            });
+            unitServerSave(data.us_desc);
+
+          }
+        }, "Join",function(){ unitServerSave(data.us_desc);});
+        
+      });
+    }
+    if((sel=="agents")&&config.hasOwnProperty('agents')&& (config.agents instanceof Array)){
+      config.agents.forEach(function(json){
+        agentSave(json.info);
+      });
+    }
+    if((sel=="snapshots")&&config.hasOwnProperty('snapshots')&& (config.snapshots instanceof Array)){
+      config.snapshots.forEach(function(json){
+        jchaos.snapshot(json.name,"set","",json.dataset,function(d){
+          system.log("restoring snapshot '"+json.name+"' created:"+json.ts);
+        });
+      });
+    }
+    if((sel=="graphs")&&config.hasOwnProperty('graphs')&& (config.graphs instanceof Array)){
+      jchaos.variable("highcharts", "set", config.graphs, function(s){
+        system.log("restoring graphs:"+JSON.stringify(config.graphs));
+        high_graphs= config.graph;
+      });
+
+    }
+  });
+  }
   function saveFullConfig(name){
     //find all US
     var obj={};
@@ -3023,7 +3126,9 @@
         obj['snapshots'].push(snap);
         });
     // graphs
-    obj['graphs']=high_graphs;
+
+    obj['graphs']=jchaos.variable("highcharts", "get", null, null);
+
     var blob = new Blob([JSON.stringify(obj)], { type: "json;charset=utf-8" });
     saveAs(blob, "configuration.json");
   }
@@ -3296,7 +3401,7 @@
 
     html += '<li class="black">';
     html += '<a href="./configuration.php" role="button" class="show_agent" data-toggle="modal">';
-    html += '<i class="icon-gear green"></i><span class="opt-menu hidden-tablet">Configuration</span>';
+    html += '<i class="icon-key green"></i><span class="opt-menu hidden-tablet">Configuration</span>';
     html += '</a>';
     html += '</li>';
 
@@ -3696,6 +3801,7 @@
         items['sep6'] = "---------";
       }
     } else if (node_type == "nt_control_unit") {
+      items['del-' + node_type] = { name: "Del " + node_selected };
       items['copy-' + node_type] = { name: "Copy " + node_selected };
       var stat = jchaos.getChannel(node_selected, -1, null);
       var cmditem = updateCUMenu(stat[0]);
@@ -3916,11 +4022,11 @@
       $(list_graphs).html("Graph Selected \"" + graph_selected + "\"");
       trace_list = high_graphs[graph_selected].trace;
       var xp, yp;
-      for (g in trace_list) {
-        xp = encodeCUPath(trace_list[g].x);
-        yp = encodeCUPath(trace_list[g].y);
-        var tname = encodeName(g);
-        $('#table_trace').append('<tr class="row_element" id=trace_"' + tname + '"><td>' + g + '</td><td>' + xp + '</td><td>' + yp + '</td></tr>');
+      for (var cnt=0;cnt<trace_list.lenght;cnt++) {
+        xp = encodeCUPath(trace_list[cnt].x);
+        yp = encodeCUPath(trace_list[cnt].y);
+        var tname = encodeName(trace_list[cnt].name);
+        $('#table_trace').append('<tr class="row_element" id=trace_"' + tname + '" tracename="'+g+'"><td>' + g + '</td><td>' + xp + '</td><td>' + yp + '</td></tr>');
 
       }
       /*$("#table_trace tbody tr").click(function (e) {
@@ -4000,9 +4106,17 @@
   $.fn.saveFullConfig=function(){
     saveFullConfig();
   }
+  $.fn.restoreFullConfig=function(json,opt){
+    restoreFullConfig(json,opt);
+  }
   $.fn.chaosDashboard = function (opt) {
     main_dom = this;
     options = opt || {};
+    // clear all intervals
+    var interval_id = setInterval("", 9999); // Get a reference to the last
+    // interval +1
+  for (var i = 1; i < interval_id; i++)
+    clearInterval(i);
 
     /* jQuery chaining */
     return this.each(function () {

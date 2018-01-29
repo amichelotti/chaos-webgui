@@ -52,11 +52,10 @@ require_once('header.php');
 		<!-- <label class="label span3" >Upload Configuration </label> -->
 		<input type="file" id="upload-file" class="span3" />
 
-    	<select id="upload_selection" class="span2" multiple>
-    	<option value="all" selected="selected">ALL</option>
+    	<select id="upload_selection" class="span2" multiple="multiple">
     	<option value="us">UnitServers</option>
-    	<option value="agent">Agents</option>
-		<option value="snapshot">Snapshots</option>
+    	<option value="agents">Agents</option>
+		<option value="snapshots">Snapshots</option>
 		<option value="graphs">Graphs</option>
     	<option value="groups">Groups</option>
 		</select>
@@ -85,13 +84,17 @@ require_once('header.php');
 <script>
 
 	  $("#menu-dashboard").generateMenuBox();
+	 //$("#upload_selection").multiSelect("select_all");
+
 	  $("#save-configuration").on("click",function(){
 		  $(this).saveFullConfig();
 	  });
 	  $('#upload-file').on('change', function() {
-	var reader = new FileReader();
-	reader.onload = function(e) {
-				alert(e.target.result); // File contents here
+		var reader = new FileReader();
+		reader.onload = function(e) {
+		var cmdselected = $("#upload_selection").val();
+		$(this).restoreFullConfig(JSON.parse(e.target.result),cmdselected);
+		
 
 	};
 	reader.readAsText(this.files[0]);
