@@ -40,7 +40,7 @@
 
   function removeElementByName(name,tlist){
     for(var cnt=0;cnt<tlist.length;cnt++){
-      if(tlist.name==name){
+      if(tlist[cnt].name==name){
         tlist.splice(cnt,1);
         return;
       }
@@ -49,7 +49,7 @@
   }
   function getElementByName(name,tlist){
     for(var cnt=0;cnt<tlist.length;cnt++){
-      if(tlist.name==name){
+      if(tlist[cnt].name==name){
         return tlist[cnt];
       }
     }
@@ -953,17 +953,16 @@
         $("#xtype").val(info.xAxis.type);
         $("#xmax").val(info.xAxis.max);
         $("#xmin").val(info.xAxis.min);
-        $("#xname").val(info.yAxis.title.text);
 
+        $("#yname").val(info.yAxis.title.text);
         $("#ytype").val(info.yAxis.type);
-
         $("#ymax").val(info.yAxis.max);
         $("#ymin").val(info.yAxis.min);
         $("#graph-width").val(high_graphs[graph_selected].width);
         $("#graph-high").val(high_graphs[graph_selected].height);
         $("#graph-update").val();
         $("#graph-keepseconds").val(info.timebuffer);
-        if (info.shift) {
+        if (info.shift == "true") {
           $radio.filter("[value=true]").prop('checked', true);
 
         } else {
@@ -975,12 +974,12 @@
         $("#graphtype").val(graph_selected);
         $("#table_graph_items").find("tr:gt(0)").remove();
         var trace = high_graphs[graph_selected].trace;
-        for (var k in trace) {
-          var tname = encodeName(k);
+        for (var k=0;k<trace.length;k++) {
+          var tname = encodeName(trace[k].name);
           var xpath, ypath;
           xpath = encodeCUPath(trace[k].x);
           ypath = encodeCUPath(trace[k].y);
-          $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '" tracename="'+k+'""><td>' + k + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
+          $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '" tracename="'+trace[k].name+'""><td>' + trace[k].name + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
 
         };
       }
@@ -3013,7 +3012,27 @@
     tmp['tracetype'] = tracetype;
     tmp['shift'] = shift_true;
     tmp['timebuffer'] = keepseconds * 1000;
-
+    /*if(tracetype=="single"){
+      var labels=[];
+      for (var cnt=0;cnt<trace_list.length;cnt++) {
+        if(trace_list[cnt].x.const!=null){
+          var l={
+            point: {
+            xAxis: 0,
+            yAxis: 0,
+            x: trace_list[cnt].x.const,
+            y: 1
+        },
+      text: trace_list[cnt].name
+    };
+      labels.push(l);
+  } 
+    }
+    
+    tmp['annotations']=[{
+     
+      'labels':labels}];
+  }*/
     if (xtype == "datetime") {
       tmp['rangeSelector'] = {
         buttons: [{
@@ -4022,11 +4041,11 @@
       $(list_graphs).html("Graph Selected \"" + graph_selected + "\"");
       trace_list = high_graphs[graph_selected].trace;
       var xp, yp;
-      for (var cnt=0;cnt<trace_list.lenght;cnt++) {
+      for (var cnt=0;cnt<trace_list.length;cnt++) {
         xp = encodeCUPath(trace_list[cnt].x);
         yp = encodeCUPath(trace_list[cnt].y);
         var tname = encodeName(trace_list[cnt].name);
-        $('#table_trace').append('<tr class="row_element" id=trace_"' + tname + '" tracename="'+g+'"><td>' + g + '</td><td>' + xp + '</td><td>' + yp + '</td></tr>');
+        $('#table_trace').append('<tr class="row_element" id=trace_"' + tname + '" tracename="'+trace_list[cnt].name+'"><td>' + trace_list[cnt].name + '</td><td>' + xp + '</td><td>' + yp + '</td></tr>');
 
       }
       /*$("#table_trace tbody tr").click(function (e) {
