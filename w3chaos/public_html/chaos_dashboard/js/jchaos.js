@@ -582,6 +582,8 @@
 				}
 				if (jchaos.options.updateEachCall) {
 					handleFunc(result);
+					result.X=[];
+					result.Y=[];
 				} else {
 					if (!(datav.uid > 0)) {
 						// update if 0 or something else

@@ -47,6 +47,38 @@
     }
     return;
   }
+  function convertToCSV(json) {
+    return json;
+  }
+  function string2buffer(str){
+    var buf = new ArrayBuffer(str.length);
+    for(var i=0;i<str.length;i++){
+      buf[i]=str.charCodeAt(i);
+    }
+    return buf;
+  }
+  function convertBinaryToArrays(obj){
+    for(var k in obj){
+      if(obj[k] instanceof Object){
+        if(obj[k].hasOwnProperty("$binary")){
+          // ok translate
+          var type= obj[k].$binary.subType;
+          if(type == "84"){
+            // integers
+            var binary_string =  atob(obj[k].$binary.base64);
+            var arr=new Int32Array(string2buffer(binary_string));
+            obj[k] =  arr;
+          } else if(type == "86"){
+            var binary_string =  atob(obj[k].$binary.base64);
+            var arr=new Float64Array(string2buffer(binary_string));
+            obj[k] =arr;
+          }
+        } else {
+          convertBinaryToArrays(obj[k]);
+        }
+      }
+    }
+  }
   function getElementByName(name,tlist){
     for(var cnt=0;cnt<tlist.length;cnt++){
       if(tlist[cnt].name==name){
@@ -92,7 +124,7 @@
     //    instantMessage("Copy","copied to clipboard",900);
   }
   function encodeCUPath(path) {
-    if (path == null) {
+    if (path == null || path== "timestamp") {
       return "timestamp";
     }
     if (path.const) {
@@ -342,7 +374,9 @@
   }
   function encodeName(str) {
     var tt = str.replace(/[\/\:\.]/g, "_");
-    return tt;
+    var rr = tt.replace(/\+/g, "_p");
+    var kk = rr.replace(/\-/g, "_m")
+    return kk;
   }
   function toHHMMSS(sec_num) {
 
@@ -756,6 +790,7 @@
   function datasetSetup() {
     $("a.show_dataset").on('click', function () {
       var dataset = jchaos.getChannel(node_selected, -1, null);
+      convertBinaryToArrays(dataset[0]);
       var jsonhtml = json2html(dataset[0], options, node_selected);
       save_obj = {
         obj: dataset[0],
@@ -960,7 +995,7 @@
         $("#ymin").val(info.yAxis.min);
         $("#graph-width").val(high_graphs[graph_selected].width);
         $("#graph-high").val(high_graphs[graph_selected].height);
-        $("#graph-update").val();
+        $("#graph-update").val(high_graphs[graph_selected].update);
         $("#graph-keepseconds").val(info.timebuffer);
         if (info.shift == "true") {
           $radio.filter("[value=true]").prop('checked', true);
@@ -1421,6 +1456,7 @@
         updateGenericControl(curr_cu_selected);
         //  $("div.cu-generic-control").html(chaosGenericControl(cu_live_selected[index]));
         if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
+          convertBinaryToArrays(curr_cu_selected);
           var jsonhtml = json2html(curr_cu_selected, options, node_selected);
           if (isCollapsable(curr_cu_selected)) {
             jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
@@ -2742,17 +2778,30 @@
           if (item.output.hasOwnProperty(path.var)) {
             return item.output[path.var];
           }
-        }
-        if (path.dir == "input") {
+        } else if (path.dir == "input") {
           if (item.input.hasOwnProperty(path.var)) {
             return item.input[path.var];
           }
-        }
+        } else if (path.dir == "health") {
+          if (item.health.hasOwnProperty(path.var)) {
+            return item.health[path.var];
+          }
+        } 
+
       }
     }
     return null;
   }
-
+  function dir2channel(dir){
+    if(dir == "output"){
+      return 0;
+    } else if(dir == "health"){
+      return 4;
+    } else if(dir == "input"){
+      return 1;
+    } 
+    return 0;
+  }
   function runGraph(graphname) {
     if (graphname == null || graphname == "")
       return;
@@ -2828,7 +2877,7 @@
                 var tr = opt.trace;
                 var enable_shift = false;
                 for (k in tr) {
-                  if (tr[k].x == null) {
+                  if ((tr[k].x == "timestamp")||(tr[k].x == null)) {
                     x = (new Date()).getTime(); // current time
                     if (opt.highchart_opt.shift && ((x - opt.start_time) > opt.highchart_opt['timebuffer'])) {
                       enable_shift = true;
@@ -2838,7 +2887,7 @@
                   } else {
                     x = getValueFromCUList(data, tr[k].x);
                   }
-                  if (tr[k].y == null) {
+                  if ((tr[k].y == "timestamp")||(tr[k].y == null)) {
                     y = (new Date()).getTime(); // current time
                   } else if (tr[k].y.const != null) {
                     y = tr[k].y.const;
@@ -2890,28 +2939,40 @@
                 delete active_plots[graphname].interval;
                 var tr = opt.trace;
                 var chart = active_plots[graphname]['graph'];
+                var dirlist=[];
                 opt.culist.forEach(function (item) {
-                  jchaos.getHistory(item, 0, qstart, qstop, "", function (data) {
-                    var cnt = 0, ele_count = 0;
-                    for (k in tr) {
-                      if (tr[k].y.cu === item) {
-                        //iterate on the datasets
-                        var variable = tr[k].y.var;
-                        var ts = data.X[ele_count++];
-                        data.Y.forEach(function (ds) {
-                          if (ds.hasOwnProperty(variable)) {
-                            chart.series[cnt].addPoint([ts, ds[variable]], false, false);
-                          }
-                        });
-                      }
-                      cnt++;
+                  for (k in tr) {
+                    if(tr[k].y.cu === item){
+                      dirlist[tr[k].y.dir]= dir2channel(tr[k].y.dir);
                     }
-                    chart.redraw();
+                  }
+                  for(var dir in dirlist){
+                    jchaos.getHistory(item, dirlist[dir], qstart, qstop, "", function (data) {
+                        var cnt = 0, ele_count = 0;
+                        for (k in tr) {
+                          if (tr[k].y.cu === item) {
+                            //iterate on the datasets
+                            console.log("retrived \""+dir+"/"+item+"\" count="+ data.Y.length);
+                            var variable = tr[k].y.var;
+                            ele_count = 0;
+                            data.Y.forEach(function (ds) {
+                              if (ds.hasOwnProperty(variable)) {
+                                var ts = data.X[ele_count++];
+    
+                                chart.series[cnt].addPoint([ts, ds[variable]], false, false);
+                              }
+                            });
+                          }
+                          cnt++;
+                        }
+                        chart.redraw();
+                      });    
+                    }
                   });
+                  
                 });
-              })
-            }
-          }, {
+              }
+            }, {
             text: "Close",
             click: function () {
               clearInterval(active_plots[graphname].interval);
@@ -3214,7 +3275,8 @@
     html += '<div id="cu-dataset" class="json-dataset"></div>';
     html += '</div>';
     html += '<div class="modal-footer">';
-    html += '<a href="#" class="btn btn-primary savetofile" filename="dataset" extension="json">Save</a>';
+    html += '<a href="#" class="btn btn-primary savetofilecsv" filename="description" extension="csv">Export To CSV</a>';
+    html += '<a href="#" class="btn btn-primary savetofile" filename="dataset" extension="json">Save To File</a>';
     html += '<a href="#" class="btn btn-primary" id="dataset-update">Pause</a>';
     html += '<a href="#" class="btn btn-primary" id="dataset-close">Close</a>';
     html += '</div>';
@@ -3254,7 +3316,8 @@
     html += '<div id="cu-description" class="json-dataset"></div>';
     html += '</div>';
     html += '<div class="modal-footer">';
-    html += '<a href="#" class="btn btn-primary savetofile" filename="description" extension="json">Save</a>';
+    html += '<a href="#" class="btn btn-primary savetofilecsv" filename="description" extension="csv">Export To CSV</a>';
+    html += '<a href="#" class="btn btn-primary savetofile icon-save" filename="description" extension="json">Save To File</a>';
     html += '<a href="#" class="btn btn-primary" id="description-close">Close</a>';
     html += '</div>';
     html += '</div>';
@@ -4039,7 +4102,11 @@
       $(this).addClass("row_snap_selected");
       graph_selected = $(this).attr("id");
       $(list_graphs).html("Graph Selected \"" + graph_selected + "\"");
-      trace_list = high_graphs[graph_selected].trace;
+      if(high_graphs[graph_selected].trace instanceof Array){
+        trace_list = high_graphs[graph_selected].trace;
+      } else {
+        trace_list=[];
+      }
       var xp, yp;
       for (var cnt=0;cnt<trace_list.length;cnt++) {
         xp = encodeCUPath(trace_list[cnt].x);
@@ -4180,14 +4247,17 @@
             saveAs(blob, save_obj.fname + "." + save_obj.fext);
           }
         }
-
       });
-
-
-
-
-
-
+        $(".savetofilecsv").on("click", function (e) {
+          var t = $(e.target);
+          if (save_obj instanceof Object) {
+            if (save_obj.fext == "json") {
+              var str =convertToCSV(save_obj.obj);
+              var blob = new Blob([str], { type: "text;charset=utf-8" });
+              saveAs(blob, save_obj.fname + ".csv");
+            }
+          }
+      });
     });
-  };
+  }
 })(jQuery);
