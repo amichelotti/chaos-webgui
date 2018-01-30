@@ -66,12 +66,18 @@
           if(type == "84"){
             // integers
             var binary_string =  atob(obj[k].$binary.base64);
-            var arr=new Int32Array(string2buffer(binary_string));
-            obj[k] =  arr;
+            if((binary_string.length%4) == 0){
+              var arr=new Int32Array(string2buffer(binary_string));
+              obj[k] =  arr;
+            }
           } else if(type == "86"){
+            
             var binary_string =  atob(obj[k].$binary.base64);
-            var arr=new Float64Array(string2buffer(binary_string));
-            obj[k] =arr;
+            if((binary_string.length%8) == 0){
+
+              var arr=new Float64Array(string2buffer(binary_string));
+              obj[k] =arr;
+            }
           }
         } else {
           convertBinaryToArrays(obj[k]);
@@ -929,7 +935,10 @@
       if (e.keyCode == 13) {
         var id = this.id;
         var attr = id.split("-")[1];
-        jchaos.setAttribute(node_selected, attr, this.value);
+        jchaos.setAttribute(node_selected, attr, this.value,function(){
+          instantMessage("Attribute ","\""+attr+"\"=\""+this.value+ "\" sent",1000)
+
+        });
         $("#" + this.id).toggle();
         return false;
       }
@@ -1232,7 +1241,9 @@
       } else {
         cuselection = node_selected;
       }
-      jchaos.sendCUCmd(cuselection, alias, cmdparam);
+      jchaos.sendCUCmd(cuselection, alias, cmdparam,function(d){
+        instantMessage("Command ","Command:\""+alias+"\" params:\""+cmdparam+ "\" sent",1000)
+      });
 
     });
 
@@ -1247,33 +1258,42 @@
       if (cuselection != null && cmd != null) {
         if (cmd == "init") {
           jchaos.node(cuselection, "init", "cu", null, function (data) {
+            instantMessage("Command ","Command:\""+cmd+"\" sent",1000);
+
           });
         } else if (cmd == "deinit") {
           jchaos.node(cuselection, "deinit", "cu", null, function (data) {
+            instantMessage("Command ","Command:\""+cmd+"\" sent",1000);
+
           });
         } else if (cmd == "bypasson") {
           jchaos.setBypass(cuselection, true, function (data) {
+            instantMessage("Command ","Command:\""+cmd+"\" sent",1000);
 
           });
           return;
         } else if (cmd == "bypassoff") {
           jchaos.setBypass(cuselection, false, function (data) {
+            instantMessage("Command ","Command:\""+cmd+"\" sent",1000);
 
           });
           return;
         } else if (cmd == "load") {
           jchaos.loadUnload(cuselection, true, function (data) {
+            instantMessage("Command ","Command:\""+cmd+"\" sent",1000);
 
           });
           return;
         } else if (cmd == "unload") {
           jchaos.loadUnload(cuselection, false, function (data) {
+            instantMessage("Command ","Command:\""+cmd+"\" sent",1000);
 
           });
           return;
         }
 
         jchaos.sendCUCmd(cuselection, cmd, "", function (data) {
+          instantMessage("Command ","Command:\""+cmd+"\" sent",1000);
 
         });
 
@@ -1283,6 +1303,8 @@
       var cuselection;
       var cmdselected = $("#cu_full_commands option:selected").val();
       var arguments = retriveCurrentCmdArguments(cmdselected);
+      var force = $("#cmd-force option:selected").val();
+
       arguments.forEach(function (item, index) {
         var value = $("#" + cmdselected + "_" + item["name"]).val();
         if ((value == null || value == "") && (item["optional"] == false)) {
@@ -1297,7 +1319,11 @@
       } else {
         cuselection = node_selected;
       }
-      jchaos.sendCUCmd(cuselection, cmdselected, parm);
+      jchaos.sendCUFullCmd(cuselection, cmdselected, parm,((force == "normal")?0:1),0,function(){
+        $("#mdl-commands").modal("hide");
+        instantMessage("Command ","Command:\""+cmdselected+"\"  params:"+parm+" sent",1000);
+
+      });
     });
     $("#command-close").click(function () {
       $("#mdl-commands").modal("hide");
@@ -1601,13 +1627,13 @@
 
     if (cmd == "start-node") {
       jchaos.node(node_selected, "start", "us", function () {
-        instantMessage("US START", "Starting " + node_selected + " via agent", 500);
+        instantMessage("US START", "Starting " + node_selected + " via agent", 1000);
       });
       return;
     }
     if (cmd == "stop-node") {
       jchaos.node(node_selected, "stop", "us", function () {
-        instantMessage("US STOP", "Stopping " + node_selected + " via agent", 500);
+        instantMessage("US STOP", "Stopping " + node_selected + " via agent", 1000);
 
       });
       return;
@@ -1622,7 +1648,7 @@
       confirm("Do you want to KILL?", "Pay attention ANY CU will be killed as well", "Kill",
         function () {
           jchaos.node(node_selected, "kill", "us", function () {
-            instantMessage("US KILL", "Killing " + node_selected + " via agent", 500);
+            instantMessage("US KILL", "Killing " + node_selected + " via agent", 1000);
           })
         }, "Joke", function () { });
       return;
@@ -1631,7 +1657,7 @@
       confirm("Do you want to RESTART?", "Pay attention ANY CU will be restarted as well", "Restart",
         function () {
           jchaos.node(node_selected, "restart", "us", function () {
-            instantMessage("US RESTARTING", "Restarting " + node_selected + " via agent", 500);
+            instantMessage("US RESTARTING", "Restarting " + node_selected + " via agent", 1000);
           })
         }, "Joke", function () { });
       return;
@@ -3275,7 +3301,7 @@
     html += '<div id="cu-dataset" class="json-dataset"></div>';
     html += '</div>';
     html += '<div class="modal-footer">';
-    html += '<a href="#" class="btn btn-primary savetofilecsv" filename="description" extension="csv">Export To CSV</a>';
+   // html += '<a href="#" class="btn btn-primary savetofilecsv" filename="description" extension="csv">Export To CSV</a>';
     html += '<a href="#" class="btn btn-primary savetofile" filename="dataset" extension="json">Save To File</a>';
     html += '<a href="#" class="btn btn-primary" id="dataset-update">Pause</a>';
     html += '<a href="#" class="btn btn-primary" id="dataset-close">Close</a>';
@@ -3316,7 +3342,7 @@
     html += '<div id="cu-description" class="json-dataset"></div>';
     html += '</div>';
     html += '<div class="modal-footer">';
-    html += '<a href="#" class="btn btn-primary savetofilecsv" filename="description" extension="csv">Export To CSV</a>';
+   // html += '<a href="#" class="btn btn-primary savetofilecsv" filename="description" extension="csv">Export To CSV</a>';
     html += '<a href="#" class="btn btn-primary savetofile icon-save" filename="description" extension="json">Save To File</a>';
     html += '<a href="#" class="btn btn-primary" id="description-close">Close</a>';
     html += '</div>';
@@ -3395,6 +3421,11 @@
     html += '</div>';
 
     html += '<div class="modal-footer">';
+    html += '<select id="cmd-force">';
+    html += '<option value="normal" selected="selected">Normal</option>';
+    html += '<option value="force">Force</option>';
+    html += '</select>';
+
     html += '<a href="#" class="btn btn-primary" id="command-send">Send</a>';
     html += '<a href="#" class="btn btn-primary" id="command-close">Close</a>';
     html += '</div>';

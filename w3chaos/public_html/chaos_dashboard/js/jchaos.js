@@ -486,7 +486,10 @@
 		 * Send a command to a set of devices
 		 * 
 		 * */
-		jchaos.sendCUCmd = function (devs, cmd, param, handleFunc) {
+		jchaos.sendCUCmd = function (devs, cmd, param,handleFunc) {
+			jchaos.sendCUFullCmd(devs,cmd,param,0,0,handleFunc);
+		}
+		jchaos.sendCUFullCmd = function (devs, cmd, param, force,prio,handleFunc) {
 			var dev_array = jchaos.convertArray2CSV(devs);
 			var params = "";
 			if (dev_array == "") {
@@ -504,7 +507,7 @@
 				params = param;
 
 			}
-			var str_url_cu = "dev=" + dev_array + "&cmd=" + cmd;
+			var str_url_cu = "dev=" + dev_array + "&cmd=" + cmd +"&mode="+force+"&prio="+prio;
 			if (params != "") {
 				str_url_cu = str_url_cu + "&parm=" + params;
 			}
