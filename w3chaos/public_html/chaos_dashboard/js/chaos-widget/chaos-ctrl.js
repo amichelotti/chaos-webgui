@@ -51,39 +51,45 @@
     return json;
   }
   function string2buffer(str){
-    var buf = new ArrayBuffer(str.length);
+    var buf = new Uint8Array(str.length);
     for(var i=0;i<str.length;i++){
       buf[i]=str.charCodeAt(i);
     }
-    return buf;
+    return buf.buffer;
   }
   function convertBinaryToArrays(obj){
-    for(var k in obj){
-      if(obj[k] instanceof Object){
-        if(obj[k].hasOwnProperty("$binary")){
-          // ok translate
-          var type= obj[k].$binary.subType;
+    if(obj.hasOwnProperty("$binary")){
+      var objtmp;
+      var type= obj.$binary.subType;
           if(type == "84"){
             // integers
-            var binary_string =  atob(obj[k].$binary.base64);
+            var binary_string =  atob(obj.$binary.base64);
             if((binary_string.length%4) == 0){
-              var arr=new Int32Array(string2buffer(binary_string));
-              obj[k] =  arr;
+              var arrbuf=string2buffer(binary_string);
+              var arr=new Int32Array(arrbuf);  
+              objtmp =  Array.prototype.slice.call(arr);
             }
           } else if(type == "86"){
             
-            var binary_string =  atob(obj[k].$binary.base64);
+            var binary_string =  atob(obj.$binary.base64);
             if((binary_string.length%8) == 0){
 
               var arr=new Float64Array(string2buffer(binary_string));
-              obj[k] =arr;
+              objtmp =Array.prototype.slice.call(arr);
             }
+          } else {
+            objtmp = obj;
           }
-        } else {
-          convertBinaryToArrays(obj[k]);
-        }
-      }
+          return objtmp;
     }
+
+    for(var k in obj){
+      if(obj[k] instanceof Object){
+        obj[k] = convertBinaryToArrays(obj[k]);
+      }
+      
+    }
+    return obj;
   }
   function getElementByName(name,tlist){
     for(var cnt=0;cnt<tlist.length;cnt++){
@@ -136,10 +142,16 @@
     if (path.const) {
       return path.const;
     }
-    return path.cu + "/" + path.dir + "/" + path.var;
+    var str=path.cu + "/" + path.dir + "/" + path.var;
+    if(path.index!=null){
+      str+="["+path.index+"]";
+    }
+    return str;
   }
 
   function decodeCUPath(cupath) {
+    var regex_vect = /(.*)\/(.*)\/(.*)\[(\d+)\]$/;
+
     var regex = /(.*)\/(.*)\/(.*)$/;
     var tmp=cupath;
     if ($.isNumeric(cupath)) {
@@ -148,17 +160,31 @@
         dir: null,
         var: null,
         const: Number(cupath),
+        index:null, // in case of vectors
         origin:cupath
       };
       return tmp;
     }
-    var match = regex.exec(cupath);
+    var match = regex_vect.exec(cupath);
     if (match != null) {
       tmp = {
         cu: match[1],
         dir: match[2],
         var: match[3],
         const: null,
+        index:match[4],
+        origin:cupath
+      };
+      return tmp;
+    }
+     match = regex.exec(cupath);
+    if (match != null) {
+      tmp = {
+        cu: match[1],
+        dir: match[2],
+        var: match[3],
+        const: null,
+        index:null,
         origin:cupath
       };
     }
@@ -796,8 +822,8 @@
   function datasetSetup() {
     $("a.show_dataset").on('click', function () {
       var dataset = jchaos.getChannel(node_selected, -1, null);
-      convertBinaryToArrays(dataset[0]);
-      var jsonhtml = json2html(dataset[0], options, node_selected);
+      var converted=convertBinaryToArrays(dataset[0]);
+      var jsonhtml = json2html(converted, options, node_selected);
       save_obj = {
         obj: dataset[0],
         fname: "dataset_"+encodeName(node_selected),
@@ -838,9 +864,15 @@
           var cuitem = {};
           var portdir = $(e.currentTarget).attr("portdir");
           var portname = $(e.currentTarget).attr("portname");
+          var portarray = $(e.currentTarget).attr("portarray");
           cuitem['show-graph'] = { name: "Show Graphs.." };
-          cuitem['plot-x'] = { name: "Plot " + portdir + "/" + portname + " on X" };
-          cuitem['plot-y'] = { name: "Plot " + portdir + "/" + portname + " on Y" };
+          if(portarray == "0"){
+            cuitem['plot-x'] = { name: "Plot " + portdir + "/" + portname + " on X" };
+            cuitem['plot-y'] = { name: "Plot " + portdir + "/" + portname + " on Y" };
+          } else {
+            cuitem['plot-x'] = { name: "Plot Array("+portarray+") " + portdir + "/" + portname + "[] on X" };
+            cuitem['plot-y'] = { name: "Plot Array("+portarray+") " + portdir + "/" + portname + "[] on Y" };
+          }
 
 
 
@@ -855,19 +887,21 @@
           return {
 
             callback: function (cmd, options) {
+              var fullname;
+              if(portarray == "0"){
+                fullname = node_selected + "/" + portdir + "/" + portname;
+              } else{
+                fullname = node_selected + "/" + portdir + "/" + portname +"[0]";
+              }
               if (cmd == "show-graph") {
-
                 $("#mdl-graph-list").modal("show");
               } else if (cmd == "plot-x") {
                 $("#mdl-graph").modal("show");
-
-                var fullname = node_selected + "/" + portdir + "/" + portname;
                 $("#trace-name").val(node_selected);
                 $("#xvar").val(fullname);
               } else if (cmd == "plot-y") {
                 $("#mdl-graph").modal("show");
                 $("#trace-name").val(node_selected);
-                var fullname = node_selected + "/" + portdir + "/" + portname;
                 $("#yvar").val(fullname);
 
               }
@@ -1131,10 +1165,11 @@
         tmpy = decodeCUPath(ypath);
       }
       var tname = encodeName(tracename);
-      $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '"><td>' + tracename + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
+      $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '" tracename="'+tracename+'"><td>' + tracename + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
       if (tmpx == null && tmpy == null) {
         alert("INVALID scale type options");
       }
+      trace_selected=tname;
       var telem={
         name:tracename,
         x: tmpx,
@@ -1178,7 +1213,8 @@
         var tname=$("#" + trace_selected).attr("tracename");
         $("#" + trace_selected).remove();
         removeElementByName(tname,trace_list);
-        
+        trace_selected=null;
+
       }
     });
 
@@ -1482,9 +1518,9 @@
         updateGenericControl(curr_cu_selected);
         //  $("div.cu-generic-control").html(chaosGenericControl(cu_live_selected[index]));
         if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
-          convertBinaryToArrays(curr_cu_selected);
-          var jsonhtml = json2html(curr_cu_selected, options, node_selected);
-          if (isCollapsable(curr_cu_selected)) {
+          var converted=convertBinaryToArrays(curr_cu_selected);
+          var jsonhtml = json2html(converted, options, node_selected);
+          if (isCollapsable(converted)) {
             jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
           }
   
@@ -2802,14 +2838,29 @@
       if (path.cu == item.health.ndk_uid) {
         if (path.dir == "output") {
           if (item.output.hasOwnProperty(path.var)) {
+            if(path.index!=null){
+              var val=convertBinaryToArrays(item.output[path.var]);
+              
+              return val[path.index];
+            }
             return item.output[path.var];
           }
         } else if (path.dir == "input") {
           if (item.input.hasOwnProperty(path.var)) {
+            if(path.index!=null){
+               var val=convertBinaryToArrays(item.input[path.var]);
+              return val[path.index];
+            }
             return item.input[path.var];
           }
         } else if (path.dir == "health") {
           if (item.health.hasOwnProperty(path.var)) {
+            if(path.index!=null){
+              var val=convertBinaryToArrays(item.health[path.var]);
+
+              
+              return val[path.index];
+            }
             return item.health[path.var];
           }
         } 
@@ -3675,13 +3726,19 @@
           if (json.hasOwnProperty(key)) {
             html += '<li>';
             var keyclass = "";
+            var portarray=0;
             if (isCollapsable(json[key])) {
-              keyclass = "json-string";
+              if(json[key] instanceof Array){
+                keyclass = "json-key";
+                portarray=json[key].length;
+              } else {
+                keyclass = "json-string";
+              }
             } else {
               keyclass = "json-key";
             }
             var keyRepr = options.withQuotes ?
-              '<span class="' + keyclass + '" id=' + pather + '-' + key + ' portdir="' + pather + '" portname="' + key + '">"' + key + '"</span>' : key;
+              '<span class="' + keyclass + '" id=' + pather + '-' + key + ' portdir="' + pather + '" portname="' + key + '" portarray="'+portarray+'">"' + key + '"</span>' : key;
             /* Add toggle button if item is collapsable */
             if (isCollapsable(json[key])) {
               html += '<a  class="json-toggle">' + keyRepr + '</a>';

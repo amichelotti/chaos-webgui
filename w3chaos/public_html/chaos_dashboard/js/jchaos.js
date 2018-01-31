@@ -7,6 +7,7 @@
 		var jchaos = {};
 
 		jchaos.ops_on_going = 0;
+		jchaos.ops_abort=false;
 		jchaos.lastChannel = {};
 		jchaos.options = {
 			updateEachCall: false,
@@ -56,6 +57,10 @@
 			// request.setRequestHeader("Content-Type", 'application/json');
 			jchaos.ops_on_going++;
 			request.onreadystatechange = function (e) {
+				if(jchaos.ops_abort){
+					request.abort();
+					return;
+				}
 				//console.log("answer:"+request.status + " state:"+request.readyState);
 				if (request.readyState == 4) {
 					jchaos.ops_on_going--;
