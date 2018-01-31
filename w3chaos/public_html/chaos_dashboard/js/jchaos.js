@@ -57,10 +57,7 @@
 			// request.setRequestHeader("Content-Type", 'application/json');
 			jchaos.ops_on_going++;
 			request.onreadystatechange = function (e) {
-				if(jchaos.ops_abort){
-					request.abort();
-					return;
-				}
+				
 				//console.log("answer:"+request.status + " state:"+request.readyState);
 				if (request.readyState == 4) {
 					jchaos.ops_on_going--;
@@ -564,24 +561,13 @@
 			var str_url_cu = "dev=" + dev_array + "&cmd=" + cmd + "&parm=" + JSON.stringify(opt);
 
 			jchaos.basicPost("CU", str_url_cu, function (datav) {
-				if (datav.uid > 0) {
-					jchaos.getHistoryBase(devs, opt, datav.uid, result, handleFunc);
-				}
+				var ret=true;
 				if (opt.var != "") {
-					/*
-			for(ele in datav.data){
-			result.X.push(Number(ele.ts.$numberLong));
-			result.Y.push(ele.val);
-			}*/
 					datav.data.forEach(function (ele) {
 						result.X.push(Number(ele.ts));
 						result.Y.push(ele.val);
 					});
 				} else {
-					/*   for(ele in datav.data){
-			result.X.push(Number(ele.dpck_ats.$numberLong));
-			result.Y.push(ele.val);
-			}*/
 					datav.data.forEach(function (ele) {
 						result.X.push(Number(ele.dpck_ats));
 						result.Y.push(ele);
@@ -589,7 +575,7 @@
 
 				}
 				if (jchaos.options.updateEachCall) {
-					handleFunc(result);
+					ret=handleFunc(result);
 					result.X=[];
 					result.Y=[];
 				} else {
@@ -599,7 +585,9 @@
 
 					}
 				}
-
+				if (ret && (datav.uid > 0)) {
+					jchaos.getHistoryBase(devs, opt, datav.uid, result, handleFunc);
+				}
 			});
 		}
 

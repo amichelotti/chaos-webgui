@@ -2945,7 +2945,11 @@
               }
               $(e.target).html("Pause Live");
               var chart = active_plots[graphname]['graph'];
+              var seriesLength = chart.series.length;
 
+              for(var i = seriesLength -1; i > -1; i--) {
+                chart.series[i].setData([]);
+            }
               var refresh = setInterval(function () {
                 var data = jchaos.getChannel(opt.culist, -1, null);
                 var set = [];
@@ -3012,11 +3016,17 @@
                 if (qstop == "" || qstop == "NOW") {
                   qstop = (new Date()).getTime();
                 }
-                clearInterval(active_plots[graphname].interval);
-                delete active_plots[graphname].interval;
+                if(active_plots[graphname].hasOwnProperty("interval") && (interval!=null)){
+                  clearInterval(active_plots[graphname].interval);
+                  delete active_plots[graphname].interval;
+                }
                 var tr = opt.trace;
                 var chart = active_plots[graphname]['graph'];
                 var dirlist=[];
+                var seriesLength = chart.series.length;
+                for(var i = seriesLength -1; i > -1; i--) {
+                    chart.series[i].setData([]);
+                }
                 opt.culist.forEach(function (item) {
                   for (k in tr) {
                     if(tr[k].y.cu === item){
@@ -3031,18 +3041,28 @@
                             //iterate on the datasets
                             console.log("retrived \""+dir+"/"+item+"\" count="+ data.Y.length);
                             var variable = tr[k].y.var;
+                            var index=tr[k].y.index;
                             ele_count = 0;
                             data.Y.forEach(function (ds) {
                               if (ds.hasOwnProperty(variable)) {
                                 var ts = data.X[ele_count++];
-    
-                                chart.series[cnt].addPoint([ts, ds[variable]], false, false);
+                                var tmp=ds[variable];
+
+                                if(index!=null){
+                                  chart.series[cnt].addPoint([ts, tmp[index]], false, false);
+
+                                } else {
+                                  chart.series[cnt].addPoint([ts, tmp], false, false);
+
+                                }
                               }
                             });
                           }
                           cnt++;
                         }
                         chart.redraw();
+                        // true until close if false the history loop retrive breaks
+                        return active_plots.hasOwnProperty(graphname);
                       });    
                     }
                   });
