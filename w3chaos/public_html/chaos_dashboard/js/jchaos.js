@@ -82,15 +82,15 @@
 
 						}
 					} else {
-						var str = "POST " + url + " body:\"" + params + "\" went wrong, result:" + request.status + " state:" + request.readyState; console.log(str);
-						throw str;
+						var str = "POST " + url + " body:\"" + params + "\" went wrong, result:" + request.status + " state:" + request.readyState; 
+						console.error(str);
 					}
 				}
 
 			}
 			request.onerror = function (e) {
-				console.error(request.statusText);
-				throw "error:" + request.statusText;
+				console.error("request error:"+request.statusText);
+				//throw "error:" + request.statusText;
 			};
 			//console.log("sending:"+params);
 			request.send(params);

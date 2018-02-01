@@ -1124,6 +1124,17 @@
     });
     $("#graph-delete").on('click', function () {
       delete high_graphs[graph_selected];
+      
+      if (active_plots[graph_selected].hasOwnProperty('interval')) {
+      
+        clearInterval(active_plots[graph_selected].interval);
+        delete active_plots[graph_selected].interval;
+      }
+      if(active_plots[grap_selected]!=null){
+        $("#dialog-"+active_plots[grap_selected].count).modal("hide");
+        delete active_plots[graph_selected];
+      }
+      graph_selected=null;      
       jchaos.variable("highcharts", "set", high_graphs, null);
       updateGraph();
     });
@@ -3016,7 +3027,7 @@
                 if (qstop == "" || qstop == "NOW") {
                   qstop = (new Date()).getTime();
                 }
-                if(active_plots[graphname].hasOwnProperty("interval") && (interval!=null)){
+                if(active_plots[graphname].hasOwnProperty("interval") && (active_plots[graphname].interval!=null)){
                   clearInterval(active_plots[graphname].interval);
                   delete active_plots[graphname].interval;
                 }
