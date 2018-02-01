@@ -47,6 +47,15 @@
     }
     return;
   }
+  function replaceElementByName(name_dst,elemsrc,tlist){
+    for(var cnt=0;cnt<tlist.length;cnt++){
+      if(tlist[cnt].name==name_dst){
+        tlist[cnt]=elemsrc
+        return;
+      }
+    }
+    return;
+  }
   function convertToCSV(json) {
     return json;
   }
@@ -1106,13 +1115,13 @@
 
     $("#graph-run").on('click', function () {
 
-      runGraph($("#graph_save_name").val());
+      runGraph();
       $("#mdl-graph").modal("hide");
 
     });
 
     $("#graph-list-run").on('click', function () {
-      runGraph(graph_selected);
+      runGraph();
       $("#mdl-graph-list").modal("hide");
 
     });
@@ -1188,6 +1197,43 @@
       };
       trace_list.push(telem);
 
+    });
+
+    $("#trace-replace").click(function () {
+      var tracename = $("#trace-name").val();
+      var xpath = $("#xvar").val();
+      var ypath = $("#yvar").val();
+      var tmpx, tmpy;
+     
+      if (xpath == "") {
+        xpath = "timestamp";
+      } else {
+        tmpx = decodeCUPath(xpath);
+      }
+      if (ypath == "") {
+        ypath = "timestamp";
+      } else {
+        tmpy = decodeCUPath(ypath);
+      }
+      if ((tmpx == null) && (tmpy == null)) {
+        alert("INVALID paths");
+        return;
+      }
+      
+      
+      var tname = encodeName(tracename);
+      var replace_row='<tr class="row_element" id="trace-' + tname + '" tracename="'+tracename+'"><td>' + tracename + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>';
+      var toreplaceTrace=$("#" + trace_selected).attr("tracename");
+
+      $("#" + trace_selected).replaceWith(replace_row);
+     
+      var telem={
+        name:tracename,
+        x: tmpx,
+        y: tmpy
+      };
+      replaceElementByName(toreplaceTrace,telem,trace_list);
+      trace_selected=tname;
     });
 
     $("#trace-up").click(function(e){
@@ -2806,8 +2852,10 @@
     html += '<input class="input-xlarge span11" type="text" title="port path to plot on X" id="xvar" value="timestamp">';
     html += '<label class="label span1">Y:</label>';
     html += '<input class="input-xlarge span11" type="text" id="yvar" title="port path to plot on Y" value="">';
-    html += '<a href="#" class="btn span3" id="trace-add" title="Add the following trace to the Graph" >Add Trace</a>';
-    html += '<a href="#" class="btn span3" id="trace-rem" title="Remove the selected trace" >Remove Trace</a>';
+    html += '<a href="#" class="btn span2" id="trace-add" title="Add the following trace to the Graph" >Add Trace</a>';
+    html += '<a href="#" class="btn span2" id="trace-replace" title="Replace the following trace to the Graph" >Replace Trace</a>';
+
+    html += '<a href="#" class="btn span2" id="trace-rem" title="Remove the selected trace" >Remove Trace</a>';
     html += '<a href="#" class="btn span2" id="trace-up" title="Move Trace up" >Trace UP</a>';
     html += '<a href="#" class="btn span2" id="trace-down" title="Move Trace down" >Trace Down</a>';
 
@@ -2890,12 +2938,15 @@
     } 
     return 0;
   }
-  function runGraph(graphname) {
-    if (graphname == null || graphname == "")
+  function runGraph() {
+    if (graph_selected == null || graph_selected == ""){
+      alert("No Graph selected");
       return;
-    var opt = high_graphs[graphname];
+    }
+    console.log("Selected graph:"+graph_selected);
+    var opt = high_graphs[graph_selected];
     if (!(opt instanceof Object)) {
-      alert("\"" + graphname + "\" not a valid graph ");
+      alert("\"" + graph_selected + "\" not a valid graph ");
       return;
     }
     /// fix things before
@@ -2912,11 +2963,16 @@
     if (!$.isNumeric(opt.highchart_opt.yAxis.min)) {
       opt.highchart_opt.yAxis.min = null;
     }
+   
+    // check if exist
+    if(active_plots[graph_selected] != null && active_plots[graph_selected].dialog != null){
+      $("#dialog-"+active_plots[graph_selected].dialog).show();
+      return;
+    }
     var count = 0;
     for (k in active_plots) {
       if (active_plots.hasOwnProperty(k)) count++;
     }
-
     if (count < 10) {
       $("#dialog-" + count).dialog({
         modal: false,
@@ -2928,13 +2984,16 @@
         resizable: true,
         dialogClass: 'no-close',
         open: function () {
-
+          
           var chart = new Highcharts.chart("graph-" + count, opt.highchart_opt);
-          $("#dialog-" + count).attr("graphname", graphname);
+          $(this).attr("graphname", graph_selected);
           var start_time = (new Date()).getTime();
+          var graphname=$(this).attr("graphname");
 
-          active_plots[graphname] = {
-            graphname: graphname,
+          console.log("New Graph("+count+"):"+graphname+ " has been created");
+
+          active_plots[graph_selected] = {
+            graphname: graph_selected,
             graph: chart,
             highchart_opt: opt.highchart_opt,
             dialog: count,
@@ -2944,9 +3003,12 @@
         },
         buttons: [
           {
-            id: "dialog-live",
             text: "Live",
             click: function (e) {
+            
+              var graphname=$(this).attr("graphname");
+              console.log("Start  Live Graph:"+graphname);
+              var graph_opt = high_graphs[graphname];
 
               if (active_plots[graphname].hasOwnProperty('interval')) {
                 clearInterval(active_plots[graphname].interval);
@@ -2962,7 +3024,7 @@
                 chart.series[i].setData([]);
             }
               var refresh = setInterval(function () {
-                var data = jchaos.getChannel(opt.culist, -1, null);
+                var data = jchaos.getChannel(graph_opt.culist, -1, null);
                 var set = [];
                 var x, y;
                 var cnt = 0;
@@ -2971,7 +3033,7 @@
                 for (k in tr) {
                   if ((tr[k].x == "timestamp")||(tr[k].x == null)) {
                     x = (new Date()).getTime(); // current time
-                    if (opt.highchart_opt.shift && ((x - opt.start_time) > opt.highchart_opt['timebuffer'])) {
+                    if (graph_opt.highchart_opt.shift && ((x - graph_opt.start_time) > graph_opt.highchart_opt['timebuffer'])) {
                       enable_shift = true;
                     }
                   } else if (tr[k].x.const != null) {
@@ -2987,36 +3049,43 @@
                     y = getValueFromCUList(data, tr[k].y);
 
                   }
-                  if (opt.highchart_opt['tracetype'] == "multi") {
+                  if (graph_opt.highchart_opt['tracetype'] == "multi") {
                     chart.series[cnt++].addPoint([x, y], false, enable_shift);
                   } else {
                     set.push({ x, y });
                   }
                 }
-                if (opt.highchart_opt['tracetype'] == "single") {
+                if (graph_opt.highchart_opt['tracetype'] == "single") {
                   chart.series[0].setData(set, true, true, true);
                 }
                 chart.redraw();
-              }, opt.update);
+              }, graph_opt.update);
               active_plots[graphname]['interval'] = refresh;
 
             }
           },
           {
-            id: "dialog-history",
             text: "History",
             click: function () {
-              if (opt.highchart_opt.xAxis.type != "datetime") {
+              var graphname=$(this).attr("graphname");
+              console.log("Start  History Graph:"+graphname);
+              var graph_opt = high_graphs[graphname];
+
+              if (graph_opt.highchart_opt.xAxis.type != "datetime") {
                 alert("X axis must be configured as datetime, for history plots!")
                 return;
               }
-              if (opt.highchart_opt.yAxis.type == "datetime") {
+              if (graph_opt.highchart_opt.yAxis.type == "datetime") {
                 alert("Y axis cannot be as datetime!")
                 return;
               }
               $("#mdl-query").modal("show");
+               $("#query-run").attr("graphname",graphname);
               $("#query-run").on("click", function () {
                 $("#mdl-query").modal("hide");
+                
+                var graphname=$(this).attr("graphname");
+                var graph_opt = high_graphs[graphname];
 
                 var qstart = $("#query-start").val();
                 var qstop = $("#query-stop").val();
@@ -3031,17 +3100,20 @@
                   clearInterval(active_plots[graphname].interval);
                   delete active_plots[graphname].interval;
                 }
-                var tr = opt.trace;
+                var tr = graph_opt.trace;
                 var chart = active_plots[graphname]['graph'];
                 var dirlist=[];
                 var seriesLength = chart.series.length;
                 for(var i = seriesLength -1; i > -1; i--) {
                     chart.series[i].setData([]);
                 }
-                opt.culist.forEach(function (item) {
+                graph_opt.culist.forEach(function (item) {
+                  console.log("to retrive CU:"+item);
                   for (k in tr) {
                     if(tr[k].y.cu === item){
                       dirlist[tr[k].y.dir]= dir2channel(tr[k].y.dir);
+                      console.log("Y Trace "+tr[k].name+" path:"+tr[k].y.origin);
+
                     }
                   }
                   for(var dir in dirlist){
@@ -3083,8 +3155,13 @@
             }, {
             text: "Close",
             click: function () {
+              var graphname=$(this).attr("graphname");
+              console.log("Removing graph:"+graphname);
+
               clearInterval(active_plots[graphname].interval);
+              delete active_plots[graphname]['graph'];
               delete active_plots[graphname];
+
               $(this).dialog('close');
             }
           }],
@@ -3092,6 +3169,8 @@
 
 
       });
+    } else {
+      alert("Too many graph dialog opened");
     }
   }
   function saveGraph() {
