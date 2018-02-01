@@ -159,7 +159,7 @@
   }
 
   function decodeCUPath(cupath) {
-    var regex_vect = /(.*)\/(.*)\/(.*)\[(\d+)\]$/;
+    var regex_vect = /(.*)\/(.*)\/(.*)\[([-\d]+)\]$/;
 
     var regex = /(.*)\/(.*)\/(.*)$/;
     var tmp=cupath;
@@ -2899,8 +2899,11 @@
           if (item.output.hasOwnProperty(path.var)) {
             if(path.index!=null){
               var val=convertBinaryToArrays(item.output[path.var]);
-              
-              return val[path.index];
+              if(index == "-1"){
+                return val;
+              } else {
+                return val[path.index];
+              }
             }
             return item.output[path.var];
           }
@@ -2908,7 +2911,11 @@
           if (item.input.hasOwnProperty(path.var)) {
             if(path.index!=null){
                var val=convertBinaryToArrays(item.input[path.var]);
-              return val[path.index];
+               if(index == "-1"){
+                return val;
+              } else {
+                return val[path.index];
+              }
             }
             return item.input[path.var];
           }
@@ -3050,9 +3057,42 @@
 
                   }
                   if (graph_opt.highchart_opt['tracetype'] == "multi") {
-                    chart.series[cnt++].addPoint([x, y], false, enable_shift);
+                    if((y instanceof Array)){
+                      var inc=x;
+                      y.forEach(function(item){
+                        
+                        chart.series[cnt].addPoint([inc, item], false, enable_shift);
+                        inc+=0.1;
+                      });
+                    } else if(x instanceof Array){
+                      var inc=y;
+
+                      x.forEach(function(item){
+                        chart.series[cnt].addPoint([item, inc], false, enable_shift); 
+                        inc+=0.1; 
+                      });
+                    } else {
+                      chart.series[cnt].addPoint([x, y], false, enable_shift);
+                    }
+                   cnt++; 
                   } else {
-                    set.push({ x, y });
+                    if((y instanceof Array)){
+                      var inc=x;
+                      y.forEach(function(item){
+                        set.push({ inc,  item });
+
+                        inc+=0.1;
+                      });
+                    } else if(x instanceof Array){
+                      var inc=y;
+
+                      x.forEach(function(item){
+                        set.push({ item, inc });
+                        inc+=0.1; 
+                      });
+                    } else {
+                      set.push({ x, y });
+                    }
                   }
                 }
                 if (graph_opt.highchart_opt['tracetype'] == "single") {
