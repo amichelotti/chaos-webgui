@@ -2899,7 +2899,7 @@
           if (item.output.hasOwnProperty(path.var)) {
             if(path.index!=null){
               var val=convertBinaryToArrays(item.output[path.var]);
-              if(index == "-1"){
+              if(path.index == "-1"){
                 return val;
               } else {
                 return val[path.index];
@@ -2911,7 +2911,7 @@
           if (item.input.hasOwnProperty(path.var)) {
             if(path.index!=null){
                var val=convertBinaryToArrays(item.input[path.var]);
-               if(index == "-1"){
+               if(path.index  == "-1"){
                 return val;
               } else {
                 return val[path.index];
@@ -3058,19 +3058,25 @@
                   }
                   if (graph_opt.highchart_opt['tracetype'] == "multi") {
                     if((y instanceof Array)){
-                      var inc=x;
-                      y.forEach(function(item){
+                      var inc=1.0/y.length;
+                      var set=[];
+                      
+                      for(var cntt=0;cntt<y.length;cntt++){
+                        set.push([x+inc*cntt,y[cntt]]);
+                      }
+                     
                         
-                        chart.series[cnt].addPoint([inc, item], false, enable_shift);
-                        inc+=0.1;
-                      });
+                      chart.series[cnt].setData(set, true, true,true);
+                    
                     } else if(x instanceof Array){
-                      var inc=y;
+                      var inc=1.0/x.length;
+                      var set=[];
+                      for(var cntt=0;cntt<y.length;cntt++){
+                        set.push([x[cntt],y+ (inc*cntt)]);
+                      }
+                     
+                      chart.series[cnt].setData(set, true, true,true);
 
-                      x.forEach(function(item){
-                        chart.series[cnt].addPoint([item, inc], false, enable_shift); 
-                        inc+=0.1; 
-                      });
                     } else {
                       chart.series[cnt].addPoint([x, y], false, enable_shift);
                     }
@@ -3172,7 +3178,21 @@
                                 var tmp=ds[variable];
 
                                 if(index!=null){
-                                  chart.series[cnt].addPoint([ts, tmp[index]], false, false);
+                                  if(index == "-1"){
+                                    var incr=1.0/tmp.length;
+                                    var dataset=[];
+                                    for(var cntt=0;cntt<tmp.length;cntt++){
+                                      var t=ts+incr*cntt;
+                                      var v=tmp[cntt];
+                                      dataset.push([t, v]);
+                                      chart.series[cnt].addPoint([t,v],false,false);
+                                    }
+                                   // chart.series[cnt].setData(dataset, true, true, true);
+                                   chart.redraw();
+
+                                  } else {
+                                    chart.series[cnt].addPoint([ts, tmp[index]], false, false);
+                                  }
 
                                 } else {
                                   chart.series[cnt].addPoint([ts, tmp], false, false);
@@ -3191,6 +3211,16 @@
                   });
                   
                 });
+              }
+            }, {
+              text: "Save",
+              click: function () {
+               
+              }
+            }, {
+              text: "Load",
+              click: function () {
+               
               }
             }, {
             text: "Close",
