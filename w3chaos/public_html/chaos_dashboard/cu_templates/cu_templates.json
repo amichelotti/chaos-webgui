@@ -29,7 +29,7 @@
 	     "dsndk_storage_history_ageing":36000,
 	     "dsndk_storage_history_time":0,
 	     "dsndk_storage_live_time":0,
-	"control_unit_implementation":"::driver::sensor::RTCameraBase",
+	"control_unit_implementation":"RTCameraBase",
 	     "cudk_driver_description":[
 		 {"cudk_driver_description_name":"",
 		 "cudk_driver_description_version":"1.0.0",

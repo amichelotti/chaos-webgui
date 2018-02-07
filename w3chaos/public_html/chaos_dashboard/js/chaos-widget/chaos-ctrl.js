@@ -650,6 +650,15 @@
   }
   function unitServerSave(json) {
 
+    if (json.hasOwnProperty("cu_desc") && (json.cu_desc instanceof Array)) {
+      json.cu_desc.forEach(function (item) {
+        if (off_line[item]!==false) {
+          console.log("deleting cu:\"" +item.ndk_uid +"\" before readding");
+          jchaos.node(item.ndk_uid, "del", "cu", node_selected, null);
+        } 
+      });
+    }
+  
     if ((json != null) && json.hasOwnProperty("ndk_uid")) {
       var name = json.ndk_uid;
       json.cu_desc.forEach(function (item) {
@@ -1657,13 +1666,6 @@
         if (data.hasOwnProperty("us_desc")) {
           editorFn = unitServerSave;
           jsonEdit(templ, data.us_desc);
-         if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
-            data.us_desc.cu_desc.forEach(function (item) {
-              if ((off_line[item.ndk_uid] != null) && (off_line[item])) {
-                jchaos.node(item.ndk_uid, "del", "cu", node_selected, null);
-              } 
-            });
-          }
         }
       });
     }
