@@ -6,7 +6,9 @@
 (function ($) {
   var json_editor;
   var editorFn = new Function;
-
+  var cu_templates=null;
+  var driver_templates=[];
+  var custom_group=[];
   var checkRegistration = 0;
   var interface;// interface we are looking for
   var cu_copied;
@@ -628,6 +630,23 @@
         }
       }
     });
+  }
+  function newCuSave(json) {
+    if(json.hasOwnProperty("ndk_uid")&& (json.ndk_uid !="")){
+    jchaos.node(node_selected, "get", "us", "", null, function (data) {
+      console.log("adding \""+json.ndk_uid+"\" to US:\""+node_selected+"\"");
+      if (data.us_desc.hasOwnProperty("cu_desc")&& (data.us_desc.cu_desc instanceof Array)) {
+          data.us_desc.push(json);  
+        } else {
+          data.us_desc["cu_desc"]=[json];
+        }
+        jchaos.node(node_selected, "set", "us", "", data.us_desc, function (data) {
+          console.log("unitServer save: \"" +name + "\" value:" + JSON.stringify(json));
+        });
+      });
+    } else {
+      alert("missing required field ndk_uid");
+    }
   }
   function unitServerSave(json) {
 
@@ -1712,6 +1731,34 @@
 
         }
       });
+    }
+    if(cmd.includes("new-nt_control_unit")){
+      var regex = /new-nt_control_unit-(.*)$/;
+      var match =regex.exec(cmd);
+      if(match!=null){
+        var template=cu_templates[match[1]];
+        if(template != null ){
+          console.log("selected template:\""+match[1]);
+          template["ndk_parent"]=node_selected;
+          var templ = {
+            $ref: "cu.json",
+            format: "tabs"
+          }
+          editorFn = newCuSave;
+          jsonEdit(templ, template);
+
+        } else {
+          // custom
+          var templ = {
+            $ref: "cu.json",
+            format: "tabs"
+          }
+          editorFn = newCuSave;
+          jsonEdit(templ, template);
+
+        }
+      }
+      return;
     }
     if (cmd == "paste-nt_unit_server") {
       alert("Not Implemented, try with Edit.. ");
@@ -3417,14 +3464,29 @@
     if((sel=="snapshots")&&config.hasOwnProperty('snapshots')&& (config.snapshots instanceof Array)){
       config.snapshots.forEach(function(json){
         jchaos.snapshot(json.name,"set","",json.dataset,function(d){
-          system.log("restoring snapshot '"+json.name+"' created:"+json.ts);
+          console.log("restoring snapshot '"+json.name+"' created:"+json.ts);
         });
       });
     }
     if((sel=="graphs")&&config.hasOwnProperty('graphs')&& (config.graphs instanceof Array)){
       jchaos.variable("highcharts", "set", config.graphs, function(s){
-        system.log("restoring graphs:"+JSON.stringify(config.graphs));
+        console.log("restoring graphs:"+JSON.stringify(config.graphs));
         high_graphs= config.graph;
+      });
+
+    }
+    if((sel=="custom_group")&&config.hasOwnProperty('custom_group')&& (config.custom_group instanceof Array)){
+      jchaos.variable("custom_group", "set", config.custom_group, function(s){
+        console.log("restoring custom groups:"+JSON.stringify(config.custom_group));
+        custom_group= config.custom_group;
+      });
+
+    }
+    if((sel=="cu_templates")&& (config instanceof Object)){
+      
+      jchaos.variable("cu_templates", "set", config, function(s){
+        console.log("restoring CU templates:"+JSON.stringify(config));
+        cu_templates= config;
       });
 
     }
@@ -4105,18 +4167,27 @@
 
     }
   }
+  function cuCreateSubMenu(){
+    var items={};
+    cu_templates=jchaos.variable("cu_templates", "get", null, null);
+    for(var item in cu_templates){
+      items["new-nt_control_unit-"+item]={name : ""+item};
+
+    }
+      items["new-nt_control_unit-custom"]={name : "Custom CU"};
+      return items;
+  }
   function updateNodeMenu(node) {
     var items = {};
-    if (interface == "cu") {
-      items['new-nt_control_unit'] = { name: "New  Control Unit..." };
-    } else if (interface == "us") {
+    if (interface == "us") {
       items['new-nt_unit_server'] = { name: "New  Unit Server..." };
       if ((us_copied != null) && us_copied.hasOwnProperty("ndk_uid")) {
         items['paste-nt_unit_server'] = { name: "Paste " + us_copied.ndk_uid };
       }
     } else {
-      items['new-nt_control_unit'] = { name: "New  Control Unit..." };
+    
       items['new-nt_unit_server'] = { name: "New  Unit Server..." };
+     
       if ((us_copied != null) && us_copied.hasOwnProperty("ndk_uid")) {
         items['paste-nt_unit_server'] = { name: "Paste " + us_copied.ndk_uid };
       }
@@ -4131,6 +4202,8 @@
     if (node_type == "nt_unit_server") {
       items['del-' + node_type] = { name: "Del " + node_selected };
       items['copy-' + node_type] = { name: "Copy " + node_selected };
+      var cutypes=cuCreateSubMenu();
+      items['fold1'] = { name: "New  Control Unit","items":cutypes };
 
       if ((cu_copied != null) && cu_copied.hasOwnProperty("ndk_uid")) {
         items['paste-nt_control_unit'] = { name: "Paste/Move \"" + cu_copied.ndk_uid };

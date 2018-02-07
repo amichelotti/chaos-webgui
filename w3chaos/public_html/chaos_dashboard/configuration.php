@@ -57,7 +57,9 @@ require_once('header.php');
     	<option value="agents">Agents</option>
 		<option value="snapshots">Snapshots</option>
 		<option value="graphs">Graphs</option>
-    	<option value="groups">Groups</option>
+		<option value="cu_templates">CU Templates</option>
+
+    	<option value="custom_group">Groups</option>
 		</select>
 		</div>
 		</div>
