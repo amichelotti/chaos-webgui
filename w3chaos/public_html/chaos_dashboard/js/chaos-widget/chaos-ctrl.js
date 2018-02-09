@@ -6,9 +6,9 @@
 (function ($) {
   var json_editor;
   var editorFn = new Function;
-  var cu_templates=null;
-  var driver_templates=[];
-  var custom_group=[];
+  var cu_templates = null;
+  var driver_templates = [];
+  var custom_group = [];
   var checkRegistration = 0;
   var interface;// interface we are looking for
   var cu_copied;
@@ -40,19 +40,19 @@
   var notupdate_dataset = 1;
   var implementation_map = { "powersupply": "SCPowerSupply", "scraper": "SCActuator" };
 
-  function removeElementByName(name,tlist){
-    for(var cnt=0;cnt<tlist.length;cnt++){
-      if(tlist[cnt].name==name){
-        tlist.splice(cnt,1);
+  function removeElementByName(name, tlist) {
+    for (var cnt = 0; cnt < tlist.length; cnt++) {
+      if (tlist[cnt].name == name) {
+        tlist.splice(cnt, 1);
         return;
       }
     }
     return;
   }
-  function replaceElementByName(name_dst,elemsrc,tlist){
-    for(var cnt=0;cnt<tlist.length;cnt++){
-      if(tlist[cnt].name==name_dst){
-        tlist[cnt]=elemsrc
+  function replaceElementByName(name_dst, elemsrc, tlist) {
+    for (var cnt = 0; cnt < tlist.length; cnt++) {
+      if (tlist[cnt].name == name_dst) {
+        tlist[cnt] = elemsrc
         return;
       }
     }
@@ -61,50 +61,50 @@
   function convertToCSV(json) {
     return json;
   }
-  function string2buffer(str){
+  function string2buffer(str) {
     var buf = new Uint8Array(str.length);
-    for(var i=0;i<str.length;i++){
-      buf[i]=str.charCodeAt(i);
+    for (var i = 0; i < str.length; i++) {
+      buf[i] = str.charCodeAt(i);
     }
     return buf.buffer;
   }
-  function convertBinaryToArrays(obj){
-    if(obj.hasOwnProperty("$binary")){
+  function convertBinaryToArrays(obj) {
+    if (obj.hasOwnProperty("$binary")) {
       var objtmp;
-      var type= obj.$binary.subType;
-          if(type == "84"){
-            // integers
-            var binary_string =  atob(obj.$binary.base64);
-            if((binary_string.length%4) == 0){
-              var arrbuf=string2buffer(binary_string);
-              var arr=new Int32Array(arrbuf);  
-              objtmp =  Array.prototype.slice.call(arr);
-            }
-          } else if(type == "86"){
-            
-            var binary_string =  atob(obj.$binary.base64);
-            if((binary_string.length%8) == 0){
+      var type = obj.$binary.subType;
+      if (type == "84") {
+        // integers
+        var binary_string = atob(obj.$binary.base64);
+        if ((binary_string.length % 4) == 0) {
+          var arrbuf = string2buffer(binary_string);
+          var arr = new Int32Array(arrbuf);
+          objtmp = Array.prototype.slice.call(arr);
+        }
+      } else if (type == "86") {
 
-              var arr=new Float64Array(string2buffer(binary_string));
-              objtmp =Array.prototype.slice.call(arr);
-            }
-          } else {
-            objtmp = obj;
-          }
-          return objtmp;
+        var binary_string = atob(obj.$binary.base64);
+        if ((binary_string.length % 8) == 0) {
+
+          var arr = new Float64Array(string2buffer(binary_string));
+          objtmp = Array.prototype.slice.call(arr);
+        }
+      } else {
+        objtmp = obj;
+      }
+      return objtmp;
     }
 
-    for(var k in obj){
-      if(obj[k] instanceof Object){
+    for (var k in obj) {
+      if (obj[k] instanceof Object) {
         obj[k] = convertBinaryToArrays(obj[k]);
       }
-      
+
     }
     return obj;
   }
-  function getElementByName(name,tlist){
-    for(var cnt=0;cnt<tlist.length;cnt++){
-      if(tlist[cnt].name==name){
+  function getElementByName(name, tlist) {
+    for (var cnt = 0; cnt < tlist.length; cnt++) {
+      if (tlist[cnt].name == name) {
         return tlist[cnt];
       }
     }
@@ -147,15 +147,15 @@
     //    instantMessage("Copy","copied to clipboard",900);
   }
   function encodeCUPath(path) {
-    if (path == null || path== "timestamp") {
+    if (path == null || path == "timestamp") {
       return "timestamp";
     }
     if (path.const) {
       return path.const;
     }
-    var str=path.cu + "/" + path.dir + "/" + path.var;
-    if(path.index!=null){
-      str+="["+path.index+"]";
+    var str = path.cu + "/" + path.dir + "/" + path.var;
+    if (path.index != null) {
+      str += "[" + path.index + "]";
     }
     return str;
   }
@@ -164,15 +164,15 @@
     var regex_vect = /(.*)\/(.*)\/(.*)\[([-\d]+)\]$/;
 
     var regex = /(.*)\/(.*)\/(.*)$/;
-    var tmp=cupath;
+    var tmp = cupath;
     if ($.isNumeric(cupath)) {
       tmp = {
         cu: null,
         dir: null,
         var: null,
         const: Number(cupath),
-        index:null, // in case of vectors
-        origin:cupath
+        index: null, // in case of vectors
+        origin: cupath
       };
       return tmp;
     }
@@ -183,20 +183,20 @@
         dir: match[2],
         var: match[3],
         const: null,
-        index:match[4],
-        origin:cupath
+        index: match[4],
+        origin: cupath
       };
       return tmp;
     }
-     match = regex.exec(cupath);
+    match = regex.exec(cupath);
     if (match != null) {
       tmp = {
         cu: match[1],
         dir: match[2],
         var: match[3],
         const: null,
-        index:null,
-        origin:cupath
+        index: null,
+        origin: cupath
       };
     }
     return tmp;
@@ -632,16 +632,21 @@
     });
   }
   function newCuSave(json) {
-    if(json.hasOwnProperty("ndk_uid")&& (json.ndk_uid !="")){
-    jchaos.node(node_selected, "get", "us", "", null, function (data) {
-      console.log("adding \""+json.ndk_uid+"\" to US:\""+node_selected+"\"");
-      if (data.us_desc.hasOwnProperty("cu_desc")&& (data.us_desc.cu_desc instanceof Array)) {
-          data.us_desc.push(json);  
+    if (node_selected == null || node_selected == "") {
+      alert("not US selected!");
+      return;
+    }
+    if (json.hasOwnProperty("ndk_uid") && (json.ndk_uid != "")) {
+      jchaos.node(node_selected, "get", "us", "", null, function (data) {
+        console.log("adding \"" + json.ndk_uid + "\" to US:\"" + node_selected + "\"");
+        json.ndk_parent = node_selected;
+        if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
+          data.us_desc.push(json);
         } else {
-          data.us_desc["cu_desc"]=[json];
+          data.us_desc["cu_desc"] = [json];
         }
         jchaos.node(node_selected, "set", "us", "", data.us_desc, function (data) {
-          console.log("unitServer save: \"" +name + "\" value:" + JSON.stringify(json));
+          console.log("unitServer save: \"" + name + "\" value:" + JSON.stringify(json));
         });
       });
     } else {
@@ -649,27 +654,33 @@
     }
   }
   function unitServerSave(json) {
+    if (node_selected == null || node_selected == "") {
+      alert("not US selected!");
+      return;
+    }
+    if ((json == null) || !json.hasOwnProperty("ndk_uid")) {
+      alert("no ndk_uid key found");
+    }
+    var data = jchaos.node(node_selected, "get", "us", "", null, null);
 
-    if (json.hasOwnProperty("cu_desc") && (json.cu_desc instanceof Array)) {
-      json.cu_desc.forEach(function (item) {
-        if (off_line[item]!==false) {
-          console.log("deleting cu:\"" +item.ndk_uid +"\" before readding");
-          jchaos.node(item.ndk_uid, "del", "cu", node_selected, null);
-        } 
-      });
+
+    if (data.hasOwnProperty("us_desc")) {
+      if(data.us_desc.hasOwnProperty("cu_desc")&& (data.us_desc.cu_desc instanceof Array)){
+        data.us_desc.cu_desc.forEach(function (item) {
+          if (off_line[item] !== false) {
+            console.log("deleting cu:\"" + item.ndk_uid + "\" before readding");
+            jchaos.node(item.ndk_uid, "del", "cu", node_selected, null);
+          }
+        });
     }
-  
-    if ((json != null) && json.hasOwnProperty("ndk_uid")) {
-      var name = json.ndk_uid;
-      json.cu_desc.forEach(function (item) {
-        item.ndk_parent = name;
-      });
-      jchaos.node(json.ndk_uid, "set", "us", "", json, function (data) {
-        console.log("unitServer save: \"" +name + "\" value:" + JSON.stringify(json));
-      });
-    } else {
-      alert("No ndk_uid field found");
-    }
+  }
+
+    json.cu_desc.forEach(function (item) {
+      item.ndk_parent = node_selected;
+    });
+    jchaos.node(node_selected, "set", "us", "", json, function (data) {
+      console.log("unitServer save: \"" + node_selected + "\" value:" + JSON.stringify(json));
+    });
   }
   function cuSave(json) {
 
@@ -804,7 +815,7 @@
         var jsonhtml = json2html(dataset, options, node_selected);
         save_obj = {
           obj: dataset,
-          fname: "snapshot_"+snap_selected,
+          fname: "snapshot_" + snap_selected,
           fext: "json"
         };
         if (isCollapsable(dataset)) {
@@ -841,7 +852,7 @@
       var jsonhtml = json2html(dataset, options, node_selected);
       save_obj = {
         obj: dataset,
-        fname: "description_"+encodeName(node_selected),
+        fname: "description_" + encodeName(node_selected),
         fext: "json"
       };
       if (isCollapsable(dataset)) {
@@ -859,11 +870,11 @@
   function datasetSetup() {
     $("a.show_dataset").on('click', function () {
       var dataset = jchaos.getChannel(node_selected, -1, null);
-      var converted=convertBinaryToArrays(dataset[0]);
+      var converted = convertBinaryToArrays(dataset[0]);
       var jsonhtml = json2html(converted, options, node_selected);
       save_obj = {
         obj: dataset[0],
-        fname: "dataset_"+encodeName(node_selected),
+        fname: "dataset_" + encodeName(node_selected),
         fext: "json"
       };
 
@@ -903,12 +914,12 @@
           var portname = $(e.currentTarget).attr("portname");
           var portarray = $(e.currentTarget).attr("portarray");
           cuitem['show-graph'] = { name: "Show Graphs.." };
-          if(portarray == "0"){
+          if (portarray == "0") {
             cuitem['plot-x'] = { name: "Plot " + portdir + "/" + portname + " on X" };
             cuitem['plot-y'] = { name: "Plot " + portdir + "/" + portname + " on Y" };
           } else {
-            cuitem['plot-x'] = { name: "Plot Array("+portarray+") " + portdir + "/" + portname + "[] on X" };
-            cuitem['plot-y'] = { name: "Plot Array("+portarray+") " + portdir + "/" + portname + "[] on Y" };
+            cuitem['plot-x'] = { name: "Plot Array(" + portarray + ") " + portdir + "/" + portname + "[] on X" };
+            cuitem['plot-y'] = { name: "Plot Array(" + portarray + ") " + portdir + "/" + portname + "[] on Y" };
           }
 
 
@@ -925,10 +936,10 @@
 
             callback: function (cmd, options) {
               var fullname;
-              if(portarray == "0"){
+              if (portarray == "0") {
                 fullname = node_selected + "/" + portdir + "/" + portname;
-              } else{
-                fullname = node_selected + "/" + portdir + "/" + portname +"[0]";
+              } else {
+                fullname = node_selected + "/" + portdir + "/" + portname + "[0]";
               }
               if (cmd == "show-graph") {
                 $("#mdl-graph-list").modal("show");
@@ -942,6 +953,7 @@
                 $("#yvar").val(fullname);
 
               }
+              return;
             },
             items: cuitem
           }
@@ -1006,8 +1018,8 @@
       if (e.keyCode == 13) {
         var id = this.id;
         var attr = id.split("-")[1];
-        jchaos.setAttribute(node_selected, attr, this.value,function(){
-          instantMessage("Attribute ","\""+attr+"\"=\""+this.value+ "\" sent",1000)
+        jchaos.setAttribute(node_selected, attr, this.value, function () {
+          instantMessage("Attribute ", "\"" + attr + "\"=\"" + this.value + "\" sent", 1000)
 
         });
         $("#" + this.id).toggle();
@@ -1089,12 +1101,12 @@
         $("#graphtype").val(graph_selected);
         $("#table_graph_items").find("tr:gt(0)").remove();
         var trace = high_graphs[graph_selected].trace;
-        for (var k=0;k<trace.length;k++) {
+        for (var k = 0; k < trace.length; k++) {
           var tname = encodeName(trace[k].name);
           var xpath, ypath;
           xpath = encodeCUPath(trace[k].x);
           ypath = encodeCUPath(trace[k].y);
-          $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '" tracename="'+trace[k].name+'""><td>' + trace[k].name + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
+          $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '" tracename="' + trace[k].name + '""><td>' + trace[k].name + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
 
         };
       }
@@ -1102,10 +1114,10 @@
     });
     $(main_dom).on("click", "#table_graph_items tbody tr", function (e) {
       $(".row_element").removeClass("row_snap_selected");
-      var tname=$(this).attr("tracename");
+      var tname = $(this).attr("tracename");
       $(this).addClass("row_snap_selected");
       $("#trace-name").val(tname);
-      var tlist=getElementByName(tname,trace_list);
+      var tlist = getElementByName(tname, trace_list);
       $("#xvar").val(encodeCUPath(tlist.x));
       $("#yvar").val(encodeCUPath(tlist.y));
       trace_selected = $(this).attr("id");
@@ -1161,17 +1173,17 @@
     });
     $("#graph-delete").on('click', function () {
       delete high_graphs[graph_selected];
-      
+
       if (active_plots[graph_selected].hasOwnProperty('interval')) {
-      
+
         clearInterval(active_plots[graph_selected].interval);
         delete active_plots[graph_selected].interval;
       }
-      if(active_plots[grap_selected]!=null){
-        $("#dialog-"+active_plots[grap_selected].count).modal("hide");
+      if (active_plots[grap_selected] != null) {
+        $("#dialog-" + active_plots[grap_selected].count).modal("hide");
         delete active_plots[graph_selected];
       }
-      graph_selected=null;      
+      graph_selected = null;
       jchaos.variable("highcharts", "set", high_graphs, null);
       updateGraph();
     });
@@ -1213,13 +1225,13 @@
         tmpy = decodeCUPath(ypath);
       }
       var tname = encodeName(tracename);
-      $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '" tracename="'+tracename+'"><td>' + tracename + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
+      $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '" tracename="' + tracename + '"><td>' + tracename + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
       if (tmpx == null && tmpy == null) {
         alert("INVALID scale type options");
       }
-      trace_selected=tname;
-      var telem={
-        name:tracename,
+      trace_selected = tname;
+      var telem = {
+        name: tracename,
         x: tmpx,
         y: tmpy
       };
@@ -1232,7 +1244,7 @@
       var xpath = $("#xvar").val();
       var ypath = $("#yvar").val();
       var tmpx, tmpy;
-     
+
       if (xpath == "") {
         xpath = "timestamp";
       } else {
@@ -1247,58 +1259,58 @@
         alert("INVALID paths");
         return;
       }
-      
-      
+
+
       var tname = encodeName(tracename);
-      var replace_row='<tr class="row_element" id="trace-' + tname + '" tracename="'+tracename+'"><td>' + tracename + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>';
-      var toreplaceTrace=$("#" + trace_selected).attr("tracename");
+      var replace_row = '<tr class="row_element" id="trace-' + tname + '" tracename="' + tracename + '"><td>' + tracename + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>';
+      var toreplaceTrace = $("#" + trace_selected).attr("tracename");
 
       $("#" + trace_selected).replaceWith(replace_row);
-     
-      var telem={
-        name:tracename,
+
+      var telem = {
+        name: tracename,
         x: tmpx,
         y: tmpy
       };
-      replaceElementByName(toreplaceTrace,telem,trace_list);
-      trace_selected=tname;
+      replaceElementByName(toreplaceTrace, telem, trace_list);
+      trace_selected = tname;
     });
 
-    $("#trace-up").click(function(e){
-      var tname=$("#" + trace_selected);
-      var prev=$(tname).prev();
-      var index=$(tname).index();
-      var index_prev=$(prev).index();
+    $("#trace-up").click(function (e) {
+      var tname = $("#" + trace_selected);
+      var prev = $(tname).prev();
+      var index = $(tname).index();
+      var index_prev = $(prev).index();
 
       $(tname).insertBefore(prev);
-     
-      if(index>index_prev){
-        var elem=trace_list[index-1];
-        trace_list[index-1]=trace_list[index];
-        trace_list[index]=elem;
+
+      if (index > index_prev) {
+        var elem = trace_list[index - 1];
+        trace_list[index - 1] = trace_list[index];
+        trace_list[index] = elem;
       }
-      
+
     });
-    $("#trace-down").click(function(e){
-      var tname=$("#" + trace_selected);
-      var next=$(tname).next();
-      var index=$(tname).index();
-      var index_after=$(next).index();
+    $("#trace-down").click(function (e) {
+      var tname = $("#" + trace_selected);
+      var next = $(tname).next();
+      var index = $(tname).index();
+      var index_after = $(next).index();
 
       $(tname).insertAfter(next);
-      if(index_after>index){
-        var elem=trace_list[index_after];
-        trace_list[index_after]=trace_list[index];
-        trace_list[index]=elem;
+      if (index_after > index) {
+        var elem = trace_list[index_after];
+        trace_list[index_after] = trace_list[index];
+        trace_list[index] = elem;
       }
-      
+
     });
     $("#trace-rem").click(function () {
       if (trace_selected != null) {
-        var tname=$("#" + trace_selected).attr("tracename");
+        var tname = $("#" + trace_selected).attr("tracename");
         $("#" + trace_selected).remove();
-        removeElementByName(tname,trace_list);
-        trace_selected=null;
+        removeElementByName(tname, trace_list);
+        trace_selected = null;
 
       }
     });
@@ -1362,8 +1374,8 @@
       } else {
         cuselection = node_selected;
       }
-      jchaos.sendCUCmd(cuselection, alias, cmdparam,function(d){
-        instantMessage("Command ","Command:\""+alias+"\" params:\""+cmdparam+ "\" sent",1000)
+      jchaos.sendCUCmd(cuselection, alias, cmdparam, function (d) {
+        instantMessage("Command ", "Command:\"" + alias + "\" params:\"" + cmdparam + "\" sent", 1000)
       });
 
     });
@@ -1379,42 +1391,42 @@
       if (cuselection != null && cmd != null) {
         if (cmd == "init") {
           jchaos.node(cuselection, "init", "cu", null, function (data) {
-            instantMessage("Command ","Command:\""+cmd+"\" sent",1000);
+            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
 
           });
         } else if (cmd == "deinit") {
           jchaos.node(cuselection, "deinit", "cu", null, function (data) {
-            instantMessage("Command ","Command:\""+cmd+"\" sent",1000);
+            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
 
           });
         } else if (cmd == "bypasson") {
           jchaos.setBypass(cuselection, true, function (data) {
-            instantMessage("Command ","Command:\""+cmd+"\" sent",1000);
+            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
 
           });
           return;
         } else if (cmd == "bypassoff") {
           jchaos.setBypass(cuselection, false, function (data) {
-            instantMessage("Command ","Command:\""+cmd+"\" sent",1000);
+            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
 
           });
           return;
         } else if (cmd == "load") {
           jchaos.loadUnload(cuselection, true, function (data) {
-            instantMessage("Command ","Command:\""+cmd+"\" sent",1000);
+            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
 
           });
           return;
         } else if (cmd == "unload") {
           jchaos.loadUnload(cuselection, false, function (data) {
-            instantMessage("Command ","Command:\""+cmd+"\" sent",1000);
+            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
 
           });
           return;
         }
 
         jchaos.sendCUCmd(cuselection, cmd, "", function (data) {
-          instantMessage("Command ","Command:\""+cmd+"\" sent",1000);
+          instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
 
         });
 
@@ -1440,9 +1452,9 @@
       } else {
         cuselection = node_selected;
       }
-      jchaos.sendCUFullCmd(cuselection, cmdselected, parm,((force == "normal")?0:1),0,function(){
+      jchaos.sendCUFullCmd(cuselection, cmdselected, parm, ((force == "normal") ? 0 : 1), 0, function () {
         $("#mdl-commands").modal("hide");
-        instantMessage("Command ","Command:\""+cmdselected+"\"  params:"+parm+" sent",1000);
+        instantMessage("Command ", "Command:\"" + cmdselected + "\"  params:" + parm + " sent", 1000);
 
       });
     });
@@ -1495,6 +1507,7 @@
 
           callback: function (cmd, options) {
             executeCUMenuCmd(cmd, options);
+            return;
 
           },
           items: cuitem
@@ -1589,35 +1602,35 @@
 
     }
     node_list_interval = setInterval(function () {
-      jchaos.getChannel(node_list, -1, function(dat){
+      jchaos.getChannel(node_list, -1, function (dat) {
         node_live_selected = dat;
         updateGenericTableDataset(node_live_selected);
         updateTableFn(node_live_selected);
-  
+
         if (node_live_selected.length == 0 || node_selected == null || node_name_to_index[encodeName(node_selected)] == null) {
           return;
         }
-  
+
         var index = node_name_to_index[encodeName(node_selected)];
         curr_cu_selected = node_live_selected[index];
         updateGenericControl(curr_cu_selected);
         //  $("div.cu-generic-control").html(chaosGenericControl(cu_live_selected[index]));
         if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
-          var converted=convertBinaryToArrays(curr_cu_selected);
+          var converted = convertBinaryToArrays(curr_cu_selected);
           var jsonhtml = json2html(converted, options, node_selected);
           if (isCollapsable(converted)) {
             jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
           }
-  
+
           $("#cu-dataset").html(jsonhtml);
-  
-        }  
+
+        }
       });
 
 
 
       // update all generic
-   
+
 
     }, options.Interval, updateTableFn);
 
@@ -1662,6 +1675,10 @@
         $ref: "us.json",
         format: "tabs"
       }
+      if (node_selected == null || node_selected == "") {
+        alert("not US selected!");
+        return;
+      }
       jchaos.node(node_selected, "get", "us", "", null, function (data) {
         if (data.hasOwnProperty("us_desc")) {
           editorFn = unitServerSave;
@@ -1686,15 +1703,15 @@
     }
 
     if (cmd == "del-nt_control_unit") {
-      node_multi_selected.forEach(function (nod){
-      var desc = jchaos.getDesc(nod, null);
-      if (desc[0] != null && desc[0].hasOwnProperty("instance_description")) {
-        var parent = desc[0].instance_description.ndk_parent;
-        confirm("Delete CU", "Your are deleting CU: \"" + nod + "\"(" + parent + ")", "Ok", function () {
-          jchaos.node(nod, "del", "cu", parent, null);
-        }, "Cancel");
-      }
-    });
+      node_multi_selected.forEach(function (nod) {
+        var desc = jchaos.getDesc(nod, null);
+        if (desc[0] != null && desc[0].hasOwnProperty("instance_description")) {
+          var parent = desc[0].instance_description.ndk_parent;
+          confirm("Delete CU", "Your are deleting CU: \"" + nod + "\"(" + parent + ")", "Ok", function () {
+            jchaos.node(nod, "del", "cu", parent, null);
+          }, "Cancel");
+        }
+      });
     }
     if (cmd == "copy-nt_control_unit") {
 
@@ -1734,19 +1751,20 @@
         }
       });
     }
-    if(cmd.includes("new-nt_control_unit")){
+    if (cmd.includes("new-nt_control_unit")) {
       var regex = /new-nt_control_unit-(.*)$/;
-      var match =regex.exec(cmd);
-      if(match!=null){
-        var template=cu_templates[match[1]];
-        if(template != null ){
-          console.log("selected template:\""+match[1]);
-          template["ndk_parent"]=node_selected;
+      var match = regex.exec(cmd);
+      if (match != null) {
+        var template = cu_templates[match[1]];
+        if (template != null) {
+          console.log("selected template:\"" + match[1]);
+          template["ndk_parent"] = node_selected;
           var templ = {
             $ref: "cu.json",
             format: "tabs"
           }
           editorFn = newCuSave;
+
           jsonEdit(templ, template);
 
         } else {
@@ -1755,6 +1773,7 @@
             $ref: "cu.json",
             format: "tabs"
           }
+
           editorFn = newCuSave;
           jsonEdit(templ, template);
 
@@ -1842,7 +1861,7 @@
       });
 
     }
-    executeCUMenuCmd(cmd, options);
+    //  executeCUMenuCmd(cmd, options);
     return;
   }
   function setupNode() {
@@ -1901,7 +1920,7 @@
 
           callback: function (cmd, options) {
             executeNodeMenuCmd(cmd, options);
-
+            return false;
           },
           items: cuitem
         }
@@ -2896,7 +2915,7 @@
 
     html += '<label class="label span2">Name </label>';
     html += '<input class="input-xlarge span10" id="trace-name" title="Name of the trace" type="text" value="">';
-    
+
     html += '<label class="label span1">X:</label>';
     html += '<input class="input-xlarge span11" type="text" title="port path to plot on X" id="xvar" value="timestamp">';
     html += '<label class="label span1">Y:</label>';
@@ -2946,9 +2965,9 @@
       if (path.cu == item.health.ndk_uid) {
         if (path.dir == "output") {
           if (item.output.hasOwnProperty(path.var)) {
-            if(path.index!=null){
-              var val=convertBinaryToArrays(item.output[path.var]);
-              if(path.index == "-1"){
+            if (path.index != null) {
+              var val = convertBinaryToArrays(item.output[path.var]);
+              if (path.index == "-1") {
                 return val;
               } else {
                 return val[path.index];
@@ -2958,9 +2977,9 @@
           }
         } else if (path.dir == "input") {
           if (item.input.hasOwnProperty(path.var)) {
-            if(path.index!=null){
-               var val=convertBinaryToArrays(item.input[path.var]);
-               if(path.index  == "-1"){
+            if (path.index != null) {
+              var val = convertBinaryToArrays(item.input[path.var]);
+              if (path.index == "-1") {
                 return val;
               } else {
                 return val[path.index];
@@ -2970,36 +2989,36 @@
           }
         } else if (path.dir == "health") {
           if (item.health.hasOwnProperty(path.var)) {
-            if(path.index!=null){
-              var val=convertBinaryToArrays(item.health[path.var]);
+            if (path.index != null) {
+              var val = convertBinaryToArrays(item.health[path.var]);
 
-              
+
               return val[path.index];
             }
             return item.health[path.var];
           }
-        } 
+        }
 
       }
     }
     return null;
   }
-  function dir2channel(dir){
-    if(dir == "output"){
+  function dir2channel(dir) {
+    if (dir == "output") {
       return 0;
-    } else if(dir == "health"){
+    } else if (dir == "health") {
       return 4;
-    } else if(dir == "input"){
+    } else if (dir == "input") {
       return 1;
-    } 
+    }
     return 0;
   }
   function runGraph() {
-    if (graph_selected == null || graph_selected == ""){
+    if (graph_selected == null || graph_selected == "") {
       alert("No Graph selected");
       return;
     }
-    console.log("Selected graph:"+graph_selected);
+    console.log("Selected graph:" + graph_selected);
     var opt = high_graphs[graph_selected];
     if (!(opt instanceof Object)) {
       alert("\"" + graph_selected + "\" not a valid graph ");
@@ -3019,10 +3038,10 @@
     if (!$.isNumeric(opt.highchart_opt.yAxis.min)) {
       opt.highchart_opt.yAxis.min = null;
     }
-   
+
     // check if exist
-    if(active_plots[graph_selected] != null && active_plots[graph_selected].dialog != null){
-      $("#dialog-"+active_plots[graph_selected].dialog).show();
+    if (active_plots[graph_selected] != null && active_plots[graph_selected].dialog != null) {
+      $("#dialog-" + active_plots[graph_selected].dialog).show();
       return;
     }
     var count = 0;
@@ -3040,13 +3059,13 @@
         resizable: true,
         dialogClass: 'no-close',
         open: function () {
-          
+
           var chart = new Highcharts.chart("graph-" + count, opt.highchart_opt);
           $(this).attr("graphname", graph_selected);
           var start_time = (new Date()).getTime();
-          var graphname=$(this).attr("graphname");
+          var graphname = $(this).attr("graphname");
 
-          console.log("New Graph("+count+"):"+graphname+ " has been created");
+          console.log("New Graph(" + count + "):" + graphname + " has been created");
 
           active_plots[graph_selected] = {
             graphname: graph_selected,
@@ -3061,9 +3080,9 @@
           {
             text: "Live",
             click: function (e) {
-            
-              var graphname=$(this).attr("graphname");
-              console.log("Start  Live Graph:"+graphname);
+
+              var graphname = $(this).attr("graphname");
+              console.log("Start  Live Graph:" + graphname);
               var graph_opt = high_graphs[graphname];
 
               if (active_plots[graphname].hasOwnProperty('interval')) {
@@ -3076,9 +3095,9 @@
               var chart = active_plots[graphname]['graph'];
               var seriesLength = chart.series.length;
 
-              for(var i = seriesLength -1; i > -1; i--) {
+              for (var i = seriesLength - 1; i > -1; i--) {
                 chart.series[i].setData([]);
-            }
+              }
               var refresh = setInterval(function () {
                 var data = jchaos.getChannel(graph_opt.culist, -1, null);
                 var set = [];
@@ -3087,7 +3106,7 @@
                 var tr = opt.trace;
                 var enable_shift = false;
                 for (k in tr) {
-                  if ((tr[k].x == "timestamp")||(tr[k].x == null)) {
+                  if ((tr[k].x == "timestamp") || (tr[k].x == null)) {
                     x = (new Date()).getTime(); // current time
                     if (graph_opt.highchart_opt.shift && ((x - graph_opt.start_time) > graph_opt.highchart_opt['timebuffer'])) {
                       enable_shift = true;
@@ -3097,7 +3116,7 @@
                   } else {
                     x = getValueFromCUList(data, tr[k].x);
                   }
-                  if ((tr[k].y == "timestamp")||(tr[k].y == null)) {
+                  if ((tr[k].y == "timestamp") || (tr[k].y == null)) {
                     y = (new Date()).getTime(); // current time
                   } else if (tr[k].y.const != null) {
                     y = tr[k].y.const;
@@ -3106,44 +3125,44 @@
 
                   }
                   if (graph_opt.highchart_opt['tracetype'] == "multi") {
-                    if((y instanceof Array)){
-                      var inc=1.0/y.length;
-                      var set=[];
-                      
-                      for(var cntt=0;cntt<y.length;cntt++){
-                        set.push([x+inc*cntt,y[cntt]]);
+                    if ((y instanceof Array)) {
+                      var inc = 1.0 / y.length;
+                      var set = [];
+
+                      for (var cntt = 0; cntt < y.length; cntt++) {
+                        set.push([x + inc * cntt, y[cntt]]);
                       }
-                     
-                        
-                      chart.series[cnt].setData(set, true, true,true);
-                    
-                    } else if(x instanceof Array){
-                      var inc=1.0/x.length;
-                      var set=[];
-                      for(var cntt=0;cntt<y.length;cntt++){
-                        set.push([x[cntt],y+ (inc*cntt)]);
+
+
+                      chart.series[cnt].setData(set, true, true, true);
+
+                    } else if (x instanceof Array) {
+                      var inc = 1.0 / x.length;
+                      var set = [];
+                      for (var cntt = 0; cntt < y.length; cntt++) {
+                        set.push([x[cntt], y + (inc * cntt)]);
                       }
-                     
-                      chart.series[cnt].setData(set, true, true,true);
+
+                      chart.series[cnt].setData(set, true, true, true);
 
                     } else {
                       chart.series[cnt].addPoint([x, y], false, enable_shift);
                     }
-                   cnt++; 
+                    cnt++;
                   } else {
-                    if((y instanceof Array)){
-                      var inc=x;
-                      y.forEach(function(item){
-                        set.push({ inc,  item });
+                    if ((y instanceof Array)) {
+                      var inc = x;
+                      y.forEach(function (item) {
+                        set.push({ inc, item });
 
-                        inc+=0.1;
+                        inc += 0.1;
                       });
-                    } else if(x instanceof Array){
-                      var inc=y;
+                    } else if (x instanceof Array) {
+                      var inc = y;
 
-                      x.forEach(function(item){
+                      x.forEach(function (item) {
                         set.push({ item, inc });
-                        inc+=0.1; 
+                        inc += 0.1;
                       });
                     } else {
                       set.push({ x, y });
@@ -3162,8 +3181,8 @@
           {
             text: "History",
             click: function () {
-              var graphname=$(this).attr("graphname");
-              console.log("Start  History Graph:"+graphname);
+              var graphname = $(this).attr("graphname");
+              console.log("Start  History Graph:" + graphname);
               var graph_opt = high_graphs[graphname];
 
               if (graph_opt.highchart_opt.xAxis.type != "datetime") {
@@ -3175,11 +3194,11 @@
                 return;
               }
               $("#mdl-query").modal("show");
-               $("#query-run").attr("graphname",graphname);
+              $("#query-run").attr("graphname", graphname);
               $("#query-run").on("click", function () {
                 $("#mdl-query").modal("hide");
-                
-                var graphname=$(this).attr("graphname");
+
+                var graphname = $(this).attr("graphname");
                 var graph_opt = high_graphs[graphname];
 
                 var qstart = $("#query-start").val();
@@ -3191,91 +3210,91 @@
                 if (qstop == "" || qstop == "NOW") {
                   qstop = (new Date()).getTime();
                 }
-                if(active_plots[graphname].hasOwnProperty("interval") && (active_plots[graphname].interval!=null)){
+                if (active_plots[graphname].hasOwnProperty("interval") && (active_plots[graphname].interval != null)) {
                   clearInterval(active_plots[graphname].interval);
                   delete active_plots[graphname].interval;
                 }
                 var tr = graph_opt.trace;
                 var chart = active_plots[graphname]['graph'];
-                var dirlist=[];
+                var dirlist = [];
                 var seriesLength = chart.series.length;
-                for(var i = seriesLength -1; i > -1; i--) {
-                    chart.series[i].setData([]);
+                for (var i = seriesLength - 1; i > -1; i--) {
+                  chart.series[i].setData([]);
                 }
                 graph_opt.culist.forEach(function (item) {
-                  console.log("to retrive CU:"+item);
+                  console.log("to retrive CU:" + item);
                   for (k in tr) {
-                    if(tr[k].y.cu === item){
-                      dirlist[tr[k].y.dir]= dir2channel(tr[k].y.dir);
-                      console.log("Y Trace "+tr[k].name+" path:"+tr[k].y.origin);
+                    if (tr[k].y.cu === item) {
+                      dirlist[tr[k].y.dir] = dir2channel(tr[k].y.dir);
+                      console.log("Y Trace " + tr[k].name + " path:" + tr[k].y.origin);
 
                     }
                   }
-                  for(var dir in dirlist){
+                  for (var dir in dirlist) {
                     jchaos.getHistory(item, dirlist[dir], qstart, qstop, "", function (data) {
-                        var cnt = 0, ele_count = 0;
-                        for (k in tr) {
-                          if (tr[k].y.cu === item) {
-                            //iterate on the datasets
-                            console.log("retrived \""+dir+"/"+item+"\" count="+ data.Y.length);
-                            var variable = tr[k].y.var;
-                            var index=tr[k].y.index;
-                            ele_count = 0;
-                            data.Y.forEach(function (ds) {
-                              if (ds.hasOwnProperty(variable)) {
-                                var ts = data.X[ele_count++];
-                                var tmp=ds[variable];
+                      var cnt = 0, ele_count = 0;
+                      for (k in tr) {
+                        if (tr[k].y.cu === item) {
+                          //iterate on the datasets
+                          console.log("retrived \"" + dir + "/" + item + "\" count=" + data.Y.length);
+                          var variable = tr[k].y.var;
+                          var index = tr[k].y.index;
+                          ele_count = 0;
+                          data.Y.forEach(function (ds) {
+                            if (ds.hasOwnProperty(variable)) {
+                              var ts = data.X[ele_count++];
+                              var tmp = ds[variable];
 
-                                if(index!=null){
-                                  if(index == "-1"){
-                                    var incr=1.0/tmp.length;
-                                    var dataset=[];
-                                    for(var cntt=0;cntt<tmp.length;cntt++){
-                                      var t=ts+incr*cntt;
-                                      var v=tmp[cntt];
-                                      dataset.push([t, v]);
-                                      chart.series[cnt].addPoint([t,v],false,false);
-                                    }
-                                   // chart.series[cnt].setData(dataset, true, true, true);
-                                   chart.redraw();
-
-                                  } else {
-                                    chart.series[cnt].addPoint([ts, tmp[index]], false, false);
+                              if (index != null) {
+                                if (index == "-1") {
+                                  var incr = 1.0 / tmp.length;
+                                  var dataset = [];
+                                  for (var cntt = 0; cntt < tmp.length; cntt++) {
+                                    var t = ts + incr * cntt;
+                                    var v = tmp[cntt];
+                                    dataset.push([t, v]);
+                                    chart.series[cnt].addPoint([t, v], false, false);
                                   }
+                                  // chart.series[cnt].setData(dataset, true, true, true);
+                                  chart.redraw();
 
                                 } else {
-                                  chart.series[cnt].addPoint([ts, tmp], false, false);
-
+                                  chart.series[cnt].addPoint([ts, tmp[index]], false, false);
                                 }
+
+                              } else {
+                                chart.series[cnt].addPoint([ts, tmp], false, false);
+
                               }
-                            });
-                          }
-                          cnt++;
+                            }
+                          });
                         }
-                        chart.redraw();
-                        // true until close if false the history loop retrive breaks
-                        return active_plots.hasOwnProperty(graphname);
-                      });    
-                    }
-                  });
-                  
+                        cnt++;
+                      }
+                      chart.redraw();
+                      // true until close if false the history loop retrive breaks
+                      return active_plots.hasOwnProperty(graphname);
+                    });
+                  }
                 });
-              }
-            }, {
-              text: "Save",
-              click: function () {
-               
-              }
-            }, {
-              text: "Load",
-              click: function () {
-               
-              }
-            }, {
+
+              });
+            }
+          }, {
+            text: "Save",
+            click: function () {
+
+            }
+          }, {
+            text: "Load",
+            click: function () {
+
+            }
+          }, {
             text: "Close",
             click: function () {
-              var graphname=$(this).attr("graphname");
-              console.log("Removing graph:"+graphname);
+              var graphname = $(this).attr("graphname");
+              console.log("Removing graph:" + graphname);
 
               clearInterval(active_plots[graphname].interval);
               delete active_plots[graphname]['graph'];
@@ -3334,7 +3353,7 @@
     if (tracetype == "single") {
       serie.push({ name: graphname });
     }
-    for (var cnt=0;cnt<trace_list.length;cnt++) {
+    for (var cnt = 0; cnt < trace_list.length; cnt++) {
       if (tracetype == "multi") {
         serie.push({ name: trace_list[cnt].name });
       }
@@ -3438,98 +3457,100 @@
     jchaos.variable("highcharts", "set", high_graphs, null);
   }
 
-  function restoreFullConfig(config,configToRestore){
-    if (! (configToRestore instanceof Array)){
+  function restoreFullConfig(config, configToRestore) {
+    if (!(configToRestore instanceof Array)) {
       return;
     }
-    configToRestore.forEach(function(sel){
+    configToRestore.forEach(function (sel) {
 
-    if((sel=="us")&& config.hasOwnProperty('us')&& (config.us instanceof Array)){
-      config.us.forEach(function(data){
-        confirm("US "+data.us_desc.ndk_uid, "Erase Or Join configuration", "Erase", function () {
-          if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
-            data.us_desc.cu_desc.forEach(function (item) {
-            jchaos.node(item.ndk_uid, "del", "cu", item.ndk_parent, null);       
-            });
-            unitServerSave(data.us_desc);
+      if ((sel == "us") && config.hasOwnProperty('us') && (config.us instanceof Array)) {
+        config.us.forEach(function (data) {
+          confirm("US " + data.us_desc.ndk_uid, "Erase Or Join configuration", "Erase", function () {
+            if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
+              data.us_desc.cu_desc.forEach(function (item) {
+                jchaos.node(item.ndk_uid, "del", "cu", item.ndk_parent, null);
+              });
+              node_selected = data.us_desc.ndk_uid;
 
-          }
-        }, "Join",function(){ unitServerSave(data.us_desc);});
-        
-      });
-    }
-    if((sel=="agents")&&config.hasOwnProperty('agents')&& (config.agents instanceof Array)){
-      config.agents.forEach(function(json){
-        agentSave(json.info);
-      });
-    }
-    if((sel=="snapshots")&&config.hasOwnProperty('snapshots')&& (config.snapshots instanceof Array)){
-      config.snapshots.forEach(function(json){
-        jchaos.snapshot(json.name,"set","",json.dataset,function(d){
-          console.log("restoring snapshot '"+json.name+"' created:"+json.ts);
+              unitServerSave(data.us_desc);
+
+            }
+          }, "Join", function () { unitServerSave(data.us_desc); });
+
         });
-      });
-    }
-    if((sel=="graphs")&&config.hasOwnProperty('graphs')&& (config.graphs instanceof Array)){
-      jchaos.variable("highcharts", "set", config.graphs, function(s){
-        console.log("restoring graphs:"+JSON.stringify(config.graphs));
-        high_graphs= config.graph;
-      });
+      }
+      if ((sel == "agents") && config.hasOwnProperty('agents') && (config.agents instanceof Array)) {
+        config.agents.forEach(function (json) {
+          agentSave(json.info);
+        });
+      }
+      if ((sel == "snapshots") && config.hasOwnProperty('snapshots') && (config.snapshots instanceof Array)) {
+        config.snapshots.forEach(function (json) {
+          jchaos.snapshot(json.name, "set", "", json.dataset, function (d) {
+            console.log("restoring snapshot '" + json.name + "' created:" + json.ts);
+          });
+        });
+      }
+      if ((sel == "graphs") && config.hasOwnProperty('graphs') && (config.graphs instanceof Array)) {
+        jchaos.variable("highcharts", "set", config.graphs, function (s) {
+          console.log("restoring graphs:" + JSON.stringify(config.graphs));
+          high_graphs = config.graph;
+        });
 
-    }
-    if((sel=="custom_group")&&config.hasOwnProperty('custom_group')&& (config.custom_group instanceof Array)){
-      jchaos.variable("custom_group", "set", config.custom_group, function(s){
-        console.log("restoring custom groups:"+JSON.stringify(config.custom_group));
-        custom_group= config.custom_group;
-      });
+      }
+      if ((sel == "custom_group") && config.hasOwnProperty('custom_group') && (config.custom_group instanceof Array)) {
+        jchaos.variable("custom_group", "set", config.custom_group, function (s) {
+          console.log("restoring custom groups:" + JSON.stringify(config.custom_group));
+          custom_group = config.custom_group;
+        });
 
-    }
-    if((sel=="cu_templates")&& (config instanceof Object)){
-      
-      jchaos.variable("cu_templates", "set", config, function(s){
-        console.log("restoring CU templates:"+JSON.stringify(config));
-        cu_templates= config;
-      });
+      }
+      if ((sel == "cu_templates") && (config instanceof Object)) {
 
-    }
-  });
+        jchaos.variable("cu_templates", "set", config, function (s) {
+          console.log("restoring CU templates:" + JSON.stringify(config));
+          cu_templates = config;
+        });
+
+      }
+    });
   }
-  function saveFullConfig(name){
+  function saveFullConfig(name) {
     //find all US
-    var obj={};
-    obj['agents']=[];
-    var agent_list=jchaos.search("","agent",false,false);
-    agent_list.forEach(function(item){
-      var agent={
-        "name":item,
+    var obj = {};
+    obj['agents'] = [];
+    var agent_list = jchaos.search("", "agent", false, false);
+    agent_list.forEach(function (item) {
+      var agent = {
+        "name": item,
       };
-      var info=jchaos.node(item, "info", "agent", "", null);
-      agent['info']=info;
+      var info = jchaos.node(item, "info", "agent", "", null);
+      agent['info'] = info;
       obj['agents'].push(agent);
       ;
     });
-    obj['us']=[];
-    var us_list=jchaos.search("","us",false,false);
-    us_list.forEach(function(item){
-      var data=jchaos.node(item, "get", "us", "", null);
+    obj['us'] = [];
+    var us_list = jchaos.search("", "us", false, false);
+    us_list.forEach(function (item) {
+      var data = jchaos.node(item, "get", "us", "", null);
       obj['us'].push(data);
 
     });
     // snapshots
-    obj['snapshots']=[];
-    var snaplist=jchaos.search("", "snapshots", false);
-    snaplist.forEach(function (item){
-        var snap={
-          snap:item,
-        };
-        var dataset=jchaos.snapshot(item.name, "load", null, "");
-        snap['dataset']=dataset;
-        obj['snapshots'].push(snap);
-        });
+    obj['snapshots'] = [];
+    var snaplist = jchaos.search("", "snapshots", false);
+    snaplist.forEach(function (item) {
+      var snap = {
+        snap: item,
+      };
+      var dataset = jchaos.snapshot(item.name, "load", null, "");
+      snap['dataset'] = dataset;
+      obj['snapshots'].push(snap);
+    });
     // graphs
 
-    obj['graphs']=jchaos.variable("highcharts", "get", null, null);
-
+    obj['graphs'] = jchaos.variable("highcharts", "get", null, null);
+    obj['cu_templates'] = jchaos.variable("cu_templates", "get", null, null);
     var blob = new Blob([JSON.stringify(obj)], { type: "json;charset=utf-8" });
     saveAs(blob, "configuration.json");
   }
@@ -3596,7 +3617,7 @@
     html += '<div id="cu-dataset" class="json-dataset"></div>';
     html += '</div>';
     html += '<div class="modal-footer">';
-   // html += '<a href="#" class="btn btn-primary savetofilecsv" filename="description" extension="csv">Export To CSV</a>';
+    // html += '<a href="#" class="btn btn-primary savetofilecsv" filename="description" extension="csv">Export To CSV</a>';
     html += '<a href="#" class="btn btn-primary savetofile" filename="dataset" extension="json">Save To File</a>';
     html += '<a href="#" class="btn btn-primary" id="dataset-update">Pause</a>';
     html += '<a href="#" class="btn btn-primary" id="dataset-close">Close</a>';
@@ -3637,7 +3658,7 @@
     html += '<div id="cu-description" class="json-dataset"></div>';
     html += '</div>';
     html += '<div class="modal-footer">';
-   // html += '<a href="#" class="btn btn-primary savetofilecsv" filename="description" extension="csv">Export To CSV</a>';
+    // html += '<a href="#" class="btn btn-primary savetofilecsv" filename="description" extension="csv">Export To CSV</a>';
     html += '<a href="#" class="btn btn-primary savetofile icon-save" filename="description" extension="json">Save To File</a>';
     html += '<a href="#" class="btn btn-primary" id="description-close">Close</a>';
     html += '</div>';
@@ -3796,7 +3817,7 @@
 
     return html;
   }
-   function generateMenuBox() {
+  function generateMenuBox() {
     var html = '<div class="box black">';
     html += '<div class="box-header">';
     html += '<h2><i class="halflings-icon white list"></i><span class="break"></span>Menu</h2>';
@@ -3818,20 +3839,20 @@
     html += '<i class="icon-search green"></i><span class="opt-menu hidden-tablet">CU</span>';
     html += '</a>';
     html += '</li>';
-/*
-    html += '<li class="black">';
-    html += '<a href="#">';
-    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Configuration</span>';
-    html += '</a>'
-
-    html += '<ul class="dashboard-list metro">';
-    html += '<li class="black">';
-    html += '<a href="./chaos_node.php" role="button" class="show_unitserver" data-toggle="modal">';
-    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Node</span>';
-    html += '</a>';
-    html += '</li>';
-    html += '</ul>';
-*/
+    /*
+        html += '<li class="black">';
+        html += '<a href="#">';
+        html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Configuration</span>';
+        html += '</a>'
+    
+        html += '<ul class="dashboard-list metro">';
+        html += '<li class="black">';
+        html += '<a href="./chaos_node.php" role="button" class="show_unitserver" data-toggle="modal">';
+        html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Node</span>';
+        html += '</a>';
+        html += '</li>';
+        html += '</ul>';
+    */
 
     html += '<li class="black">';
     html += '<a href="./chaos_node.php" role="button" class="show_unitserver" data-toggle="modal">';
@@ -3970,11 +3991,11 @@
           if (json.hasOwnProperty(key)) {
             html += '<li>';
             var keyclass = "";
-            var portarray=0;
+            var portarray = 0;
             if (isCollapsable(json[key])) {
-              if(json[key] instanceof Array){
+              if (json[key] instanceof Array) {
                 keyclass = "json-key";
-                portarray=json[key].length;
+                portarray = json[key].length;
               } else {
                 keyclass = "json-string";
               }
@@ -3982,7 +4003,7 @@
               keyclass = "json-key";
             }
             var keyRepr = options.withQuotes ?
-              '<span class="' + keyclass + '" id=' + pather + '-' + key + ' portdir="' + pather + '" portname="' + key + '" portarray="'+portarray+'">"' + key + '"</span>' : key;
+              '<span class="' + keyclass + '" id=' + pather + '-' + key + ' portdir="' + pather + '" portname="' + key + '" portarray="' + portarray + '">"' + key + '"</span>' : key;
             /* Add toggle button if item is collapsable */
             if (isCollapsable(json[key])) {
               html += '<a  class="json-toggle">' + keyRepr + '</a>';
@@ -4169,15 +4190,15 @@
 
     }
   }
-  function cuCreateSubMenu(){
-    var items={};
-    cu_templates=jchaos.variable("cu_templates", "get", null, null);
-    for(var item in cu_templates){
-      items["new-nt_control_unit-"+item]={name : ""+item};
+  function cuCreateSubMenu() {
+    var items = {};
+    cu_templates = jchaos.variable("cu_templates", "get", null, null);
+    for (var item in cu_templates) {
+      items["new-nt_control_unit-" + item] = { name: "" + item };
 
     }
-      items["new-nt_control_unit-custom"]={name : "Custom CU"};
-      return items;
+    items["new-nt_control_unit-custom"] = { name: "Custom CU" };
+    return items;
   }
   function updateNodeMenu(node) {
     var items = {};
@@ -4187,9 +4208,9 @@
         items['paste-nt_unit_server'] = { name: "Paste " + us_copied.ndk_uid };
       }
     } else {
-    
+
       items['new-nt_unit_server'] = { name: "New  Unit Server..." };
-     
+
       if ((us_copied != null) && us_copied.hasOwnProperty("ndk_uid")) {
         items['paste-nt_unit_server'] = { name: "Paste " + us_copied.ndk_uid };
       }
@@ -4204,8 +4225,8 @@
     if (node_type == "nt_unit_server") {
       items['del-' + node_type] = { name: "Del " + node_selected };
       items['copy-' + node_type] = { name: "Copy " + node_selected };
-      var cutypes=cuCreateSubMenu();
-      items['fold1'] = { name: "New  Control Unit","items":cutypes };
+      var cutypes = cuCreateSubMenu();
+      items['fold1'] = { name: "New  Control Unit", "items": cutypes };
 
       if ((cu_copied != null) && cu_copied.hasOwnProperty("ndk_uid")) {
         items['paste-nt_control_unit'] = { name: "Paste/Move \"" + cu_copied.ndk_uid };
@@ -4265,6 +4286,11 @@
         items['init'] = { name: "Init", icon: "init" };
       } else if (status == 'Recoverable Error') {
         items['recover'] = { name: "Recover", icon: "recover" };
+      } else if (status == 'Fatal Error') {
+        items['deinit'] = { name: "Deinit", icon: "deinit" };
+        items['init'] = { name: "Init", icon: "init" };
+        items['unload'] = { name: "Unload", icon: "unload" };
+
       } else if (status == "Unload") {
         items['load'] = { name: "Load", icon: "load" };
       } else if (status == "Load") {
@@ -4445,17 +4471,17 @@
       $(this).addClass("row_snap_selected");
       graph_selected = $(this).attr("id");
       $(list_graphs).html("Graph Selected \"" + graph_selected + "\"");
-      if(high_graphs[graph_selected].trace instanceof Array){
+      if (high_graphs[graph_selected].trace instanceof Array) {
         trace_list = high_graphs[graph_selected].trace;
       } else {
-        trace_list=[];
+        trace_list = [];
       }
       var xp, yp;
-      for (var cnt=0;cnt<trace_list.length;cnt++) {
+      for (var cnt = 0; cnt < trace_list.length; cnt++) {
         xp = encodeCUPath(trace_list[cnt].x);
         yp = encodeCUPath(trace_list[cnt].y);
         var tname = encodeName(trace_list[cnt].name);
-        $('#table_trace').append('<tr class="row_element" id=trace_"' + tname + '" tracename="'+trace_list[cnt].name+'"><td>' + trace_list[cnt].name + '</td><td>' + xp + '</td><td>' + yp + '</td></tr>');
+        $('#table_trace').append('<tr class="row_element" id=trace_"' + tname + '" tracename="' + trace_list[cnt].name + '"><td>' + trace_list[cnt].name + '</td><td>' + xp + '</td><td>' + yp + '</td></tr>');
 
       }
       /*$("#table_trace tbody tr").click(function (e) {
@@ -4529,14 +4555,14 @@
    * @param json: a javascript object
    * @param options: an optional options hash
    */
-  $.fn.generateMenuBox=function(){
+  $.fn.generateMenuBox = function () {
     $(this).html(generateMenuBox());
   }
-  $.fn.saveFullConfig=function(){
+  $.fn.saveFullConfig = function () {
     saveFullConfig();
   }
-  $.fn.restoreFullConfig=function(json,opt){
-    restoreFullConfig(json,opt);
+  $.fn.restoreFullConfig = function (json, opt) {
+    restoreFullConfig(json, opt);
   }
   $.fn.chaosDashboard = function (opt) {
     main_dom = this;
@@ -4544,8 +4570,8 @@
     // clear all intervals
     var interval_id = setInterval("", 9999); // Get a reference to the last
     // interval +1
-  for (var i = 1; i < interval_id; i++)
-    clearInterval(i);
+    for (var i = 1; i < interval_id; i++)
+      clearInterval(i);
 
     /* jQuery chaining */
     return this.each(function () {
@@ -4591,15 +4617,15 @@
           }
         }
       });
-        $(".savetofilecsv").on("click", function (e) {
-          var t = $(e.target);
-          if (save_obj instanceof Object) {
-            if (save_obj.fext == "json") {
-              var str =convertToCSV(save_obj.obj);
-              var blob = new Blob([str], { type: "text;charset=utf-8" });
-              saveAs(blob, save_obj.fname + ".csv");
-            }
+      $(".savetofilecsv").on("click", function (e) {
+        var t = $(e.target);
+        if (save_obj instanceof Object) {
+          if (save_obj.fext == "json") {
+            var str = convertToCSV(save_obj.obj);
+            var blob = new Blob([str], { type: "text;charset=utf-8" });
+            saveAs(blob, save_obj.fname + ".csv");
           }
+        }
       });
     });
   }
