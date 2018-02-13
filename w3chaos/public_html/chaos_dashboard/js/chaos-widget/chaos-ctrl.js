@@ -38,7 +38,7 @@
   var graph_selected;
   var search_string;
   var notupdate_dataset = 1;
-  var implementation_map = { "powersupply": "SCPowerSupply", "scraper": "SCActuator" };
+  var implementation_map = { "powersupply": "SCPowerSupply", "scraper": "SCActuator","camera":"RTCamera" };
 
   function removeElementByName(name, tlist) {
     for (var cnt = 0; cnt < tlist.length; cnt++) {
@@ -1605,6 +1605,11 @@
       htmlc = generateScraperCmd();
       updateTableFn = updateScraperTable;
 
+
+    } else if ((cutype.indexOf("RTCamera") != -1)) {
+      htmlt = generateCameraTable(node_list);
+      updateTableFn = updateCameraTable;
+
     } else {
       htmlt = generateGenericTable(node_list);
       htmlc = generateGenericControl();
@@ -1622,15 +1627,16 @@
     node_list_interval = setInterval(function () {
       jchaos.getChannel(node_list, -1, function (dat) {
         node_live_selected = dat;
-        updateGenericTableDataset(node_live_selected);
-        updateTableFn(node_live_selected);
-
+        
         if (node_live_selected.length == 0 || node_selected == null || node_name_to_index[encodeName(node_selected)] == null) {
           return;
         }
 
         var index = node_name_to_index[encodeName(node_selected)];
         curr_cu_selected = node_live_selected[index];
+        updateGenericTableDataset(node_live_selected,curr_cu_selected);
+        updateTableFn(node_live_selected,curr_cu_selected);
+
         updateGenericControl(curr_cu_selected);
         //  $("div.cu-generic-control").html(chaosGenericControl(cu_live_selected[index]));
         if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
@@ -2056,7 +2062,7 @@
 
   function mainCU() {
     var list_cu = [];
-    var classe = ["powersupply", "scraper"];
+    var classe = ["powersupply", "scraper", "camera"];
     var $radio = $("input:radio[name=search-alive]");
     if ($radio.is(":checked") === false) {
       $radio.filter("[value=true]").prop('checked', true);
@@ -2274,6 +2280,16 @@
     last_index_selected = $(e.currentTarget).index();
 
   }
+  function generateCameraTable(node_list){
+    var html;
+    html+='<div>';
+    html+='<p id="cameraName"></p>';
+    html+='<img id="cameraImage" src="" alt="image" />';
+    html+='</div>';
+    html+=generateGenericTable(node_list);
+    return html; 
+  }
+
   /********************* */
   function generateGenericTable(cu) {
     var html = '<div class="row-fluid" id="table-space">';
@@ -2628,6 +2644,13 @@
     html += '</div>';
 
     return html;
+  }
+  function updateCameratable(cu,selected) {
+    if(selected!=null && selected.hasOwnProperty("output")&&selected.output.hasOwnProperty("FRAMEBUFFER")){
+      var bin=selected.output.FRAMEBUFFER.$binary.base64;
+      $("#cameraName").html(selected.health.ndk_uid);
+      $("#cameraImage").attr("src","data:image/jpeg;base64"+bin);
+    }
   }
   function updatePStable(cu) {
     cu.forEach(function (elem, index) {
