@@ -664,13 +664,20 @@
     }
   }
   function unitServerSave(json) {
+    if ((json == null) || !json.hasOwnProperty("ndk_uid")) {
+      alert("no ndk_uid key found");
+      return;
+    }
+    if(json.ndk_uid==""){
+      alert("US name cannot be empty");
+      return;
+    }
+    node_selected = json.ndk_uid;
     if (node_selected == null || node_selected == "") {
       alert("not US selected!");
       return;
     }
-    if ((json == null) || !json.hasOwnProperty("ndk_uid")) {
-      alert("no ndk_uid key found");
-    }
+    
     var data = jchaos.node(node_selected, "get", "us", "", null, null);
 
 
@@ -1704,7 +1711,7 @@
       }
       editorFn = unitServerSave;
       jsonEdit(templ, null);
-
+      return;
     }
     if (cmd == "del-nt_unit_server") {
 
