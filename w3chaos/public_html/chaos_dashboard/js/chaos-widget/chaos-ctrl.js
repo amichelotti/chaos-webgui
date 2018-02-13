@@ -150,6 +150,10 @@
     if (path == null || path == "timestamp") {
       return "timestamp";
     }
+    if ((path.const == null) && (path.cu == null)) {
+      return path.origin;
+    }
+
     if (path.const) {
       return path.const;
     }
@@ -164,7 +168,13 @@
     var regex_vect = /(.*)\/(.*)\/(.*)\[([-\d]+)\]$/;
 
     var regex = /(.*)\/(.*)\/(.*)$/;
-    var tmp = cupath;
+    var tmp = {
+      cu: null,
+      dir: null,
+      var: null,
+      const: null,
+      origin: cupath
+    };
     if ($.isNumeric(cupath)) {
       tmp = {
         cu: null,
@@ -664,16 +674,16 @@
     var data = jchaos.node(node_selected, "get", "us", "", null, null);
 
 
-    if (data.hasOwnProperty("us_desc")) {
-      if(data.us_desc.hasOwnProperty("cu_desc")&& (data.us_desc.cu_desc instanceof Array)){
+    if ((data instanceof Object) && data.hasOwnProperty("us_desc")) {
+      if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
         data.us_desc.cu_desc.forEach(function (item) {
           if (off_line[item] !== false) {
             console.log("deleting cu:\"" + item.ndk_uid + "\" before readding");
             jchaos.node(item.ndk_uid, "del", "cu", node_selected, null);
           }
         });
+      }
     }
-  }
 
     json.cu_desc.forEach(function (item) {
       item.ndk_parent = node_selected;
@@ -1213,17 +1223,18 @@
       var tracename = $("#trace-name").val();
       var xpath = $("#xvar").val();
       var ypath = $("#yvar").val();
+      var xtype = $("#xtype:selected").val();
+      var ytype = $("#ytype:selected").val();
+
       var tmpx, tmpy;
-      if (xpath == "") {
+      if (xtype == "datetime") {
         xpath = "timestamp";
-      } else {
-        tmpx = decodeCUPath(xpath);
       }
-      if (ypath == "") {
+      if (ytype == "datetime") {
         ypath = "timestamp";
-      } else {
-        tmpy = decodeCUPath(ypath);
       }
+      tmpx = decodeCUPath(xpath);
+      tmpy = decodeCUPath(ypath);
       var tname = encodeName(tracename);
       $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '" tracename="' + tracename + '"><td>' + tracename + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
       if (tmpx == null && tmpy == null) {
@@ -3106,27 +3117,38 @@
                 var tr = opt.trace;
                 var enable_shift = false;
                 for (k in tr) {
-                  if ((tr[k].x == "timestamp") || (tr[k].x == null)) {
+                  if ((tr[k].x == null)) {
+                    x = null;
+                  } else if ((tr[k].x.origin == "timestamp")) {
                     x = (new Date()).getTime(); // current time
                     if (graph_opt.highchart_opt.shift && ((x - graph_opt.start_time) > graph_opt.highchart_opt['timebuffer'])) {
                       enable_shift = true;
                     }
                   } else if (tr[k].x.const != null) {
                     x = tr[k].x.const;
-                  } else {
+                  } else if (tr[k].x.var != null) {
                     x = getValueFromCUList(data, tr[k].x);
                   }
-                  if ((tr[k].y == "timestamp") || (tr[k].y == null)) {
+                  if ((tr[k].y == null)) {
+                    y = null;
+                  } else if ((tr[k].y.origin == "timestamp")) {
                     y = (new Date()).getTime(); // current time
                   } else if (tr[k].y.const != null) {
                     y = tr[k].y.const;
-                  } else {
+                  } else if (tr[k].y.var != null) {
                     y = getValueFromCUList(data, tr[k].y);
 
                   }
                   if (graph_opt.highchart_opt['tracetype'] == "multi") {
                     if ((y instanceof Array)) {
-                      var inc = 1.0 / y.length;
+                      var inc;
+                      if (x == null) {
+                        x = 0;
+                        inc = 1;
+                      } else {
+                        inc = 1.0 / y.length;
+                      }
+
                       var set = [];
 
                       for (var cntt = 0; cntt < y.length; cntt++) {
@@ -3137,8 +3159,15 @@
                       chart.series[cnt].setData(set, true, true, true);
 
                     } else if (x instanceof Array) {
-                      var inc = 1.0 / x.length;
+                      var inc;
                       var set = [];
+                      if (y == null) {
+                        y = 0;
+                        inc = 1;
+                      } else {
+                        inc = 1.0 / x.length;
+                      }
+
                       for (var cntt = 0; cntt < y.length; cntt++) {
                         set.push([x[cntt], y + (inc * cntt)]);
                       }
@@ -3150,28 +3179,46 @@
                     }
                     cnt++;
                   } else {
+                    // single
                     if ((y instanceof Array)) {
-                      var inc = x;
-                      y.forEach(function (item) {
-                        set.push({ inc, item });
+                      var inc = 1.0 / y.length;
+                      var xx = x;
 
-                        inc += 0.1;
+                      y.forEach(function (item, index) {
+                        if (x == null) {
+                          set.push([index, item]);
+
+                        } else {
+                          set.push([xx, item]);
+                          xx = (xx + inc);
+                        }
+
                       });
+
                     } else if (x instanceof Array) {
-                      var inc = y;
+                      var inc = 1.0 / y;
+                      var yy = y;
 
-                      x.forEach(function (item) {
-                        set.push({ item, inc });
-                        inc += 0.1;
+                      x.forEach(function (item, index) {
+                        if (y == null) {
+                          set.push([item, index]);
+
+                        } else {
+                          set.push([item, yy]);
+
+                          yy = (yy + inc);
+                        }
                       });
-                    } else {
+
+                      } else {
                       set.push({ x, y });
                     }
                   }
+                  if (graph_opt.highchart_opt['tracetype'] == "single") {
+                    chart.series[0].setData(set, true, true, true);
+                  }
                 }
-                if (graph_opt.highchart_opt['tracetype'] == "single") {
-                  chart.series[0].setData(set, true, true, true);
-                }
+               
                 chart.redraw();
               }, graph_opt.update);
               active_plots[graphname]['interval'] = refresh;
