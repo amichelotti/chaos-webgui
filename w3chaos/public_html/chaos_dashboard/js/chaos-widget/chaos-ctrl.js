@@ -3070,6 +3070,8 @@
         resizable: true,
         dialogClass: 'no-close',
         open: function () {
+          $("#graph-" + count).css('width', opt.width);
+          $("#graph-" + count).css('height', opt.height);
 
           var chart = new Highcharts.chart("graph-" + count, opt.highchart_opt);
           $(this).attr("graphname", graph_selected);
@@ -3128,6 +3130,8 @@
                     x = tr[k].x.const;
                   } else if (tr[k].x.var != null) {
                     x = getValueFromCUList(data, tr[k].x);
+                  } else {
+                    x=null;
                   }
                   if ((tr[k].y == null)) {
                     y = null;
@@ -3138,6 +3142,8 @@
                   } else if (tr[k].y.var != null) {
                     y = getValueFromCUList(data, tr[k].y);
 
+                  } else {
+                    y=null;
                   }
                   if (graph_opt.highchart_opt['tracetype'] == "multi") {
                     if ((y instanceof Array)) {
@@ -3210,7 +3216,7 @@
                         }
                       });
 
-                      } else {
+                    } else {
                       set.push({ x, y });
                     }
                   }
@@ -3218,7 +3224,7 @@
                     chart.series[0].setData(set, true, true, true);
                   }
                 }
-               
+
                 chart.redraw();
               }, graph_opt.update);
               active_plots[graphname]['interval'] = refresh;
