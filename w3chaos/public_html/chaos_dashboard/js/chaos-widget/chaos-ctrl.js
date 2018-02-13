@@ -2645,11 +2645,11 @@
 
     return html;
   }
-  function updateCameratable(cu,selected) {
+  function updateCameraTable(cu,selected) {
     if(selected!=null && selected.hasOwnProperty("output")&&selected.output.hasOwnProperty("FRAMEBUFFER")){
       var bin=selected.output.FRAMEBUFFER.$binary.base64;
       $("#cameraName").html(selected.health.ndk_uid);
-      $("#cameraImage").attr("src","data:image/jpeg;base64"+bin);
+      $("#cameraImage").attr("src","data:image/jpeg;base64,"+bin);
     }
   }
   function updatePStable(cu) {
