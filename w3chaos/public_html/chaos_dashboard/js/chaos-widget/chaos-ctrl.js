@@ -233,10 +233,17 @@
     }
     node_list_check = setInterval(function () {
       node_live_selected.forEach(function (elem, index) {
+        var curr_time=0;
+        if (elem.hasOwnProperty("health") && elem.health.hasOwnProperty("dpck_ats")){
+          curr_time=elem.health.dpck_ats;
+        }
+        if ( elem.hasOwnProperty("output") && elem.output.hasOwnProperty("dpck_ats")&& (elem.output.dpck_ats > curr_time)){
+          curr_time=elem.output.dpck_ats;
+        }
         if (elem.hasOwnProperty("health") && elem.health.hasOwnProperty("ndk_uid")) {
           var name = encodeName(elem.health.ndk_uid);
-          var diff = (elem.health.dpck_ats - health_time_stamp_old[name]);
-          if (diff > 0) {
+          var diff = (curr_time - health_time_stamp_old[name]);
+          if (diff != 0) {
             $("#" + name).css('color', 'green');
             $("#" + name).find('td').css('color', 'green');
 
@@ -248,7 +255,7 @@
             off_line[elem.health.ndk_uid] = true;
 
           }
-          health_time_stamp_old[name] = elem.health.dpck_ats;
+          health_time_stamp_old[name] = curr_time;
         } else if (node_list.length > 0) {
           var id = node_list[index];
           var name = encodeName(id);
@@ -258,7 +265,7 @@
         }
 
       });
-    }, 7000);
+    }, 10000);
   }
   function retriveCurrentCmdArguments(alias) {
     var arglist = [];
@@ -456,14 +463,14 @@
   }
 
   function show_dev_alarm(id) {
-    var dataset = node_live_selected[node_name_to_index[id]];
-    if (dataset.hasOwnProperty("device_alarms")) {
+    var dataset = node_live_selected[node_name_to_index[encodeName(id)]];
+    if ((dataset!=null) && (dataset.hasOwnProperty("device_alarms"))) {
       decodeDeviceAlarm(dataset.device_alarms);
     }
   }
 
   function show_cu_alarm(id) {
-    var dataset = node_live_selected[node_name_to_index[id]];
+    var dataset = node_live_selected[node_name_to_index[encodeName(id)]];
     if (dataset.hasOwnProperty("cu_alarms")) {
       decodeDeviceAlarm(dataset.cu_alarms);
     }
@@ -684,11 +691,21 @@
     if ((data instanceof Object) && data.hasOwnProperty("us_desc")) {
       if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
         data.us_desc.cu_desc.forEach(function (item) {
-          if (off_line[item] !== false) {
-            console.log("deleting cu:\"" + item.ndk_uid + "\" before readding");
+          var found = false;
+          // remove just the cu not present in new configuration
+          json.cu_desc.forEach(function (items) {
+            if(items.ndk_uid == item.ndk_uid){
+              found=true;
+            }
+          });
+          if(found == false){
+            if (off_line[item] !== false) {
+            console.log("deleting cu:\"" + item.ndk_uid + "\"");
             jchaos.node(item.ndk_uid, "del", "cu", node_selected, null);
           }
-        });
+        }
+      });
+        
       }
     }
 
@@ -1625,19 +1642,51 @@
 
     }
     node_list_interval = setInterval(function () {
+      /*
+      node_live_selected=  jchaos.getChannel(node_list, -1, null);
+      if (node_live_selected.length == 0) {
+        return;
+      }
+      if(node_selected!=null &&  node_name_to_index[encodeName(node_selected)] !=null){
+        var index = node_name_to_index[encodeName(node_selected)];
+        curr_cu_selected = node_live_selected[index];
+        updateGenericControl(curr_cu_selected);
+        
+      }      
+      updateGenericTableDataset(node_live_selected,curr_cu_selected);
+      
+      updateTableFn(node_live_selected,curr_cu_selected);
+
+      
+      //  $("div.cu-generic-control").html(chaosGenericControl(cu_live_selected[index]));
+      if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
+        var converted = convertBinaryToArrays(curr_cu_selected);
+        var jsonhtml = json2html(converted, options, node_selected);
+        if (isCollapsable(converted)) {
+          jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+        }
+
+        $("#cu-dataset").html(jsonhtml);
+
+      }*/
+      
       jchaos.getChannel(node_list, -1, function (dat) {
         node_live_selected = dat;
-        
-        if (node_live_selected.length == 0 || node_selected == null || node_name_to_index[encodeName(node_selected)] == null) {
+        if (node_live_selected.length == 0) {
           return;
         }
 
-        var index = node_name_to_index[encodeName(node_selected)];
-        curr_cu_selected = node_live_selected[index];
+        if(node_selected!=null &&  node_name_to_index[encodeName(node_selected)] !=null){
+          var index = node_name_to_index[encodeName(node_selected)];
+          curr_cu_selected = node_live_selected[index];
+          updateGenericControl(curr_cu_selected);
+          
+        }      
         updateGenericTableDataset(node_live_selected,curr_cu_selected);
+        
         updateTableFn(node_live_selected,curr_cu_selected);
-
-        updateGenericControl(curr_cu_selected);
+  
+        
         //  $("div.cu-generic-control").html(chaosGenericControl(cu_live_selected[index]));
         if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
           var converted = convertBinaryToArrays(curr_cu_selected);
@@ -1645,9 +1694,8 @@
           if (isCollapsable(converted)) {
             jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
           }
-
+  
           $("#cu-dataset").html(jsonhtml);
-
         }
       });
 
@@ -4381,6 +4429,10 @@
         items['init'] = { name: "Init", icon: "init" };
 
       } else {
+        items['load'] = { name: "Load", icon: "load" };
+        items['init'] = { name: "Init", icon: "init" };
+        items['unload'] = { name: "Unload", icon: "unload" };
+        items['deinit'] = { name: "Deinit", icon: "deinit" };
 
       }
     }
