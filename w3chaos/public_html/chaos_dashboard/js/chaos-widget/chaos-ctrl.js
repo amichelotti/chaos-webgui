@@ -4487,7 +4487,9 @@
         $("#cmd-load-unload").show();
       } else if (status == 'Recoverable Error') {
         $("#cmd-recover-error").html("<i class='material-icons red'>build</i><p class='name-cmd'>Recover Error</p>");
-        $("#cmd-recover-error").attr("cucmdid", "recover");
+          $("#cmd-recover-error").attr("cucmdid", "recover");
+	 $("#cmd-load-unload").attr("cucmdid", "unload");
+        $("#cmd-load-unload").show();
         $("#cmd-recover-error").show();
       } else if (status == "Unload") {
         $("#cmd-load-unload").html("<i class='material-icons green'>power</i><p class='name-cmd'>Load</p>");
@@ -4503,7 +4505,8 @@
         $("#cmd-init-deinit").show();
 
       } else {
-
+        $("#cmd-load-unload").attr("cucmdid", "load");
+        $("#cmd-load-unload").show();
       }
     }
     if (cu.hasOwnProperty('system') && (status != "Dead")) {   //if el system
