@@ -1099,10 +1099,10 @@
         $("#trace-add").attr('disabled', true);
 
       }
-      if (($("#xvar").val() == "") && ($("#xtype:selected").val() == "datetime")) {
+      if (($("#xvar").val() == "") && ($("#xtype option:selected").val() == "datetime")) {
         $("#xvar").val("timestamp")
       }
-      if (($("#yvar").val() == "") && ($("#ytype:selected").val() == "datetime")) {
+      if (($("#yvar").val() == "") && ($("#ytype option:selected").val() == "datetime")) {
         $("#yvar").val("timestamp")
       }
 
@@ -1111,12 +1111,20 @@
         var info = high_graphs[graph_selected].highchart_opt;
         $("#graph_save_name").val(graph_selected);
         $("#xname").val(info.xAxis.title.text);
-        $("#xtype").val(info.xAxis.type);
+       // $("#xtype option:selected").val(info.xAxis.type);
+       if(info.xAxis.type !=null && info.xAxis.type!=""){
+          $("#xtype").val(info.xAxis.type);
+       }
+
         $("#xmax").val(info.xAxis.max);
         $("#xmin").val(info.xAxis.min);
 
         $("#yname").val(info.yAxis.title.text);
+    //    $("#ytype option:selected").val(info.yAxis.type);
+      if(info.yAxis.type !=null && info.yAxis.type!=""){
         $("#ytype").val(info.yAxis.type);
+      }
+
         $("#ymax").val(info.yAxis.max);
         $("#ymin").val(info.yAxis.min);
         $("#graph-width").val(high_graphs[graph_selected].width);
@@ -1140,7 +1148,13 @@
           var xpath, ypath;
           xpath = encodeCUPath(trace[k].x);
           ypath = encodeCUPath(trace[k].y);
-          $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '" tracename="' + trace[k].name + '""><td>' + trace[k].name + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>');
+          var color="";
+          if(trace[k].hasOwnProperty("color")){
+            if(trace[k].color!=null){
+              color=trace[k].color;
+            }
+          }
+          $("#table_graph_items").append('<tr class="row_element" id="trace-' + tname + '" tracename="' + trace[k].name + '""><td>' + trace[k].name + '</td><td>' + xpath + '</td><td>' + ypath + '</td><td>' + color + '</td></tr>');
 
         };
       }
@@ -1154,6 +1168,9 @@
       var tlist = getElementByName(tname, trace_list);
       $("#xvar").val(encodeCUPath(tlist.x));
       $("#yvar").val(encodeCUPath(tlist.y));
+      if(tlist.hasOwnProperty("color")){
+        $("#trace-color").val(tlist.color);
+      }
       trace_selected = $(this).attr("id");
     }
     );
@@ -1168,12 +1185,12 @@
 
     });
     $("xtype").on("change", function () {
-      if ($("#xtype:selected").val() == "datetime") {
+      if ($("#xtype option:selected").val() == "datetime") {
         $("#xvar").val("timestamp");
       }
     });
     $("ytype").on("change", function () {
-      if ($("#ytype:selected").val() == "datetime") {
+      if ($("#ytype option:selected").val() == "datetime") {
         $("#yvar").val("timestamp");
       }
     });
@@ -1206,14 +1223,19 @@
       }
     });
     $("#graph-delete").on('click', function () {
+      if(graph_selected == null){
+        alert ("no graph selected");
+        return;
+      }
       delete high_graphs[graph_selected];
 
-      if (active_plots[graph_selected].hasOwnProperty('interval')) {
+      
+      if (active_plots[graph_selected] != null) {
+        if (active_plots[graph_selected].hasOwnProperty('interval')) {
 
-        clearInterval(active_plots[graph_selected].interval);
-        delete active_plots[graph_selected].interval;
-      }
-      if (active_plots[grap_selected] != null) {
+          clearInterval(active_plots[graph_selected].interval);
+          delete active_plots[graph_selected].interval;
+        }
         $("#dialog-" + active_plots[grap_selected].count).modal("hide");
         delete active_plots[graph_selected];
       }
@@ -1247,10 +1269,13 @@
       var tracename = $("#trace-name").val();
       var xpath = $("#xvar").val();
       var ypath = $("#yvar").val();
-      var xtype = $("#xtype:selected").val();
-      var ytype = $("#ytype:selected").val();
-
-      var tmpx, tmpy;
+      var xtype = $("#xtype option:selected").val();
+      var ytype = $("#ytype option:selected").val();
+      var trace_color= $("#trace-color").val();
+      var tmpx, tmpy,tmpc;
+      if(trace_color!=null && trace_color!=""){
+        tmpc=trace_color;
+      }
       if (xtype == "datetime") {
         xpath = "timestamp";
       }
@@ -1268,7 +1293,8 @@
       var telem = {
         name: tracename,
         x: tmpx,
-        y: tmpy
+        y: tmpy,
+        color:tmpc
       };
       trace_list.push(telem);
 
@@ -1276,10 +1302,13 @@
 
     $("#trace-replace").click(function () {
       var tracename = $("#trace-name").val();
+      var trace_color=$("#trace-color").val();
       var xpath = $("#xvar").val();
       var ypath = $("#yvar").val();
-      var tmpx, tmpy;
-
+      var tmpx, tmpy,tmpc;
+      if(trace_color!=null && trace_color!=""){
+        tmpc=trace_color;
+      }
       if (xpath == "") {
         xpath = "timestamp";
       } else {
@@ -1297,7 +1326,7 @@
 
 
       var tname = encodeName(tracename);
-      var replace_row = '<tr class="row_element" id="trace-' + tname + '" tracename="' + tracename + '"><td>' + tracename + '</td><td>' + xpath + '</td><td>' + ypath + '</td></tr>';
+      var replace_row = '<tr class="row_element" id="trace-' + tname + '" tracename="' + tracename + '"><td>' + tracename + '</td><td>' + xpath + '</td><td>' + ypath + '</td><td>' + trace_color + '</td></tr>';
       var toreplaceTrace = $("#" + trace_selected).attr("tracename");
 
       $("#" + trace_selected).replaceWith(replace_row);
@@ -1305,7 +1334,8 @@
       var telem = {
         name: tracename,
         x: tmpx,
-        y: tmpy
+        y: tmpy,
+        color:tmpc
       };
       replaceElementByName(toreplaceTrace, telem, trace_list);
       trace_selected = tname;
@@ -3006,9 +3036,12 @@
     html += '<input class="input-xlarge span10" id="trace-name" title="Name of the trace" type="text" value="">';
 
     html += '<label class="label span1">X:</label>';
-    html += '<input class="input-xlarge span11" type="text" title="port path to plot on X" id="xvar" value="timestamp">';
+    html += '<input class="input-xlarge span11" type="text" title="port path to plot on X (timestamp,sequence,fullpath,[-1] all array components)" id="xvar" value="timestamp">';
     html += '<label class="label span1">Y:</label>';
-    html += '<input class="input-xlarge span11" type="text" id="yvar" title="port path to plot on Y" value="">';
+    html += '<input class="input-xlarge span11" type="text" id="yvar" title="port path to plot on Y (timestamp,sequence,fullpath,[-1] all array components)" value="">';
+    html += '<label class="label span1">Color:</label>';
+    html += '<input class="input-xlarge span11" type="text" id="trace-color" title="Trace Color (empty = auto)" value="">';
+
     html += '<a href="#" class="btn span2" id="trace-add" title="Add the following trace to the Graph" >Add Trace</a>';
     html += '<a href="#" class="btn span2" id="trace-replace" title="Replace the following trace to the Graph" >Replace Trace</a>';
 
@@ -3029,6 +3062,7 @@
     html += '<th>Trace Name</th>';
     html += '<th id="X-axis">X-Axis</th>';
     html += '<th id="Y-axis">Y-Axis</th>';
+    html += '<th id="Color">Color</th>';
 
     html += '</tr>';
     html += '</thead>';
@@ -3175,6 +3209,7 @@
               var graphname = $(this).attr("graphname");
               console.log("Start  Live Graph:" + graphname);
               var graph_opt = high_graphs[graphname];
+              console.log("graph options:"+JSON.stringify(graph_opt)); 
 
               if (active_plots[graphname].hasOwnProperty('interval')) {
                 clearInterval(active_plots[graphname].interval);
@@ -3452,7 +3487,7 @@
       return;
     }
     var xname = $("#xname").val();
-    var xtype = $("#xtype").val();
+    var xtype = $("#xtype option:selected").val();
     var xmax = $("#xmax").val();
     var xmin = $("#xmin").val();
     var ymax = $("#ymax").val();
@@ -3476,18 +3511,27 @@
     }
 
     var yname = $("#yname").val();
-    var ytype = $("#ytype").val();
+    var ytype = $("#ytype option:selected").val();
     var serie = [];
     var tracecuo = {};
     var tracecu = [];
     var shift_true = $("input[type=radio][name=graph-shift]:checked").val();
-    if (tracetype == "single") {
+    /*if (tracetype == "single") {
+    
+    
       serie.push({ name: graphname });
-    }
+    }*/
     for (var cnt = 0; cnt < trace_list.length; cnt++) {
-      if (tracetype == "multi") {
-        serie.push({ name: trace_list[cnt].name });
-      }
+//      if (tracetype == "multi") {
+        var col;
+        if(trace_list[cnt].hasOwnProperty("color")&&(trace_list[cnt].color!="")){
+          col=trace_list[cnt].color;
+          serie.push({ name: trace_list[cnt].name,color:col });
+        } else {
+          serie.push({ name: trace_list[cnt].name });
+        }
+        
+     // }
       if ((trace_list[cnt].x != null) && trace_list[cnt].x.hasOwnProperty("cu") && trace_list[cnt].x.cu != null) {
         tracecuo[trace_list[cnt].x.cu] = "1";
       }
@@ -3585,6 +3629,8 @@
       culist: tracecu,
       time: tempo
     };
+    console.log("saving Graph:"+JSON.stringify( high_graphs[graphname])); 
+
     jchaos.variable("highcharts", "set", high_graphs, null);
   }
 
@@ -3807,12 +3853,14 @@
     html += '<div class="box span12">';
     html += '<div class="box-content">';
 
-    html += '<table class="table table-bordered" id="table_logs">';
+    html += '<table class="table table-bordered table-fixed" id="table_logs">';
     html += '<thead class="box-header">';
     html += '<tr>';
     html += '<th>Date</th>';
     html += '<th>Node</th>';
     html += '<th>Description</th>';
+    html += '<th>Origin</th>';
+
     html += '</tr>';
     html += '</thead>';
     html += '</table>';
@@ -3833,6 +3881,9 @@
     html += '<option value="Info">Informative</option>';
     html += '<option value="error">Error</option>';
     html += '<option value="warning">Warning</option>';
+    html += '<option value="log">Log</option>';
+    html += '<option value="command">Commands</option>';
+
     html += '</select>';
 
     html += '<input class="input-xlarge focused" id="log_search" type="text" value="Node search..">';
@@ -4569,22 +4620,25 @@
     $("#table_logs").find("tr:gt(0)").remove();
     //var logtype= $( "input[name=log]:radio" );
     var logtype = $("#logtype option:selected").val();
-    /*
-    { "result_list" : [ { "seq" : 1618, "mdsndk_nl_lts" : 1513869648206, "mdsndk_nl_sid" : "BTF/QUADRUPOLE/QUATB001", "mdsndk_nl_ld" : "error", "mdsndk_nl_lsubj" : "mode", "mdsndk_nl_e_ed" : "", "mdsndk_nl_e_em" : "", "mdsndk_nl_e_ec" : 0 }, { "seq" : 1256, "mdsndk_nl_lts" : 1513869317995, "mdsndk_nl_sid" : "BTF/QUADRUPOLE/QUATB001", "mdsndk_nl_ld" : "error", "mdsndk_nl_lsubj" : "mode", "mdsndk_nl_e_ed" : "", "mdsndk_nl_e_em" : "", "mdsndk_nl_e_ec" : 0 }, { "seq" : 654, "mdsndk_nl_lts" : 1513869128475, "mdsndk_nl_sid" : "BTF/QUADRUPOLE/QUATB001", "mdsndk_nl_ld" : "error", "mdsndk_nl_lsubj" : "mode", "mdsndk_nl_e_ed" : "", "mdsndk_nl_e_em" : "", "mdsndk_nl_e_ec" : 0 }, { "seq" : 196, "mdsndk_nl_lts" : 1513869042637, "mdsndk_nl_sid" : "BTF/QUADRUPOLE/QUATB001", "mdsndk_nl_ld" : "error", "mdsndk_nl_lsubj" : "pola", "mdsndk_nl_e_ed" : "", "mdsndk_nl_e_em" : "", "mdsndk_nl_e_ec" : 0 } ] }
-    */
-    jchaos.log(cu, "search", "log", 0, 10000000000000, function (data) {
+    $("#log_search").val(cu);
+    
+    jchaos.log(cu, "search", logtype, 0, 10000000000000, function (data) {
       if (data.hasOwnProperty("result_list")) {
         data.result_list.forEach(function (item) {
           if ((item.mdsndk_nl_ld == logtype) || (logtype == "all")) {
             var dat = new Date(item.mdsndk_nl_lts).toString();
             var nam = item.mdsndk_nl_sid;
-            var msg = item.mdsndk_nl_l_m;
-            if (logtype == "warning") {
-              $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td>' + dat + '</td><td>' + nam + '</td><td>' + msg + '</td></tr>').css('color', 'yellow');;
-            } else if (logtype == "error") {
-              $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td>' + dat + '</td><td>' + nam + '</td><td>' + msg + '</td></tr>').css('color', 'red');;
+            var msg = item.mdsndk_nl_e_em;
+            var type= item.mdsndk_nl_ld;
+            var origin=item.mdsndk_nl_e_ed;
+            if (type == "warning") {
+              $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td class="wrap">' + dat + '</td><td class="wrap">' + nam + '</td><td class="wrap">' + msg + '</td><td class="wrap">' + origin + '</td></tr>').css('color', 'yellow');;
+            } else if (type == "error") {
+              $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td class="wrap">' + dat + '</td><td>' + nam + '</td><td class="wrap">' + msg + '</td><td class="wrap">' + origin + '</td></tr>').css('color', 'red');;
+            }  else if (type == "command") {
+              $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td class="wrap">' + dat + '</td><td>' + nam + '</td><td class="wrap">' + msg + '</td><td class="wrap">' + origin + '</td></tr>').css('color', 'green');;
             } else {
-              $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td>' + dat + '</td><td>' + nam + '</td><td>' + msg + '</td></tr>');
+              $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td class="wrap">' + dat + '</td><td>' + nam + '</td><td class="wrap">' + msg + '</td><td class="wrap">' + origin + '</td></tr>');
 
             }
           }
@@ -4619,7 +4673,12 @@
         xp = encodeCUPath(trace_list[cnt].x);
         yp = encodeCUPath(trace_list[cnt].y);
         var tname = encodeName(trace_list[cnt].name);
-        $('#table_trace').append('<tr class="row_element" id=trace_"' + tname + '" tracename="' + trace_list[cnt].name + '"><td>' + trace_list[cnt].name + '</td><td>' + xp + '</td><td>' + yp + '</td></tr>');
+        var tcolor="";
+        if(trace_list[cnt].hasOwnProperty("color")){
+          tcolor=(trace_list[cnt].color == null)?"":trace_list[cnt].color;
+        }
+        
+        $('#table_trace').append('<tr class="row_element" id=trace_"' + tname + '" tracename="' + trace_list[cnt].name + '"><td>' + trace_list[cnt].name + '</td><td>' + xp + '</td><td>' + yp + '</td><td>' + tcolor + '</td></tr>');
 
       }
       /*$("#table_trace tbody tr").click(function (e) {
