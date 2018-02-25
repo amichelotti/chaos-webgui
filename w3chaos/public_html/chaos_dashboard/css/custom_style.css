@@ -1,7 +1,23 @@
 /* HOME */
+.wrap {
 
-table#main_table_cu th, table#main_table_cu td {
+    /* css-3 */
+    white-space: -o-pre-wrap; 
+    word-wrap: break-word;
+    white-space: pre-wrap; 
+    white-space: -moz-pre-wrap; 
+    white-space: -pre-wrap; 
+
+}
+.table-fixed { 
+	table-layout: fixed;
+	width: 100%
+  }
+
+table#main_table th, table#main_table td {
 	vertical-align: middle;
+	table-layout: auto;
+
 }
 
 .nav-tabs>li>a {
