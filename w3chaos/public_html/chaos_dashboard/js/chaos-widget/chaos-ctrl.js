@@ -2648,7 +2648,7 @@
   function updateCameratable(cu,selected) {
     if(selected!=null && selected.hasOwnProperty("output")&&selected.output.hasOwnProperty("FRAMEBUFFER")){
       var bin=selected.output.FRAMEBUFFER.$binary.base64;
-      $("#cameraName").html(selected.health.ndk_uid);
+      $("#cameraName").text(selected.health.ndk_uid);
       $("#cameraImage").attr("src","data:image/jpeg;base64"+bin);
     }
   }
