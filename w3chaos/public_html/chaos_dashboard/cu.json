@@ -7,17 +7,19 @@
 	"ndk_uid": {
 		"type": "string",
 		"required": true,
-		"format":"textarea",
+		"format":"text",
 	    "description":"CU Unique Identifier ZONE/TYPE/ID"
 	},
 	"ndk_parent": {
-	    "type": "string",
+		"type": "string",
+		"format":"text",
 		"description":"US owner"
 		
 	},
 	
 	"control_unit_implementation": {
-	    "type": "string",
+		"type": "string",
+		"format":"text",
 	    "description":"C++ Class that implements the CU"
 	},
 	"auto_load": {
