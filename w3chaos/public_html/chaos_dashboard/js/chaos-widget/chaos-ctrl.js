@@ -760,7 +760,7 @@
     var jopt = {
       // Enable fetching schemas via ajax
       // The schema for the editor
-      theme: 'bootstrap2',
+      //theme: 'bootstrap2',
       ajax: true,
       schema: jsontemp,
 
@@ -771,8 +771,13 @@
     if (json_editor != null) {
       delete json_editor;
     }
+    JSONEditor.defaults.options.theme = 'bootstrap2';
+    JSONEditor.defaults.options.iconlib = "bootstrap2";
+
+//    JSONEditor.defaults.iconlib = 'fontawesome4';
     json_editor = new JSONEditor(element.get(0), jopt);
     $("#mdl-jsonedit").modal("show");
+    json_editor.enable();
   }
 
   function element_sel(field, arr, add_all) {
@@ -2739,7 +2744,12 @@
       $("#cameraName").html("<b>"+selected.output.ndk_uid+"</b>");
       if(selected.output.hasOwnProperty("FRAMEBUFFER")){
       var bin=selected.output.FRAMEBUFFER.$binary.base64;
-      $("#cameraImage").attr("src","data:image/png;base64,"+bin);
+      var fmt="png";
+      if(selected.hasOwnProperty("input")&&selected.input.FMT!=null ){
+        fmt=selected.input.FMT;
+      }
+      $("#cameraName").html(selected.health.ndk_uid);
+      $("#cameraImage").attr("src","data:image/"+fmt+";base64,"+bin);
     }
   }
 }
@@ -3825,7 +3835,7 @@
     html += '<h3>Editor</h3>';
     html += '</div>';
     html += '<div class="modal-body">';
-    html += '<div id="json-edit" class="json-edit"></div>';
+    html += '<div id="json-edit" class="json-edit medium-12 columns"></div>';
     html += '</div>';
     html += '<div class="modal-footer">';
     html += '<a href="#" class="btn btn-primary" id="save-jsonedit">Save</a>';
