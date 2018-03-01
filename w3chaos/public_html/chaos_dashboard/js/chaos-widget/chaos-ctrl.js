@@ -112,7 +112,7 @@
   }
   function instantMessage(msghead, msg, tim) {
     var instant = $('<div></div>').html(msg).dialog({
-      width: 150,
+      width: 350,
       height: 100,
       title: msghead,
       position: "center",
@@ -1591,19 +1591,31 @@
   function executeCUMenuCmd(cmd, opt) {
     if (cmd == "load") {
 
-      jchaos.loadUnload(node_multi_selected, true, null);
-      return;
+      jchaos.loadUnload(node_multi_selected, true, function (data) {
+        instantMessage("LOAD ", "Command:\"" + cmd + "\" sent", 1000);
+
+      });
+      
     } else if (cmd == "unload") {
-      jchaos.loadUnload(node_multi_selected, false, null);
-      return;
+      jchaos.loadUnload(node_multi_selected, false, function (data) {
+        instantMessage("UNLOAD ", "Command:\"" + cmd + "\" sent", 1000);
+
+      });
     } else if (cmd == "init") {
       jchaos.node(node_multi_selected, "init", "cu", null, function (data) {
+        instantMessage("INIT ", "Command:\"" + cmd + "\" sent", 1000);
+
       });
     } else if (cmd == "deinit") {
       jchaos.node(node_multi_selected, "deinit", "cu", null, function (data) {
+        instantMessage("DEINIT ", "Command:\"" + cmd + "\" sent", 1000);
+
       });
     } else {
-      jchaos.sendCUCmd(node_multi_selected, cmd, "", null);
+      jchaos.sendCUCmd(node_multi_selected, cmd, "", function (data) {
+        instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
+
+      });
     }
   }
   function buildCUInterface(cuids, cutype) {
@@ -2359,10 +2371,9 @@
 
   }
   function generateCameraTable(node_list){
-    var html;
-    html+='<div>';
-    html+='<p id="cameraName"></p>';
-    html+='<img id="cameraImage" src="" alt="image" />';
+    var html='<div>';
+    html+='<div id="cameraName"></div>';
+    html+='<img id="cameraImage" src="" />';
     html+='</div>';
     html+=generateGenericTable(node_list);
     return html; 
@@ -2724,12 +2735,14 @@
     return html;
   }
   function updateCameraTable(cu,selected) {
-    if(selected!=null && selected.hasOwnProperty("output")&&selected.output.hasOwnProperty("FRAMEBUFFER")){
+    if(selected!=null && selected.hasOwnProperty("output")){
+      $("#cameraName").html("<b>"+selected.output.ndk_uid+"</b>");
+      if(selected.output.hasOwnProperty("FRAMEBUFFER")){
       var bin=selected.output.FRAMEBUFFER.$binary.base64;
-      $("#cameraName").html(selected.health.ndk_uid);
       $("#cameraImage").attr("src","data:image/png;base64,"+bin);
     }
   }
+}
   function updatePStable(cu) {
     cu.forEach(function (elem, index) {
       if (elem.hasOwnProperty("health") && elem.health.hasOwnProperty("ndk_uid")) {

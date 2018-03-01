@@ -36,13 +36,18 @@
 		 "cudk_driver_description_init_parameter":""
 		 }],
 	"attribute_value_descriptions":[
-	    {"cudk_ds_attr_name":"IMAGEX","cudk_default_value":"640","cudk_ds_max_range":"4096","cudk_ds_min_range":"0"},
-	    {"cudk_ds_attr_name":"IMAGEY","cudk_default_value":"480","cudk_ds_max_range":"4096","cudk_ds_min_range":"0"},
+	    {"cudk_ds_attr_name":"WIDTH","cudk_default_value":"640","cudk_ds_max_range":"4096","cudk_ds_min_range":"0"},
+		{"cudk_ds_attr_name":"HEIGHT","cudk_default_value":"480","cudk_ds_max_range":"4096","cudk_ds_min_range":"0"},
+		{"cudk_ds_attr_name":"OFFSETX","cudk_default_value":"0","cudk_ds_max_range":"4096","cudk_ds_min_range":"0"},
+		{"cudk_ds_attr_name":"OFFSETY","cudk_default_value":"0","cudk_ds_max_range":"4096","cudk_ds_min_range":"0"},
+
 	    {"cudk_ds_attr_name":"DEPTH","cudk_default_value":"8","cudk_ds_max_range":"8","cudk_ds_min_range":"1"},
-	    {"cudk_ds_attr_name":"SHUTTER","cudk_default_value":"0","cudk_ds_max_range":"65536","cudk_ds_min_range":"0"},
-	    {"cudk_ds_attr_name":"BRIGHTNESS","cudk_default_value":"50","cudk_ds_max_range":"100","cudk_ds_min_range":"0"},
-	    {"cudk_ds_attr_name":"SHARPNESS","cudk_default_value":"50","cudk_ds_max_range":"100","cudk_ds_min_range":"0"},
-	    {"cudk_ds_attr_name":"GAIN","cudk_default_value":"50","cudk_ds_max_range":"100","cudk_ds_min_range":"1"},
+	    {"cudk_ds_attr_name":"SHUTTER","cudk_default_value":"-1","cudk_ds_max_range":"65536","cudk_ds_min_range":"-1"},
+	    {"cudk_ds_attr_name":"BRIGHTNESS","cudk_default_value":"-1","cudk_ds_max_range":"100.0","cudk_ds_min_range":"-1"},
+		{"cudk_ds_attr_name":"SHARPNESS","cudk_default_value":"-1","cudk_ds_max_range":"100.0","cudk_ds_min_range":"-1"},
+		{"cudk_ds_attr_name":"CONTRAST","cudk_default_value":"-1","cudk_ds_max_range":"100.0","cudk_ds_min_range":"-1"},
+
+	    {"cudk_ds_attr_name":"GAIN","cudk_default_value":"-1","cudk_ds_max_range":"100.0","cudk_ds_min_range":"-1"},
 	    {"cudk_ds_attr_name":"MODE","cudk_default_value":"0","cudk_ds_max_range":"3","cudk_ds_min_range":"0"}
 	]},
     "scraper":{"ndk_parent":"","auto_load":true,"auto_init":true,"auto_start":true,"cudk_load_param":"","cudk_thr_sch_delay":1000000,"dsndk_storage_type":2,"dsndk_storage_history_ageing":36000,"dsndk_storage_history_time":0,"dsndk_storage_live_time":0,"control_unit_implementation":"::driver::actuator::SCActuatorControlUnit","cudk_driver_description":[],
