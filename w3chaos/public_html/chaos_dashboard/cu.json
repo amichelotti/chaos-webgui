@@ -22,6 +22,11 @@
 		"format":"text",
 	    "description":"C++ Class that implements the CU"
 	},
+	"cudk_load_param": {
+		"type": "string",
+		"format":"textarea",
+	    "description":"Parameters given in load (Constructor of the CU class)"
+	},
 	"auto_load": {
 	    "type": "boolean",
 	    "description":"Load automatically on registration"
@@ -34,10 +39,7 @@
 	    "type": "boolean",
 	    "description":"start automatically on registration"
 	},
-	"cudk_load_param": {
-	    "type": "string",
-	    "description":"Parameters given in load"
-	},
+	
 	"cudk_thr_sch_delay" : {
 		"type":"integer",
 		"default":1000000
