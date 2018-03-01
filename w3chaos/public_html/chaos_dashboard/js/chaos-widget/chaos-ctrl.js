@@ -974,6 +974,8 @@
           return {
 
             callback: function (cmd, options) {
+              $('.context-menu-list').trigger('contextmenu:hide')
+
               var fullname;
               if (portarray == "0") {
                 fullname = node_selected + "/" + portdir + "/" + portname;
@@ -1576,6 +1578,8 @@
         return {
 
           callback: function (cmd, options) {
+            $('.context-menu-list').trigger('contextmenu:hide')
+
             executeCUMenuCmd(cmd, options);
             return;
 
@@ -2038,6 +2042,7 @@
         return {
 
           callback: function (cmd, options) {
+            $('.context-menu-list').trigger('contextmenu:hide')
             executeNodeMenuCmd(cmd, options);
             return false;
           },
