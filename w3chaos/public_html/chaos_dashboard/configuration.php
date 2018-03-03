@@ -73,7 +73,7 @@ require_once('header.php');
 		</div><!--/fluid-row--> -->
 	</div>
 	
-
+	<div id="jsoneditor"> </div>
 	<div class="clearfix"></div>
 	
 	<footer><?php require_once('footer.php');?></footer>
@@ -86,6 +86,8 @@ require_once('header.php');
 <script>
 
 	  $("#menu-dashboard").generateMenuBox();
+	  $("#jsoneditor").generateEditJson();
+	  $(this).editActions();
 	 //$("#upload_selection").multiSelect("select_all");
 
 	  $("#save-configuration").on("click",function(){

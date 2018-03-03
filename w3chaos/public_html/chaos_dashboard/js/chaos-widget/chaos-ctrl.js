@@ -649,16 +649,26 @@
     });
   }
   function newCuSave(json) {
-    if (node_selected == null || node_selected == "") {
+    if ((node_selected == null || node_selected == ""))  {
+      if(json.ndk_parent==""){
       alert("not US selected!");
       return;
+      } else {
+        console.log("using US specified into CU:"+json.ndk_parent);
+        var us_list = jchaos.search(json.ndk_parent, "us", false, false);
+        if(us_list.length ==0){
+          alert("US specified in CU does not exist (create before)");
+          return;
+        }
+        node_selected=json.ndk_parent;
+      }
     }
     if (json.hasOwnProperty("ndk_uid") && (json.ndk_uid != "")) {
       jchaos.node(node_selected, "get", "us", "", null, function (data) {
         console.log("adding \"" + json.ndk_uid + "\" to US:\"" + node_selected + "\"");
         json.ndk_parent = node_selected;
         if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
-          data.us_desc.push(json);
+          data.us_desc.cu_desc.push(json);
         } else {
           data.us_desc["cu_desc"] = [json];
         }
@@ -777,7 +787,7 @@
 //    JSONEditor.defaults.iconlib = 'fontawesome4';
     json_editor = new JSONEditor(element.get(0), jopt);
     $("#mdl-jsonedit").modal("show");
-    json_editor.enable();
+    //json_editor.enable();
   }
 
   function element_sel(field, arr, add_all) {
@@ -974,7 +984,6 @@
           return {
 
             callback: function (cmd, options) {
-              $('.context-menu-list').trigger('contextmenu:hide')
 
               var fullname;
               if (portarray == "0") {
@@ -1571,6 +1580,7 @@
 
         cuitem['quit'] = {
           name: "Quit", icon: function () {
+            $('.context-menu-list').trigger('contextmenu:hide');
             return 'context-menu-icon context-menu-icon-quit';
           }
         };
@@ -1578,7 +1588,7 @@
         return {
 
           callback: function (cmd, options) {
-            $('.context-menu-list').trigger('contextmenu:hide')
+           // $('.context-menu-list').trigger('contextmenu:hide');
 
             executeCUMenuCmd(cmd, options);
             return;
@@ -1601,28 +1611,28 @@
     if (cmd == "load") {
 
       jchaos.loadUnload(node_multi_selected, true, function (data) {
-        instantMessage("LOAD ", "Command:\"" + cmd + "\" sent", 1000);
+    //    instantMessage("LOAD ", "Command:\"" + cmd + "\" sent", 1000);
 
       });
       
     } else if (cmd == "unload") {
       jchaos.loadUnload(node_multi_selected, false, function (data) {
-        instantMessage("UNLOAD ", "Command:\"" + cmd + "\" sent", 1000);
+      //  instantMessage("UNLOAD ", "Command:\"" + cmd + "\" sent", 1000);
 
       });
     } else if (cmd == "init") {
       jchaos.node(node_multi_selected, "init", "cu", null, function (data) {
-        instantMessage("INIT ", "Command:\"" + cmd + "\" sent", 1000);
+      //  instantMessage("INIT ", "Command:\"" + cmd + "\" sent", 1000);
 
       });
     } else if (cmd == "deinit") {
       jchaos.node(node_multi_selected, "deinit", "cu", null, function (data) {
-        instantMessage("DEINIT ", "Command:\"" + cmd + "\" sent", 1000);
+      //  instantMessage("DEINIT ", "Command:\"" + cmd + "\" sent", 1000);
 
       });
     } else {
       jchaos.sendCUCmd(node_multi_selected, cmd, "", function (data) {
-        instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
+       // instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
 
       });
     }
@@ -1846,6 +1856,19 @@
         }
       });
     }
+    if (cmd == "save-nt_control_unit") {
+
+
+      jchaos.node(node_selected, "get", "cu", "", null, function (data) {
+        if (data != null) {
+          if (data instanceof Object) {
+            var tmp={cu_desc:data};
+              var blob = new Blob([JSON.stringify(tmp)], { type: "json;charset=utf-8" });
+              saveAs(blob, node_selected + ".json"); 
+          }
+        }
+      });
+    }
     if (cmd == "paste-nt_control_unit") {
       var copia = cu_copied;
       /*check the status of the device must be not alive*/
@@ -1870,6 +1893,17 @@
         if (data.hasOwnProperty("us_desc")) {
           us_copied = data.us_desc;
           copyToClipboard(JSON.stringify(data));
+
+        }
+      });
+    }
+    if (cmd == "save-nt_unit_server") {
+      jchaos.node(node_selected, "get", "us", "", null, function (data) {
+        if (data.hasOwnProperty("us_desc")) {
+          if (data.us_desc instanceof Object) {
+            var blob = new Blob([JSON.stringify(data)], { type: "json;charset=utf-8" });
+            saveAs(blob, node_selected + ".json"); 
+        }
 
         }
       });
@@ -1997,26 +2031,7 @@
     } else {
       $("#table-scroll").css('height', '');
     }
-    $("#save-jsonedit").click(function () {
-      // editor validation
-      var errors = json_editor.validate();
-
-      if (errors.length) {
-        alert("JSON NOT VALID");
-        console.log(errors);
-      }
-      else {
-        // It's valid!
-        var json_editor_value = json_editor.getValue();
-        editorFn(json_editor_value);
-        $("#mdl-jsonedit").modal("hide");
-
-      }
-    });
-
-    $("#close-jsonclose").click(function () {
-      $("#mdl-jsonedit").modal("hide");
-    });
+    
 
     $("#cuname").draggable(
       {
@@ -2042,7 +2057,7 @@
         return {
 
           callback: function (cmd, options) {
-            $('.context-menu-list').trigger('contextmenu:hide')
+       //     $('.context-menu-list').trigger('contextmenu:hide')
             executeNodeMenuCmd(cmd, options);
             return false;
           },
@@ -2052,6 +2067,7 @@
 
 
     });
+
   }
   function buildNodeInterface(nodes, cutype) {
     if (nodes == null) {
@@ -2318,6 +2334,8 @@
 
       buildNodeInterface(list_cu, interface);
     });
+    actionJsonEditor();
+
   }
   /******************
    * MAIN TABLE HANDLING
@@ -3252,6 +3270,8 @@
               for (var i = seriesLength - 1; i > -1; i--) {
                 chart.series[i].setData([]);
               }
+              var timebuffer=Number(graph_opt.highchart_opt['timebuffer'])*1000;
+              high_graphs[graphname].start_time=(new Date()).getTime(); 
               var refresh = setInterval(function () {
                 var data = jchaos.getChannel(graph_opt.culist, -1, null);
                 var set = [];
@@ -3264,7 +3284,7 @@
                     x = null;
                   } else if ((tr[k].x.origin == "timestamp")) {
                     x = (new Date()).getTime(); // current time
-                    if (graph_opt.highchart_opt.shift && ((x - graph_opt.start_time) > graph_opt.highchart_opt['timebuffer'])) {
+                    if (graph_opt.highchart_opt.shift && ((x - high_graphs[graphname].start_time) > timebuffer)) {
                       enable_shift = true;
                     }
                   } else if (tr[k].x.const != null) {
@@ -3600,7 +3620,7 @@
     }
     tmp['tracetype'] = tracetype;
     tmp['shift'] = shift_true;
-    tmp['timebuffer'] = keepseconds * 1000;
+    tmp['timebuffer'] = keepseconds ;
     /*if(tracetype=="single"){
       var labels=[];
       for (var cnt=0;cnt<trace_list.length;cnt++) {
@@ -3668,7 +3688,8 @@
     }
     configToRestore.forEach(function (sel) {
 
-      if ((sel == "us") && config.hasOwnProperty('us') && (config.us instanceof Array)) {
+      if (sel == "us"){
+        if(config.hasOwnProperty('us') && (config.us instanceof Array)) {
         config.us.forEach(function (data) {
           confirm("US " + data.us_desc.ndk_uid, "Erase Or Join configuration", "Erase", function () {
             if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
@@ -3683,7 +3704,42 @@
           }, "Join", function () { unitServerSave(data.us_desc); });
 
         });
-      }
+      } else if(config.hasOwnProperty("us_desc")){
+        var templ = {
+          $ref: "us.json",
+          format: "tabs"
+        }
+        confirm("Add US " + config.us_desc.ndk_uid, "Erase Or Join configuration", "Erase", function () {
+          if (config.us_desc.hasOwnProperty("cu_desc") && (config.us_desc.cu_desc instanceof Array)) {
+            config.us_desc.cu_desc.forEach(function (item) {
+              jchaos.node(item.ndk_uid, "del", "cu", item.ndk_parent, null);
+            });
+            node_selected = config.us_desc.ndk_uid;
+            editorFn = unitServerSave;
+            jsonEdit(templ,config.us_desc);
+
+          }
+        }, "Join", function () { 
+          editorFn = unitServerSave;
+          jsonEdit(templ,config.us_desc); });
+      } else if(config.hasOwnProperty("cu_desc")){
+       
+        var parent=config.cu_desc.ndk_parent;
+       
+
+        confirm("Add CU " + config.cu_desc.ndk_uid, "Add CU to "+parent+"?", "Add", function () {
+          if (config.hasOwnProperty("cu_desc") ) {
+            var templ = {
+              $ref: "cu.json",
+              format: "tabs"
+            }
+            editorFn = newCuSave;
+            var tmp=config.cu_desc;
+            jsonEdit(templ, tmp);
+          }
+        }, "Cancel", function () { 
+      });
+    }}
       if ((sel == "agents") && config.hasOwnProperty('agents') && (config.agents instanceof Array)) {
         config.agents.forEach(function (json) {
           agentSave(json.info);
@@ -3710,7 +3766,7 @@
         });
 
       }
-      if ((sel == "cu_templates") && (config instanceof Object)) {
+      if ((sel == "cu_templates") && (config instanceof Object) && (!config.hasOwnProperty("cu_desc"))) {
 
         jchaos.variable("cu_templates", "set", config, function (s) {
           console.log("restoring CU templates:" + JSON.stringify(config));
@@ -3830,6 +3886,29 @@
     html += '</div>';
     return html;
   }
+
+  function actionJsonEditor(){
+    $("#save_jsonedit").on('click',function () {
+      // editor validation
+      var errors = json_editor.validate();
+
+      if (errors.length) {
+        alert("JSON NOT VALID");
+        console.log(errors);
+      }
+      else {
+        // It's valid!
+        var json_editor_value = json_editor.getValue();
+        editorFn(json_editor_value);
+        $("#mdl-jsonedit").modal("hide");
+
+      }
+    });
+
+    $("#close_jsonclose").on('click',function () {
+      $("#mdl-jsonedit").modal("hide");
+    });
+  }
   function generateEditJson() {
     // var cu=jchaos.getChannel(cuid, -1,null);
     // var desc=jchaos.getDesc(cuid,null);
@@ -3843,10 +3922,11 @@
     html += '<div id="json-edit" class="json-edit medium-12 columns"></div>';
     html += '</div>';
     html += '<div class="modal-footer">';
-    html += '<a href="#" class="btn btn-primary" id="save-jsonedit">Save</a>';
-    html += '<a href="#" class="btn btn-primary" id="close-jsonclose">Close</a>';
+    html += '<a href="#" class="btn btn-primary" id="save_jsonedit">Save</a>';
+    html += '<a href="#" class="btn btn-primary" id="close_jsonclose">Close</a>';
     html += '</div>';
     html += '</div>';
+    
     return html;
   }
 
@@ -4435,6 +4515,8 @@
     if (node_type == "nt_unit_server") {
       items['del-' + node_type] = { name: "Del " + node_selected };
       items['copy-' + node_type] = { name: "Copy " + node_selected };
+      items['save-' + node_type] = { name: "Save To Disk " + node_selected };
+
       var cutypes = cuCreateSubMenu();
       items['fold1'] = { name: "New  Control Unit", "items": cutypes };
 
@@ -4459,6 +4541,8 @@
     } else if (node_type == "nt_control_unit") {
       items['del-' + node_type] = { name: "Del " + node_selected };
       items['copy-' + node_type] = { name: "Copy " + node_selected };
+      items['save-' + node_type] = { name: "Save To Disk " + node_selected };
+
       var stat = jchaos.getChannel(node_selected, -1, null);
       var cmditem = updateCUMenu(stat[0]);
       items['sep2'] = "---------";
@@ -4782,6 +4866,12 @@
    */
   $.fn.generateMenuBox = function () {
     $(this).html(generateMenuBox());
+  }
+  $.fn.generateEditJson = function () {
+    $(this).html(generateEditJson());
+  }
+  $.fn.editActions = function () {
+    actionJsonEditor();
   }
   $.fn.saveFullConfig = function () {
     saveFullConfig();
