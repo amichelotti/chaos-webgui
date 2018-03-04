@@ -1580,7 +1580,7 @@
 
         cuitem['quit'] = {
           name: "Quit", icon: function () {
-            $('.context-menu-list').trigger('contextmenu:hide');
+//$('.context-menu-list').trigger('contextmenu:hide');
             return 'context-menu-icon context-menu-icon-quit';
           }
         };
@@ -1608,31 +1608,40 @@
 
   }
   function executeCUMenuCmd(cmd, opt) {
+    if (cmd == "quit"){
+      return;
+    }
+
     if (cmd == "load") {
 
       jchaos.loadUnload(node_multi_selected, true, function (data) {
-    //    instantMessage("LOAD ", "Command:\"" + cmd + "\" sent", 1000);
+        instantMessage("LOAD ", "Command:\"" + cmd + "\" sent", 1000);
+      //  $('.context-menu-list').trigger('contextmenu:hide')
 
       });
       
     } else if (cmd == "unload") {
       jchaos.loadUnload(node_multi_selected, false, function (data) {
-      //  instantMessage("UNLOAD ", "Command:\"" + cmd + "\" sent", 1000);
+        instantMessage("UNLOAD ", "Command:\"" + cmd + "\" sent", 1000);
+     //   $('.context-menu-list').trigger('contextmenu:hide')
 
       });
     } else if (cmd == "init") {
-      jchaos.node(node_multi_selected, "init", "cu", null, function (data) {
-      //  instantMessage("INIT ", "Command:\"" + cmd + "\" sent", 1000);
+      jchaos.node(node_multi_selected, "init", "cu", null,null,function (data) {
+        instantMessage("INIT ", "Command:\"" + cmd + "\" sent", 1000);
+    //    $('.context-menu-list').trigger('contextmenu:hide')
 
       });
     } else if (cmd == "deinit") {
-      jchaos.node(node_multi_selected, "deinit", "cu", null, function (data) {
-      //  instantMessage("DEINIT ", "Command:\"" + cmd + "\" sent", 1000);
+      jchaos.node(node_multi_selected, "deinit", "cu", null,null,function (data) {
+        instantMessage("DEINIT ", "Command:\"" + cmd + "\" sent", 1000);
+    //    $('.context-menu-list').trigger('contextmenu:hide')
 
       });
     } else {
       jchaos.sendCUCmd(node_multi_selected, cmd, "", function (data) {
-       // instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
+        instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
+     //   $('.context-menu-list').trigger('contextmenu:hide')
 
       });
     }
@@ -2057,9 +2066,8 @@
         return {
 
           callback: function (cmd, options) {
-       //     $('.context-menu-list').trigger('contextmenu:hide')
             executeNodeMenuCmd(cmd, options);
-            return false;
+            return ;
           },
           items: cuitem
         }
@@ -3516,7 +3524,7 @@
 
               $(this).dialog('close');
             }
-          }],
+          }]
 
 
 
@@ -3680,6 +3688,8 @@
     console.log("saving Graph:"+JSON.stringify( high_graphs[graphname])); 
 
     jchaos.variable("highcharts", "set", high_graphs, null);
+    graph_selected=graphname;
+
   }
 
   function restoreFullConfig(config, configToRestore) {
@@ -4878,6 +4888,9 @@
   }
   $.fn.restoreFullConfig = function (json, opt) {
     restoreFullConfig(json, opt);
+  }
+  $.fn.getValueFromCUList= function(culist, path){
+    return getValueFromCUList(culist,path);
   }
   $.fn.chaosDashboard = function (opt) {
     main_dom = this;

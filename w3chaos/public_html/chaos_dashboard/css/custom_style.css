@@ -14,6 +14,11 @@
 	width: 100%
   }
 
+  .fillparent {
+	top:50px; 
+	width:100%;
+	height: 100%
+  }
 table#main_table th, table#main_table td {
 	vertical-align: middle;
 	table-layout: auto;
