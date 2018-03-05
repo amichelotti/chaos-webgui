@@ -1456,7 +1456,13 @@
         cuselection = node_selected;
       }
       jchaos.sendCUCmd(cuselection, alias, cmdparam, function (d) {
-        instantMessage("Command ", "Command:\"" + alias + "\" params:\"" + cmdparam + "\" sent", 1000)
+        var pp;
+        if((cmdparam!=null)&& (cmdparam instanceof Object) ){
+          pp=JSON.stringify(cmdparam);
+        } else {
+          pp=cmdparam;
+        }
+        instantMessage("Command ", "Command:\"" + alias + "\" params:\"" + pp + "\" sent", 1000)
       });
 
     });
@@ -2607,7 +2613,7 @@
 
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html += "<tr class='row_element' cuname='" + cu[i] + "' id='" + cuname + "'><td class='name_element'>" + cu[i]
+      html += "<tr class='row_element cuMenu' cuname='" + cu[i] + "' id='" + cuname + "'><td class='name_element'>" + cu[i]
         + "</td><td class='position_element' id='" + cuname + "_output_position'></td><td class='position_element' id='" + cuname
         + "_input_position'></td><td id='" + cuname + "_input_saved_position'></td><td id='" + cuname + "_input_saved_status'></td><td id='" + cuname + "_output_status'></td><td id='" + cuname
         + "_in'></td><td id='" + cuname + "_out'></td><td  title='Device alarms' id='" + cuname + "_output_device_alarm'></td><td title='Control Unit alarms' id='" + cuname + "_cu_alarm'></td></tr>";
@@ -2748,7 +2754,7 @@
 
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html += "<tr class='row_element' cuname='" + cu[i] + "' id='" + cuname + "'>";
+      html += "<tr class='row_element cuMenu' cuname='" + cu[i] + "' id='" + cuname + "'>";
       html += "<td class='td_element td_name'>" + cu[i] + "</td>";
       html += "<td title='Readout current' class='td_element td_readout' id='" + cuname + "_output_current'>NA</td>";
       html += "<td class='td_element td_current' title='Setpoint current' id='" + cuname + "_input_current'>NA</td>";

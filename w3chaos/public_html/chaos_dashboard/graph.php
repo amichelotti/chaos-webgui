@@ -11,13 +11,9 @@ $curr_page = "Home";
 <?php
 require_once('header.php');
 ?>
-	<div class="container-fluid-full">
-		<div class="row-fluid">
 
 	<div id="graph-container" grafname="" style="height:100%;width:100%;">
 	<div id="graph" style="height:100%;width:100%;"></div>
-	</div>
-	</div>
 	</div>
 
 	
@@ -47,21 +43,22 @@ function GetURLParameter(sParam){
     if (!(opt instanceof Object)) {
       alert("\"" + graph_selected + "\" not a valid graph ");
 	} else {
-
+   var  width= window.innerWidth;
+  var height= window.innerHeight ;
 	$("#graph-container").dialog({
         modal: false,
         draggable: true,
         closeOnEscape: false,
         title: opt.name,
-        width: "100%",
-		hright: "100%",
+        width: width,
+		hright: height,
 		resizable: true,
         dialogClass: 'no-close',
         open: function () {
 		  opt.highchart_opt.series[0]['data']=[];
 		  var chart = new Highcharts.chart("graph", opt.highchart_opt);
-		  $("#graph").css('width','100%');
-		  $("#graph").css('height','100%');
+		  $("#graph").css('width',width);
+		  $("#graph").css('height',height);
 
           $(this).attr("graphname", graph_selected);
           var start_time = (new Date()).getTime();
