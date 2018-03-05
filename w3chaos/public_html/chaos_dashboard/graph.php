@@ -15,6 +15,8 @@ require_once('header.php');
 	<div id="graph-container" grafname="" style="height:100%;width:100%;">
 	<div id="graph" style="height:100%;width:100%;"></div>
 	</div>
+	<div id="query"></div>
+
 
 	
 	
@@ -23,6 +25,16 @@ require_once('header.php');
 
 <script>
 var active_plots={};
+	function dir2channel(dir) {
+    if (dir == "output") {
+      return 0;
+    } else if (dir == "health") {
+      return 4;
+    } else if (dir == "input") {
+      return 1;
+    }
+    return 0;
+  }
 function GetURLParameter(sParam){
     var sPageURL = window.location.search.substring(1);
     var sURLVariables = sPageURL.split('&');
@@ -43,8 +55,13 @@ function GetURLParameter(sParam){
     if (!(opt instanceof Object)) {
       alert("\"" + graph_selected + "\" not a valid graph ");
 	} else {
-   var  width= window.innerWidth;
-  var height= window.innerHeight ;
+		$("#query").generateQueryTable();
+
+   var  width= window.parent.innerWidth;
+  var height= window.parent.innerHeight ;
+  	$("#graph-container").css('width',width);
+	$("#graph-container").css('height',height);
+
 	$("#graph-container").dialog({
         modal: false,
         draggable: true,
@@ -59,12 +76,12 @@ function GetURLParameter(sParam){
 		  var chart = new Highcharts.chart("graph", opt.highchart_opt);
 		  $("#graph").css('width',width);
 		  $("#graph").css('height',height);
-
+		  
           $(this).attr("graphname", graph_selected);
           var start_time = (new Date()).getTime();
           var graphname = $(this).attr("graphname");
 
-          console.log("New Graph:" + graphname + " has been created");
+          console.log("New Graph:" + graphname + " has been created "+width+"x"+height);
 
           active_plots[graph_selected] = {
             graphname: graph_selected,

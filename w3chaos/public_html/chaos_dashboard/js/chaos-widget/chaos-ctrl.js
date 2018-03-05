@@ -4883,6 +4883,9 @@
   $.fn.generateMenuBox = function () {
     $(this).html(generateMenuBox());
   }
+  $.fn.generateQueryTable = function(){
+    $(this).html(generateQueryTable());
+  }
   $.fn.generateEditJson = function () {
     $(this).html(generateEditJson());
   }
