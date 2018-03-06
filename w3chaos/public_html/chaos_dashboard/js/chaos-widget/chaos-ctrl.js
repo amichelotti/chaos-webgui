@@ -110,6 +110,38 @@
     }
     return null;
   }
+
+
+  function getFile(msghead, msg, handler) {
+    var instant = $('<div></div>').html('<div><p>'+msg+'</p></div><div><input type="file" id="upload-file" class="span3" /></div>').dialog({
+      width: 680,
+      height: 400,
+      title: msghead,
+      position: "center",
+      open: function () {
+        $(this).css("opacity", 0.5);
+        var main=$(this);
+        $('#upload-file').on('change', function() {
+          var reader = new FileReader();
+          reader.onload = function(e) {
+             handler(JSON.parse(e.target.result));
+             $(main).dialog("close").remove();
+        };
+        reader.readAsText(this.files[0]);
+
+      });
+    },
+    buttons:[
+      {
+        text:"Close",
+        click:function(e){
+          $(this).dialog("close").remove();
+
+        }
+      }
+    ]
+    });
+}
   function instantMessage(msghead, msg, tim) {
     var instant = $('<div></div>').html(msg).dialog({
       width: 350,
@@ -1581,7 +1613,7 @@
       build: function ($trigger, e) {
         var cuname = $(e.currentTarget).attr("id");
         var cindex = node_name_to_index[cuname];
-        var cuitem = updateCUMenu(node_live_selected[cindex]);
+        var cuitem = updateCUMenu(node_live_selected[cindex],cuname);
         cuitem['sep1'] = "---------";
 
         cuitem['quit'] = {
@@ -3511,13 +3543,48 @@
           }, {
             text: "Save",
             click: function () {
-
+              var graphname = $(this).attr("graphname");
+              var graph_opt = high_graphs[graphname];
+              var chart = active_plots[graphname]['graph'];
+              var obj={};
+              if(chart.series instanceof Array){
+                chart.series.forEach(function(item){
+                  obj[item.name]=[];
+                  item.data.forEach(function (dat){
+                    var x=dat.x;
+                    var y=dat.y;
+                    obj[item.name].push([x,y]);
+                  });
+                });
+                var blob = new Blob([JSON.stringify(obj)], { type: "json;charset=utf-8" });
+                saveAs(blob, graphname+".json");
+              }
             }
           }, {
             text: "Load",
             click: function () {
+              var graphname = $(this).attr("graphname");
+              var graph_opt = high_graphs[graphname];
+              var chart = active_plots[graphname]['graph'];
+              getFile("TRACE LOAD","select the trace to load",function(data){
+                //console.log("loaded:"+JSON.stringify(data));
+                
+                for(var key in data){
+                  var newseries={};
 
+                  var xy=data[key];
+                  newseries['name']=key;
+                  newseries['data']=xy;
+                  chart.addSeries(newseries);
+                  /*xy.forEach(function(c){
+                    chart.series[index].addPoint(c, false, false);
+                  });*/
+
+                }
+
+              });
             }
+          
           }, {
             text: "Close",
             click: function () {
@@ -4560,7 +4627,7 @@
       items['save-' + node_type] = { name: "Save To Disk " + node_selected };
 
       var stat = jchaos.getChannel(node_selected, -1, null);
-      var cmditem = updateCUMenu(stat[0]);
+      var cmditem = updateCUMenu(stat[0],node_selected);
       items['sep2'] = "---------";
       for (var k in cmditem) {
         items[k] = cmditem[k];
@@ -4578,7 +4645,7 @@
     return items;
   }
 
-  function updateCUMenu(cu) {
+  function updateCUMenu(cu,name) {
     var items = {};
 
     if (cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) {   //if el health
@@ -4614,6 +4681,9 @@
         items['deinit'] = { name: "Deinit", icon: "deinit" };
 
       }
+    } else if(name!=null && name!=""){
+      items['load'] = { name: "Load", icon: "load" };
+
     }
     return items;
   }
@@ -4897,6 +4967,9 @@
   }
   $.fn.restoreFullConfig = function (json, opt) {
     restoreFullConfig(json, opt);
+  }
+  $.fn.getFile= function(msghead, msg, handler){
+    return getFile(msghead, msg, handler);
   }
   $.fn.getValueFromCUList= function(culist, path){
     return getValueFromCUList(culist,path);

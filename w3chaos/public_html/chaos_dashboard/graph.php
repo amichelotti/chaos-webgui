@@ -342,12 +342,47 @@ function GetURLParameter(sParam){
           }, {
             text: "Save",
             click: function () {
-
+              var graphname = $(this).attr("graphname");
+              var graph_opt = high_graphs[graphname];
+              var chart = active_plots[graphname]['graph'];
+              var obj={};
+              if(chart.series instanceof Array){
+                chart.series.forEach(function(item){
+                  obj[item.name]=[];
+                  item.data.forEach(function (dat){
+                    var x=dat.x;
+                    var y=dat.y;
+                    obj[item.name].push([x,y]);
+                  });
+                });
+                var blob = new Blob([JSON.stringify(obj)], { type: "json;charset=utf-8" });
+                saveAs(blob, graphname+".json");
+              }
+            
             }
           }, {
             text: "Load",
             click: function () {
+              var graphname = $(this).attr("graphname");
+              var graph_opt = high_graphs[graphname];
+              var chart = active_plots[graphname]['graph'];
+              $().getFile("TRACE LOAD","select the trace to load",function(data){
+                //console.log("loaded:"+JSON.stringify(data));
+                
+                for(var key in data){
+                  var newseries={};
 
+                  var xy=data[key];
+                  newseries['name']=key;
+                  newseries['data']=xy;
+                  chart.addSeries(newseries);
+                  /*xy.forEach(function(c){
+                    chart.series[index].addPoint(c, false, false);
+                  });*/
+
+                }
+
+              });
             }
           }, {
             text: "Close",
