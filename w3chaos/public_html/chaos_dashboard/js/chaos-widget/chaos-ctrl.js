@@ -1096,9 +1096,15 @@
           if (portarray == "0") {
             cuitem['plot-x'] = { name: "Plot " + portdir + "/" + portname + " on X" };
             cuitem['plot-y'] = { name: "Plot " + portdir + "/" + portname + " on Y" };
+            cuitem['plot-histo'] = { name: "Histogram " + portdir + "/" + portname };
+
           } else {
+
+
             cuitem['plot-x'] = { name: "Plot Array(" + portarray + ") " + portdir + "/" + portname + "[] on X" };
             cuitem['plot-y'] = { name: "Plot Array(" + portarray + ") " + portdir + "/" + portname + "[] on Y" };
+            cuitem['plot-histo'] = { name: "Histogram Array(" + portarray + ") " + portdir + "/" + portname + "[] on X" };
+
           }
 
 
@@ -1125,12 +1131,26 @@
                 $("#mdl-graph-list").modal("show");
               } else if (cmd == "plot-x") {
                 $("#mdl-graph").modal("show");
+
                 $("#trace-name").val(node_selected);
                 $("#xvar").val(fullname);
+
               } else if (cmd == "plot-y") {
                 $("#mdl-graph").modal("show");
+
                 $("#trace-name").val(node_selected);
                 $("#yvar").val(fullname);
+
+              } else if(cmd == "plot-histo"){
+                $("#mdl-graph").modal("show");
+
+                $("#trace-name").val(node_selected);
+                $("#yvar").val("histogram");
+                $("#xvar").val(fullname);
+                $("#xtype").val("linear");
+                $("#ytype").val("linear");
+
+                $("#graphtype").val("histogram");
 
               }
               return;
@@ -1286,7 +1306,7 @@
         }
 
         $("#trace-type").val(info.tracetype);
-        $("#graphtype").val(graph_selected);
+        $("#graphtype").val(info.chart.type);
         $("#table_graph_items").find("tr:gt(0)").remove();
         var trace = high_graphs[graph_selected].trace;
         for (var k = 0; k < trace.length; k++) {
@@ -3286,7 +3306,7 @@
     html += '<select id="graphtype" class="span9">';
     html += '<option value="line" selected="selected">Line</option>';
     html += '<option value="column">Column</option>';
-    html += '<option value="histo">Histogram</option>';
+    html += '<option value="histogram">Histogram</option>';
     html += '</select>';
     html += '<label class="label span3">Graph update (ms) </label>';
     html += '<input class="input-xlarge span9" id="graph-update" type="number" value="1000">';
@@ -3615,15 +3635,22 @@
                       } else {
                         inc = 1.0 / x.length;
                       }
-
+                      if(tr[k].y.origin == "histogram"){
+                        set.push(x[cntt]);
+                      } else {
                       for (var cntt = 0; cntt < y.length; cntt++) {
                         set.push([x[cntt], y + (inc * cntt)]);
                       }
-
+                    }
                       chart.series[cnt].setData(set, true, true, true);
 
                     } else {
-                      chart.series[cnt].addPoint([x, y], false, enable_shift);
+                      if(tr[k].y.origin == "histogram"){
+                        chart.series[cnt].addPoint(x, false, false);
+
+                      } else {
+                        chart.series[cnt].addPoint([x, y], false, enable_shift);
+                      }
                     }
                     cnt++;
                   } else {
@@ -3659,7 +3686,11 @@
                       });
 
                     } else {
-                      set.push({ x, y });
+                      if(tr[k].y.origin == "histogram"){
+                        set.push(x);
+                      } else {
+                        set.push({ x, y });
+                      }
                     }
                   }
                   if (graph_opt.highchart_opt['tracetype'] == "single") {
@@ -4472,8 +4503,8 @@
 
 
     html += '<li class="black">';
-    html += '<a href="./orbit.php" role="button" class="show_orbit" data-toggle="modal">';
-    html += '<i class="icon-file red"></i><span class="opt-menu hidden-tablet">Orbit</span>';
+    html += '<a href="./chaos_algo.php" role="button" class="show_alog" data-toggle="modal">';
+    html += '<i class="icon-file red"></i><span class="opt-menu hidden-tablet">Algo</span>';
     html += '</a>';
     html += '</li>';
 

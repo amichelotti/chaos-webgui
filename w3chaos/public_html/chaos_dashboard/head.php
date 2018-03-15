@@ -78,6 +78,7 @@
 			echo '<script src="'.$main_dir.'/js/highcharts.js"></script>';
 			echo '<script src="'.$main_dir.'/js/exporting.js"></script>';
 			echo '<script src="'.$main_dir.'/js/modules/annotations.js"></script>';
+			echo '<script src="'.$main_dir.'/js/modules/histogram-bellcurve.js"></script>';
 
 			echo '<script src="'.$main_dir.'/js/jquery.contextMenu.min.js"></script>';
 			echo '<script src="'.$main_dir.'/js/jquery.ui.position.min.js"></script>';
