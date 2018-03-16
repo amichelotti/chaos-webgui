@@ -1276,7 +1276,13 @@
         // initialize with the value of selected graph
         var info = high_graphs[graph_selected].highchart_opt;
         $("#graph_save_name").val(graph_selected);
-        $("#xname").val(info.xAxis.title.text);
+        if(info.xAxis instanceof Array){
+          $("#xname").val(info.xAxis[0].title.text);
+
+        } else {
+          $("#xname").val(info.xAxis.title.text);
+        }
+        
         // $("#xtype option:selected").val(info.xAxis.type);
         if (info.xAxis.type != null && info.xAxis.type != "") {
           $("#xtype").val(info.xAxis.type);
@@ -1284,8 +1290,11 @@
 
         $("#xmax").val(info.xAxis.max);
         $("#xmin").val(info.xAxis.min);
-
-        $("#yname").val(info.yAxis.title.text);
+        if(info.yAxis instanceof Array){
+          $("#yname").val(info.yAxis[0].title.text);
+        } else {
+          $("#yname").val(info.yAxis.title.text);
+        }
         //    $("#ytype option:selected").val(info.yAxis.type);
         if (info.yAxis.type != null && info.yAxis.type != "") {
           $("#ytype").val(info.yAxis.type);
@@ -3592,6 +3601,7 @@
                     x = tr[k].x.const;
                   } else if (tr[k].x.var != null) {
                     x = getValueFromCUList(data, tr[k].x);
+                    
                   } else {
                     x = null;
                   }
@@ -3603,7 +3613,7 @@
                     y = tr[k].y.const;
                   } else if (tr[k].y.var != null) {
                     y = getValueFromCUList(data, tr[k].y);
-
+                  
                   } else {
                     y = null;
                   }
@@ -3637,22 +3647,33 @@
                       }
                       if(tr[k].y.origin == "histogram"){
                         set.push(x[cntt]);
+
+                        chart.series[cnt+1].setData(set, true, true, true);
+
                       } else {
                       for (var cntt = 0; cntt < y.length; cntt++) {
                         set.push([x[cntt], y + (inc * cntt)]);
                       }
-                    }
                       chart.series[cnt].setData(set, true, true, true);
+
+                    }
 
                     } else {
                       if(tr[k].y.origin == "histogram"){
-                        chart.series[cnt].addPoint(x, false, false);
+                        if($.isNumeric(x)){
+                          chart.series[cnt+1].addPoint(x, false, false);
+                        }
 
                       } else {
                         chart.series[cnt].addPoint([x, y], false, enable_shift);
                       }
                     }
-                    cnt++;
+                    if(tr[k].y.origin == "histogram"){
+                      cnt+=2;
+
+                    } else {
+                      cnt++;
+                    }
                   } else {
                     // single
                     if ((y instanceof Array)) {
@@ -3687,7 +3708,9 @@
 
                     } else {
                       if(tr[k].y.origin == "histogram"){
-                        set.push(x);
+                        if($.isNumeric(x)){
+                          set.push(x);
+                        }
                       } else {
                         set.push({ x, y });
                       }
@@ -3711,7 +3734,7 @@
               console.log("Start  History Graph:" + graphname);
               var graph_opt = high_graphs[graphname];
 
-              if (graph_opt.highchart_opt.xAxis.type != "datetime") {
+              if ((graph_opt.highchart_opt.xAxis.type != "datetime") && (graph_opt.highchart_opt.chart.type != "histogram")) {
                 alert("X axis must be configured as datetime, for history plots!")
                 return;
               }
@@ -3750,16 +3773,38 @@
                 graph_opt.culist.forEach(function (item) {
                   console.log("to retrive CU:" + item);
                   for (k in tr) {
+                    if(tr[k].y.origin == "histogram"){
+                      if (tr[k].x.cu === item) {
+                        dirlist[tr[k].x.dir] = dir2channel(tr[k].x.dir);
+                        console.log("X Trace " + tr[k].name + " path:" + tr[k].x.origin);
+  
+                      }
+                    } else {
                     if (tr[k].y.cu === item) {
                       dirlist[tr[k].y.dir] = dir2channel(tr[k].y.dir);
                       console.log("Y Trace " + tr[k].name + " path:" + tr[k].y.origin);
 
                     }
                   }
+                  }
                   for (var dir in dirlist) {
+                    var dataset=[];
+
                     jchaos.getHistory(item, dirlist[dir], qstart, qstop, "", function (data) {
                       var cnt = 0, ele_count = 0;
                       for (k in tr) {
+                        if(tr[k].y.origin == "histogram"){
+                          if (tr[k].x.cu === item) {
+                            var variable = tr[k].x.var;
+
+                            data.Y.forEach(function (ds) {
+                              //dataset.push(ds[variable]);
+                              chart.series[cnt+1].addPoint(ds[variable], false, false);
+
+                            });
+                          }
+                          cnt+=2;
+                        } else {
                         if (tr[k].y.cu === item) {
                           //iterate on the datasets
                           console.log("retrived \"" + dir + "/" + item + "\" count=" + data.Y.length);
@@ -3796,6 +3841,8 @@
                           });
                         }
                         cnt++;
+                      }
+
                       }
                       chart.redraw();
                       // true until close if false the history loop retrive breaks
@@ -3919,11 +3966,31 @@
     for (var cnt = 0; cnt < trace_list.length; cnt++) {
       //      if (tracetype == "multi") {
       var col;
+      var seriespec={};
+      seriespec['name']=trace_list[cnt].name;
+      seriespec['type']=graphtype;
+
       if (trace_list[cnt].hasOwnProperty("color") && (trace_list[cnt].color != "")) {
         col = trace_list[cnt].color;
-        serie.push({ name: trace_list[cnt].name, color: col });
+        seriespec['color']=col;
+      }
+      if(graphtype == "histogram"){
+        var histo_data={};
+
+        seriespec['xAxis']=1;
+        seriespec['yAxis']=1;
+        seriespec['baseSeries']="histo_data"+(cnt+1);
+        histo_data['name']=trace_list[cnt].name;
+        histo_data['type']="scatter";
+        histo_data['visible']=false;
+
+        histo_data['id']="histo_data"+(cnt+1);
+        histo_data['marker']={"radius":1.5};
+        serie.push(seriespec);
+        serie.push(histo_data);
+
       } else {
-        serie.push({ name: trace_list[cnt].name });
+        serie.push(seriespec);
       }
 
       // }
@@ -3946,7 +4013,18 @@
       title: {
         text: graphname
       },
-      xAxis: {
+     
+      series: serie
+    }
+    if(graphtype=="histogram"){
+      tmp['xAxis']=[];
+      tmp['yAxis']=[];
+      tmp['xAxis'].push({'title':xname,alignTicks:false});
+      tmp['xAxis'].push({'title':'Histogram','alignTicks':false,'opposite':false});
+      tmp['yAxis'].push({'title':'Frequence',alignTicks:false});
+      tmp['yAxis'].push({'title':yname,'alignTicks':false,'opposite':false});
+    } else {
+      tmp['xAxis']= {
         type: xtype,
         max: xmax,
         min: xmin,
@@ -3954,16 +4032,15 @@
         title: {
           text: xname
         }
-      },
-      yAxis: {
+      };
+      tmp['yAxis']= {
         type: ytype,
         max: ymax,
         min: ymin,
         title: {
           text: yname
         }
-      },
-      series: serie
+      };
     }
     tmp['tracetype'] = tracetype;
     tmp['shift'] = shift_true;
@@ -4918,6 +4995,13 @@
 
     if (cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) {   //if el health
       var status = cu.health.nh_status;
+      if ((off_line[name] == true)) {
+        items['load'] = { name: "Load", icon: "load" };
+        items['init'] = { name: "Init", icon: "init" };
+        items['unload'] = { name: "Unload", icon: "unload" };
+        items['deinit'] = { name: "Deinit", icon: "deinit" };
+        return items;
+      }
       if (status == 'Start') {
         items['stop'] = { name: "Stop", icon: "stop" };
       } else if (status == 'Stop') {
