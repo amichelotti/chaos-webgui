@@ -1769,7 +1769,25 @@
     $("#mdl-description").draggable();
     $("#mdl-snap").draggable();
     $("#mdl-log").draggable();
+    configureSliderCommands("slider-GAIN","image_gain");
+    configureSliderCommands("slider-BRIGHTNESS","image_brightness");
+    configureSliderCommands("slider-SHUTTER","image_shutter");
+    configureSliderCommands("slider-CONTRAST","image_contrast");
+    configureSliderCommands("slider-SHARPNESS","image_sharpness");
+    $(main_dom).on("keypress","input.cucmdattr",function (e) {
+      if (e.keyCode == 13) {
+        var id = this.id;
+        var attr = id.split("-")[1];
+        jchaos.setAttribute(node_selected, attr, this.value, function () {
+          instantMessage("Attribute ", "\"" + attr + "\"=\"" + this.value + "\" sent", 1000)
 
+        });
+        $("#" + this.id).toggle();
+        return false;
+      }
+      //var tt =prompt('type value');
+      return this;
+    });
 
   }
   function executeCUMenuCmd(cmd, opt) {
@@ -2713,8 +2731,83 @@
     html += '<div id="cameraName"></div>';
     html += '<img id="cameraImage" src="" />';
     html += '</div>';
+    html += '<div class="box span12">';
+    html += '<div class="box-content">';
+    html += '<h3 class="box-header" id=image-options>Image Options</h3>';
+
+    html += '<label class="label span3" >Trigger</label>';
+    html += '<select id="triggerType" class="span9">';
+    html += '<option value="continuos" selected="continuos">Continuos</option>';
+    html += '<option value="single">Single Shot</option>';
+    html += '<option value="hw">HW trigger</option>';
+    html += '<option value="sw">SW trigger</option>';
+    html += '</select>';
+
+    html += '<label class="label span3">Width </label>';
+    html += '<input class="input-xlarge focused span4" id="image-WIDTH" readonly title="Readout Resize image width" type="text" value="640">';
+    html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-WIDTH" title="SET Resize image width" type="number" value=640>';
+
+    html += '<label class="label span3">Height </label>';
+    html += '<input class="input-xlarge focused span4" id="image-HEIGHT" readonly title="Readout Resize image height" type="text" value="480">';
+    html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-HEIGHT" title="Resize image height" type="text" value=480>';
+
+    html += '<label class="label span3">Offset X</label>';
+    html += '<input class="input-xlarge focused span4 json-keyinput" id="image-OFFSETX" readonly title="Readout Image Offset X (ROI)" type="text" value="0">';
+    html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-OFFSETX" title="Image Offset X (ROI)" type="number" value=0>';
+
+    html += '<label class="label span3">Offset Y</label>';
+    html += '<input class="input-xlarge focused span4 json-keyinput" id="image-OFFSETY" readonly title="Readout Image Offset X (ROI)" type="text" value="0">';
+    html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-OFFSETY" title="SET Image Offset Y (ROI)" type="text" value=0>';
+    
+    html += '<label class="label span3">Gain:</label>';
+    html += '<input class="input-xlarge focused span3" id="image-GAIN" readonly title="Image Readout Gain" type="text" value="0">';
+    html += '<input class="input-xlarge focused span3" id="image_gain" readonly title="Set Gain" type="number" value=0>';
+    html += '<div class="span3" id="slider-GAIN" title="Camera Gain"> </div>';
+
+    html += '<label class="label span3">Brightness</label>';
+    html += '<input class="input-xlarge focused span3" id="image-BRIGHTNESS" readonly title="Image Readout Brightnessn" type="text">';
+    html += '<input class="input-xlarge focused span3" id="image_brightness" readonly title="SET Brightness" type="number" value=0>';
+    html += '<div class="span3" id="slider-BRIGHTNESS" title="Camera Brightness"></div>';
+    
+    html += '<label class="label span3">Shutter</label>';
+    html += '<input class="input-xlarge focused span3" id="image-SHUTTER" readonly title="Camera Readout Shutter" type="text">';
+    html += '<input class="input-xlarge focused span3" id="image_shutter" readonly title="SET Shutter" type="number" value=0>';
+    html += '<div class="span3" id="slider-SHUTTER" title="Camera Shutter"> </div>';
+    
+
+    html += '<label class="label span3">Contrast</label>';
+    html += '<input class="input-xlarge focused span3" id="image-CONTRAST" readonly title="Camera Readout Contrast" type="text">';
+    html += '<input class="input-xlarge focused span3" id="image_contrast" readonly title="SET Contrast" type="number" value=0>';
+    html += '<div class="span3" id="slider-CONTRAST" title="Camera Contrast"> </div>';
+    
+    html += '<label class="label span3">Sharpness</label>';
+    html += '<input class="input-xlarge focused span3" id="image-SHARPNESS" readonly title="Camera Readout Sharpness" type="text">';
+    html += '<input class="input-xlarge focused span3" id="image_sharpness" readonly title="SET Sharpness" type="number" value=0>';
+    html += '<div class="span3" id="slider-SHARPNESS" title="Camera Sharpness"> </div>';
+    
+    html += '</div>';
+    html += '</div>';
+
     html += generateGenericTable(node_list);
     return html;
+  }
+  function configureSliderCommands(slname,slinput){
+    $( "#"+ slname ).slider({
+      range: "max",
+      min: 0,
+      max: 100,
+      value: 1,
+      slide: function( event, ui ) {
+        $( "#"+slinput ).val( ui.value );
+        var id = this.id;
+        var attr = id.split("-")[1];
+        jchaos.setAttribute(node_selected, attr, String(ui.value), function () {
+       //   instantMessage("Attribute ", "\"" + attr + "\"=\"" + ui.value + "\" sent", 1000)
+
+        });
+      }
+    });
+    $( "#"+ slinput ).val( $( "#"+ slname ).slider( "value" ) ); 
   }
 
   /********************* */
@@ -2775,6 +2868,7 @@
     cu.forEach(function (el) {  // cu forEach
       var name_device_db, name_id;
       var status;
+      try {
       if (el.hasOwnProperty('health') && (el.health.hasOwnProperty("ndk_uid"))) {   //if el health
         name_device_db = el.health.ndk_uid;
         name_id = encodeName(name_device_db);
@@ -2888,6 +2982,9 @@
           $("#" + name_id + "_output_busy").html('');
         }
       }
+    } catch (e){
+      console.log(name_device_db + " warning :",e);
+    }
     });
   }
 
@@ -3078,8 +3175,21 @@
       if (selected.output.hasOwnProperty("FRAMEBUFFER")) {
         var bin = selected.output.FRAMEBUFFER.$binary.base64;
         var fmt = "png";
-        if (selected.hasOwnProperty("input") && selected.input.FMT != null) {
-          fmt = selected.input.FMT;
+        if (selected.hasOwnProperty("input")){ 
+          if(selected.input.FMT != null) {
+            fmt = selected.input.FMT;
+          }
+          $("#image-GAIN").val(selected.input.GAIN);
+          $("#slider-GAIN").val(selected.input.GAIN);
+          $("#image-WIDTH").val(selected.input.WIDTH);
+          $("#image-HEIGHT").val(selected.input.HEIGHT);
+          $("#image-OFFSETX").val(selected.input.OFFSETX);
+          $("#image-OFFSETY").val(selected.input.OFFSETY);
+          $("#image-BRIGHTNESS").val(selected.input.BRIGHTNESS);
+          $("#image-SHUTTER").val(selected.input.SHUTTER);
+          $("#image-CONTRAST").val(selected.input.CONTRAST);
+          $("#image-SHARPNESS").val(selected.input.SHARPNESS);
+
         }
         $("#cameraName").html(selected.health.ndk_uid);
         $("#cameraImage").attr("src", "data:image/" + fmt + ";base64," + bin);
@@ -3167,20 +3277,20 @@
     html += '</div>';
     html += '<div class="box-content">';
     html += '<div class="row-fluid">';
-    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="PSbuttON" cucmdid="mode" cucmdvalue=1>';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="PSbuttON" cucmdid="mode" title="Powersupply Operational" cucmdvalue=1>';
     html += '<i class="material-icons verde">trending_down</i>';
     html += '<p class="name-cmd">On</p>';
     html += '</a>';
-    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="PSbuttOFF" cucmdid="mode" cucmdvalue=0>';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="PSbuttOFF" cucmdid="mode" title="Powersupply STBY" cucmdvalue=0>';
     html += '<i class="material-icons rosso">pause_circle_outline</i>';
     html += '<p class="name-cmd">Standby</p>';
     html += '</a>';
-    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="PSreset_alarm" cucmdid="rst">';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="PSreset_alarm" title="Reset Powersupply Alarms" cucmdid="rset">';
     html += '<i class="material-icons rosso">error</i>';
     html += '<p class="name-cmd">Reset</p>';
     html += '</a>';
     html += '<div class="span3 offset1" onTablet="span6" onDesktop="span3" id="input-value-mag">';
-    html += '<input class="input focused" id="sett_sett_cur" name="setCurrent" type="text" value="[A]">';
+    html += '<input class="input focused" id="sett_sett_cur" name="setCurrent" title="current setpoint in Ampere" type="text" value="">';
     html += '</div>';
 
     html += '<a class="quick-button-small span1 btn-value cucmd" cucmdid="sett" id="PSapply_current" >';
@@ -3188,15 +3298,15 @@
     html += '</a>';
     html += '</div>';
     html += '<div class="row-fluid">';
-    html += '<a class="quick-button-small span1 btn-cmd cucmd" cucmdid="pola" cucmdvalue=1 >';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" cucmdid="pola" title="Powersupply Polarity POS" cucmdvalue=1 >';
     html += '<i class="material-icons rosso">add_circle</i>';
     html += '<p class="name-cmd">Pos</p>';
     html += '</a>';
-    html += '<a class="quick-button-small span1 btn-cmd cucmd" cucmdid="pola" cucmdvalue=0 >';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" cucmdid="pola"  title="Powersupply Polarity OPEN" cucmdvalue=0 >';
     html += '<i class="material-icons">radio_button_unchecked</i>';
     html += '<p class="name-cmd">Open</p>';
     html += '</a>';
-    html += '<a class="quick-button-small span1 btn-cmd cucmd" cucmdid="pola" cucmdvalue=-1 >';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" cucmdid="pola"  title="Powersupply Polarity NEGATIVE" cucmdvalue=-1 >';
     html += '<i class="material-icons blu">remove_circle</i>';
     html += '<p class="name-cmd">Neg</p>';
     html += '</a>';

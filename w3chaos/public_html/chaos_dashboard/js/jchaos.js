@@ -72,7 +72,8 @@
 
 						} catch (err) {
 							var str = "jchaos.basicPost Error parsing json '" + err + "' body returned:'" + request.responseText + "'";
-							console.error(str);
+							//console.error(str);
+							console.log(str);
 							//throw str;
 							if (could_make_async) {
 								handleFunc(request.responseText);
