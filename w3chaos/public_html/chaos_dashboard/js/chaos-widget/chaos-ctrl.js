@@ -3434,6 +3434,7 @@
     html += '<label class="label span3" >Graph Type </label>';
     html += '<select id="graphtype" class="span9">';
     html += '<option value="line" selected="selected">Line</option>';
+    html += '<option value="scatter">Scatter</option>';
     html += '<option value="column">Column</option>';
     html += '<option value="histogram">Histogram</option>';
     html += '</select>';
