@@ -1982,6 +1982,7 @@
           }
         };
       });
+      return;
     }
     if (cmd == "edit-nt_control_unit") {
       var templ = {
@@ -1994,6 +1995,7 @@
           jsonEdit(templ, data);
         }
       });
+      return;
     }
     if (cmd == "edit-nt_unit_server") {
       var templ = {
@@ -2010,6 +2012,7 @@
           jsonEdit(templ, data.us_desc);
         }
       });
+      return;
     }
     if (cmd == "new-nt_unit_server") {
       var templ = {
@@ -2025,6 +2028,7 @@
       confirm("Delete US", "Your are deleting US: " + node_selected, "Ok", function () {
         jchaos.node(node_selected, "del", "us", null, null);
       }, "Cancel");
+      return;
     }
 
     if (cmd == "del-nt_control_unit") {
@@ -2037,6 +2041,7 @@
           }, "Cancel");
         }
       });
+      return;
     }
     if (cmd == "copy-nt_control_unit") {
 
@@ -2047,6 +2052,7 @@
           copyToClipboard(JSON.stringify(data));
         }
       });
+      return;
     }
     if (cmd == "save-nt_control_unit") {
 
@@ -2060,6 +2066,7 @@
           }
         }
       });
+      return;
     }
     if (cmd == "paste-nt_control_unit") {
       var copia = cu_copied;
@@ -2079,6 +2086,7 @@
         });
 
       });
+      return;
     }
     if (cmd == "copy-nt_unit_server") {
       jchaos.node(node_selected, "get", "us", "", null, function (data) {
@@ -2088,6 +2096,7 @@
 
         }
       });
+      return;
     }
     if (cmd == "save-nt_unit_server") {
       jchaos.node(node_selected, "get", "us", "", null, function (data) {
@@ -2099,6 +2108,7 @@
 
         }
       });
+      return;
     }
     if (cmd.includes("new-nt_control_unit")) {
       var regex = /new-nt_control_unit-(.*)$/;
@@ -2208,9 +2218,9 @@
           jsonEdit(templ, data);
         };
       });
-
+      return;
     }
-    //  executeCUMenuCmd(cmd, options);
+      executeCUMenuCmd(cmd, options);
     return;
   }
   function setupNode() {
