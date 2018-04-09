@@ -39,6 +39,7 @@
   var search_string;
   var notupdate_dataset = 1;
   var implementation_map = { "powersupply": "SCPowerSupply", "scraper": "SCActuator", "camera": "RTCamera" };
+  var histdataset={};
 
   function removeElementByName(name, tlist) {
     for (var cnt = 0; cnt < tlist.length; cnt++) {
@@ -1768,7 +1769,7 @@
     $("#mdl-dataset").draggable();
     $("#mdl-description").draggable();
     $("#mdl-snap").draggable();
-    $("#mdl-log").draggable();
+    $("#mdl-log").resizable().draggable();
     configureSliderCommands("slider-GAIN","image_gain");
     configureSliderCommands("slider-BRIGHTNESS","image_brightness");
     configureSliderCommands("slider-SHUTTER","image_shutter");
@@ -3148,6 +3149,7 @@
     html += '<thead class="box-header">';
     html += '<tr>';
     html += '<th>Element</th>';
+    html += '<th>Status</th>';
     html += '<th>Readout [A]</th>';
     html += '<th>Setting [A]</th>';
     html += '<th colspan="3">Saved</th>';
@@ -3159,6 +3161,7 @@
       var cuname = encodeName(cu[i]);
       html += "<tr class='row_element cuMenu' cuname='" + cu[i] + "' id='" + cuname + "'>";
       html += "<td class='td_element td_name'>" + cu[i] + "</td>";
+      html += "<td id='" + cuname + "_health_status'></td>";
       html += "<td title='Readout current' class='td_element td_readout' id='" + cuname + "_output_current'>NA</td>";
       html += "<td class='td_element td_current' title='Setpoint current' id='" + cuname + "_input_current'>NA</td>";
       html += "<td class='td_element' title='Restore setpoint current'  id='" + cuname + "_input_saved_current'></td>";
@@ -3851,13 +3854,13 @@
           {
             text: "History",
             click: function () {
+
               var graphname = $(this).attr("graphname");
               console.log("Start  History Graph:" + graphname);
               var graph_opt = high_graphs[graphname];
-
+              var correlation=false;
               if ((graph_opt.highchart_opt.xAxis.type != "datetime") && (graph_opt.highchart_opt.chart.type != "histogram")) {
-                alert("X axis must be configured as datetime, for history plots!")
-                return;
+                correlation=true;
               }
               if (graph_opt.highchart_opt.yAxis.type == "datetime") {
                 alert("Y axis cannot be as datetime!")
@@ -3892,22 +3895,93 @@
                   chart.series[i].setData([]);
                 }
                 graph_opt.culist.forEach(function (item) {
-                  console.log("to retrive CU:" + item);
                   for (k in tr) {
-                    if(tr[k].y.origin == "histogram"){
-                      if (tr[k].x.cu === item) {
-                        dirlist[tr[k].x.dir] = dir2channel(tr[k].x.dir);
-                        console.log("X Trace " + tr[k].name + " path:" + tr[k].x.origin);
-  
-                      }
-                    } else {
-                    if (tr[k].y.cu === item) {
-                      dirlist[tr[k].y.dir] = dir2channel(tr[k].y.dir);
-                      console.log("Y Trace " + tr[k].name + " path:" + tr[k].y.origin);
+                    if (tr[k].x.cu === item) {
+                      dirlist[tr[k].x.dir] = dir2channel(tr[k].x.dir);
+                      console.log("X Trace " + tr[k].name + " path:" + tr[k].x.origin);
 
                     }
+                  if (tr[k].y.cu === item) {
+                    dirlist[tr[k].y.dir] = dir2channel(tr[k].y.dir);
+                    console.log("Y Trace " + tr[k].name + " path:" + tr[k].y.origin);
                   }
+                }
+                });
+
+                if(correlation){
+                  for (k in tr) {
+                    histdataset[tr[k].name]={x:[],tx:[],y:[],ty:[]};
                   }
+                  // download all data before.
+                  for(var v in  graph_opt.culist){
+                    var item=graph_opt.culist[v];
+                  for (var dir in dirlist) {
+                    console.log("Retrive correlation data CU:" + item+ " direction:"+dirlist[dir]);
+
+                    jchaos.getHistory(item, dirlist[dir], qstart, qstop, "", function (data) {
+                    
+                      for (k in tr) {
+                        var trname=tr[k].name;
+
+                        if(tr[k].x.cu === item){
+                          var variable=tr[k].x.var;
+                          if(data.Y[0].hasOwnProperty(variable)){
+                            var cnt=0;
+                            console.log("X acquiring "+trname+" path:"+tr[k].x.origin+" items:"+data.Y.length);
+
+                            data.Y.forEach(function(ds){
+                              if(tr[k].x.index!=null && tr[k].x.index!="-1"){
+                                var tmp=ds[variable];
+                                histdataset[trname].x.push(tmp[tr[k].x.index]);
+                              } else {
+                                histdataset[trname].x.push(ds[variable]);
+
+                              }
+                              histdataset[trname].tx.push(data.X[cnt++]);
+
+                            });
+                           
+                          }
+                        }
+                        if(tr[k].y.cu === item){
+                          var variable=tr[k].y.var;
+                          if(data.Y[0].hasOwnProperty(variable)){
+                            var cnt=0;
+                            console.log("Y acquiring "+trname+" path:"+tr[k].y.origin+" items:"+data.Y.length);
+
+                            data.Y.forEach(function(ds){
+                              if(tr[k].y.index!=null && tr[k].y.index!="-1"){
+                                var tmp=ds[variable];
+                                histdataset[trname].y.push(tmp[tr[k].y.index]);
+                              } else {
+                                histdataset[trname].y.push(ds[variable]);
+
+                              }
+                              histdataset[trname].ty.push(data.X[cnt++]);
+
+                            });
+                          }
+                        }
+                      }
+                  });
+                }};
+                // ok plot
+                var chartn=0;
+                for (k in tr) {
+                  var cnt=0;
+                  var name=tr[k].name;
+
+                  var xpoints=histdataset[name].tx.length;
+                  var ypoints=histdataset[name].ty.length;
+                  for(cnt=0;cnt<Math.min(xpoints,ypoints);cnt++){
+                    chart.series[chartn].addPoint([histdataset[name].x[cnt],histdataset[name].y[cnt]], false, false);
+                  }
+                  chartn++;
+                }
+                } else {
+                graph_opt.culist.forEach(function (item) {
+                  console.log("to retrive CU:" + item);
+                 
                   for (var dir in dirlist) {
                     var dataset=[];
 
@@ -3971,6 +4045,7 @@
                     });
                   }
                 });
+              }
 
               });
             }
@@ -4709,6 +4784,9 @@
     html += '</ul>';
     html += '</div>';
     html += '</div>';
+
+    html +='<div id="progressbar"></div>';
+
     return html;
   }
 
