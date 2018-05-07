@@ -1896,6 +1896,7 @@
 
     }
     node_list_interval = setInterval(function () {
+      var channel_sel=-1;
       /*
       node_live_selected=  jchaos.getChannel(node_list, -1, null);
       if (node_live_selected.length == 0) {
@@ -1923,8 +1924,10 @@
         $("#cu-dataset").html(jsonhtml);
 
       }*/
-
-      jchaos.getChannel(node_list, -1, function (dat) {
+      if(updateTableFn == updateGenericControl){
+        channel_sel=255;
+      }
+      jchaos.getChannel(node_list, channel_sel, function (dat) {
         node_live_selected = dat;
         if (node_live_selected.length == 0) {
           return;
@@ -1943,14 +1946,16 @@
 
         //  $("div.cu-generic-control").html(chaosGenericControl(cu_live_selected[index]));
         if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
-          var converted = convertBinaryToArrays(curr_cu_selected);
+          jchaos.getChannel(node_selected, -1, function (datone) {
+          var converted = convertBinaryToArrays(datone);
           var jsonhtml = json2html(converted, options, node_selected);
           if (isCollapsable(converted)) {
             jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
           }
 
           $("#cu-dataset").html(jsonhtml);
-        }
+        });
+      };
       });
 
 
