@@ -3578,10 +3578,10 @@
               if (path.index == "-1") {
                 return val;
               } else {
-                return val[path.index];
+                return Number(val[path.index]);
               }
             }
-            return item.output[path.var];
+            return Number(item.output[path.var]);
           }
         } else if (path.dir == "input") {
           if (item.input.hasOwnProperty(path.var)) {
@@ -3590,10 +3590,10 @@
               if (path.index == "-1") {
                 return val;
               } else {
-                return val[path.index];
+                return Number(val[path.index]);
               }
             }
-            return item.input[path.var];
+            return Number(item.input[path.var]);
           }
         } else if (path.dir == "health") {
           if (item.health.hasOwnProperty(path.var)) {
@@ -3601,7 +3601,7 @@
               var val = convertBinaryToArrays(item.health[path.var]);
 
 
-              return val[path.index];
+              return Number(val[path.index]);
             }
             return item.health[path.var];
           }
@@ -3936,10 +3936,10 @@
 
                             data.Y.forEach(function(ds){
                               if(tr[k].x.index!=null && tr[k].x.index!="-1"){
-                                var tmp=ds[variable];
+                                var tmp=Number(ds[variable]);
                                 histdataset[trname].x.push(tmp[tr[k].x.index]);
                               } else {
-                                histdataset[trname].x.push(ds[variable]);
+                                histdataset[trname].x.push(Number(ds[variable]));
 
                               }
                               histdataset[trname].tx.push(data.X[cnt++]);
@@ -3957,9 +3957,9 @@
                             data.Y.forEach(function(ds){
                               if(tr[k].y.index!=null && tr[k].y.index!="-1"){
                                 var tmp=ds[variable];
-                                histdataset[trname].y.push(tmp[tr[k].y.index]);
+                                histdataset[trname].y.push(Number(tmp[tr[k].y.index]));
                               } else {
-                                histdataset[trname].y.push(ds[variable]);
+                                histdataset[trname].y.push(Number(ds[variable]));
 
                               }
                               histdataset[trname].ty.push(data.X[cnt++]);
@@ -4014,7 +4014,7 @@
                           data.Y.forEach(function (ds) {
                             if (ds.hasOwnProperty(variable)) {
                               var ts = data.X[ele_count++];
-                              var tmp = ds[variable];
+                              var tmp = Number(ds[variable]);
 
                               if (index != null) {
                                 if (index == "-1") {
@@ -4022,7 +4022,7 @@
                                   var dataset = [];
                                   for (var cntt = 0; cntt < tmp.length; cntt++) {
                                     var t = ts + incr * cntt;
-                                    var v = tmp[cntt];
+                                    var v = Number(tmp[cntt]);
                                     dataset.push([t, v]);
                                     chart.series[cnt].addPoint([t, v], false, false);
                                   }
@@ -4030,7 +4030,7 @@
                                   chart.redraw();
 
                                 } else {
-                                  chart.series[cnt].addPoint([ts, tmp[index]], false, false);
+                                  chart.series[cnt].addPoint([ts, Number(tmp[index])], false, false);
                                 }
 
                               } else {
