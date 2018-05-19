@@ -150,6 +150,7 @@
       title: msghead,
       position: "center",
       open: function () {
+        console.log(msghead + ":"+msg);
         $(this).css("opacity", 0.5);
         setTimeout(function () {
           $(instant).dialog("close");
@@ -1622,7 +1623,7 @@
         } else {
           pp = cmdparam;
         }
-        instantMessage("Command ", "Command:\"" + alias + "\" params:\"" + pp + "\" sent", 1000)
+        instantMessage(cuselection, "Command:\"" + alias + "\" params:\"" + pp + "\" sent", 1000)
       });
 
     });
@@ -3067,14 +3068,14 @@
         }
         if (elem.output.NegativeLimitSwitchActive == 'true') {
           $("#" + cuname + "_out").html('<i id="out_icon_' + cuname + '" class="icon-caret-left verde"></i>');
-        } else if (out_neg_col[i] == 'false') {
+        } else if (elem.output.NegativeLimitSwitchActive == 'false') {
           $("#" + cuname + "_out").remove();
         }
 
 
         if (elem.output.PositiveLimitSwitchActive == 'true') {
           $("#" + cuname + "_in").html('<i id="in_icon_' + cuname + '" class="icon-caret-right verde"></i>');
-        } else if (in_pos_col[i] == 'false') {
+        } else if (elem.output.PositiveLimitSwitchActive == 'false') {
           $("#" + cuname + "_in").remove();
         }
 
@@ -5199,7 +5200,7 @@
 
     if (cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) {   //if el health
       var status = cu.health.nh_status;
-      if ((off_line[name] == true)) {
+      if ((off_line[cu.health.ndk_uid] == true)) {
         items['load'] = { name: "Load", icon: "load" };
         items['init'] = { name: "Init", icon: "init" };
         items['unload'] = { name: "Unload", icon: "unload" };
@@ -5237,6 +5238,7 @@
         items['deinit'] = { name: "Deinit", icon: "deinit" };
 
       }
+     
     } else if (name != null && name != "") {
       items['load'] = { name: "Load", icon: "load" };
 
