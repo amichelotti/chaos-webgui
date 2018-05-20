@@ -1106,7 +1106,10 @@
             cuitem['plot-x'] = { name: "Plot Array(" + portarray + ") " + portdir + "/" + portname + "[] on X" };
             cuitem['plot-y'] = { name: "Plot Array(" + portarray + ") " + portdir + "/" + portname + "[] on Y" };
             cuitem['plot-histo'] = { name: "Histogram Array(" + portarray + ") " + portdir + "/" + portname + "[] on X" };
+         /*   if(node_selected[portdir][portname].hasOwnProperty("$binary")&& node_selected[portdir][portname].$binary.hasOwnProperty("base64")){
+              cuitem['show-png'] = { name: "show as png" };
 
+            }*/
           }
 
 
@@ -1593,6 +1596,8 @@
     $(".cucmd").click(function () {
       var alias = $(this).attr("cucmdid");
       var parvalue = $(this).attr("cucmdvalue");
+      var mult=$(this).attr("cucmdvalueMult");
+      
       var arglist = retriveCurrentCmdArguments(alias);
       var cuselection;
       var cmdparam = {};
@@ -1606,7 +1611,9 @@
           alert("argument '" + item['name'] + "' is required in command:'" + alias + "'");
           return;
         }
-
+        if((parvalue !=null) && (mult != null)){
+          parvalue=parvalue*mult;
+        }
         item['value'] = parvalue;
       });
 
@@ -3113,7 +3120,7 @@
     html += '<p class="name-cmd">Reset</p>';
     html += '</a>';
     html += '<div class="span3 offset1" onTablet="span6" onDesktop="span3" id="input-value">';
-    html += '<input class="input focused" id="mov_abs_offset_mm" type="number" value="[mm]">';
+    html += '<input class="input focused" id="mov_abs_offset_mm" type="number" value="1">';
     html += '</div>';
     html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPosition" cucmdid="mov_abs">';
     html += '<p>Apply</p>';
@@ -3123,12 +3130,13 @@
     html += '<p>Stop</p>';
     html += '</a>';
     html += '<div class="span12 statbox" onTablet="span12" onDesktop="span12" id="box-cmd-due">';
-    html += '<a class="quick-button-small span1 btn-cmd offset2 cucmd" id="scraper_in" cucmdid="mov_rel">';
+    html += '<a class="quick-button-small span1 btn-cmd offset2 cucmd" id="scraper_in" cucmdid="mov_rel" cucmdvalueMult=-1>';
     html += '<i class="icon-angle-left"></i>';
     html += '<p class="name-cmd">In</p>';
     html += '</a>';
+    // in case of cucmdvalue = null, a item named 'cucmd'_<commandparam>
     html += '<div class="span3" onTablet="span6" onDesktop="span3" id="input-value-due">';
-    html += '<input class="input focused" id="mov_rel_offset_mm" type="number" value="&#916; [mm]">';
+    html += '<input class="input focused" id="mov_rel_offset_mm" type="number" value=1>';
     html += '</div>';
     html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_out" cucmdid="mov_rel">';
     html += '<i class="icon-angle-right"></i>';
