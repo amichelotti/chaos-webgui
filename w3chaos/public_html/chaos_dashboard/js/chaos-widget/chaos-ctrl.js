@@ -171,7 +171,7 @@
          },
          open: function () {
           console.log(cuname+" control" );
-          $("#desc-"+name).chaosDashboard({collapsed: true,withQuotes: true,template:"ctrl",cu:cuname,interface:"generic",Interval: refresh});       
+          $("#desc-"+name).chaosDashboard({collapsed: true,withQuotes: true,template:"ctrl",cu:cuname,interface:"powersupply",Interval: refresh});       
          }
   });
 }
@@ -894,13 +894,13 @@
     html += '</div>';
     return html;
   }
-  function generateAlgoTable(cu) {
+  function generateAlgoTable(cu,template) {
     var html = '<div class="row-fluid" id="table-space">';
 
     html += '<div class="box span12" id="container-main-table">';
     html += '<div class="box-content span12">';
 
-    html += '<table class="table table-bordered" id="main_table">';
+    html += '<table class="table table-bordered" id="main_table-'+template+'">';
     html += '<thead class="box-header">';
     html += '<tr class="algoMenu">';
     html += '<th>Name</th>';
@@ -931,13 +931,13 @@
 
   }
 
-  function generateNodeTable(cu) {
+  function generateNodeTable(cu,template) {
     var html = '<div class="row-fluid" id="table-space">';
 
     html += '<div class="box span12" id="container-main-table">';
     html += '<div class="box-content span12">';
 
-    html += '<table class="table table-bordered" id="main_table">';
+    html += '<table class="table table-bordered" id="main_table-'+template+'">';
     html += '<thead class="box-header">';
     html += '<tr class="nodeMenu">';
     html += '<th>Node</th>';
@@ -1807,11 +1807,11 @@
    * 
   */
   // the interface has all the main elements
-  function setupCU() {
-    $("#main_table tbody tr").click(function (e) {
-      mainTableCommonHandling("main_table", e, "cu");
+  function setupCU(template) {
+    $("#main_table-"+template+" tbody tr").click(function (e) {
+      mainTableCommonHandling("main_table-"+template, e, "cu");
     });
-    n = $('#main_table tr').size();
+    n = $('#main_table-'+template+' tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
       $("#table-scroll").css('height', '280px');
     } else {
@@ -2067,7 +2067,7 @@
 
       });
     } else if(cmd == "open-ctrl"){
-      openControl("Description "+node_multi_selected[0],node_multi_selected[0],"cu",1000);
+      openControl("Control "+node_multi_selected[0],node_multi_selected[0],"cu",1000);
     } else if(cmd == "show-dataset"){
       showDataset(node_multi_selected[0],node_multi_selected[0],1000);
     } else if(cmd == "show-desc"){
@@ -2102,7 +2102,7 @@
       });
     } 
   }
-  function buildCUInterface(cuids, cutype) {
+  function buildCUInterface(cuids, cutype,template) {
     if (cuids == null) {
       alert("NO CU given!");
       return;
@@ -2139,29 +2139,29 @@
      */
 
     if ((cutype.indexOf("SCPowerSupply") != -1)) {
-      htmlt = generatePStable(node_list);
-      htmlc = generatePSCmd();
+      htmlt = generatePStable(node_list,template);
+      htmlc = generatePSCmd(template);
       updateTableFn = updatePStable;
 
     } else if ((cutype.indexOf("SCActuator") != -1)) {
-      htmlt = generateScraperTable(node_list);
-      htmlc = generateScraperCmd();
+      htmlt = generateScraperTable(node_list,template);
+      htmlc = generateScraperCmd(template);
       updateTableFn = updateScraperTable;
 
 
     } else if ((cutype.indexOf("RTCamera") != -1)) {
-      htmlt = generateCameraTable(node_list);
+      htmlt = generateCameraTable(node_list,template);
       updateTableFn = updateCameraTable;
 
     } else {
-      htmlt = generateGenericTable(node_list);
-      htmlc = generateGenericControl();
+      htmlt = generateGenericTable(node_list,template);
+      htmlc = generateGenericControl(template);
       updateTableFn = updateGenericControl;
     }
 
-    $("div.specific-table").html(htmlt);
-    $("div.specific-control").html(htmlc);
-    setupCU();
+    $("div.specific-table-"+template).html(htmlt);
+    $("div.specific-control-"+template).html(htmlc);
+    setupCU(template);
 
     if (node_list_interval != null) {
       clearInterval(node_list_interval);
@@ -2512,11 +2512,11 @@
       executeCUMenuCmd(cmd, options);
     return;
   }
-  function setupNode() {
-    $("#main_table tbody tr").click(function (e) {
-      mainTableCommonHandling("main_table", e, "node");
+  function setupNode(template) {
+    $("#main_table-"+template+" tbody tr").click(function (e) {
+      mainTableCommonHandling("main_table-"+template, e, "node");
     });
-    n = $('#main_table tr').size();
+    n = $('#main_table-'+template+' tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
       $("#table-scroll").css('height', '280px');
     } else {
@@ -2559,7 +2559,7 @@
     });
 
   }
-  function buildNodeInterface(nodes, cutype) {
+  function buildNodeInterface(nodes, cutype,template) {
     if (nodes == null) {
       alert("NO Nodes given!");
       return;
@@ -2591,10 +2591,10 @@
     updateTableFn = updateNodeTable;
 
 
-    $("div.specific-table").html(htmlt);
+    $("div.specific-table-"+template).html(htmlt);
     // $("div.specific-control").html(htmlc);
     checkRegistration = 0;
-    setupNode();
+    setupNode(template);
 
     jchaos.node(node_list, "desc", cutype, null, null, function (data) {
       var cnt = 0;
@@ -2666,7 +2666,7 @@
 
   }
 
-  function buildAlgoInterface(nodes) {
+  function buildAlgoInterface(nodes,template) {
     if (nodes == null) {
       alert("NO Nodes given!");
       return;
@@ -2696,10 +2696,10 @@
     htmlt = generateAlgoTable(node_list);
 
 
-    $("div.specific-table").html(htmlt);
+    $("div.specific-table-"+template).html(htmlt);
 
 
-    setupNode();
+    setupNode(template);
 
     jchaos.node(node_list, "desc", cutype, null, null, function (data) {
       var cnt = 0;
@@ -2812,7 +2812,7 @@
 
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
 
-      buildCUInterface(list_cu, implementation_map[interface]);
+      buildCUInterface(list_cu, implementation_map[interface],"cu");
     });
 
     $("#elements").change(function () {
@@ -2840,7 +2840,7 @@
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
       var interface = $("#classe option:selected").val();
 
-      buildCUInterface(list_cu, implementation_map[interface]);
+      buildCUInterface(list_cu, implementation_map[interface],"cu");
 
     });
     $("#classe").change(function () {
@@ -2849,7 +2849,7 @@
 
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
 
-      buildCUInterface(list_cu, implementation_map[interface]);
+      buildCUInterface(list_cu, implementation_map[interface],"cu");
 
     });
     $("#search-chaos").keypress(function (e) {
@@ -2859,7 +2859,7 @@
         var alive = $("input[type=radio][name=search-alive]:checked").val()
 
         list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
-        buildCUInterface(list_cu, implementation_map[interface]);
+        buildCUInterface(list_cu, implementation_map[interface],"cu");
 
       }
       //var tt =prompt('type value');
@@ -2870,7 +2870,7 @@
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
       var interface = $("#classe option:selected").val();
 
-      buildCUInterface(list_cu, implementation_map[interface]);
+      buildCUInterface(list_cu, implementation_map[interface],"cu");
     });
 
 
@@ -2946,7 +2946,7 @@
         search_string = $(this).val();
         var alive = $("input[type=radio][name=search-alive]:checked").val();
         jchaos.search(search_string,"script",alive,function(list_algo){
-          buildAlgoInterface(list_cu);
+          buildAlgoInterface(list_cu,"cu");
 
         });
        
@@ -2957,7 +2957,7 @@
     $("input[type=radio][name=search-alive]").change(function (e) {
       var alive = $("input[type=radio][name=search-alive]:checked").val()
       jchaos.search(search_string,"script",alive,function(list_algo){
-        buildAlgoInterface(list_cu);
+        buildAlgoInterface(list_cu,"cu");
 
       });
     });
@@ -3025,7 +3025,7 @@
     last_index_selected = $(e.currentTarget).index();
 
   }
-  function generateCameraTable(node_list) {
+  function generateCameraTable(node_list,template) {
     var html = '<div>';
     html += '<div id="cameraName"></div>';
     html += '<img id="cameraImage" src="" />';
@@ -3087,7 +3087,7 @@
     html += '</div>';
     html += '</div>';
 
-    html += generateGenericTable(node_list);
+    html += generateGenericTable(node_list,template);
     return html;
   }
   function configureSliderCommands(slname,slinput){
@@ -3110,7 +3110,7 @@
   }
 
   /********************* */
-  function generateGenericTable(cu) {
+  function generateGenericTable(cu,template) {
     var html = '<div class="row-fluid" id="table-space">';
     html += '<div class="box span12">';
     html += '<div class="box-content span12">';
@@ -3122,7 +3122,7 @@
 
     }
 
-    html += '<table class="table table-bordered" id="main_table">';
+    html += '<table class="table table-bordered" id="main_table-'+template+'">';
     html += '<thead class="box-header">';
     html += '<tr>';
     html += '<th>Name CU</th>';
@@ -3287,11 +3287,11 @@
     });
   }
 
-  function generateScraperTable(cu) {
+  function generateScraperTable(cu,template) {
     var html = '<div class="row-fluid">';
     html += '<div class="box span12">';
     html += '<div class="box-content">';
-    html += '<table class="table table-bordered" id="main_table">';
+    html += '<table class="table table-bordered" id="main_table-'+template+'">';
     html += '<thead class="box-header">';
     html += '<tr>';
     html += '<th>Element</th>';
@@ -3430,11 +3430,11 @@
 
     return html;
   }
-  function generatePStable(cu) {
+  function generatePStable(cu,template) {
     var html = '<div class="row-fluid">';
     html += '<div class="box span12">';
     html += '<div class="box-content">';
-    html += '<table class="table table-bordered" id="main_table">';
+    html += '<table class="table table-bordered" id="main_table-'+template+'">';
     html += '<thead class="box-header">';
     html += '<tr>';
     html += '<th>Element</th>';
@@ -5479,7 +5479,7 @@
   function updateCUMenu(cu, name) {
     var items = {};
 
-    if (cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) {   //if el health
+    if (cu!=null && cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) {   //if el health
       var status = cu.health.nh_status;
       if ((off_line[cu.health.ndk_uid] == false)) {
       
@@ -5845,8 +5845,8 @@
         var html = "";
         html += buildCUBody();
         html += generateModalActions();
-        html += '<div class="specific-table"></div>';
-        html += '<div class="specific-control"></div>';
+        html += '<div class="specific-table-cu"></div>';
+        html += '<div class="specific-control-cu"></div>';
         /*** */
         /* Insert HTML in target DOM element */
         $(this).html(html);
@@ -5862,17 +5862,17 @@
         html += generateEditJson();
         html += '<input type="text" id="inputClipBoard" value=" "/>';
 
-        html += '<div class="specific-table"></div>';
+        html += '<div class="specific-table-node"></div>';
 
         $(this).html(html);
         mainNode();
 
-      } else if(option.template == "ctrl"){
+      } else if(options.template == "ctrl"){
         var html = "";
-        html += '<div class="specific-table"></div>';
-        html += '<div class="specific-control"></div>';
+        html += '<div class="specific-table-ctrl"></div>';
+        html += '<div class="specific-control-ctrl"></div>';
         $(this).html(html);
-        buildCUInterface(option.cu, implementation_map[option.interface]);
+        buildCUInterface(options.cu, implementation_map[options.interface],"ctrl");
 
       }
       $("#menu-dashboard").html(generateMenuBox());

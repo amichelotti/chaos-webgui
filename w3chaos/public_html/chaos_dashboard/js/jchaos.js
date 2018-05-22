@@ -65,8 +65,12 @@
 						try {
 							var json = JSON.parse(request.responseText);
 							if (could_make_async) {
-
-								handleFunc(json);
+								try {
+									handleFunc(json);
+								} catch(err){
+									var str = "handler function error:'"+err+"'";
+									console.log(str);
+								}
 							}
 							return json;
 
