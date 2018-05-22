@@ -146,6 +146,47 @@
       ]
     });
   }
+  function showJson(msg,cuname, json) {
+    var name=encodeName(cuname);
+
+    var instant = $('<div id=desc-'+name+'></div>').dialog({
+      /*   width: 350,
+         height: 100,*/
+         title: msg,
+         position: "center",
+         resizable: true,
+         buttons:[
+         {
+             text: "save",click:function(e){
+               var blob = new Blob([JSON.stringify(json)], { type: "json;charset=utf-8" });
+               saveAs(blob, name+ ".json" );
+             }
+           },
+           {
+             text: "close",click:function(e){
+              $(this).remove();
+             }
+           }
+   
+   
+         ],
+         close: function (event, ui) {
+   
+          $(this).remove();
+         },
+         open: function () {
+          console.log(cuname+" description" );
+          var jsonhtml = json2html(json, options, cuname);
+          if (isCollapsable(json)) {
+            jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+          }
+          $("#desc-"+name).html(jsonhtml);         
+          jsonSetup($(this));
+          $(".json-toggle").trigger("click");
+
+          }
+       });
+  }
 
   function showDataset(msghead, cuname,refresh) {
     var update;
@@ -1997,6 +2038,13 @@
       });
     } else if(cmd == "show-dataset"){
       showDataset(node_multi_selected[0],node_multi_selected[0],1000);
+
+     
+    } else if(cmd == "show-desc"){
+      jchaos.getDesc(node_multi_selected[0], function(data){
+        showJson("Description "+node_multi_selected[0],node_multi_selected[0],data);
+      });
+      
 
      
     } else if(cmd == "show-picture"){
@@ -5042,20 +5090,20 @@
     html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Dataset</span>';
     html += '</a>';
     html += '</li>';
-*/
+
     html += '<li class="green">';
     html += '<a href="#mdl-description" role="button" class="show_description" data-toggle="modal">';
     html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Description</span>';
     html += '</a>';
     html += '</li>';
-
-    html += '<li class="red">';
+*/
+    html += '<li class="green">';
     html += '<a href="#mdl-log" role="button" class="show_log" data-toggle="modal">';
     html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Logging</span>';
     html += '</a>';
     html += '</li>';
 
-    html += '<li class="green">';
+    html += '<li class="red">';
     html += '<a href="#mdl-graph-list" role="button" class="show_graph" data-toggle="modal">';
     html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Graphs</span>';
     html += '</a>';
@@ -5454,6 +5502,7 @@
 
     if(node_multi_selected.length==1){
       items['show-dataset'] = { name: "show Dataset"};
+      items['show-desc'] = { name: "show Description"};
 
       items['show-picture'] = { name: "show as Picture.." };
     }
