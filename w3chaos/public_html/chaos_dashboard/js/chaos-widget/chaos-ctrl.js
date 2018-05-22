@@ -75,12 +75,15 @@
       var type = obj.$binary.subType;
       if (type == "84") {
         // integers
-        var binary_string = atob(obj.$binary.base64);
-        if ((binary_string.length % 4) == 0) {
+        var binary_string= atob(obj.$binary.base64);
+        if((binary_string.length % 4)!=0){
+          binary_string= binary_string.substring(0,binary_string.length-(binary_string.length % 4));
+        } 
+     //  if ((binary_string.length % 4) == 0) {
           var arrbuf = string2buffer(binary_string);
           var arr = new Int32Array(arrbuf);
           objtmp = Array.prototype.slice.call(arr);
-        }
+      //  }
       } else if (type == "86") {
 
         var binary_string = atob(obj.$binary.base64);
@@ -141,6 +144,169 @@
           }
         }
       ]
+    });
+  }
+
+  function showDataset(msghead, cuname,refresh) {
+    var update;
+    var started=0;
+    var stop_update=false;
+    var last_dataset={};
+    var name=encodeName(cuname);
+    var instant = $('<div id=dataset-'+name+'></div>').dialog({
+   /*   width: 350,
+      height: 100,*/
+      title: msghead,
+      position: "center",
+      resizable: true,
+      buttons:[
+        {
+          text: "update", id: 'dataset-update-'+name,click:function(e){
+           // var interval=$(this).attr("refresh_time");
+           stop_update=!stop_update;
+            
+           // $(instant).dialog("close");
+          }
+        },{
+          text: "save",click:function(e){
+            var blob = new Blob([JSON.stringify(last_dataset)], { type: "json;charset=utf-8" });
+            saveAs(blob, name+ ".json" );
+          }
+        },
+        {
+          text: "close",click:function(e){
+           // var interval=$(this).attr("refresh_time");
+
+           clearInterval(update);
+           // $(instant).dialog("close");
+           $(this).remove();
+          }
+        }
+
+
+      ],
+      close: function (event, ui) {
+      //  var interval=$(this).attr("refresh_time");
+
+        clearInterval(update);
+       // $(instant).dialog("close");
+       $(this).remove();
+      },
+      open: function () {
+       console.log(cuname+"dataset uodate refresh:"+refresh);
+       //$(".ui-dialog-titlebar-close", ui.dialog | ui).show();
+        update=setInterval(function () {
+          if(stop_update){
+            $('#dataset-update-'+name).text("Update");
+          } else {
+            $('#dataset-update-'+name).text("Not Update");
+          }
+          if(!stop_update){
+            jchaos.getChannel(cuname,-1,function(imdata){
+              last_dataset=imdata;
+              var converted = convertBinaryToArrays(imdata);
+              var jsonhtml = json2html(converted, options, cuname);
+              if (isCollapsable(converted)) {
+                jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+              }
+    
+              $("#dataset-"+name).html(jsonhtml);
+              if(started==0){
+                started =1;
+                stop_update=true;
+          //var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
+          //target.toggle();
+               $(".json-toggle").trigger("click");
+               jsonEnableContext();
+              }
+            });
+        }
+        
+        }, refresh);
+
+        jsonSetup($(this));
+       
+      }
+    });
+  }
+  function showPicture(msghead, fmt, cuname,refresh) {
+    var update;
+    var data;
+    var stop_update=false;
+    var name=encodeName(cuname);
+    var instant = $('<div><img id=pict-'+name+' src=""></div>').dialog({
+   /*   width: 350,
+      height: 100,*/
+      title: msghead,
+      position: "center",
+      resizable: true,
+      dialogClass: 'no-close',
+      buttons:[
+        {
+          text: "save",click:function(e){
+            var binary_string =atob( data.FRAMEBUFFER.$binary.base64);
+            var len = binary_string.length;
+            var bytes = new Uint8Array( len );
+            for (var i = 0; i < len; i++)        {
+              bytes[i] = binary_string.charCodeAt(i);
+            }
+            var blob = new Blob([bytes], { type: "image/png" });
+            saveAs(blob, name+ ".png" );
+          }
+        },
+        {
+          text: "update", id: 'pict-update-'+name,click:function(e){
+           // var interval=$(this).attr("refresh_time");
+           stop_update=!stop_update;
+            
+          }
+        },
+        {
+          text: "close",click:function(e){
+           // var interval=$(this).attr("refresh_time");
+
+           clearInterval(update);
+           // $(instant).dialog("close");
+           $(this).remove();
+          }
+        }
+
+
+      ],
+      close: function (event, ui) {
+      //  var interval=$(this).attr("refresh_time");
+
+        clearInterval(update);
+       // $(instant).dialog("close");
+       $(this).remove();
+      },
+      open: function () {
+       console.log(msghead+ " refresh:"+refresh," fmt:"+fmt);
+
+        update=setInterval(function () {
+          if(stop_update){
+            $('#pict-update-'+name).text("Update");
+          } else {
+            $('#pict-update-'+name).text("Not Update");
+          }
+          if(!stop_update){
+          jchaos.getChannel(cuname,0,function(imdata){
+             data=imdata[0];
+            if(data.hasOwnProperty("FRAMEBUFFER")&& data.FRAMEBUFFER.hasOwnProperty("$binary")&& data.FRAMEBUFFER.$binary.hasOwnProperty("base64")){
+              var bin = data.FRAMEBUFFER.$binary.base64;
+            //  $("#pict-"+name).attr("src", "data:image/" + fmt + ";base64," + bin);
+            $("#pict-"+name).attr("src", "data:;base64," + bin);
+            } else {
+              alert("NO 'FRAMEBUFFER.$binary.base64' key EXISTS");
+              clearInterval( update);
+              $(this).remove();
+
+            }
+          });
+        }
+          //$(this).attr("refresh_time",update);
+        }, refresh);
+      }
     });
   }
   function instantMessage(msghead, msg, tim) {
@@ -1044,6 +1210,83 @@
     });
 
   }
+
+  function jsonEnableContext(){
+    $.contextMenu({
+      selector: '.json-key',
+      build: function ($trigger, e) {
+        var cuitem = {};
+        var portdir = $(e.currentTarget).attr("portdir");
+        var portname = $(e.currentTarget).attr("portname");
+        var portarray = $(e.currentTarget).attr("portarray");
+        cuitem['show-graph'] = { name: "Show Graphs.." };
+        if (portarray == "0") {
+          cuitem['plot-x'] = { name: "Plot " + portdir + "/" + portname + " on X" };
+          cuitem['plot-y'] = { name: "Plot " + portdir + "/" + portname + " on Y" };
+          cuitem['plot-histo'] = { name: "Histogram " + portdir + "/" + portname };
+
+        } else {
+
+
+          cuitem['plot-x'] = { name: "Plot Array(" + portarray + ") " + portdir + "/" + portname + "[] on X" };
+          cuitem['plotM-y'] = { name: "Plot Array(" + portarray + ") " + portdir + "/" + portname + "[] on Y" };
+          cuitem['plot-histo'] = { name: "Histogram Array(" + portarray + ") " + portdir + "/" + portname + "[] on X" };
+        
+        }
+
+
+
+        cuitem['sep1'] = "---------";
+
+        cuitem['quit'] = {
+          name: "Quit", icon: function () {
+            return 'context-menu-icon context-menu-icon-quit';
+          }
+        };
+
+        return {
+
+          callback: function (cmd, options) {
+
+            var fullname;
+            if (portarray == "0") {
+              fullname = node_selected + "/" + portdir + "/" + portname;
+            } else {
+              fullname = node_selected + "/" + portdir + "/" + portname + "[0]";
+            }
+            if (cmd == "show-graph") {
+              $("#mdl-graph-list").modal("show");
+            } else if (cmd == "plot-x") {
+              $("#mdl-graph").modal("show");
+
+              $("#trace-name").val(node_selected);
+              $("#xvar").val(fullname);
+
+            } else if (cmd == "plot-y") {
+              $("#mdl-graph").modal("show");
+
+              $("#trace-name").val(node_selected);
+              $("#yvar").val(fullname);
+
+            } else if(cmd == "plot-histo"){
+              $("#mdl-graph").modal("show");
+
+              $("#trace-name").val(node_selected);
+              $("#yvar").val("histogram");
+              $("#xvar").val(fullname);
+              $("#xtype").val("linear");
+              $("#ytype").val("linear");
+
+              $("#graphtype").val("histogram");
+
+            } 
+            return;
+          },
+          items: cuitem
+        }
+      }
+    });
+  }
   /***
    * Setup CU Dataset
    * **/
@@ -1087,85 +1330,7 @@
 
         }
       });
-      $.contextMenu({
-        selector: '.json-key',
-        build: function ($trigger, e) {
-          var cuitem = {};
-          var portdir = $(e.currentTarget).attr("portdir");
-          var portname = $(e.currentTarget).attr("portname");
-          var portarray = $(e.currentTarget).attr("portarray");
-          cuitem['show-graph'] = { name: "Show Graphs.." };
-          if (portarray == "0") {
-            cuitem['plot-x'] = { name: "Plot " + portdir + "/" + portname + " on X" };
-            cuitem['plot-y'] = { name: "Plot " + portdir + "/" + portname + " on Y" };
-            cuitem['plot-histo'] = { name: "Histogram " + portdir + "/" + portname };
-
-          } else {
-
-
-            cuitem['plot-x'] = { name: "Plot Array(" + portarray + ") " + portdir + "/" + portname + "[] on X" };
-            cuitem['plot-y'] = { name: "Plot Array(" + portarray + ") " + portdir + "/" + portname + "[] on Y" };
-            cuitem['plot-histo'] = { name: "Histogram Array(" + portarray + ") " + portdir + "/" + portname + "[] on X" };
-         /*   if(node_selected[portdir][portname].hasOwnProperty("$binary")&& node_selected[portdir][portname].$binary.hasOwnProperty("base64")){
-              cuitem['show-png'] = { name: "show as png" };
-
-            }*/
-          }
-
-
-
-          cuitem['sep1'] = "---------";
-
-          cuitem['quit'] = {
-            name: "Quit", icon: function () {
-              return 'context-menu-icon context-menu-icon-quit';
-            }
-          };
-
-          return {
-
-            callback: function (cmd, options) {
-
-              var fullname;
-              if (portarray == "0") {
-                fullname = node_selected + "/" + portdir + "/" + portname;
-              } else {
-                fullname = node_selected + "/" + portdir + "/" + portname + "[0]";
-              }
-              if (cmd == "show-graph") {
-                $("#mdl-graph-list").modal("show");
-              } else if (cmd == "plot-x") {
-                $("#mdl-graph").modal("show");
-
-                $("#trace-name").val(node_selected);
-                $("#xvar").val(fullname);
-
-              } else if (cmd == "plot-y") {
-                $("#mdl-graph").modal("show");
-
-                $("#trace-name").val(node_selected);
-                $("#yvar").val(fullname);
-
-              } else if(cmd == "plot-histo"){
-                $("#mdl-graph").modal("show");
-
-                $("#trace-name").val(node_selected);
-                $("#yvar").val("histogram");
-                $("#xvar").val(fullname);
-                $("#xtype").val("linear");
-                $("#ytype").val("linear");
-
-                $("#graphtype").val("histogram");
-
-              }
-              return;
-            },
-            items: cuitem
-          }
-        }
-
-
-      });
+      jsonEnableContext();
     });
 
     $("#dataset-close").on('click', function () {
@@ -1192,9 +1357,9 @@
    * JSON SETUP
    */
 
-  function jsonSetup() {
+  function jsonSetup(dom) {
     var collapsed = options.collapsed;
-    $(main_dom).on("click", "a.json-toggle", function () {
+    $(dom).on("click", "a.json-toggle", function () {
       var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
       target.toggle();
       if (target.is(':visible')) {
@@ -1209,7 +1374,7 @@
     });
 
 
-    $(main_dom).on("click", "span.json-key", function () {
+    $(dom).on("click", "span.json-key", function () {
       var id = this.id;
       var attr = id.split("-")[1];
 
@@ -1219,7 +1384,7 @@
     });
 
     //$("input.json-keyinput").keypress(function (e) {
-    $(main_dom).on("keypress", "input.json-keyinput", function (e) {
+    $(dom).on("keypress", "input.json-keyinput", function (e) {
       if (e.keyCode == 13) {
         var id = this.id;
         var attr = id.split("-")[1];
@@ -1235,8 +1400,8 @@
     });
     /* Simulate click on toggle button when placeholder is clicked */
     //$("a.json-placeholder").click(function () {
-    $(main_dom).on("click", "a.json-placeholder", function () {
-      $(main_dom).siblings('a.json-toggle').click();
+    $(dom).on("click", "a.json-placeholder", function () {
+      $(dom).siblings('a.json-toggle').click();
       return false;
     });
     /* Trigger click to collapse all nodes */
@@ -1678,7 +1843,7 @@
 
           });
           return;
-        }
+        } 
 
         jchaos.sendCUCmd(cuselection, cmd, "", function (data) {
           instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
@@ -1830,13 +1995,36 @@
         //    $('.context-menu-list').trigger('contextmenu:hide')
 
       });
+    } else if(cmd == "show-dataset"){
+      showDataset(node_multi_selected[0],node_multi_selected[0],1000);
+
+     
+    } else if(cmd == "show-picture"){
+      jchaos.getChannel(node_multi_selected[0],-1,function(imdata){
+        var cu=imdata[0];
+        var refresh=1000;
+        if(cu.hasOwnProperty("health")&&cu.health.hasOwnProperty("cuh_dso_prate")){
+          refresh=1000/(cu.health.cuh_dso_prate);
+        }
+        if(cu && cu.hasOwnProperty("output")&&
+        cu.output.hasOwnProperty("FRAMEBUFFER")&&
+        cu.output.FRAMEBUFFER.hasOwnProperty("$binary")&& 
+        cu.output.FRAMEBUFFER.$binary.hasOwnProperty("base64")){
+       // $("#mdl-dataset").modal("hide");
+      
+          showPicture(node_multi_selected[0],"png",node_selected,refresh);
+        } else {
+          alert(node_multi_selected[0] +" cannot be viewed as a Picture, missing 'FRAMEBUFFER'");
+        }
+      });
+     
     } else {
       jchaos.sendCUCmd(node_multi_selected, cmd, "", function (data) {
         instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
         //   $('.context-menu-list').trigger('contextmenu:hide')
 
       });
-    }
+    } 
   }
   function buildCUInterface(cuids, cutype) {
     if (cuids == null) {
@@ -1953,8 +2141,18 @@
 
 
         //  $("div.cu-generic-control").html(chaosGenericControl(cu_live_selected[index]));
-        if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
+       /* if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
+          if(channel_sel == -1){
+            var converted = convertBinaryToArrays(curr_cu_selected);
+            var jsonhtml = json2html(converted, options, node_selected);
+            if (isCollapsable(converted)) {
+              jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+            }
+  
+            $("#cu-dataset").html(jsonhtml);
+          }  else {
           jchaos.getChannel(node_selected, -1, function (datone) {
+          curr_cu_selected=datone;
           var converted = convertBinaryToArrays(datone);
           var jsonhtml = json2html(converted, options, node_selected);
           if (isCollapsable(converted)) {
@@ -1963,7 +2161,8 @@
 
           $("#cu-dataset").html(jsonhtml);
         });
-      };
+      }
+      };*/
       });
 
 
@@ -3230,11 +3429,8 @@
 
         var id = elem.health.ndk_uid;
         var cuname = encodeName(id);
-        if (!elem.output.hasOwnProperty("current")) {
-          $("#" + cuname + "_output_current").html("NO DATASET");
-          $("#" + cuname + "_input_current").html("NO DATASET");
-          return;
-        }
+        if(elem.hasOwnProperty("output") && elem.hasOwnProperty("input") && elem.output.hasOwnProperty("current") && elem.input.hasOwnProperty("current")){
+
         $("#" + cuname + "_output_current").html(elem.output.current.toFixed(3));
         $("#" + cuname + "_input_current").html(elem.input.current);
         switch (elem.output.polarity) {
@@ -3291,6 +3487,7 @@
           }
         }
       }
+    }
     });
 
 
@@ -4839,26 +5036,26 @@
     html += '</a>';
     html += '</li>';
 
-
+/*
     html += '<li class="green">';
     html += '<a href="#mdl-dataset" role="button" class="show_dataset" data-toggle="modal">';
     html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Dataset</span>';
     html += '</a>';
     html += '</li>';
-
-    html += '<li class="red">';
+*/
+    html += '<li class="green">';
     html += '<a href="#mdl-description" role="button" class="show_description" data-toggle="modal">';
     html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Description</span>';
     html += '</a>';
     html += '</li>';
 
-    html += '<li class="green">';
+    html += '<li class="red">';
     html += '<a href="#mdl-log" role="button" class="show_log" data-toggle="modal">';
     html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Logging</span>';
     html += '</a>';
     html += '</li>';
 
-    html += '<li class="red">';
+    html += '<li class="green">';
     html += '<a href="#mdl-graph-list" role="button" class="show_graph" data-toggle="modal">';
     html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Graphs</span>';
     html += '</a>';
@@ -5208,13 +5405,8 @@
 
     if (cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) {   //if el health
       var status = cu.health.nh_status;
-      if ((off_line[cu.health.ndk_uid] == true)) {
-        items['load'] = { name: "Load", icon: "load" };
-        items['init'] = { name: "Init", icon: "init" };
-        items['unload'] = { name: "Unload", icon: "unload" };
-        items['deinit'] = { name: "Deinit", icon: "deinit" };
-        return items;
-      }
+      if ((off_line[cu.health.ndk_uid] == false)) {
+      
       if (status == 'Start') {
         items['stop'] = { name: "Stop", icon: "stop" };
       } else if (status == 'Stop') {
@@ -5244,13 +5436,29 @@
         items['init'] = { name: "Init", icon: "init" };
         items['unload'] = { name: "Unload", icon: "unload" };
         items['deinit'] = { name: "Deinit", icon: "deinit" };
+        
 
       }
-     
-    } else if (name != null && name != "") {
+    
+    }  else {
       items['load'] = { name: "Load", icon: "load" };
+      items['init'] = { name: "Init", icon: "init" };
+      items['unload'] = { name: "Unload", icon: "unload" };
+      items['deinit'] = { name: "Deinit", icon: "deinit" };
+    } 
+  } else if (name != null && name != "") {
+    items['load'] = { name: "Load", icon: "load" };
 
+  }
+    items['sep1'] = "---------";
+
+    if(node_multi_selected.length==1){
+      items['show-dataset'] = { name: "show Dataset"};
+
+      items['show-picture'] = { name: "show as Picture.." };
     }
+
+    
     return items;
   }
   function updateGenericControl(cu) {
@@ -5583,7 +5791,7 @@
       }
       $("#menu-dashboard").html(generateMenuBox());
 
-      jsonSetup();
+      jsonSetup($(this));
       $(".savetofile").on("click", function (e) {
         var t = $(e.target);
         if (save_obj instanceof Object) {
