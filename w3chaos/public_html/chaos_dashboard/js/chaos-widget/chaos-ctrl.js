@@ -146,6 +146,36 @@
       ]
     });
   }
+
+  function openControl(msg,cuname, cutype,refresh) {
+    var name=encodeName(cuname);
+
+    var instant = $('<div id=desc-'+name+'></div>').dialog({
+      /*   width: 350,
+         height: 100,*/
+         title: msg,
+         position: "center",
+         resizable: true,
+         buttons:[
+           {
+             text: "close",click:function(e){
+              $(this).remove();
+             }
+           }
+   
+   
+         ],
+         close: function (event, ui) {
+   
+          $(this).remove();
+         },
+         open: function () {
+          console.log(cuname+" control" );
+          $("#desc-"+name).chaosDashboard({collapsed: true,withQuotes: true,template:"ctrl",cu:cuname,interface:"generic",Interval: refresh});       
+         }
+  });
+}
+
   function showJson(msg,cuname, json) {
     var name=encodeName(cuname);
 
@@ -2036,16 +2066,14 @@
         //    $('.context-menu-list').trigger('contextmenu:hide')
 
       });
+    } else if(cmd == "open-ctrl"){
+      openControl("Description "+node_multi_selected[0],node_multi_selected[0],"cu",1000);
     } else if(cmd == "show-dataset"){
       showDataset(node_multi_selected[0],node_multi_selected[0],1000);
-
-     
     } else if(cmd == "show-desc"){
       jchaos.getDesc(node_multi_selected[0], function(data){
         showJson("Description "+node_multi_selected[0],node_multi_selected[0],data);
       });
-      
-
      
     } else if(cmd == "show-picture"){
       jchaos.getChannel(node_multi_selected[0],-1,function(imdata){
@@ -5501,10 +5529,12 @@
     items['sep1'] = "---------";
 
     if(node_multi_selected.length==1){
-      items['show-dataset'] = { name: "show Dataset"};
-      items['show-desc'] = { name: "show Description"};
+      //node_name_to_desc[node_multi_selected[0]]
+      items['open-ctrl']={ name: "Open control"};
+      items['show-dataset'] = { name: "Show Dataset"};
+      items['show-desc'] = { name: "Show Description"};
 
-      items['show-picture'] = { name: "show as Picture.." };
+      items['show-picture'] = { name: "Show as Picture.." };
     }
 
     
@@ -5836,6 +5866,13 @@
 
         $(this).html(html);
         mainNode();
+
+      } else if(option.template == "ctrl"){
+        var html = "";
+        html += '<div class="specific-table"></div>';
+        html += '<div class="specific-control"></div>';
+        $(this).html(html);
+        buildCUInterface(option.cu, implementation_map[option.interface]);
 
       }
       $("#menu-dashboard").html(generateMenuBox());
