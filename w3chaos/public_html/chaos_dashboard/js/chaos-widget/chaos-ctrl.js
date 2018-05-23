@@ -39,8 +39,18 @@
   var search_string;
   var notupdate_dataset = 1;
   var implementation_map = { "powersupply": "SCPowerSupply", "scraper": "SCActuator", "camera": "RTCamera" };
-  var histdataset={};
+  var histdataset = {};
+  var hostWidth = 640;
+  var hostHeight = 640;
 
+  function getInterfaceFromClass(impl_class) {
+    for (var key in implementation_map) {
+      if (impl_class.includes(implementation_map[key])) {
+        return key;
+      }
+    };
+    return null;
+  }
   function removeElementByName(name, tlist) {
     for (var cnt = 0; cnt < tlist.length; cnt++) {
       if (tlist[cnt].name == name) {
@@ -75,15 +85,15 @@
       var type = obj.$binary.subType;
       if (type == "84") {
         // integers
-        var binary_string= atob(obj.$binary.base64);
-        if((binary_string.length % 4)!=0){
-          binary_string= binary_string.substring(0,binary_string.length-(binary_string.length % 4));
-        } 
-     //  if ((binary_string.length % 4) == 0) {
-          var arrbuf = string2buffer(binary_string);
-          var arr = new Int32Array(arrbuf);
-          objtmp = Array.prototype.slice.call(arr);
-      //  }
+        var binary_string = atob(obj.$binary.base64);
+        if ((binary_string.length % 4) != 0) {
+          binary_string = binary_string.substring(0, binary_string.length - (binary_string.length % 4));
+        }
+        //  if ((binary_string.length % 4) == 0) {
+        var arrbuf = string2buffer(binary_string);
+        var arr = new Int32Array(arrbuf);
+        objtmp = Array.prototype.slice.call(arr);
+        //  }
       } else if (type == "86") {
 
         var binary_string = atob(obj.$binary.base64);
@@ -147,234 +157,250 @@
     });
   }
 
-  function openControl(msg,cuname, cutype,refresh) {
-    var name=encodeName(cuname);
+  function openControl(msg, cuname, cutype, refresh) {
+    var name  = encodeName(cuname[0]);
 
-    var instant = $('<div id=desc-'+name+'></div>').dialog({
-      /*   width: 350,
-         height: 100,*/
-         title: msg,
-         position: "center",
-         resizable: true,
-         buttons:[
-           {
-             text: "close",click:function(e){
-              $(this).remove();
-             }
-           }
-   
-   
-         ],
-         close: function (event, ui) {
-   
-          $(this).remove();
-         },
-         open: function () {
-          console.log(cuname+" control" );
-          $("#desc-"+name).chaosDashboard({collapsed: true,withQuotes: true,template:"ctrl",cu:cuname,interface:"powersupply",Interval: refresh});       
-         }
-  });
-}
-
-  function showJson(msg,cuname, json) {
-    var name=encodeName(cuname);
-
-    var instant = $('<div id=desc-'+name+'></div>').dialog({
-      /*   width: 350,
-         height: 100,*/
-         title: msg,
-         position: "center",
-         resizable: true,
-         buttons:[
-         {
-             text: "save",click:function(e){
-               var blob = new Blob([JSON.stringify(json)], { type: "json;charset=utf-8" });
-               saveAs(blob, name+ ".json" );
-             }
-           },
-           {
-             text: "close",click:function(e){
-              $(this).remove();
-             }
-           }
-   
-   
-         ],
-         close: function (event, ui) {
-   
-          $(this).remove();
-         },
-         open: function () {
-          console.log(cuname+" description" );
-          var jsonhtml = json2html(json, options, cuname);
-          if (isCollapsable(json)) {
-            jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
-          }
-          $("#desc-"+name).html(jsonhtml);         
-          jsonSetup($(this));
-          $(".json-toggle").trigger("click");
-
-          }
-       });
-  }
-
-  function showDataset(msghead, cuname,refresh) {
-    var update;
-    var started=0;
-    var stop_update=false;
-    var last_dataset={};
-    var name=encodeName(cuname);
-    var instant = $('<div id=dataset-'+name+'></div>').dialog({
-   /*   width: 350,
-      height: 100,*/
-      title: msghead,
+    
+    var nintervals = 0;
+    var orginal_list = [];
+    var instant = $('<div id=ctrl-' + name + '></div>').dialog({
+      minWidth: hostWidth / 2,
+      minHeight: hostHeight / 4,
+      title: msg,
       position: "center",
       resizable: true,
-      buttons:[
+      buttons: [
         {
-          text: "update", id: 'dataset-update-'+name,click:function(e){
-           // var interval=$(this).attr("refresh_time");
-           stop_update=!stop_update;
-            
-           // $(instant).dialog("close");
-          }
-        },{
-          text: "save",click:function(e){
-            var blob = new Blob([JSON.stringify(last_dataset)], { type: "json;charset=utf-8" });
-            saveAs(blob, name+ ".json" );
-          }
-        },
-        {
-          text: "close",click:function(e){
-           // var interval=$(this).attr("refresh_time");
+          text: "close", click: function (e) {
+            $("#ctrl-" + name).dialog('close');
 
-           clearInterval(update);
-           // $(instant).dialog("close");
-           $(this).remove();
+
           }
         }
 
 
       ],
       close: function (event, ui) {
-      //  var interval=$(this).attr("refresh_time");
+        var last_interval = setInterval(function () { }, 100000);
+        console.log(name + " CLOSING intervals from:" + nintervals + " to :" + last_interval);
+        for (var i = nintervals; i <= last_interval; i++) {
+          clearInterval(i);
+        }
+        $(this).remove();
+        var interface = $("#classe option:selected").val();
+        console.log("restoring view :" + interface);
 
-        clearInterval(update);
-       // $(instant).dialog("close");
-       $(this).remove();
+        buildCUInterface(orginal_list, implementation_map[interface], "cu");
       },
       open: function () {
-       console.log(cuname+"dataset uodate refresh:"+refresh);
-       //$(".ui-dialog-titlebar-close", ui.dialog | ui).show();
-        update=setInterval(function () {
-          if(stop_update){
-            $('#dataset-update-'+name).text("Update");
-          } else {
-            $('#dataset-update-'+name).text("Not Update");
+        nintervals = setInterval(function () { }, 100000);  // Get a reference to the last
+        // interval +1
+        orginal_list = node_list;
+        console.log(name + " OPEN control interval:" + nintervals);
+        $("#ctrl-" + name).chaosDashboard({ collapsed: true, withQuotes: true, template: "ctrl", cu: cuname, interface: cutype, Interval: refresh });
+      }
+    });
+  }
+
+  function showJson(msg, cuname, json) {
+    var name = encodeName(cuname);
+
+    var instant = $('<div id=desc-' + name + '></div>').dialog({
+      minWidth: hostWidth / 4,
+      minHeight: hostHeight / 4,
+      title: msg,
+      position: "center",
+      resizable: true,
+      buttons: [
+        {
+          text: "save", click: function (e) {
+            var blob = new Blob([JSON.stringify(json)], { type: "json;charset=utf-8" });
+            saveAs(blob, name + ".json");
           }
-          if(!stop_update){
-            jchaos.getChannel(cuname,-1,function(imdata){
-              last_dataset=imdata;
+        },
+        {
+          text: "close", click: function (e) {
+            $("#desc-" + name).dialog('close');
+          }
+        }
+
+
+      ],
+      close: function (event, ui) {
+
+        $(this).remove();
+      },
+      open: function () {
+        console.log(cuname + " description");
+        //   $("#desc-"+name).width(hostWidth/4);
+        //  $("#desc-"+name).height(hostHeight/4);
+        var jsonhtml = json2html(json, options, cuname);
+        if (isCollapsable(json)) {
+          jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+        }
+        $("#desc-" + name).html(jsonhtml);
+        jsonSetup($(this));
+        $(".json-toggle").trigger("click");
+
+      }
+    });
+  }
+
+  function showDataset(msghead, cuname, refresh) {
+    var update;
+    var started = 0;
+    var stop_update = false;
+    var last_dataset = {};
+    var name = encodeName(cuname);
+    var instant = $('<div id=dataset-' + name + '></div>').dialog({
+      minWidth: hostWidth / 4,
+      minHeight: hostHeight / 4,
+      title: msghead,
+      position: "center",
+      resizable: true,
+      buttons: [
+        {
+          text: "update", id: 'dataset-update-' + name, click: function (e) {
+            // var interval=$(this).attr("refresh_time");
+            stop_update = !stop_update;
+
+            // $(instant).dialog("close");
+          }
+        }, {
+          text: "save", click: function (e) {
+            var blob = new Blob([JSON.stringify(last_dataset)], { type: "json;charset=utf-8" });
+            saveAs(blob, name + ".json");
+          }
+        },
+        {
+          text: "close", click: function (e) {
+            // var interval=$(this).attr("refresh_time");
+            $("#dataset-" + name).dialog('close');
+
+          }
+        }
+
+
+      ],
+      close: function (event, ui) {
+        //  var interval=$(this).attr("refresh_time");
+
+        clearInterval(update);
+        // $(instant).dialog("close");
+        $(this).remove();
+      },
+      open: function () {
+        console.log(cuname + "dataset uodate refresh:" + refresh);
+        //$(".ui-dialog-titlebar-close", ui.dialog | ui).show();
+        update = setInterval(function () {
+          if (stop_update) {
+            $('#dataset-update-' + name).text("Update");
+          } else {
+            $('#dataset-update-' + name).text("Not Update");
+          }
+          if (!stop_update) {
+            jchaos.getChannel(cuname, -1, function (imdata) {
+              last_dataset = imdata;
               var converted = convertBinaryToArrays(imdata);
               var jsonhtml = json2html(converted, options, cuname);
               if (isCollapsable(converted)) {
                 jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
               }
-    
-              $("#dataset-"+name).html(jsonhtml);
-              if(started==0){
-                started =1;
-                stop_update=true;
-          //var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
-          //target.toggle();
-               $(".json-toggle").trigger("click");
-               jsonEnableContext();
+
+              $("#dataset-" + name).html(jsonhtml);
+              if (started == 0) {
+                started = 1;
+                stop_update = true;
+                //var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
+                //target.toggle();
+                $(".json-toggle").trigger("click");
+                jsonEnableContext();
               }
             });
-        }
-        
+          }
+
         }, refresh);
 
         jsonSetup($(this));
-       
+
       }
     });
   }
-  function showPicture(msghead, fmt, cuname,refresh) {
+  function showPicture(msghead, fmt, cuname, refresh) {
     var update;
     var data;
-    var stop_update=false;
-    var name=encodeName(cuname);
-    var instant = $('<div><img id=pict-'+name+' src=""></div>').dialog({
-   /*   width: 350,
-      height: 100,*/
+    var stop_update = false;
+    var name = encodeName(cuname);
+    var instant = $('<div><img id=pict-' + name + ' src=""></div>').dialog({
+      minWidth: hostWidth / 4,
+      minHeight: hostHeight / 4,
       title: msghead,
       position: "center",
       resizable: true,
       dialogClass: 'no-close',
-      buttons:[
+      buttons: [
         {
-          text: "save",click:function(e){
-            var binary_string =atob( data.FRAMEBUFFER.$binary.base64);
+          text: "save", click: function (e) {
+            var binary_string = atob(data.FRAMEBUFFER.$binary.base64);
             var len = binary_string.length;
-            var bytes = new Uint8Array( len );
-            for (var i = 0; i < len; i++)        {
+            var bytes = new Uint8Array(len);
+            for (var i = 0; i < len; i++) {
               bytes[i] = binary_string.charCodeAt(i);
             }
             var blob = new Blob([bytes], { type: "image/png" });
-            saveAs(blob, name+ ".png" );
+            saveAs(blob, name + ".png");
           }
         },
         {
-          text: "update", id: 'pict-update-'+name,click:function(e){
-           // var interval=$(this).attr("refresh_time");
-           stop_update=!stop_update;
-            
-          }
-        },
-        {
-          text: "close",click:function(e){
-           // var interval=$(this).attr("refresh_time");
+          text: "update", id: 'pict-update-' + name, click: function (e) {
+            // var interval=$(this).attr("refresh_time");
+            stop_update = !stop_update;
 
-           clearInterval(update);
-           // $(instant).dialog("close");
-           $(this).remove();
+          }
+        },
+        {
+          text: "close", click: function (e) {
+            // var interval=$(this).attr("refresh_time");
+
+            clearInterval(update);
+            // $(instant).dialog("close");
+            $(this).remove();
           }
         }
 
 
       ],
       close: function (event, ui) {
-      //  var interval=$(this).attr("refresh_time");
+        //  var interval=$(this).attr("refresh_time");
 
         clearInterval(update);
-       // $(instant).dialog("close");
-       $(this).remove();
+        // $(instant).dialog("close");
+        $(this).remove();
       },
       open: function () {
-       console.log(msghead+ " refresh:"+refresh," fmt:"+fmt);
+        console.log(msghead + " refresh:" + refresh, " fmt:" + fmt);
 
-        update=setInterval(function () {
-          if(stop_update){
-            $('#pict-update-'+name).text("Update");
+        update = setInterval(function () {
+          if (stop_update) {
+            $('#pict-update-' + name).text("Update");
           } else {
-            $('#pict-update-'+name).text("Not Update");
+            $('#pict-update-' + name).text("Not Update");
           }
-          if(!stop_update){
-          jchaos.getChannel(cuname,0,function(imdata){
-             data=imdata[0];
-            if(data.hasOwnProperty("FRAMEBUFFER")&& data.FRAMEBUFFER.hasOwnProperty("$binary")&& data.FRAMEBUFFER.$binary.hasOwnProperty("base64")){
-              var bin = data.FRAMEBUFFER.$binary.base64;
-            //  $("#pict-"+name).attr("src", "data:image/" + fmt + ";base64," + bin);
-            $("#pict-"+name).attr("src", "data:;base64," + bin);
-            } else {
-              alert("NO 'FRAMEBUFFER.$binary.base64' key EXISTS");
-              clearInterval( update);
-              $(this).remove();
+          if (!stop_update) {
+            jchaos.getChannel(cuname, 0, function (imdata) {
+              data = imdata[0];
+              if (data.hasOwnProperty("FRAMEBUFFER") && data.FRAMEBUFFER.hasOwnProperty("$binary") && data.FRAMEBUFFER.$binary.hasOwnProperty("base64")) {
+                var bin = data.FRAMEBUFFER.$binary.base64;
+                //  $("#pict-"+name).attr("src", "data:image/" + fmt + ";base64," + bin);
+                $("#pict-" + name).attr("src", "data:;base64," + bin);
+              } else {
+                alert("NO 'FRAMEBUFFER.$binary.base64' key EXISTS");
+                clearInterval(update);
+                $(this).remove();
 
-            }
-          });
-        }
+              }
+            });
+          }
           //$(this).attr("refresh_time",update);
         }, refresh);
       }
@@ -387,7 +413,7 @@
       title: msghead,
       position: "center",
       open: function () {
-        console.log(msghead + ":"+msg);
+        console.log(msghead + ":" + msg);
         $(this).css("opacity", 0.5);
         setTimeout(function () {
           $(instant).dialog("close");
@@ -524,7 +550,7 @@
             $("#" + name).css('color', 'black');
             $("#" + name).find('td').css('color', 'black');
             off_line[elem.health.ndk_uid] = true;
-            node_live_selected[index].health.nh_status="Dead";
+            node_live_selected[index].health.nh_status = "Dead";
 
           }
           health_time_stamp_old[name] = curr_time;
@@ -834,7 +860,7 @@
     return html;
   }
 
-      function updateAlgoMenu(cu, name) {
+  function updateAlgoMenu(cu, name) {
     var items = {};
 
     if (cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) {   //if el health
@@ -894,13 +920,13 @@
     html += '</div>';
     return html;
   }
-  function generateAlgoTable(cu,template) {
+  function generateAlgoTable(cu, template) {
     var html = '<div class="row-fluid" id="table-space">';
 
     html += '<div class="box span12" id="container-main-table">';
     html += '<div class="box-content span12">';
 
-    html += '<table class="table table-bordered" id="main_table-'+template+'">';
+    html += '<table class="table table-bordered" id="main_table-' + template + '">';
     html += '<thead class="box-header">';
     html += '<tr class="algoMenu">';
     html += '<th>Name</th>';
@@ -931,13 +957,13 @@
 
   }
 
-  function generateNodeTable(cu,template) {
+  function generateNodeTable(cu, template) {
     var html = '<div class="row-fluid" id="table-space">';
 
     html += '<div class="box span12" id="container-main-table">';
     html += '<div class="box-content span12">';
 
-    html += '<table class="table table-bordered" id="main_table-'+template+'">';
+    html += '<table class="table table-bordered" id="main_table-' + template + '">';
     html += '<thead class="box-header">';
     html += '<tr class="nodeMenu">';
     html += '<th>Node</th>';
@@ -1282,7 +1308,7 @@
 
   }
 
-  function jsonEnableContext(){
+  function jsonEnableContext() {
     $.contextMenu({
       selector: '.json-key',
       build: function ($trigger, e) {
@@ -1302,7 +1328,7 @@
           cuitem['plot-x'] = { name: "Plot Array(" + portarray + ") " + portdir + "/" + portname + "[] on X" };
           cuitem['plotM-y'] = { name: "Plot Array(" + portarray + ") " + portdir + "/" + portname + "[] on Y" };
           cuitem['plot-histo'] = { name: "Histogram Array(" + portarray + ") " + portdir + "/" + portname + "[] on X" };
-        
+
         }
 
 
@@ -1339,7 +1365,7 @@
               $("#trace-name").val(node_selected);
               $("#yvar").val(fullname);
 
-            } else if(cmd == "plot-histo"){
+            } else if (cmd == "plot-histo") {
               $("#mdl-graph").modal("show");
 
               $("#trace-name").val(node_selected);
@@ -1350,7 +1376,7 @@
 
               $("#graphtype").val("histogram");
 
-            } 
+            }
             return;
           },
           items: cuitem
@@ -1517,13 +1543,13 @@
         // initialize with the value of selected graph
         var info = high_graphs[graph_selected].highchart_opt;
         $("#graph_save_name").val(graph_selected);
-        if(info.xAxis instanceof Array){
+        if (info.xAxis instanceof Array) {
           $("#xname").val(info.xAxis[0].title.text);
 
         } else {
           $("#xname").val(info.xAxis.title.text);
         }
-        
+
         // $("#xtype option:selected").val(info.xAxis.type);
         if (info.xAxis.type != null && info.xAxis.type != "") {
           $("#xtype").val(info.xAxis.type);
@@ -1531,7 +1557,7 @@
 
         $("#xmax").val(info.xAxis.max);
         $("#xmin").val(info.xAxis.min);
-        if(info.yAxis instanceof Array){
+        if (info.yAxis instanceof Array) {
           $("#yname").val(info.yAxis[0].title.text);
         } else {
           $("#yname").val(info.yAxis.title.text);
@@ -1808,10 +1834,10 @@
   */
   // the interface has all the main elements
   function setupCU(template) {
-    $("#main_table-"+template+" tbody tr").click(function (e) {
-      mainTableCommonHandling("main_table-"+template, e, "cu");
+    $("#main_table-" + template + " tbody tr").click(function (e) {
+      mainTableCommonHandling("main_table-" + template, e, "cu");
     });
-    n = $('#main_table-'+template+' tr').size();
+    n = $('#main_table-' + template + ' tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
       $("#table-scroll").css('height', '280px');
     } else {
@@ -1832,8 +1858,8 @@
     $(".cucmd").click(function () {
       var alias = $(this).attr("cucmdid");
       var parvalue = $(this).attr("cucmdvalue");
-      var mult=$(this).attr("cucmdvalueMult");
-      
+      var mult = $(this).attr("cucmdvalueMult");
+
       var arglist = retriveCurrentCmdArguments(alias);
       var cuselection;
       var cmdparam = {};
@@ -1847,8 +1873,8 @@
           alert("argument '" + item['name'] + "' is required in command:'" + alias + "'");
           return;
         }
-        if((parvalue !=null) && (mult != null)){
-          parvalue=parvalue*mult;
+        if ((parvalue != null) && (mult != null)) {
+          parvalue = parvalue * mult;
         }
         item['value'] = parvalue;
       });
@@ -1914,7 +1940,7 @@
 
           });
           return;
-        } 
+        }
 
         jchaos.sendCUCmd(cuselection, cmd, "", function (data) {
           instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
@@ -2014,12 +2040,12 @@
     $("#mdl-description").draggable();
     $("#mdl-snap").draggable();
     $("#mdl-log").resizable().draggable();
-    configureSliderCommands("slider-GAIN","image_gain");
-    configureSliderCommands("slider-BRIGHTNESS","image_brightness");
-    configureSliderCommands("slider-SHUTTER","image_shutter");
-    configureSliderCommands("slider-CONTRAST","image_contrast");
-    configureSliderCommands("slider-SHARPNESS","image_sharpness");
-    $(main_dom).on("keypress","input.cucmdattr",function (e) {
+    configureSliderCommands("slider-GAIN", "image_gain");
+    configureSliderCommands("slider-BRIGHTNESS", "image_brightness");
+    configureSliderCommands("slider-SHUTTER", "image_shutter");
+    configureSliderCommands("slider-CONTRAST", "image_contrast");
+    configureSliderCommands("slider-SHARPNESS", "image_sharpness");
+    $(main_dom).on("keypress", "input.cucmdattr", function (e) {
       if (e.keyCode == 13) {
         var id = this.id;
         var attr = id.split("-")[1];
@@ -2066,43 +2092,50 @@
         //    $('.context-menu-list').trigger('contextmenu:hide')
 
       });
-    } else if(cmd == "open-ctrl"){
-      openControl("Control "+node_multi_selected[0],node_multi_selected[0],"cu",1000);
-    } else if(cmd == "show-dataset"){
-      showDataset(node_multi_selected[0],node_multi_selected[0],1000);
-    } else if(cmd == "show-desc"){
-      jchaos.getDesc(node_multi_selected[0], function(data){
-        showJson("Description "+node_multi_selected[0],node_multi_selected[0],data);
-      });
-     
-    } else if(cmd == "show-picture"){
-      jchaos.getChannel(node_multi_selected[0],-1,function(imdata){
-        var cu=imdata[0];
-        var refresh=1000;
-        if(cu.hasOwnProperty("health")&&cu.health.hasOwnProperty("cuh_dso_prate")){
-          refresh=1000/(cu.health.cuh_dso_prate);
-        }
-        if(cu && cu.hasOwnProperty("output")&&
-        cu.output.hasOwnProperty("FRAMEBUFFER")&&
-        cu.output.FRAMEBUFFER.hasOwnProperty("$binary")&& 
-        cu.output.FRAMEBUFFER.$binary.hasOwnProperty("base64")){
-       // $("#mdl-dataset").modal("hide");
+    } else if (cmd == "open-ctrl") {
+      var desc = node_name_to_desc[encodeName(node_multi_selected[0])];
+      var tt = getInterfaceFromClass(desc.instance_description.control_unit_implementation);
+      if(node_multi_selected.length>1){
+        openControl("Multi Control " + node_multi_selected[0]+"...", node_multi_selected, tt, 1000);
+      } else {
+        openControl("Control " + node_multi_selected[0], node_multi_selected, tt, 1000);
+      }
       
-          showPicture(node_multi_selected[0],"png",node_selected,refresh);
+    } else if (cmd == "show-dataset") {
+      showDataset(node_multi_selected[0], node_multi_selected[0], 1000);
+    } else if (cmd == "show-desc") {
+      jchaos.getDesc(node_multi_selected[0], function (data) {
+        showJson("Description " + node_multi_selected[0], node_multi_selected[0], data);
+      });
+
+    } else if (cmd == "show-picture") {
+      jchaos.getChannel(node_multi_selected[0], -1, function (imdata) {
+        var cu = imdata[0];
+        var refresh = 1000;
+        if (cu.hasOwnProperty("health") && cu.health.hasOwnProperty("cuh_dso_prate")) {
+          refresh = 1000 / (cu.health.cuh_dso_prate);
+        }
+        if (cu && cu.hasOwnProperty("output") &&
+          cu.output.hasOwnProperty("FRAMEBUFFER") &&
+          cu.output.FRAMEBUFFER.hasOwnProperty("$binary") &&
+          cu.output.FRAMEBUFFER.$binary.hasOwnProperty("base64")) {
+          // $("#mdl-dataset").modal("hide");
+
+          showPicture(node_multi_selected[0], "png", node_selected, refresh);
         } else {
-          alert(node_multi_selected[0] +" cannot be viewed as a Picture, missing 'FRAMEBUFFER'");
+          alert(node_multi_selected[0] + " cannot be viewed as a Picture, missing 'FRAMEBUFFER'");
         }
       });
-     
+
     } else {
       jchaos.sendCUCmd(node_multi_selected, cmd, "", function (data) {
         instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
         //   $('.context-menu-list').trigger('contextmenu:hide')
 
       });
-    } 
+    }
   }
-  function buildCUInterface(cuids, cutype,template) {
+  function buildCUInterface(cuids, cutype, template) {
     if (cuids == null) {
       alert("NO CU given!");
       return;
@@ -2139,36 +2172,36 @@
      */
 
     if ((cutype.indexOf("SCPowerSupply") != -1)) {
-      htmlt = generatePStable(node_list,template);
+      htmlt = generatePStable(node_list, template);
       htmlc = generatePSCmd(template);
       updateTableFn = updatePStable;
 
     } else if ((cutype.indexOf("SCActuator") != -1)) {
-      htmlt = generateScraperTable(node_list,template);
+      htmlt = generateScraperTable(node_list, template);
       htmlc = generateScraperCmd(template);
       updateTableFn = updateScraperTable;
 
 
     } else if ((cutype.indexOf("RTCamera") != -1)) {
-      htmlt = generateCameraTable(node_list,template);
+      htmlt = generateCameraTable(node_list, template);
       updateTableFn = updateCameraTable;
 
     } else {
-      htmlt = generateGenericTable(node_list,template);
+      htmlt = generateGenericTable(node_list, template);
       htmlc = generateGenericControl(template);
       updateTableFn = updateGenericControl;
     }
 
-    $("div.specific-table-"+template).html(htmlt);
-    $("div.specific-control-"+template).html(htmlc);
+    $("div.specific-table-" + template).html(htmlt);
+    $("div.specific-control-" + template).html(htmlc);
     setupCU(template);
 
-    if (node_list_interval != null) {
+    if ((node_list_interval != null)) {
       clearInterval(node_list_interval);
 
     }
     node_list_interval = setInterval(function () {
-      var channel_sel=-1;
+      var channel_sel = -1;
       /*
       node_live_selected=  jchaos.getChannel(node_list, -1, null);
       if (node_live_selected.length == 0) {
@@ -2196,8 +2229,8 @@
         $("#cu-dataset").html(jsonhtml);
 
       }*/
-      if(updateTableFn == updateGenericControl){
-        channel_sel=255;
+      if (updateTableFn == updateGenericControl) {
+        channel_sel = 255;
       }
       jchaos.getChannel(node_list, channel_sel, function (dat) {
         node_live_selected = dat;
@@ -2217,28 +2250,28 @@
 
 
         //  $("div.cu-generic-control").html(chaosGenericControl(cu_live_selected[index]));
-       /* if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
-          if(channel_sel == -1){
-            var converted = convertBinaryToArrays(curr_cu_selected);
-            var jsonhtml = json2html(converted, options, node_selected);
-            if (isCollapsable(converted)) {
-              jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
-            }
-  
-            $("#cu-dataset").html(jsonhtml);
-          }  else {
-          jchaos.getChannel(node_selected, -1, function (datone) {
-          curr_cu_selected=datone;
-          var converted = convertBinaryToArrays(datone);
-          var jsonhtml = json2html(converted, options, node_selected);
-          if (isCollapsable(converted)) {
-            jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
-          }
-
-          $("#cu-dataset").html(jsonhtml);
-        });
-      }
-      };*/
+        /* if ($("#cu-dataset").is(':visible') && !notupdate_dataset) {
+           if(channel_sel == -1){
+             var converted = convertBinaryToArrays(curr_cu_selected);
+             var jsonhtml = json2html(converted, options, node_selected);
+             if (isCollapsable(converted)) {
+               jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+             }
+   
+             $("#cu-dataset").html(jsonhtml);
+           }  else {
+           jchaos.getChannel(node_selected, -1, function (datone) {
+           curr_cu_selected=datone;
+           var converted = convertBinaryToArrays(datone);
+           var jsonhtml = json2html(converted, options, node_selected);
+           if (isCollapsable(converted)) {
+             jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+           }
+ 
+           $("#cu-dataset").html(jsonhtml);
+         });
+       }
+       };*/
       });
 
 
@@ -2249,6 +2282,7 @@
     }, options.Interval, updateTableFn);
 
     installCheckLive();
+
   }
 
   function executeNodeMenuCmd(cmd, opt) {
@@ -2509,14 +2543,14 @@
       });
       return;
     }
-      executeCUMenuCmd(cmd, options);
+    executeCUMenuCmd(cmd, options);
     return;
   }
   function setupNode(template) {
-    $("#main_table-"+template+" tbody tr").click(function (e) {
-      mainTableCommonHandling("main_table-"+template, e, "node");
+    $("#main_table-" + template + " tbody tr").click(function (e) {
+      mainTableCommonHandling("main_table-" + template, e, "node");
     });
-    n = $('#main_table-'+template+' tr').size();
+    n = $('#main_table-' + template + ' tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
       $("#table-scroll").css('height', '280px');
     } else {
@@ -2559,7 +2593,7 @@
     });
 
   }
-  function buildNodeInterface(nodes, cutype,template) {
+  function buildNodeInterface(nodes, cutype, template) {
     if (nodes == null) {
       alert("NO Nodes given!");
       return;
@@ -2587,11 +2621,11 @@
     /**
      * fixed part
      */
-    htmlt = generateNodeTable(node_list);
+    htmlt = generateNodeTable(node_list, template);
     updateTableFn = updateNodeTable;
 
 
-    $("div.specific-table-"+template).html(htmlt);
+    $("div.specific-table-" + template).html(htmlt);
     // $("div.specific-control").html(htmlc);
     checkRegistration = 0;
     setupNode(template);
@@ -2666,7 +2700,7 @@
 
   }
 
-  function buildAlgoInterface(nodes,template) {
+  function buildAlgoInterface(nodes, template) {
     if (nodes == null) {
       alert("NO Nodes given!");
       return;
@@ -2680,7 +2714,7 @@
     node_list.forEach(function (elem, id) {
       var name = encodeName(elem);
       node_name_to_index[name] = id;
-      
+
     });
     // cu_selected = cu_list[0];
     node_selected = null;
@@ -2696,7 +2730,7 @@
     htmlt = generateAlgoTable(node_list);
 
 
-    $("div.specific-table-"+template).html(htmlt);
+    $("div.specific-table-" + template).html(htmlt);
 
 
     setupNode(template);
@@ -2812,7 +2846,7 @@
 
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
 
-      buildCUInterface(list_cu, implementation_map[interface],"cu");
+      buildCUInterface(list_cu, implementation_map[interface], "cu");
     });
 
     $("#elements").change(function () {
@@ -2840,7 +2874,7 @@
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
       var interface = $("#classe option:selected").val();
 
-      buildCUInterface(list_cu, implementation_map[interface],"cu");
+      buildCUInterface(list_cu, implementation_map[interface], "cu");
 
     });
     $("#classe").change(function () {
@@ -2849,7 +2883,7 @@
 
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
 
-      buildCUInterface(list_cu, implementation_map[interface],"cu");
+      buildCUInterface(list_cu, implementation_map[interface], "cu");
 
     });
     $("#search-chaos").keypress(function (e) {
@@ -2859,7 +2893,7 @@
         var alive = $("input[type=radio][name=search-alive]:checked").val()
 
         list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
-        buildCUInterface(list_cu, implementation_map[interface],"cu");
+        buildCUInterface(list_cu, implementation_map[interface], "cu");
 
       }
       //var tt =prompt('type value');
@@ -2870,7 +2904,7 @@
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
       var interface = $("#classe option:selected").val();
 
-      buildCUInterface(list_cu, implementation_map[interface],"cu");
+      buildCUInterface(list_cu, implementation_map[interface], "cu");
     });
 
 
@@ -2899,7 +2933,7 @@
     return tmp;
   }
 
-  function mainNode() {
+  function mainNode(template) {
     var list_cu = [];
     search_string = "";
     var $radio = $("input:radio[name=search-alive]");
@@ -2916,7 +2950,7 @@
         search_string = $(this).val();
         var alive = $("input[type=radio][name=search-alive]:checked").val()
         list_cu = interface2NodeList(interface, alive);
-        buildNodeInterface(list_cu, "us");
+        buildNodeInterface(list_cu, "us", template);
       }
       //var tt =prompt('type value');
     });
@@ -2927,7 +2961,7 @@
 
       list_cu = interface2NodeList(interface, alive);
 
-      buildNodeInterface(list_cu, interface);
+      buildNodeInterface(list_cu, interface, template);
     });
     actionJsonEditor();
 
@@ -2945,19 +2979,19 @@
       if (e.keyCode == 13) {
         search_string = $(this).val();
         var alive = $("input[type=radio][name=search-alive]:checked").val();
-        jchaos.search(search_string,"script",alive,function(list_algo){
-          buildAlgoInterface(list_cu,"cu");
+        jchaos.search(search_string, "script", alive, function (list_algo) {
+          buildAlgoInterface(list_cu, "cu");
 
         });
-       
+
       }
       //var tt =prompt('type value');
     });
 
     $("input[type=radio][name=search-alive]").change(function (e) {
       var alive = $("input[type=radio][name=search-alive]:checked").val()
-      jchaos.search(search_string,"script",alive,function(list_algo){
-        buildAlgoInterface(list_cu,"cu");
+      jchaos.search(search_string, "script", alive, function (list_algo) {
+        buildAlgoInterface(list_cu, "cu");
 
       });
     });
@@ -3025,7 +3059,7 @@
     last_index_selected = $(e.currentTarget).index();
 
   }
-  function generateCameraTable(node_list,template) {
+  function generateCameraTable(node_list, template) {
     var html = '<div>';
     html += '<div id="cameraName"></div>';
     html += '<img id="cameraImage" src="" />';
@@ -3057,7 +3091,7 @@
     html += '<label class="label span3">Offset Y</label>';
     html += '<input class="input-xlarge focused span4 json-keyinput" id="image-OFFSETY" readonly title="Readout Image Offset X (ROI)" type="text" value="0">';
     html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-OFFSETY" title="SET Image Offset Y (ROI)" type="text" value=0>';
-    
+
     html += '<label class="label span3">Gain:</label>';
     html += '<input class="input-xlarge focused span3" id="image-GAIN" readonly title="Image Readout Gain" type="text" value="0">';
     html += '<input class="input-xlarge focused span3" id="image_gain" readonly title="Set Gain" type="number" value=0>';
@@ -3067,50 +3101,50 @@
     html += '<input class="input-xlarge focused span3" id="image-BRIGHTNESS" readonly title="Image Readout Brightnessn" type="text">';
     html += '<input class="input-xlarge focused span3" id="image_brightness" readonly title="SET Brightness" type="number" value=0>';
     html += '<div class="span3" id="slider-BRIGHTNESS" title="Camera Brightness"></div>';
-    
+
     html += '<label class="label span3">Shutter</label>';
     html += '<input class="input-xlarge focused span3" id="image-SHUTTER" readonly title="Camera Readout Shutter" type="text">';
     html += '<input class="input-xlarge focused span3" id="image_shutter" readonly title="SET Shutter" type="number" value=0>';
     html += '<div class="span3" id="slider-SHUTTER" title="Camera Shutter"> </div>';
-    
+
 
     html += '<label class="label span3">Contrast</label>';
     html += '<input class="input-xlarge focused span3" id="image-CONTRAST" readonly title="Camera Readout Contrast" type="text">';
     html += '<input class="input-xlarge focused span3" id="image_contrast" readonly title="SET Contrast" type="number" value=0>';
     html += '<div class="span3" id="slider-CONTRAST" title="Camera Contrast"> </div>';
-    
+
     html += '<label class="label span3">Sharpness</label>';
     html += '<input class="input-xlarge focused span3" id="image-SHARPNESS" readonly title="Camera Readout Sharpness" type="text">';
     html += '<input class="input-xlarge focused span3" id="image_sharpness" readonly title="SET Sharpness" type="number" value=0>';
     html += '<div class="span3" id="slider-SHARPNESS" title="Camera Sharpness"> </div>';
-    
+
     html += '</div>';
     html += '</div>';
 
-    html += generateGenericTable(node_list,template);
+    html += generateGenericTable(node_list, template);
     return html;
   }
-  function configureSliderCommands(slname,slinput){
-    $( "#"+ slname ).slider({
+  function configureSliderCommands(slname, slinput) {
+    $("#" + slname).slider({
       range: "max",
       min: 0,
       max: 100,
       value: 1,
-      slide: function( event, ui ) {
-        $( "#"+slinput ).val( ui.value );
+      slide: function (event, ui) {
+        $("#" + slinput).val(ui.value);
         var id = this.id;
         var attr = id.split("-")[1];
         jchaos.setAttribute(node_selected, attr, String(ui.value), function () {
-       //   instantMessage("Attribute ", "\"" + attr + "\"=\"" + ui.value + "\" sent", 1000)
+          //   instantMessage("Attribute ", "\"" + attr + "\"=\"" + ui.value + "\" sent", 1000)
 
         });
       }
     });
-    $( "#"+ slinput ).val( $( "#"+ slname ).slider( "value" ) ); 
+    $("#" + slinput).val($("#" + slname).slider("value"));
   }
 
   /********************* */
-  function generateGenericTable(cu,template) {
+  function generateGenericTable(cu, template) {
     var html = '<div class="row-fluid" id="table-space">';
     html += '<div class="box span12">';
     html += '<div class="box-content span12">';
@@ -3122,7 +3156,7 @@
 
     }
 
-    html += '<table class="table table-bordered" id="main_table-'+template+'">';
+    html += '<table class="table table-bordered" id="main_table-' + template + '">';
     html += '<thead class="box-header">';
     html += '<tr>';
     html += '<th>Name CU</th>';
@@ -3168,130 +3202,130 @@
       var name_device_db, name_id;
       var status;
       try {
-      if (el.hasOwnProperty('health') && (el.health.hasOwnProperty("ndk_uid"))) {   //if el health
-        name_device_db = el.health.ndk_uid;
-        name_id = encodeName(name_device_db);
-        el.systTime = Number(el.health.nh_st).toFixed(3);
-        el.usrTime = Number(el.health.nh_ut).toFixed(3);
-        el.tmStamp = Number(el.health.dpck_ats);
+        if (el.hasOwnProperty('health') && (el.health.hasOwnProperty("ndk_uid"))) {   //if el health
+          name_device_db = el.health.ndk_uid;
+          name_id = encodeName(name_device_db);
+          el.systTime = Number(el.health.nh_st).toFixed(3);
+          el.usrTime = Number(el.health.nh_ut).toFixed(3);
+          el.tmStamp = Number(el.health.dpck_ats);
 
-        el.tmUtm = toHHMMSS(el.health.nh_upt);
-        status = el.health.nh_status;
-        $("#" + name_id + "_health_uptime").html(el.tmUtm);
-        $("#" + name_id + "_health_timestamp").html(new Date(el.tmStamp).toUTCString());
-        $("#" + name_id + "_health_usertime").html(el.usrTime);
-        $("#" + name_id + "_health_systemtime").html(el.systTime);
-        $("#" + name_id + "_health_prate").html(Number(el.health.cuh_dso_prate).toFixed(3));
-        if ((off_line[name_device_db] == true) && (status != "Unload")) {
-          status = "Dead";
-        }
-
-        if (status == 'Start') {
-          $("#" + name_id + "_health_status").html('<i class="material-icons verde">play_arrow</i>');
-
-        } else if (status == 'Stop') {
-          $("#" + name_id + "_health_status").html('<i class="material-icons arancione">stop</i>');
-        } else if (status == 'Init') {
-          $("#" + name_id + "_health_status").html('<i class="material-icons giallo">trending_up</i>');
-
-        } else if (status == 'Deinit') {
-          $("#" + name_id + "_health_status").html('<i class="material-icons rosso">trending_down</i>');
-
-        } else if (status == 'Fatal Error' || status == 'Recoverable Error') {
-          //$("#status_" + name_id).html('<a id="fatalError_' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" onclick="return show_fatal_error(this.id);"><i style="cursor:pointer;" class="material-icons rosso">error</i></a>');
-          $("#" + name_id + "_health_status").html('<a id="Error-' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" ><i style="cursor:pointer;" class="material-icons rosso">cancel</i></a>');
-
-          $("Error-" + name_id).on("click", function () {
-            $("#name-FE-device").html(el.health.ndk_uid);
-            $("#status_message").html(status);
-
-            $("#error_message").html(el.health.nh_lem);
-            $("#error_domain").html(el.health.nh_led);
-          });
-        } else if (status == "Unload") {
-          $("#" + name_id + "_health_status").html('<i class="material-icons rosso">power</i>');
-
-
-        } else if (status == "Load") {
-          $("#" + name_id + "_health_status").html('<i class="material-icons verde">power</i>');
-
-        } else {
-          $("#" + name_id + "_health_status").html('<i class="material-icons red">block</i>');
-
-        }
-      }
-      $("#" + name_id + "_health_status").attr('title', "Device status:" + status);
-      if (el.hasOwnProperty('system') && (status != "Dead")) {   //if el system
-        $("#" + name_id + "_system_command").html(el.system.dp_sys_que_cmd);
-
-
-        if (el.system.cudk_bypass_state == false) {
-          $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">usb</i>');
-          $("#" + name_id + "_system_bypass").attr('title', "Bypass disabled")
-
-        } else {
-          $("#" + name_id + "_system_bypass").attr('title', "Bypass enabled")
-
-          $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons yellow">cached</i>');
-        }
-      }
-      if (el.hasOwnProperty('output')) {   //if el output
-        var busy = $.trim(el.output.busy);
-        var dev_alarm = $.trim(el.output.device_alarm);
-        var cu_alarm = $.trim(el.output.cu_alarm);
-        if (dev_alarm == 1) {
-          $("#" + name_id + "_output_device_alarm").attr('title', "Device Warning");
-          $("#" + name_id + "_output_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error</i></a>');
-        } else if (dev_alarm == 2) {
-          $("#" + name_id + "_output_device_alarm").attr('title', "Device Error");
-          $("#" + name_id + "_output_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons rosso">error</i></a>');
-        } else {
-          $("#" + name_id + "_output_device_alarm").html('');
-        }
-
-        if (cu_alarm == 1) {
-          $("#" + name_id + "_output_cu_alarm").attr('title', "Control Unit Warning");
-
-          $("#" + name_id + "_output_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error_outline</i></a>');
-        } else if (cu_alarm == 2) {
-          $("#" + name_id + "_output_cu_alarm").attr('title', "Control Unit Error");
-
-          $("#" + name_id + "_output_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal"><i  class="material-icons rosso">error_outline</i></a>');
-        } else {
-          $("#" + name_id + "_output_cu_alarm").html('');
-        }
-        $("a.device-alarm").click(function (e) {
-          var id = $(this).attr("cuname");
-          show_dev_alarm(id);
-        });
-        $("a.cu-alarm").click(function (e) {
-          var id = $(this).attr("cuname");
-
-          show_cu_alarm(id);
-        });
-
-        if (busy == 'true') {
-          $("#" + name_id + "_output_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd);
-          if (el.output.dpck_seq_id & 1) {
-            $("#" + name_id + "_output_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_empty</i>');
-          } else {
-            $("#" + name_id + "_output_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_full</i>');
+          el.tmUtm = toHHMMSS(el.health.nh_upt);
+          status = el.health.nh_status;
+          $("#" + name_id + "_health_uptime").html(el.tmUtm);
+          $("#" + name_id + "_health_timestamp").html(new Date(el.tmStamp).toUTCString());
+          $("#" + name_id + "_health_usertime").html(el.usrTime);
+          $("#" + name_id + "_health_systemtime").html(el.systTime);
+          $("#" + name_id + "_health_prate").html(Number(el.health.cuh_dso_prate).toFixed(3));
+          if ((off_line[name_device_db] == true) && (status != "Unload")) {
+            status = "Dead";
           }
-        } else {
-          $("#" + name_id + "_output_busy").html('');
+
+          if (status == 'Start') {
+            $("#" + name_id + "_health_status").html('<i class="material-icons verde">play_arrow</i>');
+
+          } else if (status == 'Stop') {
+            $("#" + name_id + "_health_status").html('<i class="material-icons arancione">stop</i>');
+          } else if (status == 'Init') {
+            $("#" + name_id + "_health_status").html('<i class="material-icons giallo">trending_up</i>');
+
+          } else if (status == 'Deinit') {
+            $("#" + name_id + "_health_status").html('<i class="material-icons rosso">trending_down</i>');
+
+          } else if (status == 'Fatal Error' || status == 'Recoverable Error') {
+            //$("#status_" + name_id).html('<a id="fatalError_' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" onclick="return show_fatal_error(this.id);"><i style="cursor:pointer;" class="material-icons rosso">error</i></a>');
+            $("#" + name_id + "_health_status").html('<a id="Error-' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" ><i style="cursor:pointer;" class="material-icons rosso">cancel</i></a>');
+
+            $("Error-" + name_id).on("click", function () {
+              $("#name-FE-device").html(el.health.ndk_uid);
+              $("#status_message").html(status);
+
+              $("#error_message").html(el.health.nh_lem);
+              $("#error_domain").html(el.health.nh_led);
+            });
+          } else if (status == "Unload") {
+            $("#" + name_id + "_health_status").html('<i class="material-icons rosso">power</i>');
+
+
+          } else if (status == "Load") {
+            $("#" + name_id + "_health_status").html('<i class="material-icons verde">power</i>');
+
+          } else {
+            $("#" + name_id + "_health_status").html('<i class="material-icons red">block</i>');
+
+          }
         }
+        $("#" + name_id + "_health_status").attr('title', "Device status:" + status);
+        if (el.hasOwnProperty('system') && (status != "Dead")) {   //if el system
+          $("#" + name_id + "_system_command").html(el.system.dp_sys_que_cmd);
+
+
+          if (el.system.cudk_bypass_state == false) {
+            $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">usb</i>');
+            $("#" + name_id + "_system_bypass").attr('title', "Bypass disabled")
+
+          } else {
+            $("#" + name_id + "_system_bypass").attr('title', "Bypass enabled")
+
+            $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons yellow">cached</i>');
+          }
+        }
+        if (el.hasOwnProperty('output')) {   //if el output
+          var busy = $.trim(el.output.busy);
+          var dev_alarm = $.trim(el.output.device_alarm);
+          var cu_alarm = $.trim(el.output.cu_alarm);
+          if (dev_alarm == 1) {
+            $("#" + name_id + "_output_device_alarm").attr('title', "Device Warning");
+            $("#" + name_id + "_output_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error</i></a>');
+          } else if (dev_alarm == 2) {
+            $("#" + name_id + "_output_device_alarm").attr('title', "Device Error");
+            $("#" + name_id + "_output_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons rosso">error</i></a>');
+          } else {
+            $("#" + name_id + "_output_device_alarm").html('');
+          }
+
+          if (cu_alarm == 1) {
+            $("#" + name_id + "_output_cu_alarm").attr('title', "Control Unit Warning");
+
+            $("#" + name_id + "_output_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error_outline</i></a>');
+          } else if (cu_alarm == 2) {
+            $("#" + name_id + "_output_cu_alarm").attr('title', "Control Unit Error");
+
+            $("#" + name_id + "_output_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal"><i  class="material-icons rosso">error_outline</i></a>');
+          } else {
+            $("#" + name_id + "_output_cu_alarm").html('');
+          }
+          $("a.device-alarm").click(function (e) {
+            var id = $(this).attr("cuname");
+            show_dev_alarm(id);
+          });
+          $("a.cu-alarm").click(function (e) {
+            var id = $(this).attr("cuname");
+
+            show_cu_alarm(id);
+          });
+
+          if (busy == 'true') {
+            $("#" + name_id + "_output_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd);
+            if (el.output.dpck_seq_id & 1) {
+              $("#" + name_id + "_output_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_empty</i>');
+            } else {
+              $("#" + name_id + "_output_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_full</i>');
+            }
+          } else {
+            $("#" + name_id + "_output_busy").html('');
+          }
+        }
+      } catch (e) {
+        console.log(name_device_db + " warning :", e);
       }
-    } catch (e){
-      console.log(name_device_db + " warning :",e);
-    }
     });
   }
 
-  function generateScraperTable(cu,template) {
+  function generateScraperTable(cu, template) {
     var html = '<div class="row-fluid">';
     html += '<div class="box span12">';
     html += '<div class="box-content">';
-    html += '<table class="table table-bordered" id="main_table-'+template+'">';
+    html += '<table class="table table-bordered" id="main_table-' + template + '">';
     html += '<thead class="box-header">';
     html += '<tr>';
     html += '<th>Element</th>';
@@ -3430,11 +3464,11 @@
 
     return html;
   }
-  function generatePStable(cu,template) {
+  function generatePStable(cu, template) {
     var html = '<div class="row-fluid">';
     html += '<div class="box span12">';
     html += '<div class="box-content">';
-    html += '<table class="table table-bordered" id="main_table-'+template+'">';
+    html += '<table class="table table-bordered" id="main_table-' + template + '">';
     html += '<thead class="box-header">';
     html += '<tr>';
     html += '<th>Element</th>';
@@ -3477,8 +3511,8 @@
       if (selected.output.hasOwnProperty("FRAMEBUFFER")) {
         var bin = selected.output.FRAMEBUFFER.$binary.base64;
         var fmt = "png";
-        if (selected.hasOwnProperty("input")){ 
-          if(selected.input.FMT != null) {
+        if (selected.hasOwnProperty("input")) {
+          if (selected.input.FMT != null) {
             fmt = selected.input.FMT;
           }
           $("#image-GAIN").val(selected.input.GAIN);
@@ -3505,65 +3539,65 @@
 
         var id = elem.health.ndk_uid;
         var cuname = encodeName(id);
-        if(elem.hasOwnProperty("output") && elem.hasOwnProperty("input") && elem.output.hasOwnProperty("current") && elem.input.hasOwnProperty("current")){
+        if (elem.hasOwnProperty("output") && elem.hasOwnProperty("input") && elem.output.hasOwnProperty("current") && elem.input.hasOwnProperty("current")) {
 
-        $("#" + cuname + "_output_current").html(elem.output.current.toFixed(3));
-        $("#" + cuname + "_input_current").html(elem.input.current);
-        switch (elem.output.polarity) {
-          case 1:
-            $("#" + cuname + "_output_polarity").html('<i class="material-icons rosso">add_circle</i>');
-            break;
-          case -1:
-            $("#" + cuname + "_output_polarity").html('<i class="material-icons blu">remove_circle</i>');
-            break;
-          case 0:
-            $("#" + cuname + "_output_polarity").html('<i class="material-icons">radio_button_unchecked</i>');
-            break;
-
-        }
-
-
-        if (elem.output.stby == false) {
-          $("#" + cuname + "_output_stby").html('<i class="material-icons verde">trending_down</i>');
-        } else if (elem.output.stby = true) {
-          $("#" + cuname + "_output_stby").html('<i class="material-icons rosso">pause_circle_outline</i>');
-
-        }
-
-
-
-        if (elem.output.local == true) {
-          $("#" + cuname + "_output_local").html('<i class="material-icons rosso">vpn_key</i>');
-        } else if (elem.output.local == false) {
-          $("#" + cuname + "_output_local").remove();
-        }
-
-        if ((cu_name_to_saved != null) && (cu_name_to_saved[elem.output.ndk_uid] != null)) {
-          var saved = cu_name_to_saved[elem.output.ndk_uid];
-          if (saved.input.stby == false) {
-            $("#" + cuname + "_input_saved_stby").attr('title', "from snapshot:" + snap_selected);
-            $("#" + cuname + "_input_saved_stby").html('<i class="material-icons verde">trending_down</i>');
-          } else if (saved.input.stby = true) {
-            $("#" + cuname + "_input_saved_stby").html('<i class="material-icons rosso">pause_circle_outline</i>');
-          }
-          $("#" + cuname + "_input_saved_current").attr('title', "from snapshot:" + snap_selected);
-          $("#" + cuname + "_input_saved_current").html(saved.input.current);
-          $("#" + cuname + "_input_saved_polarity").attr('title', "from snapshot:" + snap_selected);
-          switch (saved.input.polarity) {
+          $("#" + cuname + "_output_current").html(elem.output.current.toFixed(3));
+          $("#" + cuname + "_input_current").html(elem.input.current);
+          switch (elem.output.polarity) {
             case 1:
-              $("#" + cuname + "_input_saved_polarity").html('<i class="material-icons rosso">add_circle</i>');
+              $("#" + cuname + "_output_polarity").html('<i class="material-icons rosso">add_circle</i>');
               break;
             case -1:
-              $("#" + cuname + "_input_saved_polarity").html('<i class="material-icons blu">remove_circle</i>');
+              $("#" + cuname + "_output_polarity").html('<i class="material-icons blu">remove_circle</i>');
               break;
             case 0:
-              $("#" + cuname + "_input_saved_polarity").html('<i class="material-icons">radio_button_unchecked</i>');
+              $("#" + cuname + "_output_polarity").html('<i class="material-icons">radio_button_unchecked</i>');
               break;
 
+          }
+
+
+          if (elem.output.stby == false) {
+            $("#" + cuname + "_output_stby").html('<i class="material-icons verde">trending_down</i>');
+          } else if (elem.output.stby = true) {
+            $("#" + cuname + "_output_stby").html('<i class="material-icons rosso">pause_circle_outline</i>');
+
+          }
+
+
+
+          if (elem.output.local == true) {
+            $("#" + cuname + "_output_local").html('<i class="material-icons rosso">vpn_key</i>');
+          } else if (elem.output.local == false) {
+            $("#" + cuname + "_output_local").remove();
+          }
+
+          if ((cu_name_to_saved != null) && (cu_name_to_saved[elem.output.ndk_uid] != null)) {
+            var saved = cu_name_to_saved[elem.output.ndk_uid];
+            if (saved.input.stby == false) {
+              $("#" + cuname + "_input_saved_stby").attr('title', "from snapshot:" + snap_selected);
+              $("#" + cuname + "_input_saved_stby").html('<i class="material-icons verde">trending_down</i>');
+            } else if (saved.input.stby = true) {
+              $("#" + cuname + "_input_saved_stby").html('<i class="material-icons rosso">pause_circle_outline</i>');
+            }
+            $("#" + cuname + "_input_saved_current").attr('title', "from snapshot:" + snap_selected);
+            $("#" + cuname + "_input_saved_current").html(saved.input.current);
+            $("#" + cuname + "_input_saved_polarity").attr('title', "from snapshot:" + snap_selected);
+            switch (saved.input.polarity) {
+              case 1:
+                $("#" + cuname + "_input_saved_polarity").html('<i class="material-icons rosso">add_circle</i>');
+                break;
+              case -1:
+                $("#" + cuname + "_input_saved_polarity").html('<i class="material-icons blu">remove_circle</i>');
+                break;
+              case 0:
+                $("#" + cuname + "_input_saved_polarity").html('<i class="material-icons">radio_button_unchecked</i>');
+                break;
+
+            }
           }
         }
       }
-    }
     });
 
 
@@ -4012,7 +4046,7 @@
                     x = tr[k].x.const;
                   } else if (tr[k].x.var != null) {
                     x = getValueFromCUList(data, tr[k].x);
-                    
+
                   } else {
                     x = null;
                   }
@@ -4024,7 +4058,7 @@
                     y = tr[k].y.const;
                   } else if (tr[k].y.var != null) {
                     y = getValueFromCUList(data, tr[k].y);
-                  
+
                   } else {
                     y = null;
                   }
@@ -4056,31 +4090,31 @@
                       } else {
                         inc = 1.0 / x.length;
                       }
-                      if(tr[k].y.origin == "histogram"){
+                      if (tr[k].y.origin == "histogram") {
                         set.push(x[cntt]);
 
-                        chart.series[cnt+1].setData(set, true, true, true);
+                        chart.series[cnt + 1].setData(set, true, true, true);
 
                       } else {
-                      for (var cntt = 0; cntt < y.length; cntt++) {
-                        set.push([x[cntt], y + (inc * cntt)]);
-                      }
-                      chart.series[cnt].setData(set, true, true, true);
+                        for (var cntt = 0; cntt < y.length; cntt++) {
+                          set.push([x[cntt], y + (inc * cntt)]);
+                        }
+                        chart.series[cnt].setData(set, true, true, true);
 
-                    }
+                      }
 
                     } else {
-                      if(tr[k].y.origin == "histogram"){
-                        if($.isNumeric(x)){
-                          chart.series[cnt+1].addPoint(x, false, false);
+                      if (tr[k].y.origin == "histogram") {
+                        if ($.isNumeric(x)) {
+                          chart.series[cnt + 1].addPoint(x, false, false);
                         }
 
                       } else {
                         chart.series[cnt].addPoint([x, y], false, enable_shift);
                       }
                     }
-                    if(tr[k].y.origin == "histogram"){
-                      cnt+=2;
+                    if (tr[k].y.origin == "histogram") {
+                      cnt += 2;
 
                     } else {
                       cnt++;
@@ -4118,8 +4152,8 @@
                       });
 
                     } else {
-                      if(tr[k].y.origin == "histogram"){
-                        if($.isNumeric(x)){
+                      if (tr[k].y.origin == "histogram") {
+                        if ($.isNumeric(x)) {
                           set.push(x);
                         }
                       } else {
@@ -4145,9 +4179,9 @@
               var graphname = $(this).attr("graphname");
               console.log("Start  History Graph:" + graphname);
               var graph_opt = high_graphs[graphname];
-              var correlation=false;
+              var correlation = false;
               if ((graph_opt.highchart_opt.xAxis.type != "datetime") && (graph_opt.highchart_opt.chart.type != "histogram")) {
-                correlation=true;
+                correlation = true;
               }
               if (graph_opt.highchart_opt.yAxis.type == "datetime") {
                 alert("Y axis cannot be as datetime!")
@@ -4188,151 +4222,152 @@
                       console.log("X Trace " + tr[k].name + " path:" + tr[k].x.origin);
 
                     }
-                  if (tr[k].y.cu === item) {
-                    dirlist[tr[k].y.dir] = dir2channel(tr[k].y.dir);
-                    console.log("Y Trace " + tr[k].name + " path:" + tr[k].y.origin);
+                    if (tr[k].y.cu === item) {
+                      dirlist[tr[k].y.dir] = dir2channel(tr[k].y.dir);
+                      console.log("Y Trace " + tr[k].name + " path:" + tr[k].y.origin);
+                    }
                   }
-                }
                 });
 
-                if(correlation){
+                if (correlation) {
                   for (k in tr) {
-                    histdataset[tr[k].name]={x:[],tx:[],y:[],ty:[]};
+                    histdataset[tr[k].name] = { x: [], tx: [], y: [], ty: [] };
                   }
                   // download all data before.
-                  for(var v in  graph_opt.culist){
-                    var item=graph_opt.culist[v];
-                  for (var dir in dirlist) {
-                    console.log("Retrive correlation data CU:" + item+ " direction:"+dirlist[dir]);
+                  for (var v in graph_opt.culist) {
+                    var item = graph_opt.culist[v];
+                    for (var dir in dirlist) {
+                      console.log("Retrive correlation data CU:" + item + " direction:" + dirlist[dir]);
 
-                    jchaos.getHistory(item, dirlist[dir], qstart, qstop, "", function (data) {
-                    
-                      for (k in tr) {
-                        var trname=tr[k].name;
+                      jchaos.getHistory(item, dirlist[dir], qstart, qstop, "", function (data) {
 
-                        if(tr[k].x.cu === item){
-                          var variable=tr[k].x.var;
-                          if(data.Y[0].hasOwnProperty(variable)){
-                            var cnt=0;
-                            console.log("X acquiring "+trname+" path:"+tr[k].x.origin+" items:"+data.Y.length);
+                        for (k in tr) {
+                          var trname = tr[k].name;
 
-                            data.Y.forEach(function(ds){
-                              if(tr[k].x.index!=null && tr[k].x.index!="-1"){
-                                var tmp=Number(ds[variable]);
-                                histdataset[trname].x.push(tmp[tr[k].x.index]);
-                              } else {
-                                histdataset[trname].x.push(Number(ds[variable]));
-
-                              }
-                              histdataset[trname].tx.push(data.X[cnt++]);
-
-                            });
-                           
-                          }
-                        }
-                        if(tr[k].y.cu === item){
-                          var variable=tr[k].y.var;
-                          if(data.Y[0].hasOwnProperty(variable)){
-                            var cnt=0;
-                            console.log("Y acquiring "+trname+" path:"+tr[k].y.origin+" items:"+data.Y.length);
-
-                            data.Y.forEach(function(ds){
-                              if(tr[k].y.index!=null && tr[k].y.index!="-1"){
-                                var tmp=ds[variable];
-                                histdataset[trname].y.push(Number(tmp[tr[k].y.index]));
-                              } else {
-                                histdataset[trname].y.push(Number(ds[variable]));
-
-                              }
-                              histdataset[trname].ty.push(data.X[cnt++]);
-
-                            });
-                          }
-                        }
-                      }
-                  });
-                }};
-                // ok plot
-                var chartn=0;
-                for (k in tr) {
-                  var cnt=0;
-                  var name=tr[k].name;
-
-                  var xpoints=histdataset[name].tx.length;
-                  var ypoints=histdataset[name].ty.length;
-                  for(cnt=0;cnt<Math.min(xpoints,ypoints);cnt++){
-                    chart.series[chartn].addPoint([histdataset[name].x[cnt],histdataset[name].y[cnt]], false, false);
-                  }
-                  chartn++;
-                }
-                } else {
-                graph_opt.culist.forEach(function (item) {
-                  console.log("to retrive CU:" + item);
-                 
-                  for (var dir in dirlist) {
-                    var dataset=[];
-
-                    jchaos.getHistory(item, dirlist[dir], qstart, qstop, "", function (data) {
-                      var cnt = 0, ele_count = 0;
-                      for (k in tr) {
-                        if(tr[k].y.origin == "histogram"){
                           if (tr[k].x.cu === item) {
                             var variable = tr[k].x.var;
+                            if (data.Y[0].hasOwnProperty(variable)) {
+                              var cnt = 0;
+                              console.log("X acquiring " + trname + " path:" + tr[k].x.origin + " items:" + data.Y.length);
 
-                            data.Y.forEach(function (ds) {
-                              //dataset.push(ds[variable]);
-                              chart.series[cnt+1].addPoint(ds[variable], false, false);
-
-                            });
-                          }
-                          cnt+=2;
-                        } else {
-                        if (tr[k].y.cu === item) {
-                          //iterate on the datasets
-                          console.log("retrived \"" + dir + "/" + item + "\" count=" + data.Y.length);
-                          var variable = tr[k].y.var;
-                          var index = tr[k].y.index;
-                          ele_count = 0;
-                          data.Y.forEach(function (ds) {
-                            if (ds.hasOwnProperty(variable)) {
-                              var ts = data.X[ele_count++];
-                              var tmp = Number(ds[variable]);
-
-                              if (index != null) {
-                                if (index == "-1") {
-                                  var incr = 1.0 / tmp.length;
-                                  var dataset = [];
-                                  for (var cntt = 0; cntt < tmp.length; cntt++) {
-                                    var t = ts + incr * cntt;
-                                    var v = Number(tmp[cntt]);
-                                    dataset.push([t, v]);
-                                    chart.series[cnt].addPoint([t, v], false, false);
-                                  }
-                                  // chart.series[cnt].setData(dataset, true, true, true);
-                                  chart.redraw();
-
+                              data.Y.forEach(function (ds) {
+                                if (tr[k].x.index != null && tr[k].x.index != "-1") {
+                                  var tmp = Number(ds[variable]);
+                                  histdataset[trname].x.push(tmp[tr[k].x.index]);
                                 } else {
-                                  chart.series[cnt].addPoint([ts, Number(tmp[index])], false, false);
+                                  histdataset[trname].x.push(Number(ds[variable]));
+
                                 }
+                                histdataset[trname].tx.push(data.X[cnt++]);
 
-                              } else {
-                                chart.series[cnt].addPoint([ts, tmp], false, false);
+                              });
 
-                              }
                             }
-                          });
-                        }
-                        cnt++;
-                      }
+                          }
+                          if (tr[k].y.cu === item) {
+                            var variable = tr[k].y.var;
+                            if (data.Y[0].hasOwnProperty(variable)) {
+                              var cnt = 0;
+                              console.log("Y acquiring " + trname + " path:" + tr[k].y.origin + " items:" + data.Y.length);
 
-                      }
-                      chart.redraw();
-                      // true until close if false the history loop retrive breaks
-                      return active_plots.hasOwnProperty(graphname);
-                    });
+                              data.Y.forEach(function (ds) {
+                                if (tr[k].y.index != null && tr[k].y.index != "-1") {
+                                  var tmp = ds[variable];
+                                  histdataset[trname].y.push(Number(tmp[tr[k].y.index]));
+                                } else {
+                                  histdataset[trname].y.push(Number(ds[variable]));
+
+                                }
+                                histdataset[trname].ty.push(data.X[cnt++]);
+
+                              });
+                            }
+                          }
+                        }
+                      });
+                    }
+                  };
+                  // ok plot
+                  var chartn = 0;
+                  for (k in tr) {
+                    var cnt = 0;
+                    var name = tr[k].name;
+
+                    var xpoints = histdataset[name].tx.length;
+                    var ypoints = histdataset[name].ty.length;
+                    for (cnt = 0; cnt < Math.min(xpoints, ypoints); cnt++) {
+                      chart.series[chartn].addPoint([histdataset[name].x[cnt], histdataset[name].y[cnt]], false, false);
+                    }
+                    chartn++;
                   }
-                });
-              }
+                } else {
+                  graph_opt.culist.forEach(function (item) {
+                    console.log("to retrive CU:" + item);
+
+                    for (var dir in dirlist) {
+                      var dataset = [];
+
+                      jchaos.getHistory(item, dirlist[dir], qstart, qstop, "", function (data) {
+                        var cnt = 0, ele_count = 0;
+                        for (k in tr) {
+                          if (tr[k].y.origin == "histogram") {
+                            if (tr[k].x.cu === item) {
+                              var variable = tr[k].x.var;
+
+                              data.Y.forEach(function (ds) {
+                                //dataset.push(ds[variable]);
+                                chart.series[cnt + 1].addPoint(ds[variable], false, false);
+
+                              });
+                            }
+                            cnt += 2;
+                          } else {
+                            if (tr[k].y.cu === item) {
+                              //iterate on the datasets
+                              console.log("retrived \"" + dir + "/" + item + "\" count=" + data.Y.length);
+                              var variable = tr[k].y.var;
+                              var index = tr[k].y.index;
+                              ele_count = 0;
+                              data.Y.forEach(function (ds) {
+                                if (ds.hasOwnProperty(variable)) {
+                                  var ts = data.X[ele_count++];
+                                  var tmp = Number(ds[variable]);
+
+                                  if (index != null) {
+                                    if (index == "-1") {
+                                      var incr = 1.0 / tmp.length;
+                                      var dataset = [];
+                                      for (var cntt = 0; cntt < tmp.length; cntt++) {
+                                        var t = ts + incr * cntt;
+                                        var v = Number(tmp[cntt]);
+                                        dataset.push([t, v]);
+                                        chart.series[cnt].addPoint([t, v], false, false);
+                                      }
+                                      // chart.series[cnt].setData(dataset, true, true, true);
+                                      chart.redraw();
+
+                                    } else {
+                                      chart.series[cnt].addPoint([ts, Number(tmp[index])], false, false);
+                                    }
+
+                                  } else {
+                                    chart.series[cnt].addPoint([ts, tmp], false, false);
+
+                                  }
+                                }
+                              });
+                            }
+                            cnt++;
+                          }
+
+                        }
+                        chart.redraw();
+                        // true until close if false the history loop retrive breaks
+                        return active_plots.hasOwnProperty(graphname);
+                      });
+                    }
+                  });
+                }
 
               });
             }
@@ -4449,26 +4484,26 @@
     for (var cnt = 0; cnt < trace_list.length; cnt++) {
       //      if (tracetype == "multi") {
       var col;
-      var seriespec={};
-      seriespec['name']=trace_list[cnt].name;
-      seriespec['type']=graphtype;
+      var seriespec = {};
+      seriespec['name'] = trace_list[cnt].name;
+      seriespec['type'] = graphtype;
 
       if (trace_list[cnt].hasOwnProperty("color") && (trace_list[cnt].color != "")) {
         col = trace_list[cnt].color;
-        seriespec['color']=col;
+        seriespec['color'] = col;
       }
-      if(graphtype == "histogram"){
-        var histo_data={};
+      if (graphtype == "histogram") {
+        var histo_data = {};
 
-        seriespec['xAxis']=1;
-        seriespec['yAxis']=1;
-        seriespec['baseSeries']="histo_data"+(cnt+1);
-        histo_data['name']=trace_list[cnt].name;
-        histo_data['type']="scatter";
-        histo_data['visible']=false;
+        seriespec['xAxis'] = 1;
+        seriespec['yAxis'] = 1;
+        seriespec['baseSeries'] = "histo_data" + (cnt + 1);
+        histo_data['name'] = trace_list[cnt].name;
+        histo_data['type'] = "scatter";
+        histo_data['visible'] = false;
 
-        histo_data['id']="histo_data"+(cnt+1);
-        histo_data['marker']={"radius":1.5};
+        histo_data['id'] = "histo_data" + (cnt + 1);
+        histo_data['marker'] = { "radius": 1.5 };
         serie.push(seriespec);
         serie.push(histo_data);
 
@@ -4496,18 +4531,18 @@
       title: {
         text: graphname
       },
-     
+
       series: serie
     }
-    if(graphtype=="histogram"){
-      tmp['xAxis']=[];
-      tmp['yAxis']=[];
-      tmp['xAxis'].push({'title':xname,alignTicks:false});
-      tmp['xAxis'].push({'title':'Histogram','alignTicks':false,'opposite':false});
-      tmp['yAxis'].push({'title':'Frequence',alignTicks:false});
-      tmp['yAxis'].push({'title':yname,'alignTicks':false,'opposite':false});
+    if (graphtype == "histogram") {
+      tmp['xAxis'] = [];
+      tmp['yAxis'] = [];
+      tmp['xAxis'].push({ 'title': xname, alignTicks: false });
+      tmp['xAxis'].push({ 'title': 'Histogram', 'alignTicks': false, 'opposite': false });
+      tmp['yAxis'].push({ 'title': 'Frequence', alignTicks: false });
+      tmp['yAxis'].push({ 'title': yname, 'alignTicks': false, 'opposite': false });
     } else {
-      tmp['xAxis']= {
+      tmp['xAxis'] = {
         type: xtype,
         max: xmax,
         min: xmin,
@@ -4516,7 +4551,7 @@
           text: xname
         }
       };
-      tmp['yAxis']= {
+      tmp['yAxis'] = {
         type: ytype,
         max: ymax,
         min: ymin,
@@ -5072,7 +5107,7 @@
     html += '</div>';
     html += '</div>';
 
-    html +='<div id="progressbar"></div>';
+    html += '<div id="progressbar"></div>';
 
     return html;
   }
@@ -5112,19 +5147,19 @@
     html += '</a>';
     html += '</li>';
 
-/*
-    html += '<li class="green">';
-    html += '<a href="#mdl-dataset" role="button" class="show_dataset" data-toggle="modal">';
-    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Dataset</span>';
-    html += '</a>';
-    html += '</li>';
-
-    html += '<li class="green">';
-    html += '<a href="#mdl-description" role="button" class="show_description" data-toggle="modal">';
-    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Description</span>';
-    html += '</a>';
-    html += '</li>';
-*/
+    /*
+        html += '<li class="green">';
+        html += '<a href="#mdl-dataset" role="button" class="show_dataset" data-toggle="modal">';
+        html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Dataset</span>';
+        html += '</a>';
+        html += '</li>';
+    
+        html += '<li class="green">';
+        html += '<a href="#mdl-description" role="button" class="show_description" data-toggle="modal">';
+        html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Description</span>';
+        html += '</a>';
+        html += '</li>';
+    */
     html += '<li class="green">';
     html += '<a href="#mdl-log" role="button" class="show_log" data-toggle="modal">';
     html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Logging</span>';
@@ -5479,65 +5514,72 @@
   function updateCUMenu(cu, name) {
     var items = {};
 
-    if (cu!=null && cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) {   //if el health
+    if (cu != null && cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) {   //if el health
       var status = cu.health.nh_status;
       if ((off_line[cu.health.ndk_uid] == false)) {
-      
-      if (status == 'Start') {
-        items['stop'] = { name: "Stop", icon: "stop" };
-      } else if (status == 'Stop') {
-        items['start'] = { name: "Start", icon: "start" };
-        items['deinit'] = { name: "Deinit", icon: "deinit" };
-      } else if (status == 'Init') {
-        items['start'] = { name: "Start", icon: "start" };
-        items['deinit'] = { name: "Deinit", icon: "deinit" };
-      } else if (status == 'Deinit') {
-        items['unload'] = { name: "Unload", icon: "unload" };
-        items['init'] = { name: "Init", icon: "init" };
-      } else if (status == 'Recoverable Error') {
-        items['recover'] = { name: "Recover", icon: "recover" };
-      } else if (status == 'Fatal Error') {
-        items['deinit'] = { name: "Deinit", icon: "deinit" };
-        items['init'] = { name: "Init", icon: "init" };
-        items['unload'] = { name: "Unload", icon: "unload" };
 
-      } else if (status == "Unload") {
-        items['load'] = { name: "Load", icon: "load" };
-      } else if (status == "Load") {
-        items['unload'] = { name: "Unload", icon: "unload" };
-        items['init'] = { name: "Init", icon: "init" };
+        if (status == 'Start') {
+          items['stop'] = { name: "Stop", icon: "stop" };
+        } else if (status == 'Stop') {
+          items['start'] = { name: "Start", icon: "start" };
+          items['deinit'] = { name: "Deinit", icon: "deinit" };
+        } else if (status == 'Init') {
+          items['start'] = { name: "Start", icon: "start" };
+          items['deinit'] = { name: "Deinit", icon: "deinit" };
+        } else if (status == 'Deinit') {
+          items['unload'] = { name: "Unload", icon: "unload" };
+          items['init'] = { name: "Init", icon: "init" };
+        } else if (status == 'Recoverable Error') {
+          items['recover'] = { name: "Recover", icon: "recover" };
+        } else if (status == 'Fatal Error') {
+          items['deinit'] = { name: "Deinit", icon: "deinit" };
+          items['init'] = { name: "Init", icon: "init" };
+          items['unload'] = { name: "Unload", icon: "unload" };
+
+        } else if (status == "Unload") {
+          items['load'] = { name: "Load", icon: "load" };
+        } else if (status == "Load") {
+          items['unload'] = { name: "Unload", icon: "unload" };
+          items['init'] = { name: "Init", icon: "init" };
+
+        } else {
+          items['load'] = { name: "Load", icon: "load" };
+          items['init'] = { name: "Init", icon: "init" };
+          items['unload'] = { name: "Unload", icon: "unload" };
+          items['deinit'] = { name: "Deinit", icon: "deinit" };
+
+
+        }
 
       } else {
         items['load'] = { name: "Load", icon: "load" };
         items['init'] = { name: "Init", icon: "init" };
         items['unload'] = { name: "Unload", icon: "unload" };
         items['deinit'] = { name: "Deinit", icon: "deinit" };
-        
-
       }
-    
-    }  else {
+    } else if (name != null && name != "") {
       items['load'] = { name: "Load", icon: "load" };
-      items['init'] = { name: "Init", icon: "init" };
-      items['unload'] = { name: "Unload", icon: "unload" };
-      items['deinit'] = { name: "Deinit", icon: "deinit" };
-    } 
-  } else if (name != null && name != "") {
-    items['load'] = { name: "Load", icon: "load" };
 
-  }
+    }
     items['sep1'] = "---------";
+    //node_name_to_desc[node_multi_selected[0]]
+    var desc = node_name_to_desc[encodeName(node_multi_selected[0])];
+    if (desc != null && desc.hasOwnProperty("instance_description") && desc.instance_description.hasOwnProperty("control_unit_implementation")) {
+      var tt = getInterfaceFromClass(desc.instance_description.control_unit_implementation);
 
-    if(node_multi_selected.length==1){
-      //node_name_to_desc[node_multi_selected[0]]
-      items['open-ctrl']={ name: "Open control"};
-      items['show-dataset'] = { name: "Show Dataset"};
-      items['show-desc'] = { name: "Show Description"};
+      if (tt != null) {
+        items['open-ctrl'] = { name: "Open control:" + tt };
+      }
+    }
+    if (node_multi_selected.length == 1) {
+
+      items['show-dataset'] = { name: "Show Dataset" };
+      items['show-desc'] = { name: "Show Description" };
 
       items['show-picture'] = { name: "Show as Picture.." };
     }
 
-    
+
     return items;
   }
   function updateGenericControl(cu) {
@@ -5831,11 +5873,21 @@
     main_dom = this;
     options = opt || {};
     // clear all intervals
-    var interval_id = setInterval("", 9999); // Get a reference to the last
-    // interval +1
-    for (var i = 1; i < interval_id; i++)
-      clearInterval(i);
 
+    /*  var interval_id = setInterval("", 9999); // Get a reference to the last
+      // interval +1
+      for (var i = 1; i < interval_id; i++)
+        clearInterval(i);
+  */
+    hostWidth = $(window).width();
+    hostHeight = $(window).height();
+    console.log("Window size:" + hostWidth + "x" + hostHeight);
+
+    $(window).resize(function () {
+      hostWidth = $(window).width();
+      hostHeight = $(window).height();
+      console.log("resized " + hostWidth + "x" + hostHeight);
+    });
     /* jQuery chaining */
     return this.each(function () {
       var notupdate_dataset = 1;
@@ -5865,14 +5917,14 @@
         html += '<div class="specific-table-node"></div>';
 
         $(this).html(html);
-        mainNode();
+        mainNode(options.template);
 
-      } else if(options.template == "ctrl"){
+      } else if (options.template == "ctrl") {
         var html = "";
         html += '<div class="specific-table-ctrl"></div>';
         html += '<div class="specific-control-ctrl"></div>';
         $(this).html(html);
-        buildCUInterface(options.cu, implementation_map[options.interface],"ctrl");
+        buildCUInterface(options.cu, implementation_map[options.interface], options.template);
 
       }
       $("#menu-dashboard").html(generateMenuBox());
