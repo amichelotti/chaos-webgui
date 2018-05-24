@@ -1,0 +1,46 @@
+{
+    "title":"ALGORITHM",
+    "type":"object",
+    "id":"editor-algo",
+    "format":"tab",
+    "properties": {
+	"script_name": {
+	    "type": "string",
+	    "required": true,
+	    "format":"text",
+	    "description":"CU Unique Identifier of the Algorithm"
+	},
+	"script_description": {
+		"type": "string",
+		"format":"textarea",
+		"description":"Description"
+		
+	},
+	"eudk_script_language" :
+	{
+	    "type": "array",
+	    "format": "select",
+	    "uniqueItems": true,
+	    "items": {
+		"type": "string",
+		"enum": ["LUA","CPP"]
+	    }
+	},
+	"eudk_script_content": {
+		"type": "string",
+		"format":"cpp",
+		"description":"Script code"
+		
+	},
+	"cudk_ds_desc":{
+		"type":"array",
+		"format": "tab",
+		"title": "Dataset Description",
+		"items":{
+		    "$ref":"algo-port.json",
+		    "title":"Dataset description"
+		}
+	}
+    }
+}
+    

@@ -225,6 +225,17 @@
 			return jchaos.mdsBase("node", opt, handleFunc);
 		}
 
+		jchaos.loadScript=function(_name,seqid,handleFunc){
+			var opt={};
+			var value={
+				"seq":seqid,
+				"script_name":_name
+			};
+			opt['name']="";
+			opt['what']="load";
+			opt['value']=value;
+			return jchaos.mdsBase("script", opt, handleFunc);
+		}
 
 		jchaos.variable = function (_name, _what, value_, handleFunc) {
 			var opt = {};

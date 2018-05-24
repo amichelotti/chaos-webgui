@@ -13,6 +13,7 @@
   var interface;// interface we are looking for
   var cu_copied;
   var us_copied;
+  var algo_copied;
   var save_obj;
   var selectedInterface = "";
   var snap_selected = "";
@@ -190,7 +191,7 @@
         var interface = $("#classe option:selected").val();
         console.log("restoring view :" + interface);
 
-        buildCUInterface(orginal_list, implementation_map[interface], "cu");
+        buildCUInteface(orginal_list, implementation_map[interface], "cu");
       },
       open: function () {
         nintervals = setInterval(function () { }, 100000);  // Get a reference to the last
@@ -840,7 +841,7 @@
   function buildNodeBody() {
     var html = '<div class="row-fluid">';
     html += '<div class="statbox purple" onTablet="span4" onDesktop="span3">'
-    html += '<h3>Class</h3>';
+    html += '<h3>Node Type</h3>';
     html += '<select id="classe" size="auto"></select>';
     html += '</div>';
 
@@ -860,55 +861,46 @@
     return html;
   }
 
+  function buildAlgoBody() {
+    var html = '<div class="row-fluid">';
+    html += '<div class="statbox purple" onTablet="span4" onDesktop="span3">'
+    html += '<h3>Algorithm Type</h3>';
+    html += '<select id="classe" size="auto"></select>';
+    html += '</div>';
+
+    html += '<div class="statbox purple row-fluid" onTablet="span4" onDesktop="span3">'
+    html += '<div class="span6">'
+    html += '<label for="search-alive">Search All Algorithms</label><input class="input-xlarge" id="search-alive-false" title="Search Algorithm" name="search-alive" type="radio" value=false>';
+    html += '</div>'
+    html += '<div class="span6">'
+    html += '<label for="search-alive">Search in Use Algorithm </label><input class="input-xlarge" id="search-alive-true" title="Search just instanciated Algorithm" name="search-alive" type="radio" value=true>';
+    html += '</div>'
+    // html += '<h3 class="span3">Search</h3>';
+
+    html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
+    html += '</div>';
+    html += '</div>';
+
+    return html;
+  }
   function updateAlgoMenu(cu, name) {
     var items = {};
-
-    if (cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) {   //if el health
-      var status = cu.health.nh_status;
-      if (status == 'Start') {
-        items['stop'] = { name: "Stop", icon: "stop" };
-      } else if (status == 'Stop') {
-        items['start'] = { name: "Start", icon: "start" };
-        items['deinit'] = { name: "Deinit", icon: "deinit" };
-      } else if (status == 'Init') {
-        items['start'] = { name: "Start", icon: "start" };
-        items['deinit'] = { name: "Deinit", icon: "deinit" };
-      } else if (status == 'Deinit') {
-        items['unload'] = { name: "Unload", icon: "unload" };
-        items['init'] = { name: "Init", icon: "init" };
-      } else if (status == 'Recoverable Error') {
-        items['recover'] = { name: "Recover", icon: "recover" };
-      } else if (status == 'Fatal Error') {
-        items['deinit'] = { name: "Deinit", icon: "deinit" };
-        items['init'] = { name: "Init", icon: "init" };
-        items['unload'] = { name: "Unload", icon: "unload" };
-
-      } else if (status == "Unload") {
-        items['load'] = { name: "Load", icon: "load" };
-      } else if (status == "Load") {
-        items['unload'] = { name: "Unload", icon: "unload" };
-        items['init'] = { name: "Init", icon: "init" };
-
-      } else {
-        items['load'] = { name: "Load", icon: "load" };
-        items['init'] = { name: "Init", icon: "init" };
-        items['unload'] = { name: "Unload", icon: "unload" };
-        items['deinit'] = { name: "Deinit", icon: "deinit" };
-
-      }
-    } else if (name != null && name != "") {
-      items['load'] = { name: "Load", icon: "load" };
-
-    }
+    items['edit-algo'] = { name: "Edit..", icon: "Edit" };
+    items['new-algo'] = { name: "New..", icon: "New" };
+    items['copy-algo'] = { name: "Copy", icon: "copy" };
+    items['paste-algo'] = { name: "Paste", icon: "paste" };
+    items['delete-algo'] = { name: "Delete", icon: "delete" };
+    items['create-instance'] = { name: "Create Instance", icon: "Create" };
+    items['delete-instance'] = { name: "Delete Instance", icon: "Delete" };
     return items;
   }
-
+/*
   function buildAlgoBody() {
     var html = '<div class="row-fluid">';
 
     html += '<div class="statbox purple row-fluid" onTablet="span4" onDesktop="span8">'
     html += '<div class="span6">'
-    html += '<label for="search-alive">Search All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
+    html += '<label for="search-alive">Search All Alghoritm</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
     html += '</div>'
     html += '<div class="span6">'
     html += '<label for="search-alive">Search Alive</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
@@ -919,7 +911,7 @@
     html += '</div>';
     html += '</div>';
     return html;
-  }
+  }*/
   function generateAlgoTable(cu, template) {
     var html = '<div class="row-fluid" id="table-space">';
 
@@ -930,16 +922,17 @@
     html += '<thead class="box-header">';
     html += '<tr class="algoMenu">';
     html += '<th>Name</th>';
-    html += '<th>Language</th>';
     html += '<th>Description</th>';
+    html += '<th>Language</th>';
     html += '</tr>';
     html += '</thead> ';
-    $(cu).each(function (i) {
-      var cuname = encodeName(cu[i]);
-      html += "<tr class='row_element algoMenu' cuname='" + cu[i] + "' id='" + cuname + "'>";
-      html += "<td class='name_element'>" + cu[i] + "</td>";
-      html += "<td id='" + cuname + "_eudk_script_language'></td>";
-      html += "<td id='" + cuname + "_script_description'></td>";
+    cu.forEach(function (elem) {
+      var name=elem.script_name;
+      var nameid=encodeName(name);
+      html += "<tr class='row_element algoMenu' cuname='" + name + "' id='" +  nameid  + "'>";
+      html += "<td class='name_element'>" +elem.script_name + "</td>";
+      html += "<td>"+ elem.script_description + "</td>";
+      html += "<td>"+ elem.eudk_script_language + "</td></tr>";
     });
 
     html += '</table>';
@@ -996,7 +989,7 @@
       html += "<td id='" + cuname + "_health_uptime'></td>";
       html += "<td id='" + cuname + "_health_systemtime'></td>";
       html += "<td id='" + cuname + "_health_usertime'></td>";
-      html += "<td id='" + cuname + "_parent'></td>";
+      html += "<td id='" + cuname + "_parent'></td></tr>";
 
     });
 
@@ -1042,6 +1035,10 @@
         }
       }
     });
+  }
+
+  function algoSave(json){
+
   }
   function newCuSave(json) {
     if ((node_selected == null || node_selected == "")) {
@@ -1156,6 +1153,61 @@
       alert("No andk_node_associated field found");
 
     }
+  }
+
+  /***
+   * 
+   */
+  function jsonEditWindow(name,jsontemp, jsonin){
+    var instant = $('<div id=edit-' + name + '></div>').dialog({
+      minWidth: hostWidth / 4,
+      minHeight: hostHeight / 4,
+      title: name,
+      position: "center",
+      resizable: true,
+      buttons: [
+        {
+          text: "save", click: function (e) {
+            var blob = new Blob([JSON.stringify(json_editor)], { type: "json;charset=utf-8" });
+            saveAs(blob, name + ".json");
+          }
+        },
+        {
+          text: "close", click: function (e) {
+            $("#edit-" + name).dialog('close');
+          }
+        }
+
+
+      ],
+      close: function (event, ui) {
+
+        $(this).remove();
+      },
+      open: function () {
+        console.log("Open Editor");
+        var element = $("#edit-"+name);
+
+        var jopt = {
+          // Enable fetching schemas via ajax
+          // The schema for the editor
+          //theme: 'bootstrap2',
+          ajax: true,
+          schema: jsontemp,
+    
+          // Seed the form with a starting value
+          startval: jsonin
+        };
+        if (json_editor != null) {
+          delete json_editor;
+        }
+        JSONEditor.defaults.options.theme = 'bootstrap2';
+        JSONEditor.defaults.options.iconlib = "bootstrap2";
+    
+        //    JSONEditor.defaults.iconlib = 'fontawesome4';
+        json_editor = new JSONEditor(element.get(0), jopt);
+      }
+    });
   }
   /***
    * JSON EDITOR
@@ -2135,7 +2187,7 @@
       });
     }
   }
-  function buildCUInterface(cuids, cutype, template) {
+  function buildCUInteface(cuids, cutype, template) {
     if (cuids == null) {
       alert("NO CU given!");
       return;
@@ -2546,6 +2598,108 @@
     executeCUMenuCmd(cmd, options);
     return;
   }
+/**** ALGO MENU */
+
+function executeAlgoMenuCmd(cmd, opt) {
+  if (cmd == "edit-algo") {
+    var templ = {
+      $ref: "algo.json",
+      format: "tabs"
+    }
+    if(node_selected!=null && node_name_to_desc[node_selected]!=null){
+      jchaos.loadScript(node_selected,node_name_to_desc[node_selected].seq,function(data){
+        console.log("script:"+node_selected+" ="+JSON.stringify(data));
+        editorFn = algoSave;
+        jsonEditWindow(node_selected,templ, data);
+        
+      });
+    }
+    
+    return;
+  }
+  
+  if (cmd == "new-algo") {
+    var templ = {
+      $ref: "algo.json",
+      format: "tabs"
+    }
+    editorFn = algoSave;
+    jsonEdit(templ, null);
+    return;
+  }
+  if (cmd == "del-algo") {
+
+    confirm("Delete Algorithm", "Your are deleting Algorithm: " + node_selected, "Ok", function () {
+     // jchaos.node(node_selected, "del", "us", null, null);
+    }, "Cancel");
+    return;
+  }
+
+  
+  if (cmd == "copy-algo") {
+
+
+    jchaos.node(node_selected, "get", "cu", "", null, function (data) {
+      if (data != null) {
+        algo_copied = data;
+        copyToClipboard(JSON.stringify(data));
+      }
+    });
+    return;
+  }
+  if (cmd == "save-algo") {
+
+    jchaos.node(node_selected, "get", "cu", "", null, function (data) {
+      if (data != null) {
+        if (data instanceof Object) {
+          var tmp = { cu_desc: data };
+          var blob = new Blob([JSON.stringify(tmp)], { type: "json;charset=utf-8" });
+          saveAs(blob, node_selected + ".json");
+        }
+      }
+    });
+    return;
+  }
+  if (cmd == "paste-algo") {
+    var copia = cu_copied;
+    /*check the status of the device must be not alive*/
+
+    copia.ndk_parent = node_selected;
+    confirm("Move or Copy", "Copy or Moving CU: \"" + cu_copied.ndk_uid + "\" into US:\"" + node_selected + "\"", "Move", function () {
+      if (off_line[cu_copied.ndk_uid] == false) {
+        alert("CU " + cu_copied.ndk_uid + " cannot be MOVED if alive, please bring it to 'unload' state");
+        return;
+      }
+      jchaos.node(cu_copied.ndk_uid, "set", "cu", node_selected, copia, function () { });
+    }, "Copy", function () {
+
+      jchaos.node(cu_copied.ndk_uid + "_copied", "set", "cu", node_selected, copia, function () {
+        alert("Copied and renamed:\"" + cu_copied.ndk_uid + "_copied" + "\"");
+      });
+
+    });
+    return;
+  }
+ 
+  if (cmd == "create-implementation") {
+    return;
+  }
+  if (cmd == "delete-implementation") {
+    jchaos.node(node_selected, "stop", "us", function () {
+      instantMessage("US STOP", "Stopping " + node_selected + " via agent", 1000);
+
+    });
+    return;
+  }
+ 
+  return;
+}
+
+/****** */
+
+
+
+
   function setupNode(template) {
     $("#main_table-" + template + " tbody tr").click(function (e) {
       mainTableCommonHandling("main_table-" + template, e, "node");
@@ -2593,6 +2747,8 @@
     });
 
   }
+
+
   function buildNodeInterface(nodes, cutype, template) {
     if (nodes == null) {
       alert("NO Nodes given!");
@@ -2700,26 +2856,23 @@
 
   }
 
-  function buildAlgoInterface(nodes, template) {
+  function buildAlgoInterface(nodes, interface,template) {
     if (nodes == null) {
       alert("NO Nodes given!");
       return;
     }
-    if (!(nodes instanceof Array)) {
-      node_list = [nodes];
-    } else {
-      node_list = nodes;
+    node_list=[];
+    for(var key in nodes){
+      if(nodes[key] instanceof Array){
+        node_list=node_list.concat(nodes[key]);
+        
+      }
     }
-
-    node_list.forEach(function (elem, id) {
-      var name = encodeName(elem);
-      node_name_to_index[name] = id;
-
+    node_list.forEach(function(elem){
+      node_name_to_desc[elem.script_name]=elem;
     });
-    // cu_selected = cu_list[0];
-    node_selected = null;
-    var htmlt, htmlc, htmlg;
-    var updateTableFn = new Function;
+    
+    
     /*****
      * 
      * clear all interval interrupts
@@ -2727,81 +2880,49 @@
     /**
      * fixed part
      */
-    htmlt = generateAlgoTable(node_list);
+    htmlt = generateAlgoTable(node_list,template);
 
 
     $("div.specific-table-" + template).html(htmlt);
 
 
-    setupNode(template);
+    $("#main_table-" + template + " tbody tr").click(function (e) {
+      mainTableCommonHandling("main_table-" + template, e, "node");
+    });
+    n = $('#main_table-' + template + ' tr').size();
+    if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
+      $("#table-scroll").css('height', '280px');
+    } else {
+      $("#table-scroll").css('height', '');
+    }
 
-    jchaos.node(node_list, "desc", cutype, null, null, function (data) {
-      var cnt = 0;
-      node_list.forEach(function (elem, index) {
-        var type = data[index].ndk_type;
-        node_name_to_desc[elem] = { desc: data[index], parent: null, detail: null };
-        if ((type == "nt_control_unit")) {
-          jchaos.getDesc(elem, function (data) {
-            if (data[0].hasOwnProperty("instance_description")) {
-              node_name_to_desc[elem].detail = data[0].instance_description;
-              node_name_to_desc[elem].parent = data[0].instance_description.ndk_parent;
-            }
-          });
-        } else if ((type == "nt_unit_server")) {
-          var par = jchaos.node(elem, "parent", "us", null, null);
-          if (par.hasOwnProperty("ndk_uid") && par.ndk_uid != "") {
-            node_name_to_desc[elem].parent = par.ndk_uid;
+
+   
+    $.contextMenu({
+      selector: '.algoMenu',
+      build: function ($trigger, e) {
+        var algoname = $(e.currentTarget).attr("cuname");
+        var cuitem = updateAlgoMenu(algoname);
+        cuitem['sep1'] = "---------";
+
+        cuitem['quit'] = {
+          name: "Quit", icon: function () {
+            return 'context-menu-icon context-menu-icon-quit';
           }
+        };
 
+        return {
+
+          callback: function (cmd, options) {
+            executeAlgoMenuCmd(cmd, options);
+            return;
+          },
+          items: cuitem
         }
-      });
+      }
+
 
     });
-
-
-    if (node_list_interval != null) {
-      clearInterval(node_list_interval);
-    }
-    updateTableFn(node_list);
-    node_list_interval = setInterval(function (e) {
-      var start_time = (new Date()).getTime();
-      if ((start_time - checkRegistration) > 60000) {
-        checkRegistration = start_time;
-        jchaos.node(node_list, "desc", cutype, null, null, function (data) {
-          var cnt = 0;
-          node_list.forEach(function (elem, index) {
-            node_name_to_desc[elem].desc = data[index];
-          });
-        });
-        updateTableFn(node_list);
-
-      }
-      jchaos.node(node_list, "health", cutype, null, null, function (data) {
-        node_live_selected = data;
-        updateGenericTableDataset(node_live_selected);
-
-      });
-
-
-      /*
-      cu_list.forEach(function (item) {
-        cu_live_selected.push(jchaos.node(item, "desc", cutype));
-      })
-      */
-
-      // update all generic
-
-      if (node_live_selected.length == 0 || node_selected == null || node_name_to_index[node_selected] == null) {
-        return;
-      }
-
-
-
-
-    }, options.Interval, updateTableFn);
-
-    installCheckLive();
-
 
   }
 
@@ -2846,7 +2967,7 @@
 
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
 
-      buildCUInterface(list_cu, implementation_map[interface], "cu");
+      buildCUInteface(list_cu, implementation_map[interface], "cu");
     });
 
     $("#elements").change(function () {
@@ -2874,7 +2995,7 @@
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
       var interface = $("#classe option:selected").val();
 
-      buildCUInterface(list_cu, implementation_map[interface], "cu");
+      buildCUInteface(list_cu, implementation_map[interface], "cu");
 
     });
     $("#classe").change(function () {
@@ -2883,7 +3004,7 @@
 
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
 
-      buildCUInterface(list_cu, implementation_map[interface], "cu");
+      buildCUInteface(list_cu, implementation_map[interface], "cu");
 
     });
     $("#search-chaos").keypress(function (e) {
@@ -2893,7 +3014,7 @@
         var alive = $("input[type=radio][name=search-alive]:checked").val()
 
         list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
-        buildCUInterface(list_cu, implementation_map[interface], "cu");
+        buildCUInteface(list_cu, implementation_map[interface], "cu");
 
       }
       //var tt =prompt('type value');
@@ -2904,7 +3025,7 @@
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
       var interface = $("#classe option:selected").val();
 
-      buildCUInterface(list_cu, implementation_map[interface], "cu");
+      buildCUInteface(list_cu, implementation_map[interface], "cu");
     });
 
 
@@ -2948,7 +3069,7 @@
       if (e.keyCode == 13) {
         interface = $("#classe option:selected").val();
         search_string = $(this).val();
-        var alive = $("input[type=radio][name=search-alive]:checked").val()
+        var alive = $("input[type=radio][name=search-alive]:checked").val();
         list_cu = interface2NodeList(interface, alive);
         buildNodeInterface(list_cu, "us", template);
       }
@@ -2956,7 +3077,7 @@
     });
 
     $("input[type=radio][name=search-alive]").change(function (e) {
-      var alive = $("input[type=radio][name=search-alive]:checked").val()
+      var alive = $("input[type=radio][name=search-alive]:checked").val();
       interface = $("#classe option:selected").val();
 
       list_cu = interface2NodeList(interface, alive);
@@ -2967,9 +3088,13 @@
 
   }
 
-  function mainAlgo() {
+  function mainAlgo(template) {
     search_string = "";
+
     var $radio = $("input:radio[name=search-alive]");
+    var interface = $("#classe option:selected").val();
+
+    element_sel('#classe', ["Math", "Signal", "Fit"], 1);
     if ($radio.is(":checked") === false) {
       $radio.filter("[value=true]").prop('checked', true);
     }
@@ -2978,9 +3103,9 @@
     $("#search-chaos").keypress(function (e) {
       if (e.keyCode == 13) {
         search_string = $(this).val();
-        var alive = $("input[type=radio][name=search-alive]:checked").val();
-        jchaos.search(search_string, "script", alive, function (list_algo) {
-          buildAlgoInterface(list_cu, "cu");
+        var alive =  $("input[type=radio][name=search-alive]:checked").val();
+        jchaos.search(search_string, "script", (alive == "true"), function (list_algo) {
+          buildAlgoInterface(list_algo, interface,template);
 
         });
 
@@ -2990,12 +3115,11 @@
 
     $("input[type=radio][name=search-alive]").change(function (e) {
       var alive = $("input[type=radio][name=search-alive]:checked").val()
-      jchaos.search(search_string, "script", alive, function (list_algo) {
-        buildAlgoInterface(list_cu, "cu");
+      jchaos.search(search_string, "script", (alive == "true"), function (list_algo) {
+        buildAlgoInterface(list_algo, interface,template);
 
       });
     });
-    actionJsonEditor();
 
   }
   /******************
@@ -5924,8 +6048,16 @@
         html += '<div class="specific-table-ctrl"></div>';
         html += '<div class="specific-control-ctrl"></div>';
         $(this).html(html);
-        buildCUInterface(options.cu, implementation_map[options.interface], options.template);
+        buildCUInteface(options.cu, implementation_map[options.interface], options.template);
 
+      } else if (options.template == "algo") {
+        var html = "";
+        html += buildAlgoBody();
+        html += '<div class="specific-table-algo"></div>';
+        html += '<div class="specific-control-algo"></div>';
+
+        $(this).html(html);
+        mainAlgo(options.template);
       }
       $("#menu-dashboard").html(generateMenuBox());
 
