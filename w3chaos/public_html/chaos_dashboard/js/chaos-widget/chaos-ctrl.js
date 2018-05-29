@@ -1038,6 +1038,10 @@
   }
 
   function algoSave(json){
+    jchaos.saveScript(json,function(data){
+      console.log("saving script:"+JSON.stringify(json));
+    });
+    
 
   }
   function newCuSave(json) {
@@ -1168,8 +1172,31 @@
       buttons: [
         {
           text: "save", click: function (e) {
-            var blob = new Blob([JSON.stringify(json_editor)], { type: "json;charset=utf-8" });
-            saveAs(blob, name + ".json");
+               // editor validation
+           var errors = json_editor.validate();
+
+          if (errors.length) {
+            alert("JSON NOT VALID");
+            console.log(errors);
+          } else {
+            // It's valid!
+            var json_editor_value = json_editor.getValue();
+            editorFn(json_editor_value);
+          }
+    }
+  }, {
+        text: "download",click: function(e){
+            var errors = json_editor.validate();
+
+          if (errors.length) {
+            alert("JSON NOT VALID");
+            console.log(errors);
+          } else {
+            // It's valid!
+            var json_editor_value = json_editor.getValue();
+            var blob = new Blob([JSON.stringify(json_editor_value)], { type: "json;charset=utf-8" });
+            saveAs(blob, name + ".json");          }
+           
           }
         },
         {
@@ -2630,7 +2657,11 @@ function executeAlgoMenuCmd(cmd, opt) {
   if (cmd == "del-algo") {
 
     confirm("Delete Algorithm", "Your are deleting Algorithm: " + node_selected, "Ok", function () {
-     // jchaos.node(node_selected, "del", "us", null, null);
+     jchaos.rmScript(node_name_to_desc[node_selected],function(data){
+      instantMessage("Remove Script", "removed " + node_selected, 1000);
+
+     });
+
     }, "Cancel");
     return;
   }
@@ -2638,55 +2669,40 @@ function executeAlgoMenuCmd(cmd, opt) {
   
   if (cmd == "copy-algo") {
 
-
-    jchaos.node(node_selected, "get", "cu", "", null, function (data) {
-      if (data != null) {
-        algo_copied = data;
-        copyToClipboard(JSON.stringify(data));
-      }
+    jchaos.loadScript(node_selected,node_name_to_desc[node_selected].seq,function(data){
+      algo_copied = data;
+      instantMessage("Copy Script", "copied " + node_selected, 1000);
     });
+   
     return;
   }
   if (cmd == "save-algo") {
-
-    jchaos.node(node_selected, "get", "cu", "", null, function (data) {
+    jchaos.loadScript(node_selected,node_name_to_desc[node_selected].seq,function(data){
       if (data != null) {
         if (data instanceof Object) {
-          var tmp = { cu_desc: data };
-          var blob = new Blob([JSON.stringify(tmp)], { type: "json;charset=utf-8" });
+          var blob = new Blob([JSON.stringify(data)], { type: "json;charset=utf-8" });
           saveAs(blob, node_selected + ".json");
         }
       }
     });
+ 
     return;
   }
   if (cmd == "paste-algo") {
-    var copia = cu_copied;
-    /*check the status of the device must be not alive*/
-
-    copia.ndk_parent = node_selected;
-    confirm("Move or Copy", "Copy or Moving CU: \"" + cu_copied.ndk_uid + "\" into US:\"" + node_selected + "\"", "Move", function () {
-      if (off_line[cu_copied.ndk_uid] == false) {
-        alert("CU " + cu_copied.ndk_uid + " cannot be MOVED if alive, please bring it to 'unload' state");
-        return;
-      }
-      jchaos.node(cu_copied.ndk_uid, "set", "cu", node_selected, copia, function () { });
-    }, "Copy", function () {
-
-      jchaos.node(cu_copied.ndk_uid + "_copied", "set", "cu", node_selected, copia, function () {
-        alert("Copied and renamed:\"" + cu_copied.ndk_uid + "_copied" + "\"");
-      });
-
-    });
+    
     return;
   }
  
   if (cmd == "create-implementation") {
+    jchaos.manageInstanceScript(node_selected,node_name_to_desc[node_selected].seq,true,function(data){
+      instantMessage("Create Instance", "instance of " + node_selected+ "created with name:"+impl_name, 1000);
+
+    });
     return;
   }
   if (cmd == "delete-implementation") {
-    jchaos.node(node_selected, "stop", "us", function () {
-      instantMessage("US STOP", "Stopping " + node_selected + " via agent", 1000);
+    jchaos.manageInstanceScript(node_selected,node_name_to_desc[node_selected].seq,false,function(data){
+      instantMessage("Delete Instance", "instance of " + node_selected+ "created with name:"+impl_name, 1000);
 
     });
     return;

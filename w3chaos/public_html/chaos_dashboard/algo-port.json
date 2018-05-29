@@ -14,16 +14,10 @@
 	    "description":"Attribute Description"
 	},
 	"cudk_ds_attr_dir" : {
-	    "type": "array",
-	    "format": "select",
-	    "uniqueItems": true,
-	    "description":"0= input,1=output",
-	    "items":{
-		"type":"integer",
-		"enum":[0,1]
-	    }
-
+	    "type": "integer",
+	    "description":" 0= Input, 1=Output"
 	},
+	
 	"cudk_ds_attr_type" : {
 	    "type": "integer",
 	    "description":"Type 1= double, 3=integer32"

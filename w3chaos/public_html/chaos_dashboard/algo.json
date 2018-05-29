@@ -13,17 +13,22 @@
 	"script_description": {
 		"type": "string",
 		"format":"textarea",
-		"description":"Description"
+		"description":"Full Description"
 		
 	},
 	"eudk_script_language" :
+	{
+	    "type": "string"
+
+	},
+	"eudk_script_language_select" :
 	{
 	    "type": "array",
 	    "format": "select",
 	    "uniqueItems": true,
 	    "items": {
 		"type": "string",
-		"enum": ["LUA","CPP"]
+		"enum": ["LUA","CPP","PYTHON"]
 	    }
 	},
 	"eudk_script_content": {
