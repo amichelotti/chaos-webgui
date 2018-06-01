@@ -870,10 +870,10 @@
 
     html += '<div class="statbox purple row-fluid" onTablet="span4" onDesktop="span3">'
     html += '<div class="span6">'
-    html += '<label for="search-alive">Search All Algorithms</label><input class="input-xlarge" id="search-alive-false" title="Search Algorithm" name="search-alive" type="radio" value=false>';
+    html += '<label for="search-algo">Search Algorithms</label><input class="input-xlarge" id="search-algo" title="Search Algorithms" name="search-algo" type="radio" value=true>';
     html += '</div>'
     html += '<div class="span6">'
-    html += '<label for="search-alive">Search in Use Algorithm </label><input class="input-xlarge" id="search-alive-true" title="Search just instanciated Algorithm" name="search-alive" type="radio" value=true>';
+    html += '<label for="search-algo">Search Instanced</label><input class="input-xlarge" id="search-instance" title="Search Instanced Algorithms" name="search-algo" type="radio" value=false>';
     html += '</div>'
     // html += '<h3 class="span3">Search</h3>';
 
@@ -1020,7 +1020,14 @@
           } else {
             $("#" + cuname + "_timestamp").html("NA");
           }
-          $("#" + cuname + "_type").html(elem.desc.ndk_type);
+          if(elem.desc.hasOwnProperty("ndk_group_set")){
+            $("#" + cuname + "_type").html(elem.desc.ndk_group_set);
+          } else if(elem.desc.hasOwnProperty("ndk_sub_type")){
+            $("#" + cuname + "_type").html(elem.desc.ndk_sub_type);
+
+          } else{
+            $("#" + cuname + "_type").html(elem.desc.ndk_type);
+          }
           if (elem.desc.hasOwnProperty("ndk_host_name")) {
             $("#" + cuname + "_hostname").html(elem.desc.ndk_host_name);
           } else {
@@ -2687,20 +2694,41 @@ function executeAlgoMenuCmd(cmd, opt) {
     });
  
     return;
+  
   }
   if (cmd == "paste-algo") {
+    if((algo_copied instanceof Object)&& algo_copied.hasOwnProperty("script_name")){
+      var instUnique = (new Date()).getTime();
+      var templ = {
+        $ref: "algo.json",
+        format: "tabs"
+      }
+      getEntryWindow("Rename Algo","Algo Name",node_selected+ "_"+instUnique,"Create",function(inst_name){
+        editorFn = algoSave;
+        algo_copied.script_name=inst_name;
+        jsonEdit(algo_copied, null);
+        
+  
+      },"Cancel");    
+    }
     
     return;
   }
  
-  if (cmd == "create-implementation") {
-    jchaos.manageInstanceScript(node_selected,node_name_to_desc[node_selected].seq,true,function(data){
-      instantMessage("Create Instance", "instance of " + node_selected+ "created with name:"+impl_name, 1000);
+  if (cmd == "create-instance") {
+      var instUnique = (new Date()).getTime();
 
-    });
+      getEntryWindow("Create Instance","Instance Name",node_selected + "/"+node_selected+"_"+instUnique,"Create",function(inst_name){
+        jchaos.manageInstanceScript(node_selected,node_name_to_desc[node_selected].seq,inst_name,true,function(data){
+          instantMessage("Create Instance", "instance of " + node_selected+ "created with name:"+inst_name, 1000);
+    
+        });
+
+      },"Cancel");
+
     return;
   }
-  if (cmd == "delete-implementation") {
+  if (cmd == "delete-instance") {
     jchaos.manageInstanceScript(node_selected,node_name_to_desc[node_selected].seq,false,function(data){
       instantMessage("Delete Instance", "instance of " + node_selected+ "created with name:"+impl_name, 1000);
 
@@ -3104,37 +3132,60 @@ function executeAlgoMenuCmd(cmd, opt) {
 
   }
 
+  function rebuildAlgoInterface(template){
+    var search_string=$("#search-chaos").val();
+    var interface=$("#classe option:selected").val();
+    var algo_instance =  ($("input[type=radio][name=search-algo]:checked").val()=="true");
+    if(algo_instance){
+      jchaos.search(search_string, "script", true, function (list_algo) {
+        buildAlgoInterface(list_algo, interface,template);
+
+      }); 
+
+  } else {
+    jchaos.searchScriptInstance(interface,search_string,function(list_instances){
+      buildAlgoInterface(list_instances, interface,"algo-instance");
+
+    });
+  }
+}
   function mainAlgo(template) {
     search_string = "";
 
-    var $radio = $("input:radio[name=search-alive]");
+    var $radio = $("input:radio[name=search-algo]");
     var interface = $("#classe option:selected").val();
+    var algos=[];
+    var algos_names=[];
+    jchaos.search(search_string, "script", true, function (list_algo) {
+      for(var key in list_algo){
+        if(list_algo[key] instanceof Array){
+          algo=algo.concat(list_algo[key]);
+          if(list_algo[key].hasOwnProperty("script_name")){
+            algos_names.push(list_algo[key].script_name)
+          }
+        }
+      }
+      element_sel('#classe',algos_names, 1);
 
-    element_sel('#classe', ["Math", "Signal", "Fit"], 1);
+    });
+     
     if ($radio.is(":checked") === false) {
       $radio.filter("[value=true]").prop('checked', true);
     }
 
-
+    $("#classe").change(function () {
+      rebuildAlgoInterface(template);
+    });
     $("#search-chaos").keypress(function (e) {
       if (e.keyCode == 13) {
-        search_string = $(this).val();
-        var alive =  $("input[type=radio][name=search-alive]:checked").val();
-        jchaos.search(search_string, "script", (alive == "true"), function (list_algo) {
-          buildAlgoInterface(list_algo, interface,template);
-
-        });
-
-      }
+        rebuildAlgoInterface(template);
+      } 
       //var tt =prompt('type value');
     });
 
     $("input[type=radio][name=search-alive]").change(function (e) {
-      var alive = $("input[type=radio][name=search-alive]:checked").val()
-      jchaos.search(search_string, "script", (alive == "true"), function (list_algo) {
-        buildAlgoInterface(list_algo, interface,template);
-
-      });
+      rebuildAlgoInterface(template);
+     
     });
 
   }
@@ -5522,6 +5573,43 @@ function executeAlgoMenuCmd(cmd, opt) {
       });
 
   }
+  function getEntryWindow(hmsg, msg, def_text, butyes, yeshandle, cancelText){
+    var ret = true;
+    $('<div></div>').appendTo('body')
+      .html('<div><h6>' + msg + '</h6><input type="text" id="getEntryWindow_name" value='+def_text+' class="text ui-widget-content ui-corner-all"></div>')
+      .dialog({
+        modal: true, title: hmsg, zIndex: 10000, autoOpen: true,
+        width: 'auto', resizable: false,
+        buttons: [
+          {
+            id: "confirm-yes",
+            text: butyes,
+            click: function (e) {
+              if (typeof yeshandle === "function") {
+                yeshandle($("#getEntryWindow_name").val());
+              }
+              $(this).dialog("close");
+
+
+            }
+          },
+          {
+            id: "confirm-no",
+            text: cancelText,
+            click: function (e) {
+              if (typeof nohandle === "function") {
+                nohandle();
+              }
+              $(this).dialog("close");
+            }
+          }],
+        close: function (event, ui) {
+          $(this).remove();
+        }
+      });
+
+  }
+
   function confirm(hmsg, msg, butyes, yeshandle, butno, nohandle) {
     var ret = true;
     $('<div></div>').appendTo('body')

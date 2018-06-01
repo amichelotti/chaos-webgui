@@ -239,8 +239,8 @@
 		jchaos.manageInstanceScript=function(script_name,script_seq,instance_name,create,handleFunc){
 			var opt={};
 			var script_desc={};
-			script_desc['script_seq']=script_seq;
-			script_desc['script_seq']=script_name;
+			script_desc['script_seq']=Number(script_seq);
+			script_desc['script_name']=script_name;
 
 			script_desc['instance_name']=instance_name;
 			script_desc['create']=create;
@@ -263,6 +263,17 @@
 			opt['name']="";
 			opt['what']="del";
 			opt['value']=value;
+			return jchaos.mdsBase("script", opt, handleFunc);
+		}
+		jchaos.searchScriptInstance=function(script_name,search_string,handleFunc){
+			var opt={};
+			var script_desc={};
+			script_desc['script_name']=script_name;
+			script_desc['search_string']=search_string;
+
+			opt['name']="";
+			opt['what']="searchInstance";
+			opt['value']=script_desc;
 			return jchaos.mdsBase("script", opt, handleFunc);
 		}
 		jchaos.variable = function (_name, _what, value_, handleFunc) {
