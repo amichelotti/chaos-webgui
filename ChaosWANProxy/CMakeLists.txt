@@ -1,9 +1,11 @@
 
 cmake_minimum_required(VERSION 2.6)
 IF(NOT CHAOS_BUNDLE)
-       MESSAGE(STATUS "Adding WAN interface dependencies")
+  MESSAGE(STATUS "Adding WAN interface dependencies")
+  
 ENDIF()
-
+find_package(chaos MODULE REQUIRED)
+include_directories(../../ ${chaos_INCLUDE_DIRS})
 
 SET(wp_src main.cpp		main.cpp
 						ChaosWANProxy.cpp
