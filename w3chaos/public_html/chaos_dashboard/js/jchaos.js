@@ -276,6 +276,17 @@
 			opt['value']=script_desc;
 			return jchaos.mdsBase("script", opt, handleFunc);
 		}
+		jchaos.updateScriptInstance=function(script_instance,script_base_description,handleFunc){
+			var opt={};
+			var script_desc={};
+			script_desc['script_instance']=script_instance;
+			script_desc['script_base_description']=script_base_description;
+
+			opt['name']="";
+			opt['what']="bind";
+			opt['value']=script_desc;
+			return jchaos.mdsBase("script", opt, handleFunc);
+		}
 		jchaos.variable = function (_name, _what, value_, handleFunc) {
 			var opt = {};
 			if (_name instanceof Array) {

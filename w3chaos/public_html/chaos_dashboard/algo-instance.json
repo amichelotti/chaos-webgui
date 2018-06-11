@@ -1,0 +1,31 @@
+{
+    "title":"ALGORITHM INSTANCE",
+    "type":"object",
+    "id":"editor-algo-instance",
+    "format":"tab",
+    "properties": {
+	"instance_name": {
+	    "type": "string",
+	    "required": true,
+	    "format":"text",
+	    "description":"Unique Identifier of the Algorithm Instance"
+	},
+	"script_bind_type" :
+	{
+		"type": "integer",
+		"description":"1=Auto, 3=US"
+
+	},
+	"script_bind_node": {
+		"type": "string",
+		"format":"text",
+		"description":"Bind to Node (i.e. US NAME)"
+		
+	},
+	"instance_seq":{
+		"type": "integer",
+	    "description":"identifier id"
+	}
+    }
+}
+    

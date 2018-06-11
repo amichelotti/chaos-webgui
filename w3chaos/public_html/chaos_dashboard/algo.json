@@ -8,28 +8,13 @@
 	    "type": "string",
 	    "required": true,
 	    "format":"text",
-	    "description":"CU Unique Identifier of the Algorithm"
-	},
-	"script_description": {
-		"type": "string",
-		"format":"textarea",
-		"description":"Full Description"
-		
+	    "description":"Unique Identifier of the Algorithm"
 	},
 	"eudk_script_language" :
 	{
-	    "type": "string"
-
-	},
-	"eudk_script_language_select" :
-	{
-	    "type": "array",
-	    "format": "select",
-	    "uniqueItems": true,
-	    "items": {
 		"type": "string",
-		"enum": ["LUA","CPP","PYTHON"]
-	    }
+		"description":"Script Laguage valid: LUA CPP"
+
 	},
 	"eudk_script_content": {
 		"type": "string",
@@ -45,6 +30,16 @@
 		    "$ref":"algo-port.json",
 		    "title":"Dataset description"
 		}
+	},
+	"script_description": {
+		"type": "string",
+		"format":"textarea",
+		"description":"Full Description"
+		
+	},
+	"seq":{
+		"type": "integer",
+	    "description":"identifier id"
 	}
     }
 }

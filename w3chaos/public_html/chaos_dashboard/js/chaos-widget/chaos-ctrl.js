@@ -15,9 +15,9 @@
   var us_copied;
   var algo_copied;
   var save_obj;
-  var selectedInterface = "";
   var snap_selected = "";
   var node_selected = "";
+  var pather_selected="";
   var node_multi_selected = [];
   var options;
   var node_live_selected = [{}];
@@ -863,12 +863,12 @@
 
   function buildAlgoBody() {
     var html = '<div class="row-fluid">';
-    html += '<div class="statbox purple" onTablet="span4" onDesktop="span3">'
+    /*html += '<div class="statbox purple" onTablet="span4" onDesktop="span3">'
     html += '<h3>Algorithm Type</h3>';
     html += '<select id="classe" size="auto"></select>';
     html += '</div>';
-
-    html += '<div class="statbox purple row-fluid" onTablet="span4" onDesktop="span3">'
+*/
+    html += '<div class="statbox purple row-fluid" onTablet="span8" onDesktop="span6">'
     html += '<div class="span6">'
     html += '<label for="search-algo">Search Algorithms</label><input class="input-xlarge" id="search-algo" title="Search Algorithms" name="search-algo" type="radio" value=true>';
     html += '</div>'
@@ -891,6 +891,12 @@
     items['paste-algo'] = { name: "Paste", icon: "paste" };
     items['delete-algo'] = { name: "Delete", icon: "delete" };
     items['create-instance'] = { name: "Create Instance", icon: "Create" };
+    return items;
+  }
+  function updateInstanceAlgoMenu(cu, name) {
+    var items = {};
+    items['edit-instance'] = { name: "Edit Instance..", icon: "Delete" };
+
     items['delete-instance'] = { name: "Delete Instance", icon: "Delete" };
     return items;
   }
@@ -912,7 +918,7 @@
     html += '</div>';
     return html;
   }*/
-  function generateAlgoTable(cu, template) {
+  function generateAlgoTable(cu, interface, template) {
     var html = '<div class="row-fluid" id="table-space">';
 
     html += '<div class="box span12" id="container-main-table">';
@@ -920,21 +926,48 @@
 
     html += '<table class="table table-bordered" id="main_table-' + template + '">';
     html += '<thead class="box-header">';
-    html += '<tr class="algoMenu">';
-    html += '<th>Name</th>';
-    html += '<th>Description</th>';
-    html += '<th>Language</th>';
-    html += '</tr>';
-    html += '</thead> ';
-    cu.forEach(function (elem) {
-      var name=elem.script_name;
-      var nameid=encodeName(name);
-      html += "<tr class='row_element algoMenu' cuname='" + name + "' id='" +  nameid  + "'>";
-      html += "<td class='name_element'>" +elem.script_name + "</td>";
-      html += "<td>"+ elem.script_description + "</td>";
-      html += "<td>"+ elem.eudk_script_language + "</td></tr>";
-    });
+    if(interface == "algo-instance"){
+      html += '<tr class="algoInstanceMenu">';
+      html += '<th>Instance Name</th>';
+      html += '<th>Algorithm Name</th>';
+      html += '<th>Language</th>';
+      html += '<th>RPC Address</th>';
+      html += '<th>Hostname</th>';
+      html += '<th>Bind Type</th>';
+      html += '<th>Bind Node</th>';
+      html += '<th>Instance seq</th>';
+      html += '</tr>';
+      html += '</thead> ';
+      cu.forEach(function (elem) {
+        var name=elem.instance_name;
+        var nameid=encodeName(name);
+        html += "<tr class='row_element algoInstanceMenu' cuname='" + name + "' id='" +  nameid  + "'>";
+        html += "<td class='name_element'>" +name + "</td>";
+        html += "<td>"+ pather_selected + "</td>";
+        html += "<td>"+ node_name_to_desc[pather_selected].eudk_script_language + "</td>";
 
+        html += "<td>"+ elem.ndk_rpc_addr + "</td>";
+        html += "<td>"+ elem.ndk_host_name + "</td>";
+        html += "<td>"+ elem.script_bind_type + "</td>";
+        html += "<td>"+ elem.script_bind_node + "</td>";
+        html += "<td>"+ elem.instance_seq + "</td></tr>";
+      });
+    } else {
+      html += '<tr class="algoMenu">';
+      html += '<th>Name</th>';
+      html += '<th>Description</th>';
+      html += '<th>Language</th>';
+      html += '</tr>';
+      html += '</thead> ';
+      cu.forEach(function (elem) {
+        var name=elem.script_name;
+        var nameid=encodeName(name);
+        html += "<tr class='row_element algoMenu' cuname='" + name + "' id='" +  nameid  + "'>";
+        html += "<td class='name_element'>" +elem.script_name + "</td>";
+        html += "<td>"+ elem.script_description + "</td>";
+        html += "<td>"+ elem.eudk_script_language + "</td></tr>";
+      });
+  } 
     html += '</table>';
     html += '</div>';
     html += '</div>';
@@ -1047,6 +1080,13 @@
   function algoSave(json){
     jchaos.saveScript(json,function(data){
       console.log("saving script:"+JSON.stringify(json));
+    });
+    
+  }
+
+  function algoSaveInstance(json){
+    jchaos.updateScriptInstance(json,node_name_to_desc[pather_selected],function(data){
+      console.log("saving Instance:"+JSON.stringify(json));
     });
     
 
@@ -1190,6 +1230,7 @@
             var json_editor_value = json_editor.getValue();
             editorFn(json_editor_value);
           }
+          $(this).remove();
     }
   }, {
         text: "download",click: function(e){
@@ -2658,10 +2699,10 @@ function executeAlgoMenuCmd(cmd, opt) {
       format: "tabs"
     }
     editorFn = algoSave;
-    jsonEdit(templ, null);
+    jsonEditWindow("newInstanceName",templ, null);
     return;
   }
-  if (cmd == "del-algo") {
+  if (cmd == "delete-algo") {
 
     confirm("Delete Algorithm", "Your are deleting Algorithm: " + node_selected, "Ok", function () {
      jchaos.rmScript(node_name_to_desc[node_selected],function(data){
@@ -2728,11 +2769,35 @@ function executeAlgoMenuCmd(cmd, opt) {
 
     return;
   }
+  if (cmd == "edit-instance"){
+    var templ = {
+      $ref: "algo-instance.json",
+      format: "tabs"
+    }
+    
+    if(node_name_to_desc[pather_selected]!=null && node_name_to_desc[pather_selected].hasOwnProperty('instances')){
+      var arr=node_name_to_desc[pather_selected].instances;
+      arr.forEach(function(item){
+        if(item.instance_name == node_selected){
+          editorFn = algoSaveInstance;
+          console.log("editing instance: "+node_selected + " of:"+pather_selected + ":"+JSON.stringify(item));
+          var fname=encodeName(node_selected);
+          jsonEditWindow(fname,templ,item);
+        }
+      })
+    }
+   
+    return;
+  }
   if (cmd == "delete-instance") {
-    jchaos.manageInstanceScript(node_selected,node_name_to_desc[node_selected].seq,false,function(data){
-      instantMessage("Delete Instance", "instance of " + node_selected+ "created with name:"+impl_name, 1000);
-
-    });
+    confirm("Delete Algorithm Instance", "Your are deleting Instance Algorithm: " + node_selected + "("+pather_selected+")",  "Ok", function () {
+      jchaos.manageInstanceScript(pather_selected,node_name_to_desc[pather_selected].seq,node_selected,false,function(data){
+        instantMessage("Delete Instance", "instance of " + pather_selected+ "created with name:"+node_selected, 1000);
+  
+      });
+ 
+     }, "Cancel");
+   
     return;
   }
  
@@ -2912,10 +2977,20 @@ function executeAlgoMenuCmd(cmd, opt) {
         
       }
     }
+    if(interface !== "algo-instance"){
     node_list.forEach(function(elem){
       node_name_to_desc[elem.script_name]=elem;
+      var tmp_array=[];
+      jchaos.searchScriptInstance(elem.script_name,"",function(script_inst){
+        for(var key in script_inst){
+          if(script_inst[key] instanceof Array){
+          tmp_array=tmp_array.concat(script_inst[key]);
+        }
+      }
+      node_name_to_desc[elem.script_name]['instances']=tmp_array;
+      });
     });
-    
+  }
     
     /*****
      * 
@@ -2924,7 +2999,7 @@ function executeAlgoMenuCmd(cmd, opt) {
     /**
      * fixed part
      */
-    htmlt = generateAlgoTable(node_list,template);
+    htmlt = generateAlgoTable(node_list,interface,template);
 
 
     $("div.specific-table-" + template).html(htmlt);
@@ -2947,6 +3022,31 @@ function executeAlgoMenuCmd(cmd, opt) {
       build: function ($trigger, e) {
         var algoname = $(e.currentTarget).attr("cuname");
         var cuitem = updateAlgoMenu(algoname);
+        cuitem['sep1'] = "---------";
+
+        cuitem['quit'] = {
+          name: "Quit", icon: function () {
+            return 'context-menu-icon context-menu-icon-quit';
+          }
+        };
+
+        return {
+
+          callback: function (cmd, options) {
+            executeAlgoMenuCmd(cmd, options);
+            return;
+          },
+          items: cuitem
+        }
+      }
+
+
+    });
+    $.contextMenu({
+      selector: '.algoInstanceMenu',
+      build: function ($trigger, e) {
+        var algoname = $(e.currentTarget).attr("cuname");
+        var cuitem = updateInstanceAlgoMenu(algoname);
         cuitem['sep1'] = "---------";
 
         cuitem['quit'] = {
@@ -3133,8 +3233,9 @@ function executeAlgoMenuCmd(cmd, opt) {
   }
 
   function rebuildAlgoInterface(template){
+   
     var search_string=$("#search-chaos").val();
-    var interface=$("#classe option:selected").val();
+  //  var interface=$("#classe option:selected").val();
     var algo_instance =  ($("input[type=radio][name=search-algo]:checked").val()=="true");
     if(algo_instance){
       jchaos.search(search_string, "script", true, function (list_algo) {
@@ -3143,8 +3244,16 @@ function executeAlgoMenuCmd(cmd, opt) {
       }); 
 
   } else {
-    jchaos.searchScriptInstance(interface,search_string,function(list_instances){
-      buildAlgoInterface(list_instances, interface,"algo-instance");
+    if((node_selected!=null) && (node_selected!="")){
+      pather_selected=node_selected;
+    }
+    if(pather_selected == null || pather_selected==""){
+      alert("Please select an algorithm before");
+      return;
+    }
+    jchaos.searchScriptInstance(node_selected,search_string,function(list_instances){
+    
+      buildAlgoInterface(list_instances, "algo-instance",template);
 
     });
   }
@@ -3156,28 +3265,48 @@ function executeAlgoMenuCmd(cmd, opt) {
     var interface = $("#classe option:selected").val();
     var algos=[];
     var algos_names=[];
-    jchaos.search(search_string, "script", true, function (list_algo) {
+    /*jchaos.search(search_string, "script", true, function (list_algo) {
       for(var key in list_algo){
         if(list_algo[key] instanceof Array){
-          algo=algo.concat(list_algo[key]);
-          if(list_algo[key].hasOwnProperty("script_name")){
-            algos_names.push(list_algo[key].script_name)
-          }
+          algos=algos.concat(list_algo[key]);
+         
         }
       }
-      element_sel('#classe',algos_names, 1);
+      algos.forEach(function(elem){
+        if(elem.hasOwnProperty("script_name")){
+          algos_names.push(elem.script_name)
+        }
+      });
+      element_sel('#classe',algos_names, 0);
 
     });
-     
+     */
+
     if ($radio.is(":checked") === false) {
       $radio.filter("[value=true]").prop('checked', true);
     }
 
-    $("#classe").change(function () {
+  /*  $("#classe").change(function () {
       rebuildAlgoInterface(template);
-    });
+    });*/
     $("#search-chaos").keypress(function (e) {
       if (e.keyCode == 13) {
+        algos_names=[];
+        algos=[];
+        jchaos.search(search_string, "script", true, function (list_algo) {
+          for(var key in list_algo){
+            if(list_algo[key] instanceof Array){
+              algos=algos.concat(list_algo[key]);
+            }
+          }
+          algos.forEach(function(elem){
+            if(elem.hasOwnProperty("script_name")){
+              algos_names.push(elem.script_name)
+            }
+          });
+          element_sel('#classe',algos_names, 0);
+    
+        });
         rebuildAlgoInterface(template);
       } 
       //var tt =prompt('type value');
