@@ -154,8 +154,9 @@ int ProducerRegisterJsonApi::execute(std::vector<std::string>& api_tokens,
 
 	//close array for all device description
 	cu_dataset.finalizeArrayForKey(ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION);
-	cu_dataset.addInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID,(int64_t)0);
-
+    if(!cu_dataset.hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID)){
+        cu_dataset.addInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID,(int64_t)0);
+      }
     mds_registration_pack.addCSDataValue(ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION, cu_dataset);
     mds_registration_pack.addStringValue(NodeDefinitionKey::NODE_TYPE, NodeType::NODE_TYPE_CONTROL_UNIT);
 	DEBUG_CODE(PRA_LDBG << mds_registration_pack.getJSONString());

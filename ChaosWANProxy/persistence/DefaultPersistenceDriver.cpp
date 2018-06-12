@@ -235,6 +235,9 @@ int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
     }
     if(!new_dataset->hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID)){
         new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID,i_cuid->second.pckid++ );
+    } else {
+       // to evaluate push rate
+       i_cuid->second.pckid= new_dataset->getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
     }
     if(!new_dataset->hasKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID)){
         new_dataset->addInt64Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID,i_cuid->second.runid );
