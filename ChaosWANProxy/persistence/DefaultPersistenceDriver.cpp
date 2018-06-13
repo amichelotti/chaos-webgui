@@ -479,8 +479,13 @@ int DefaultPersistenceDriver::queryMetrics(const std::string& start,const std::s
                                         tmp.value=w->getInt32ElementAtIndex(cnt);
                                         res[metric_name].push_back(tmp);
                                     }
+
                                     if(w->isInt64ElementAtIndex(cnt)){
                                         tmp.value=w->getInt64ElementAtIndex(cnt);
+                                        res[metric_name].push_back(tmp);
+                                    }
+                                    if(w->isBoolElementAtIndex(cnt)){
+                                        tmp.value=w->getBoolElementAtIndex(cnt);
                                         res[metric_name].push_back(tmp);
                                     }
                                 }
@@ -488,6 +493,11 @@ int DefaultPersistenceDriver::queryMetrics(const std::string& start,const std::s
                                 tmp.idx=0;
                                 if(ds->isDoubleValue(*j)){
                                     tmp.value=ds->getDoubleValue(*j);
+                                    res[metric_name].push_back(tmp);
+
+                                }
+                                if(ds->isBoolValue(*j)){
+                                    tmp.value=ds->getBoolValue(*j);
                                     res[metric_name].push_back(tmp);
 
                                 }

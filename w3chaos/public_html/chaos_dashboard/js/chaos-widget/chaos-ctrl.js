@@ -4671,7 +4671,7 @@ function executeAlgoMenuCmd(cmd, opt) {
                                     }
 
                                   } else {
-                                    chart.series[cnt].addPoint([ts, tmp], false, false);
+                                    chart.series[cnt].addPoint([ts, Number(tmp)], false, false);
 
                                   }
                                 }
