@@ -1453,7 +1453,7 @@
 
 
           cuitem['plot-x'] = { name: "Plot Array(" + portarray + ") " + portdir + "/" + portname + "[] on X" };
-          cuitem['plotM-y'] = { name: "Plot Array(" + portarray + ") " + portdir + "/" + portname + "[] on Y" };
+          cuitem['plot-y'] = { name: "Plot Array(" + portarray + ") " + portdir + "/" + portname + "[] on Y" };
           cuitem['plot-histo'] = { name: "Histogram Array(" + portarray + ") " + portdir + "/" + portname + "[] on X" };
 
         }
@@ -4651,7 +4651,7 @@ function executeAlgoMenuCmd(cmd, opt) {
                               data.Y.forEach(function (ds) {
                                 if (ds.hasOwnProperty(variable)) {
                                   var ts = data.X[ele_count++];
-                                  var tmp = Number(ds[variable]);
+                                  var tmp = ds[variable];
 
                                   if (index != null) {
                                     if (index == "-1") {
