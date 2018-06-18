@@ -5018,7 +5018,7 @@ function executeAlgoMenuCmd(cmd, opt) {
           });
         });
       }
-      if ((sel == "graphs") && config.hasOwnProperty('graphs') && (config.graphs instanceof Array)) {
+      if ((sel == "graphs") && config.hasOwnProperty('graphs') && (config.graphs instanceof Object)) {
         jchaos.variable("highcharts", "set", config.graphs, function (s) {
           console.log("restoring graphs:" + JSON.stringify(config.graphs));
           high_graphs = config.graph;
