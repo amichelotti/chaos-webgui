@@ -416,11 +416,12 @@ chaos::common::data::CDWShrdPtr DefaultPersistenceDriver::searchMetrics(const st
     return ret;
 }
 
-void allocateMetrics(chaos::common::data::CDWShrdPtr ds,std::map<std::string,std::vector<std::string> >::iterator i,metrics_results_t& res){
-  uint64_t ts=0;
-  if(ds->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
+void allocateMetrics(uint64_t ts,chaos::common::data::CDWShrdPtr ds,std::map<std::string,std::vector<std::string> >::iterator i,metrics_results_t& res,int limit){
+  //uint64_t ts=0;
+ /* if(ds->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
     ts=ds->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
-  }
+  }*/
+
 
     for(std::vector<std::string>::iterator j=i->second.begin();j!=i->second.end();j++){
         if(ds->hasKey(*j)){
@@ -429,7 +430,16 @@ void allocateMetrics(chaos::common::data::CDWShrdPtr ds,std::map<std::string,std
             std::string metric_name=i->first+"/"+*j;
             if(ds->isVector(*j)){
                 chaos::common::data::CMultiTypeDataArrayWrapper*w =ds->getVectorValue(*j);
-                for(int cnt=0;cnt<w->size();cnt++){
+                int step=1;
+                int size=w->size();
+                if(w->size()>limit){
+                    step=(w->size()-limit)/limit;
+                    if(step==0){
+                        step=1;
+                        size=limit;
+                    }
+                }
+                for(int cnt=0;cnt<size;cnt+=step){
                     tmp.idx=cnt;
                     if(w->isDoubleElementAtIndex(cnt)){
                         tmp.value=w->getDoubleElementAtIndex(cnt);
@@ -515,7 +525,7 @@ int DefaultPersistenceDriver::queryMetrics(const std::string& start,const std::s
                 CDataWrapper* dss;
                 getLastDataset(dst,&dss);
                 ds.reset(dss);
-                allocateMetrics(ds,i,res);
+                allocateMetrics(start_t,ds,i,res,limit);
                 return ret;
                 // go live
             }
@@ -525,7 +535,11 @@ int DefaultPersistenceDriver::queryMetrics(const std::string& start,const std::s
                 int cnt=0;
                 while(pnt->hasNext()&& cnt++<limit){
                     chaos::common::data::CDWShrdPtr ds(pnt->next());
-                    allocateMetrics(ds,i,res);
+                    if(ds->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
+                        start_t=ds->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
+                    }
+
+                    allocateMetrics(start_t,ds,i,res,limit);
                 }
                 ioLiveDataDriver->releaseQuery(pnt);
             }
