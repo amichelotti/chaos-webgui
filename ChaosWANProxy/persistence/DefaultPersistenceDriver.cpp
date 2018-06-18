@@ -509,7 +509,7 @@ int DefaultPersistenceDriver::queryMetrics(const std::string& start,const std::s
             int type =HumanTodatasetType(dir);
             std::string dst=cuname+chaos::datasetTypeToPostfix(type);
 
-            if((end_t - start_t )<1000){
+            if((end_t - start_t )<=1000){
 	      DPD_LDBG << " perform LIVE query to:"<<dst<<" start:"<<start_t<<" end:"<<end_t<<" limit:"<<limit;
                 chaos::common::data::CDWShrdPtr ds;
                 CDataWrapper* dss;
