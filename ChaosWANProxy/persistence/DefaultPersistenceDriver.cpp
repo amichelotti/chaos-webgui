@@ -236,8 +236,8 @@ int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
     if(!new_dataset->hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID)){
         new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID,i_cuid->second.pckid++ );
     } else {
-       // to evaluate push rate
-       i_cuid->second.pckid= new_dataset->getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
+        // to evaluate push rate
+        i_cuid->second.pckid= new_dataset->getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
     }
     if(!new_dataset->hasKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID)){
         new_dataset->addInt64Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID,i_cuid->second.runid );
@@ -359,7 +359,7 @@ void DefaultPersistenceDriver::searchMetrics(const std::string&search_string,Cha
                         std::string metric=*i+"/"+chaos::datasetTypeToHuman(dt[cnt])+"/"+*ii;
                         metrics.push_back(metric);
                     }
-            }
+                }
             }
 
         }
@@ -417,11 +417,10 @@ chaos::common::data::CDWShrdPtr DefaultPersistenceDriver::searchMetrics(const st
 }
 
 void allocateMetrics(uint64_t ts,chaos::common::data::CDWShrdPtr ds,std::map<std::string,std::vector<std::string> >::iterator i,metrics_results_t& res,int limit){
-  //uint64_t ts=0;
- /* if(ds->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
+    //uint64_t ts=0;
+    /* if(ds->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
     ts=ds->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
   }*/
-
 
     for(std::vector<std::string>::iterator j=i->second.begin();j!=i->second.end();j++){
         if(ds->hasKey(*j)){
@@ -429,7 +428,7 @@ void allocateMetrics(uint64_t ts,chaos::common::data::CDWShrdPtr ds,std::map<std
             tmp.milli_ts=ts;
             std::string metric_name=i->first+"/"+*j;
             if(ds->isVector(*j)){
-                chaos::common::data::CMultiTypeDataArrayWrapper*w =ds->getVectorValue(*j);
+               ChaosUniquePtr<chaos::common::data::CMultiTypeDataArrayWrapper> w(ds->getVectorValue(*j));
                 int step=1;
                 int size=w->size();
                 if(w->size()>limit){
@@ -490,6 +489,7 @@ int DefaultPersistenceDriver::queryMetrics(const std::string& start,const std::s
     uint64_t start_t=chaos::common::utility::TimingUtil::getTimestampFromString(start,true);
     uint64_t end_t=chaos::common::utility::TimingUtil::getTimestampFromString(end,true);
     std::map<std::string,std::vector<std::string> > accesses;
+    res.clear();
     for ( int index = 0; index < metrics_name.size(); ++index ){
         std::string tname=metrics_name[index];
         DPD_LDBG << "Target:"<<tname;
@@ -520,16 +520,19 @@ int DefaultPersistenceDriver::queryMetrics(const std::string& start,const std::s
             std::string dst=cuname+chaos::datasetTypeToPostfix(type);
 
             if((end_t - start_t )<=1000){
-	      DPD_LDBG << " perform LIVE query to:"<<dst<<" start:"<<start_t<<" end:"<<end_t<<" limit:"<<limit;
-                chaos::common::data::CDWShrdPtr ds;
-                CDataWrapper* dss;
-                getLastDataset(dst,&dss);
-                ds.reset(dss);
-                allocateMetrics(start_t,ds,i,res,limit);
+                DPD_LDBG << " perform LIVE query to:"<<dst<<" start:"<<start_t<<" end:"<<end_t<<" limit:"<<limit;
+                CDataWrapper* dss=NULL;
+                if(getLastDataset(dst,&dss)==0){
+                    if(dss){
+                       ChaosSharedPtr<CDataWrapper>ds(dss);
+
+                        allocateMetrics(start_t,ds,i,res,limit);
+                    }
+                }
                 return ret;
                 // go live
             }
-	    DPD_LDBG << " perform query to:"<<dst<<" start:"<<start_t<<" end:"<<end_t<<" limit:"<<limit;
+            DPD_LDBG << " perform query to:"<<dst<<" start:"<<start_t<<" end:"<<end_t<<" limit:"<<limit;
             chaos::common::io::QueryCursor *pnt=ioLiveDataDriver->performQuery(dst,start_t,end_t,100);
             if(pnt ){
                 int cnt=0;
