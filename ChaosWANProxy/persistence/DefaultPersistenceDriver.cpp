@@ -123,7 +123,7 @@ void DefaultPersistenceDriver::addServerList(const std::vector<std::string>& _cd
         if(tmp_data_handler!=NULL){
             ChaosUniquePtr<chaos::common::data::CDataWrapper> best_available_da_ptr(tmp_data_handler);
             DPD_LDBG <<best_available_da_ptr->getJSONString();
-            ChaosUniquePtr<chaos::common::data::CMultiTypeDataArrayWrapper> liveMemAddrConfig(best_available_da_ptr->getVectorValue(DataServiceNodeDefinitionKey::DS_DIRECT_IO_FULL_ADDRESS_LIST));
+            ChaosSharedPtr<chaos::common::data::CMultiTypeDataArrayWrapper> liveMemAddrConfig=best_available_da_ptr->getVectorValue(DataServiceNodeDefinitionKey::DS_DIRECT_IO_FULL_ADDRESS_LIST);
             if(liveMemAddrConfig.get()){
                 size_t numerbOfserverAddressConfigured = liveMemAddrConfig->size();
                 for ( int idx = 0; idx < numerbOfserverAddressConfigured; idx++ ){
@@ -387,15 +387,13 @@ chaos::common::data::CDWShrdPtr DefaultPersistenceDriver::searchMetrics(const st
 
                 if(out && (out->hasKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION))&&(out->isCDataWrapperValue(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION))){
                     chaos::common::data::CDWUniquePtr ds(out->getCSDataValue(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION));
-                    chaos::common::data::CMultiTypeDataArrayWrapper*w =ds->getVectorValue(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION);
+                    ChaosSharedPtr<chaos::common::data::CMultiTypeDataArrayWrapper> w =ds->getVectorValue(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION);
                     for(int idx=0;idx<w->size();idx++){
                         chaos::common::data::CDWUniquePtr ws(w->getCDataWrapperElementAtIndex(idx));
                         ret->appendCDataWrapperToArray(*(ws.get()));
                     }
                     ret->finalizeArrayForKey(*i);
-                    if(w){
-                        delete w;
-                    }
+
                     //          DEBUG_CODE(DPD_LDBG << "adding:"<<ret->getCompliantJSONString());
 
                     /*if(ds->hasKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION)&&ds->isVector(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION) ){
@@ -428,7 +426,7 @@ void allocateMetrics(uint64_t ts,chaos::common::data::CDWShrdPtr ds,std::map<std
             tmp.milli_ts=ts;
             std::string metric_name=i->first+"/"+*j;
             if(ds->isVector(*j)){
-               ChaosUniquePtr<chaos::common::data::CMultiTypeDataArrayWrapper> w(ds->getVectorValue(*j));
+               ChaosSharedPtr<chaos::common::data::CMultiTypeDataArrayWrapper> w=ds->getVectorValue(*j);
                 int step=1;
                 int size=w->size();
                 if(w->size()>limit){
