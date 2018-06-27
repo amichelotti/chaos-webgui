@@ -359,6 +359,8 @@ void DefaultPersistenceDriver::searchMetrics(const std::string&search_string,Cha
                         std::string metric=*i+"/"+chaos::datasetTypeToHuman(dt[cnt])+"/"+*ii;
                         metrics.push_back(metric);
                     }
+                    free(value);
+                    delete(tmp);
                 }
             }
 
