@@ -3555,7 +3555,7 @@ function executeAlgoMenuCmd(cmd, opt) {
             //$("#status_" + name_id).html('<a id="fatalError_' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" onclick="return show_fatal_error(this.id);"><i style="cursor:pointer;" class="material-icons rosso">error</i></a>');
             $("#" + name_id + "_health_status").html('<a id="Error-' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" ><i style="cursor:pointer;" class="material-icons rosso">cancel</i></a>');
 
-            $("Error-" + name_id).on("click", function () {
+            $("#Error-" + name_id).on("click", function () {
               $("#name-FE-device").html(el.health.ndk_uid);
               $("#status_message").html(status);
 
