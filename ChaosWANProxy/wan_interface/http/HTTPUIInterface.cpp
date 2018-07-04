@@ -322,8 +322,9 @@ int HTTPUIInterface::process(struct mg_connection *connection) {
                 return 1;
             }
             char decoded[connection->content_len +2];
-            mg_url_decode(connection->content, connection->content_len+2,decoded, connection->content_len+2,0);
-            std::string content_data(decoded, connection->content_len);
+            connection->content[connection->content_len]=0;
+            mg_url_decode(connection->content, connection->content_len,decoded, connection->content_len,0);
+            std::string content_data(decoded);
             HTTWAN_INTERFACE_DBG_<<LOG_CONNECTION<<"POST:"<<content_data;
             request=mappify(content_data);
         } else {
