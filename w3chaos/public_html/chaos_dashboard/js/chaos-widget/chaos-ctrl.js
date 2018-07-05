@@ -2560,7 +2560,25 @@
       });
       return;
     }
-    if (cmd.includes("new-nt_control_unit")) {
+    if(cmd =="new-nt_control_unit-fromfile"){
+      getFile("LOAD JSON CU description", "select the JSON to load", function (config) {
+        //console.log("loaded:"+JSON.stringify(data));
+        confirm("Add CU " + config.cu_desc.ndk_uid, "Add CU to " + node_selected + "?", "Add", function () {
+          if (config.hasOwnProperty("cu_desc")) {
+            var templ = {
+              $ref: "cu.json",
+              format: "tabs"
+            }
+            editorFn = newCuSave;
+            var tmp = config.cu_desc;
+            tmp.ndk_parent=node_selected;
+            jsonEdit(templ, tmp);
+          }
+        }, "Cancel", function () {
+        });
+
+      });
+    } else if (cmd.includes("new-nt_control_unit")) {
       var regex = /new-nt_control_unit-(.*)$/;
       var match = regex.exec(cmd);
       if (match != null) {
@@ -5788,6 +5806,8 @@ function executeAlgoMenuCmd(cmd, opt) {
   }
   function cuCreateSubMenu() {
     var items = {};
+    items["new-nt_control_unit-fromfile"] = { name: "CU from file..." };
+
     cu_templates = jchaos.variable("cu_templates", "get", null, null);
     for (var item in cu_templates) {
       items["new-nt_control_unit-" + item] = { name: "" + item };
