@@ -302,7 +302,8 @@ int HTTPUIInterface::process(struct mg_connection *connection) {
         //remove the prefix and tokenize the url
         if(method == "GET"){
             if(connection->query_string== NULL){
-                HTTWAN_INTERFACE_ERR_<<LOG_CONNECTION<<"Bad query GET params";
+                // sometimes web browser ask for favicon
+             //   HTTWAN_INTERFACE_ERR_<<LOG_CONNECTION<<"Bad query GET params";
                 response.setCode(200);
                 flush_response(connection, &response);
                 return 1;
@@ -323,7 +324,7 @@ int HTTPUIInterface::process(struct mg_connection *connection) {
             }
             char decoded[connection->content_len +2];
             connection->content[connection->content_len]=0;
-            mg_url_decode(connection->content, connection->content_len,decoded, connection->content_len,0);
+            mg_url_decode(connection->content, connection->content_len+1,decoded, connection->content_len+1,0);
             std::string content_data(decoded);
             HTTWAN_INTERFACE_DBG_<<LOG_CONNECTION<<"POST:"<<content_data;
             request=mappify(content_data);
