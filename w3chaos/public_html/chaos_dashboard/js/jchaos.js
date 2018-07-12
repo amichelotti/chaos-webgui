@@ -648,7 +648,7 @@
 					}
 				}
 				if (ret && (datav.end ==0)) {
-					jchaos.getHistoryBase(devs, opt, datav.seqid,datav.runid, result, handleFunc);
+					jchaos.getHistoryBase(devs, opt, datav.seqid+1,datav.runid, result, handleFunc);
 				}
 			});
 		}

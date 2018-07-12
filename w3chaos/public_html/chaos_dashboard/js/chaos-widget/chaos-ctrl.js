@@ -425,9 +425,12 @@
   }
   function copyToClipboard(testo) {
     // $("#inputClipBoard").focus();
-    $("#inputClipBoard").val(testo);
-    $("#inputClipBoard").select();
-    document.execCommand("Copy");
+    //var $temp=$("<input>");
+    //$("body").append($temp);
+    //$temp.val(testo).select();
+    $("#inputClipBoard").val(testo).select();
+    //document.execCommand("Copy");
+    //$temp.remove();
 
     /*
     var $temp = $("<div>");
@@ -3171,7 +3174,7 @@ function executeAlgoMenuCmd(cmd, opt) {
     });
     $("#search-chaos").keypress(function (e) {
       if (e.keyCode == 13) {
-        var interface = $("#classe option:selected").val();
+        var interface = $("#classe").val();
         search_string = $(this).val();
         var alive = $("input[type=radio][name=search-alive]:checked").val()
 
@@ -3229,7 +3232,7 @@ function executeAlgoMenuCmd(cmd, opt) {
 
     $("#search-chaos").keypress(function (e) {
       if (e.keyCode == 13) {
-        interface = $("#classe option:selected").val();
+        interface = $("#classe").val();
         search_string = $(this).val();
         var alive = $("input[type=radio][name=search-alive]:checked").val();
         list_cu = interface2NodeList(interface, alive);
@@ -6289,7 +6292,7 @@ function executeAlgoMenuCmd(cmd, opt) {
         var html = "";
         html += buildNodeBody();
         html += generateEditJson();
-        html += '<input type="text" id="inputClipBoard" value=" "/>';
+        html += '<input id="inputClipBoard" value=" "/>';
 
         html += '<div class="specific-table-node"></div>';
 
