@@ -2499,7 +2499,7 @@
       jchaos.node(node_selected, "get", "cu", "", null, function (data) {
         if (data != null) {
           cu_copied = data;
-          copyToClipboard(JSON.stringify(data));
+        //  copyToClipboard(JSON.stringify(data));
         }
       });
       return;
@@ -3229,7 +3229,7 @@ function executeAlgoMenuCmd(cmd, opt) {
 
     $("#search-chaos").keypress(function (e) {
       if (e.keyCode == 13) {
-        interface = $("#classe option:selected").val();
+        interface = $("#classe").val();
         search_string = $(this).val();
         var alive = $("input[type=radio][name=search-alive]:checked").val();
         list_cu = interface2NodeList(interface, alive);
