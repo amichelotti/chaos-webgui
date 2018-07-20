@@ -2195,8 +2195,38 @@
     if (cmd == "quit") {
       return;
     }
+    if(cmd=="snapshot-cu"){
+      var instUnique = (new Date()).getTime();
 
-    if (cmd == "load") {
+      getEntryWindow("Snapshotting","Snap Name", "NONAME_"+instUnique,"Create",function(inst_name){
+        jchaos.snapshot(inst_name, "create", node_multi_selected, function () {
+          instantMessage("Snapshot \""+inst_name+"\"", " created ", 1000);
+  
+        });
+       
+  
+      },"Cancel");  
+     
+    } else if(cmd=="tag-cu"){
+      getNEntryWindow("Tagging",["Tag Name","Duration Type","Duration"], ["NONAME_"+instUnique,"1","1"],"Create",function(inst_name){
+        if(Number(inst_name[1])==1){
+          jchaos.tag(inst_name[0], node_multi_selected,Number(inst_name[1]),Number(inst_name[2]), function () {
+          
+            instantMessage("Creating CYCLE Tag \""+inst_name[0]+"\"", " during "+inst_name[2] + " cycles", 3000);
+    
+          });    
+        } else if(Number(inst_name[1])==2){
+          jchaos.tag(inst_name[0], node_multi_selected,Number(inst_name[1]),Number(inst_name[2]), function () {
+          
+            instantMessage("Creating TIME Tag \""+inst_name[0]+"\"", " during: "+inst_name[2]+ " ms", 3000);
+    
+          });
+        }
+        
+       
+  
+      },"Cancel");  
+    } else if (cmd == "load") {
 
       jchaos.loadUnload(node_multi_selected, true, function (data) {
         instantMessage("LOAD ", "Command:\"" + cmd + "\" sent", 1000);
@@ -5743,6 +5773,56 @@ function executeAlgoMenuCmd(cmd, opt) {
 
   }
 
+  function getNEntryWindow(hmsg, def_msg_v,def_text_v, butyes, yeshandle, cancelText){
+    var ret = true;
+    var htmp="";
+    if(def_msg_v instanceof Array){
+      var cnt=0;
+      def_msg_v.forEach(function(item){
+        htmp+='<div><h6>'+item+'</h6><input type="text" id="getEntryWindow_name_'+cnt+'" value='+def_text_v[cnt]+' class="text ui-widget-content ui-corner-all"></div>';
+        cnt++;
+      });
+    } else {
+      return;
+    }
+    $('<div></div>').appendTo('body')
+      .html(htmp)
+      .dialog({
+        modal: true, title: hmsg, zIndex: 10000, autoOpen: true,
+        width: 'auto', resizable: false,
+        buttons: [
+          {
+            id: "confirm-yes",
+            text: butyes,
+            click: function (e) {
+              if (typeof yeshandle === "function") {
+                var answ=[];
+                var cnt=0;
+                def_text_v.forEach(function(item){
+                  answ.push($("#getEntryWindow_name_"+cnt).val());
+                  cnt++;
+                });
+                yeshandle(answ);
+              }
+              $(this).dialog("close");
+            }
+          },
+          {
+            id: "confirm-no",
+            text: cancelText,
+            click: function (e) {
+              if (typeof nohandle === "function") {
+                nohandle();
+              }
+              $(this).dialog("close");
+            }
+          }],
+        close: function (event, ui) {
+          $(this).remove();
+        }
+      });
+
+  }
   function confirm(hmsg, msg, butyes, yeshandle, butno, nohandle) {
     var ret = true;
     $('<div></div>').appendTo('body')
@@ -5883,6 +5963,8 @@ function executeAlgoMenuCmd(cmd, opt) {
 
         if (status == 'Start') {
           items['stop'] = { name: "Stop", icon: "stop" };
+          items['snapshot-cu']= { name: "Take Snapshot", icon: "snapshot" };
+          items['tag-cu']= { name: "Tag for...", icon: "tag" };
         } else if (status == 'Stop') {
           items['start'] = { name: "Start", icon: "start" };
           items['deinit'] = { name: "Deinit", icon: "deinit" };

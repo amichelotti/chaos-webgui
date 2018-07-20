@@ -156,9 +156,29 @@
 			var ret = jchaos.basicPost("MDS", param, handleFunc/*function(datav){handleFunc(datav);}*/);
 			return ret;
 		}
+		/**
+		 * Start tagging a list of nodes for an interval of given time, expressed in cycles or ms
+		 * @param {*} _tagname tag name
+		 * @param {*} _node_list a list of nodes
+		 * @param {*} _tag_type 1 means cycles 2 means ms time
+		 * @param {*} _tag_value tag value
+		 */
+		jchaos.tag= function(_tagname,_node_list,_tag_type,_tag_value,handleFunc){
+			var value={};
+			value['dsndk_history_burst_tag']=_tagname;
+			value['dsndk_history_burst_type']=_tag_type;
+			value['dsndk_history_burst_value']=_tag_value;
 
+			if (_node_list instanceof Array) {
+				value['ndk_uid']=_node_list;
+			} else {
+				value['ndk_uid']=[_node_list];
+			}
+			return jchaos.snapshot("","burst","",JSON.stringify(value),handleFunc);
+		}
 		jchaos.snapshot = function (_name, _what, _node_list, value_, handleFunc) {
 			var opt = {};
+			
 			if (_name instanceof Array) {
 				opt['names'] = _name;
 			} else {
