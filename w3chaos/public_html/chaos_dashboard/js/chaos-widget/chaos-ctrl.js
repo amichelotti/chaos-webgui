@@ -2070,6 +2070,16 @@
 
           });
           return;
+        } else if (cmd == "start") {
+          jchaos.node(cuselection, "start", "cu", null, function (data) {
+            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
+
+          });
+        } else if (cmd == "stop") {
+          jchaos.node(cuselection, "stop", "cu", null, function (data) {
+            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
+
+          });
         }
 
         jchaos.sendCUCmd(cuselection, cmd, "", function (data) {
@@ -2249,6 +2259,18 @@
     } else if (cmd == "deinit") {
       jchaos.node(node_multi_selected, "deinit", "cu", null, null, function (data) {
         instantMessage("DEINIT ", "Command:\"" + cmd + "\" sent", 1000);
+        //    $('.context-menu-list').trigger('contextmenu:hide')
+
+      });
+    } else if (cmd == "start") {
+      jchaos.node(node_multi_selected, "start", "cu", null, null, function (data) {
+        instantMessage("START ", "Command:\"" + cmd + "\" sent", 1000);
+        //    $('.context-menu-list').trigger('contextmenu:hide')
+
+      });
+    } else if (cmd == "stop") {
+      jchaos.node(node_multi_selected, "stop", "cu", null, null, function (data) {
+        instantMessage("STOP ", "Command:\"" + cmd + "\" sent", 1000);
         //    $('.context-menu-list').trigger('contextmenu:hide')
 
       });

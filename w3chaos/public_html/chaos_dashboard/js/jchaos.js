@@ -68,7 +68,8 @@
 								try {
 									handleFunc(json);
 								} catch(err){
-									var str = "handler function error:'"+err+"'";
+									var str = "handler function error:'"+err+"' url:'"+url+"' post data:'"+params+"' response:'"+request.responseText+"'";
+									console.trace("trace:");
 									console.log(str);
 								}
 							}
@@ -178,7 +179,6 @@
 		}
 		jchaos.snapshot = function (_name, _what, _node_list, value_, handleFunc) {
 			var opt = {};
-			
 			if (_name instanceof Array) {
 				opt['names'] = _name;
 			} else {
@@ -375,23 +375,19 @@
 			var cnt = 0;
 			jchaos.search("", "cu", true, function (data) {
 				cu_to_search = data;
-				cu_to_search.forEach(function (elem) {
-					jchaos.getChannel(elem, 4, function (data) {
-						cnt++;
-						if (data[0].hasOwnProperty('nh_status')) {
-							if (data[0].nh_status == status_to_search) {
-								cu_stats.push(elem)
-							}
-
-						}
-						if (cnt == cu_to_search.length) {
-							handleFunc(cu_stats);
+				jchaos.getChannel(cu_to_search, 4, function (ds) {
+				//	console.log("status:"+JSON.stringify(ds));
+					ds.forEach(function(elem){
+						if (elem.nh_status == status_to_search) {
+							cu_stats.push(elem.ndk_uid)
 						}
 					});
+					handleFunc(cu_stats);
+
 				});
 
-			});
-
+					});
+		
 		}
 		jchaos.convertArray2CSV = function (devs) {
 			var dev_array = "";
@@ -456,7 +452,7 @@
 				"what": "set",
 				"value": { "properties": [{ "cudk_bypass_state": value }] }
 			};
-			jchaos.mdsBase("node", opt, handleFunc);
+			return jchaos.mdsBase("node", opt, handleFunc);
 		}
 
 		jchaos.loadUnload = function (dev, value, handleFunc) {
@@ -668,7 +664,7 @@
 					}
 				}
 				if (ret && (datav.end ==0)) {
-					jchaos.getHistoryBase(devs, opt, datav.seqid+1,datav.runid, result, handleFunc);
+					jchaos.getHistoryBase(devs, opt, datav.seqid,datav.runid, result, handleFunc);
 				}
 			});
 		}
@@ -680,34 +676,29 @@
 		 * okhandle is called if success
 		 * nokhandle if fails
 		 * */
-		jchaos.checkLive = function (devlist, retry, checkFreq, checkFunc, okhandle, nokhandle) {
-			tot_ok = 0;
-			console.log(" checking Live of " + devlist + " every:" + checkFreq + " ms");
-
-			devlist.forEach(function (elem) {
-				jchaos.getChannel(elem, -1, function (data) {
-					//console.log(" - "+elem+ " ->"+JSON.stringify(data));
-					if (checkFunc(data[0])) {
+		jchaos.checkLive = function (str,devlist, retry, checkFreq, checkFunc, okhandle, nokhandle) {
+			var tot_ok = 0;
+			//console.log(" checking Live of " + devlist + " every:" + checkFreq + " ms");
+			jchaos.getChannel(devlist, -1, function (ds) {
+				ds.forEach(function (elem) {
+					if (checkFunc(elem)) {
 					    tot_ok++;
-					    console.log("\t+ " + data[0].health.ndk_uid + " ok " + tot_ok + "/" + devlist.length);
+					    console.log(str+"\t+ " + elem.health.ndk_uid + " ok " + tot_ok + "/" + devlist.length);
 					} else {
-					    console.log("\t- " + data[0].health.ndk_uid + " NOT YET " + tot_ok + "/" + devlist.length);
+					    console.log(str+"\t- " + elem.health.ndk_uid + " NOT YET " + tot_ok + "/" + devlist.length);
 					}
-					
-
-
 				});
 			});
-
+			
 			setTimeout(function () {
 				if (tot_ok == devlist.length) {
 					okhandle();
 				} else if (--retry > 0) {
-					console.log("retry check... " + retry);
+					console.log(str+" retry check... " + retry);
 
-					jchaos.checkLive(devlist, retry, checkFreq, checkFunc, okhandle, nokhandle);
+					jchaos.checkLive(str,devlist, retry, checkFreq, checkFunc, okhandle, nokhandle);
 				} else {
-					console.log("expired maximum number of retry...");
+					console.log(str+ " expired maximum number of retry...");
 
 					nokhandle();
 				}
