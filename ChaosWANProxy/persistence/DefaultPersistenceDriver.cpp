@@ -270,12 +270,12 @@ int DefaultPersistenceDriver::getLastDataset(const std::string& producer_key,
                                              chaos::common::data::CDataWrapper **last_dataset) {
     int err = 0;
     uint32_t size = 0;
-    void* result = NULL;
+    char* result = NULL;
     DirectIOChannelsInfo	*next_client = static_cast<DirectIOChannelsInfo*>(connection_feeder.getService());
     if(!next_client) return err;
 
     boost::shared_lock<boost::shared_mutex>(next_client->connection_mutex);
-    next_client->device_client_channel->requestLastOutputData(producer_key, (void**)&result, size);
+    next_client->device_client_channel->requestLastOutputData(producer_key, &result, size);
     *last_dataset = new CDataWrapper(result);
     return err;
 }
