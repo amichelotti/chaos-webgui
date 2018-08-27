@@ -3597,8 +3597,13 @@ function executeAlgoMenuCmd(cmd, opt) {
           }
 
           if (status == 'Start') {
-            $("#" + name_id + "_health_status").html('<i class="material-icons verde">play_arrow</i>');
-
+            
+            if(el.hasOwnProperty('system')&&el.system.hasOwnProperty(cudk_burst_state)&&el.system.cudk_burst_state){
+              $("#" + name_id + "_health_status").html('<i class="material-icons verde">videocam</i>');
+              $("#" + name_id + "_health_status").attr('title',"TAG:'"+el.system.cudk_burst_tag+"'");
+            } else {
+              $("#" + name_id + "_health_status").html('<i class="material-icons verde">play_arrow</i>');
+            }
           } else if (status == 'Stop') {
             $("#" + name_id + "_health_status").html('<i class="material-icons arancione">stop</i>');
           } else if (status == 'Init') {
