@@ -43,7 +43,7 @@
 						var json = JSON.parse(request.responseText);
 						return json;
 					} catch (err) {
-						var str = "jchaos.basicPost Error parsing json '" + err + "' body returned:'" + request.responseText + "'";
+						var str = "jchaos.basicPost Error parsing json '" + err + "' body returned:'" + request.responseText + "' post:'"+params+"'";
 						console.error(str);
 						return null;
 					}
@@ -68,15 +68,15 @@
 								try {
 									handleFunc(json);
 								} catch(err){
-									var str = "handler function error:'"+err+"' url:'"+url+"' post data:'"+params+"' response:'"+request.responseText+"'";
 									console.trace("trace:");
+									var str = "handler function error:'"+err+"' url:'"+url+"' post data:'"+params+"' response:'"+request.responseText+"'";
 									console.log(str);
 								}
 							}
 							return json;
 
 						} catch (err) {
-							var str = "jchaos.basicPost Error parsing json '" + err + "' body returned:'" + request.responseText + "'";
+							var str = "jchaos.basicPost Error parsing json '" + err + "' body returned:'" + request.responseText + "'"+ "' post:'"+params+"'";;
 							//console.error(str);
 							console.log(str);
 							//throw str;
@@ -373,14 +373,17 @@
 			var cu_stats = [];
 			var cu_to_search = [];
 			var cnt = 0;
-			jchaos.search("", "cu", true, function (data) {
+			jchaos.search("", "cu", false, function (data) {
 				cu_to_search = data;
 				jchaos.getChannel(cu_to_search, 4, function (ds) {
 				//	console.log("status:"+JSON.stringify(ds));
 					ds.forEach(function(elem){
-						if (elem.nh_status == status_to_search) {
-							cu_stats.push(elem.ndk_uid)
+						if( elem.hasOwnProperty("nh_status")){
+							if (elem.nh_status == status_to_search) {
+								cu_stats.push(elem.ndk_uid)
+							}
 						}
+						
 					});
 					handleFunc(cu_stats);
 
