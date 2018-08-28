@@ -40,10 +40,12 @@ using namespace chaos::common::utility;
 using namespace chaos::wan_proxy::wan_interface;
 using namespace chaos::wan_proxy::wan_interface::http;
 using namespace mongoose;
+using namespace chaos::common::async_central;
+
 #define API_PREFIX_V1 "/api/v1"
 #define API_PATH_REGEX_V1(p) API_PREFIX_V1 p
 
-#define HTTWANINTERFACE_LOG_HEAD "["<<getName()<<"] - "
+#define HTTWANINTERFACE_LOG_HEAD "[HTTPUIInterface"<< current_index<<"] -"
 #define LOG_CONNECTION "["<<connection->remote_ip<<":"<<std::dec<<connection->remote_port<<"] "
 
 #define HTTWAN_INTERFACE_APP_ INFO_LOG(HTTPUIInterface)
@@ -103,6 +105,11 @@ HTTPUIInterface::HTTPUIInterface(const string& alias):
 }
 
 HTTPUIInterface::~HTTPUIInterface() {}
+
+void  HTTPUIInterface::timeout(){
+        HTTPUIInterface::checkActivity();
+
+}
 
 //inherited method
 void HTTPUIInterface::init(void *init_data) throw(CException) {
@@ -192,6 +199,7 @@ void HTTPUIInterface::start() throw(CException) {
     for(std::vector< ::common::misc::scheduler::Scheduler*>::iterator i=sched_cu_v.begin();i!=sched_cu_v.end();i++){
         (*i)->start();
     }
+	AsyncCentralManager::getInstance()->addTimer(this, 0, CHECK_ACTIVITY_CU);
 
 }
 
@@ -202,6 +210,7 @@ void HTTPUIInterface::stop() throw(CException) {
     for(std::vector< ::common::misc::scheduler::Scheduler*>::iterator i=sched_cu_v.begin();i!=sched_cu_v.end();i++){
         (*i)->stop();
     }
+
 }
 
 //inherited method
@@ -221,6 +230,8 @@ void HTTPUIInterface::deinit() throw(CException) {
         sched_cu_v[cnt]=NULL;
 
     }
+    AsyncCentralManager::getInstance()->removeTimer(this);
+
 }
 
 void HTTPUIInterface::pollHttpServer(struct mg_server *http_server) {
@@ -236,6 +247,7 @@ void HTTPUIInterface::pollHttpServer(struct mg_server *http_server) {
 
 
 void HTTPUIInterface::addDevice(std::string name, ::driver::misc::ChaosController*d) {
+    boost::mutex::scoped_lock l(devio_mutex);
 
     devs[name] = d;
 
@@ -259,7 +271,7 @@ static std::map<std::string, std::string> mappify(std::string const& s)
             }
         }
     } catch( boost::bad_expression & ex){
-        HTTWAN_INTERFACE_ERR_ << ex.what() ;
+        LERR_ << ex.what() ;
     }
 
 
@@ -271,6 +283,8 @@ int HTTPUIInterface::removeDevice(std::string devname){
             HTTWAN_INTERFACE_DBG_<<"* removing \""<<devname<<"\" from scheduler "<<cnt;
         }
     }
+    boost::mutex::scoped_lock l(devio_mutex);
+
     std::map<std::string,::driver::misc::ChaosController*>::iterator i=devs.find(devname);
     if(i!=devs.end()){
         HTTWAN_INTERFACE_DBG_<<"* removing \""<<devname<<"\" from known devices";
@@ -311,7 +325,7 @@ int HTTPUIInterface::process(struct mg_connection *connection) {
             int size_query=strlen(connection->query_string)+2;
             char decoded[size_query];
             mg_url_decode(connection->query_string, size_query,decoded, size_query,0);
-            HTTWAN_INTERFACE_DBG_<<LOG_CONNECTION<<"GET:"<<decoded;
+            HTTWAN_INTERFACE_DBG_<<LOG_CONNECTION<<"GET:\""<<decoded<<"\"";
 
             std::string query=decoded;
             request=mappify(query);
@@ -368,7 +382,7 @@ int HTTPUIInterface::process(struct mg_connection *connection) {
             }
             for(std::vector<std::string>::iterator idevname=dev_v.begin();idevname!=dev_v.end();idevname++){
                 std::string ret;
-                boost::mutex::scoped_lock l(devio_mutex);
+               
 
                 if ((*idevname).empty() || cmd.empty()) {
                     continue;
@@ -403,6 +417,7 @@ int HTTPUIInterface::process(struct mg_connection *connection) {
                         }
                         continue;
                     } else{
+                        HTTWAN_INTERFACE_DBG_<<"* adding device \""<<*idevname<<"\"";
 
                         addDevice(*idevname,controller);
                         sched_cu_v[sched_alloc++%chaos_thread_number]->add(*idevname,controller);
@@ -449,19 +464,18 @@ int HTTPUIInterface::process(struct mg_connection *connection) {
     DEBUG_CODE(execution_time_end = TimingUtil::getTimeStampInMicroseconds();)
             DEBUG_CODE(uint64_t duration = execution_time_end - execution_time_start;)
             DEBUG_CODE(HTTWAN_INTERFACE_DBG_<<LOG_CONNECTION << "Execution time is:" << duration*1.0/1000.0 << " ms";)
-            HTTPUIInterface::checkActivity();
     return 1;//
 
 }
 void HTTPUIInterface::checkActivity(){
     int64_t now=TimingUtil::getTimeStampInMicroseconds();
-    if((now-last_check_activity)<CHECK_ACTIVITY_CU){
+   /* if((now-last_check_activity)<CHECK_ACTIVITY_CU){
         return;
     }
     HTTWAN_INTERFACE_DBG_<<" checking activity after:"<<(1.0*(now-last_check_activity)/1000000.0)<<" s";
     last_check_activity = now;
-    boost::mutex::scoped_lock l(devio_mutex);
-
+    */
+   HTTWAN_INTERFACE_DBG_<<" check activity";
     for(std::map<std::string,::driver::misc::ChaosController*>::iterator i=devs.begin();i!=devs.end();i++){
         if((i->second->lastAccess() >0)){
             int64_t elapsed=(now - (i->second)->lastAccess());

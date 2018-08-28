@@ -41,7 +41,8 @@ namespace chaos {
 			class AbstractWANInterface:
 			public common::utility::NamedService,
 			public common::utility::StartableService,
-			public common::utility::UrlAccessibleService {
+			public common::utility::UrlAccessibleService,
+            protected chaos::common::async_central::TimerHandler {
 				friend class chaos::wan_proxy::ChaosWANProxy;
                 Json::Value						wan_interface_parameter;
                 Json::Reader					json_reader;

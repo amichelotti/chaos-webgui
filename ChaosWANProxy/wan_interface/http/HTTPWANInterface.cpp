@@ -157,6 +157,7 @@ void HTTPWANInterface::start() throw(CException) {
 		it++) {
 		http_server_thread.add_thread(new boost::thread(boost::bind(&HTTPWANInterface::pollHttpServer, this, *it)));
 	}
+
 }
 
 //inherited method

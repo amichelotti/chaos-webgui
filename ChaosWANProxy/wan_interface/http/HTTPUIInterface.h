@@ -40,7 +40,7 @@ namespace chaos {
         }
     }
 
-#define CHECK_ACTIVITY_CU 2*60*1000*1000
+#define CHECK_ACTIVITY_CU 2*60*1000
 #define PRUNE_NOT_ACCESSED_CU 6*60*1000*1000
 
     namespace wan_proxy {
@@ -69,7 +69,6 @@ namespace chaos {
                     int thread_number;
                     int chaos_thread_number;
                     ServerList http_server_list;
-                    
                     boost::atomic<int> thread_index;
                     
                     boost::thread_group http_server_thread;
@@ -97,7 +96,7 @@ namespace chaos {
                     int processRest(mongoose::mg_connection *connection);
 
                 protected:
-                    
+                    void timeout();
                     //inherited method
                     void init(void*) throw(CException);
                     
