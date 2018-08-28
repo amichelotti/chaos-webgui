@@ -40,8 +40,8 @@ namespace chaos {
         }
     }
 
-#define CHECK_ACTIVITY_CU 2*60*1000
-#define PRUNE_NOT_ACCESSED_CU 6*60*1000*1000
+#define CHECK_ACTIVITY_CU 60*1000
+#define PRUNE_NOT_ACCESSED_CU 3*60*1000*1000
 
     namespace wan_proxy {
         namespace wan_interface {

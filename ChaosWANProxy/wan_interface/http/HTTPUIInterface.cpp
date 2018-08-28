@@ -283,10 +283,11 @@ int HTTPUIInterface::removeDevice(std::string devname){
             HTTWAN_INTERFACE_DBG_<<"* removing \""<<devname<<"\" from scheduler "<<cnt;
         }
     }
-    boost::mutex::scoped_lock l(devio_mutex);
 
     std::map<std::string,::driver::misc::ChaosController*>::iterator i=devs.find(devname);
     if(i!=devs.end()){
+        boost::mutex::scoped_lock l(devio_mutex);
+
         HTTWAN_INTERFACE_DBG_<<"* removing \""<<devname<<"\" from known devices";
         delete i->second;
         devs.erase(i);
