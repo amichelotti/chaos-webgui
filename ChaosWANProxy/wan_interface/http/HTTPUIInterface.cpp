@@ -54,7 +54,7 @@ using namespace chaos::common::async_central;
 static const boost::regex REG_API_URL_FORMAT(API_PATH_REGEX_V1("((/[a-zA-Z0-9_]+))*")); //"/api/v1((/[a-zA-Z0-9_]+))*"
 
 std::map<std::string, ::driver::misc::ChaosController*> HTTPUIInterface::devs;
-boost::mutex HTTPUIInterface::devio_mutex;
+ChaosSharedMutex HTTPUIInterface::devio_mutex;
 uint64_t HTTPUIInterface::last_check_activity=0;
 
 /**
@@ -247,7 +247,7 @@ void HTTPUIInterface::pollHttpServer(struct mg_server *http_server) {
 
 
 void HTTPUIInterface::addDevice(std::string name, ::driver::misc::ChaosController*d) {
-    boost::mutex::scoped_lock l(devio_mutex);
+    ChaosWriteLock l(devio_mutex);
 
     devs[name] = d;
 
@@ -286,8 +286,8 @@ int HTTPUIInterface::removeDevice(std::string devname){
 
     std::map<std::string,::driver::misc::ChaosController*>::iterator i=devs.find(devname);
     if(i!=devs.end()){
-        boost::mutex::scoped_lock l(devio_mutex);
-
+      //        boost::mutex::scoped_lock l(devio_mutex);
+        ChaosWriteLock l(devio_mutex);
         HTTWAN_INTERFACE_DBG_<<"* removing \""<<devname<<"\" from known devices";
         delete i->second;
         devs.erase(i);
@@ -384,10 +384,11 @@ int HTTPUIInterface::process(struct mg_connection *connection) {
             for(std::vector<std::string>::iterator idevname=dev_v.begin();idevname!=dev_v.end();idevname++){
                 std::string ret;
                
-
+               
                 if ((*idevname).empty() || cmd.empty()) {
                     continue;
                 }
+                ChaosReadLock l(devio_mutex);
                 if(devs.count(*idevname)){
 
                     controller = devs[*idevname];

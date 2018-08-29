@@ -85,7 +85,7 @@ namespace chaos {
                     int removeDevice(std::string);
                     bool checkForContentType(mongoose::mg_connection *connection,
                                                                const std::string& type);
-                    static boost::mutex devio_mutex;
+                    static ChaosSharedMutex devio_mutex;
                     static uint64_t last_check_activity;
 
                     void checkActivity();

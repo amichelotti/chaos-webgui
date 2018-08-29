@@ -77,10 +77,9 @@ void DefaultPersistenceDriver::init(void *init_data) throw (chaos::CException) {
     if(!ioLiveDataDriver){
         throw chaos::CException(-1, "No LIVE Channel created", "DefaultPersistenceDriver()");
     }
-    CDataWrapper *tmp_data_handler = NULL;
+    ChaosUniquePtr<chaos::common::data::CDataWrapper> best_available_da_ptr;
 
-    if(!mds_message_channel->getDataDriverBestConfiguration(&tmp_data_handler, 5000)){
-        ChaosUniquePtr<chaos::common::data::CDataWrapper> best_available_da_ptr(tmp_data_handler);
+    if(!mds_message_channel->getDataDriverBestConfiguration(best_available_da_ptr, 5000)){
         ioLiveDataDriver->updateConfiguration(best_available_da_ptr.get());
     }
     //InizializableService::initImplementation(direct_io_client,
@@ -117,11 +116,10 @@ void DefaultPersistenceDriver::addServerList(const std::vector<std::string>& _cd
     //checkif someone has passed us the device indetification
     DPD_LAPP << "Scan the direction address";
 
-    CDataWrapper *tmp_data_handler = NULL;
+    ChaosUniquePtr<chaos::common::data::CDataWrapper> best_available_da_ptr;
 
-    if(!mds_message_channel->getDataDriverBestConfiguration(&tmp_data_handler, 5000)){
-        if(tmp_data_handler!=NULL){
-            ChaosUniquePtr<chaos::common::data::CDataWrapper> best_available_da_ptr(tmp_data_handler);
+    if(!mds_message_channel->getDataDriverBestConfiguration(best_available_da_ptr, 5000)){
+        if(best_available_da_ptr.get()!=NULL){
             DPD_LDBG <<best_available_da_ptr->getJSONString();
             ChaosSharedPtr<chaos::common::data::CMultiTypeDataArrayWrapper> liveMemAddrConfig=best_available_da_ptr->getVectorValue(DataServiceNodeDefinitionKey::DS_DIRECT_IO_FULL_ADDRESS_LIST);
             if(liveMemAddrConfig.get()){
@@ -285,16 +283,17 @@ int DefaultPersistenceDriver::registerDataset(const std::string& producer_key,
                                               chaos::common::data::CDataWrapper& last_dataset) {
     CHAOS_ASSERT(mds_message_channel);
     int ret;
-
-    last_dataset.addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, producer_key);
-    last_dataset.addStringValue(chaos::NodeDefinitionKey::NODE_RPC_DOMAIN, chaos::common::utility::UUIDUtil::generateUUIDLite());
-    last_dataset.addStringValue(chaos::NodeDefinitionKey::NODE_RPC_ADDR, network_broker->getRPCUrl());
-    last_dataset.addStringValue("mds_control_key","none");
-    if((ret=mds_message_channel->sendNodeRegistration(last_dataset, true, 10000)) ==0){
-        CDataWrapper mdsPack;
-        mdsPack.addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, producer_key);
-        mdsPack.addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
-        ret = mds_message_channel->sendNodeLoadCompletion(mdsPack, true, 10000);
+    CDWUniquePtr dd(new CDataWrapper());
+    last_dataset.copyAllTo(*dd.get());
+    dd->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, producer_key);
+    dd->addStringValue(chaos::NodeDefinitionKey::NODE_RPC_DOMAIN, chaos::common::utility::UUIDUtil::generateUUIDLite());
+    dd->addStringValue(chaos::NodeDefinitionKey::NODE_RPC_ADDR, network_broker->getRPCUrl());
+    dd->addStringValue("mds_control_key","none");
+    if((ret=mds_message_channel->sendNodeRegistration(MOVE(dd), true, 10000)) ==0){
+        CDWUniquePtr mdsPack(new CDataWrapper());
+        mdsPack->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, producer_key);
+        mdsPack->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
+        ret = mds_message_channel->sendNodeLoadCompletion(MOVE(mdsPack), true, 10000);
         HealtManager::getInstance()->addNewNode(producer_key);
         HealtManager::getInstance()->addNodeMetric(producer_key,
                                                    chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE,
@@ -382,12 +381,12 @@ chaos::common::data::CDWShrdPtr DefaultPersistenceDriver::searchMetrics(const st
         for(ChaosStringVector::iterator i=node_tmp.begin();node_tmp.end()!=i;i++){
 
 
-            CDataWrapper* out=0;
+            CDWUniquePtr out;
             DEBUG_CODE(DPD_LDBG << "finding description of:"<<*i);
 
-            if (mds_message_channel->getFullNodeDescription(*i, &out, MDS_TIMEOUT) == 0) {
+            if (mds_message_channel->getFullNodeDescription(*i, out, MDS_TIMEOUT) == 0) {
 
-                if(out && (out->hasKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION))&&(out->isCDataWrapperValue(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION))){
+                if(out.get() && (out->hasKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION))&&(out->isCDataWrapperValue(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION))){
                     chaos::common::data::CDWUniquePtr ds(out->getCSDataValue(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION));
                     ChaosSharedPtr<chaos::common::data::CMultiTypeDataArrayWrapper> w =ds->getVectorValue(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION);
                     for(int idx=0;idx<w->size();idx++){
@@ -406,9 +405,7 @@ chaos::common::data::CDWShrdPtr DefaultPersistenceDriver::searchMetrics(const st
                     }*/
 
                 }
-                if(out){
-                    delete out;
-                }
+              
             }
         }
 
