@@ -392,7 +392,7 @@ int HTTPUIInterface::process(struct mg_connection *connection) {
                 if(devs.count(*idevname)){
 
                     controller = devs[*idevname];
-
+                    l.unlock();
                 } else {
                     controller = new ::driver::misc::ChaosController();
 
@@ -420,7 +420,7 @@ int HTTPUIInterface::process(struct mg_connection *connection) {
                         continue;
                     } else{
                         HTTWAN_INTERFACE_DBG_<<"* adding device \""<<*idevname<<"\"";
-
+                        l.unlock();
                         addDevice(*idevname,controller);
                         sched_cu_v[sched_alloc++%chaos_thread_number]->add(*idevname,controller);
                     }
