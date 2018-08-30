@@ -247,8 +247,6 @@ void HTTPUIInterface::pollHttpServer(struct mg_server *http_server) {
 
 
 void HTTPUIInterface::addDevice(std::string name, ::driver::misc::ChaosController*d) {
-    ChaosWriteLock l(devio_mutex);
-
     devs[name] = d;
 
 }
@@ -284,12 +282,15 @@ int HTTPUIInterface::removeDevice(std::string devname){
         }
     }
 
+    ChaosReadLock l(devio_mutex);
     std::map<std::string,::driver::misc::ChaosController*>::iterator i=devs.find(devname);
     if(i!=devs.end()){
       //        boost::mutex::scoped_lock l(devio_mutex);
-        ChaosWriteLock l(devio_mutex);
         HTTWAN_INTERFACE_DBG_<<"* removing \""<<devname<<"\" from known devices";
+        l.unlock();
         delete i->second;
+        ChaosWriteLock ll(devio_mutex);
+
         devs.erase(i);
         return 1;
     }
@@ -381,58 +382,48 @@ int HTTPUIInterface::process(struct mg_connection *connection) {
             if(dev_v.size()>1 || always_vector){
                 answer_multi<<"[";
             }
+            // creation
+            for(std::vector<std::string>::iterator idevname=dev_v.begin();idevname!=dev_v.end();idevname++){
+             if ((*idevname).empty() || cmd.empty()) {
+                    continue;
+                }
+                ChaosWriteLock l(devio_mutex);
+
+                if(devs.find(*idevname)==devs.end()){
+                    controller = new ::driver::misc::ChaosController();
+                    if(controller){
+                        if(controller->init(*idevname,DEFAULT_TIMEOUT_FOR_CONTROLLER)!=0){
+                            HTTWAN_INTERFACE_ERR_<<LOG_CONNECTION<<"cannot init controller for "<<*idevname<<"\"";
+                            //  response << "{}";
+                            //response.setCode(400);
+                            delete controller;
+                            //flush_response(connection, &response);
+                            //return 1;
+                        } else{
+                            HTTWAN_INTERFACE_DBG_<<"* adding device \""<<*idevname<<"\"";
+                            addDevice(*idevname,controller);
+                            sched_cu_v[sched_alloc++%chaos_thread_number]->add(*idevname,controller);
+                        }
+                    }
+
+                }
+            }
+            ///
             for(std::vector<std::string>::iterator idevname=dev_v.begin();idevname!=dev_v.end();idevname++){
                 std::string ret;
-               
                
                 if ((*idevname).empty() || cmd.empty()) {
                     continue;
                 }
                 ChaosReadLock l(devio_mutex);
-                if(devs.count(*idevname)){
-
-                    controller = devs[*idevname];
-                    l.unlock();
-                } else {
-                    controller = new ::driver::misc::ChaosController();
-
-                    if (controller == NULL) {
-                        response << "{}";
+                std::map<std::string,::driver::misc::ChaosController*>::iterator dd=devs.find(*idevname);
+                if(dd!=devs.end()){
+                    controller=dd->second;
+                    if(controller->get(cmd,(char*)parm.c_str(),0,atoi(cmd_prio.c_str()),atoi(cmd_schedule.c_str()),atoi(cmd_mode.c_str()),0,ret)!=::driver::misc::ChaosController::CHAOS_DEV_OK){
+                        HTTWAN_INTERFACE_ERR_<<LOG_CONNECTION<<"An error occurred during get of:\""<<*idevname<<"\"";
                         response.setCode(400);
-                        HTTWAN_INTERFACE_ERR_<<LOG_CONNECTION<<"error creating Chaos Controller";
-                        response<<"error creating Chaos Controller for:"<<*idevname;
-                        flush_response(connection, &response);
-                        return 1;
                     }
-                    if(controller->init(*idevname,DEFAULT_TIMEOUT_FOR_CONTROLLER)!=0){
-                        response << controller->getJsonState();
-                        HTTWAN_INTERFACE_ERR_<<LOG_CONNECTION<<"cannot init controller for "<<*idevname<<"\"";
-                        //  response << "{}";
-                        //response.setCode(400);
-                        delete controller;
-                        //flush_response(connection, &response);
-                        //return 1;
-                        if((idevname+1) == dev_v.end()){
-                            answer_multi<<"{}]";
-                        }else {
-                            answer_multi<<"{},";
-                        }
-                        continue;
-                    } else{
-                        HTTWAN_INTERFACE_DBG_<<"* adding device \""<<*idevname<<"\"";
-                        l.unlock();
-                        addDevice(*idevname,controller);
-                        sched_cu_v[sched_alloc++%chaos_thread_number]->add(*idevname,controller);
-                    }
-
                 }
-
-                if(controller->get(cmd,(char*)parm.c_str(),0,atoi(cmd_prio.c_str()),atoi(cmd_schedule.c_str()),atoi(cmd_mode.c_str()),0,ret)!=::driver::misc::ChaosController::CHAOS_DEV_OK){
-                    HTTWAN_INTERFACE_ERR_<<LOG_CONNECTION<<"An error occurred during get of:\""<<*idevname<<"\"";
-                    response.setCode(400);
-
-                }
-
                 if((idevname+1) == dev_v.end()){
                     if(dev_v.size()>1 || always_vector){
                         answer_multi<<ret<<"]";
