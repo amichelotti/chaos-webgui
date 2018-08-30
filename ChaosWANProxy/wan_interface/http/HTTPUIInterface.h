@@ -41,7 +41,7 @@ namespace chaos {
     }
 
 #define CHECK_ACTIVITY_CU 60*1000
-#define PRUNE_NOT_ACCESSED_CU 3*60*1000*1000
+#define PRUNE_NOT_ACCESSED_CU 1*60*1000*1000
 
     namespace wan_proxy {
         namespace wan_interface {
@@ -82,7 +82,9 @@ namespace chaos {
                      int sched_alloc;
 
                     static void addDevice(std::string,::driver::misc::ChaosController*);
-                    int removeDevice(std::string);
+                    int removeDevice(const std::string&);
+                    int removeFromQueue(const std::string&);
+
                     bool checkForContentType(mongoose::mg_connection *connection,
                                                                const std::string& type);
                     static ChaosSharedMutex devio_mutex;
