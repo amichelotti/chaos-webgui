@@ -550,6 +550,7 @@ void HTTPUIInterface::checkActivity()
         if ((i->second->lastAccess() > 0)){
             int64_t elapsed = (now - (i->second)->lastAccess());
             if ((elapsed > PRUNE_NOT_ACCESSED_CU)){
+                l.unlock();
                 ChaosWriteLock ll(devio_mutex);
 
                 HTTWAN_INTERFACE_DBG_ << "* removing \"" << i->first << "\" from known devices";
