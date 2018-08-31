@@ -222,7 +222,7 @@ void HTTPUIInterface::start() throw(CException)
     {
         (*i)->start();
     }
-    AsyncCentralManager::getInstance()->addTimer(this, 0, CHECK_ACTIVITY_CU);
+    AsyncCentralManager::getInstance()->addTimer(this, CHECK_ACTIVITY_CU, CHECK_ACTIVITY_CU);
 }
 
 //inherited method
