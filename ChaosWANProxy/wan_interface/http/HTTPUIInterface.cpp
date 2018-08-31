@@ -532,8 +532,7 @@ void HTTPUIInterface::checkActivity()
     last_check_activity = now;
     */
     HTTWAN_INTERFACE_DBG_ << " check activity";
-    ChaosReadLock l(devio_mutex);
-
+/*
     for (std::map<std::string, ::driver::misc::ChaosController *>::iterator i = devs.begin(); i != devs.end(); i++)
     {
         if ((i->second->lastAccess() > 0))
@@ -544,13 +543,21 @@ void HTTPUIInterface::checkActivity()
                 removeFromQueue(i->first);
             }
         }
+    }*/
+     std::map<std::string, ::driver::misc::ChaosController *>::iterator i;
+    {
+        ChaosReadLock l(devio_mutex);
+       i= devs.begin();
     }
-    std::map<std::string, ::driver::misc::ChaosController *>::iterator i = devs.begin();
+
     while(i!=devs.end()){
+
         if ((i->second->lastAccess() > 0)){
             int64_t elapsed = (now - (i->second)->lastAccess());
             if ((elapsed > PRUNE_NOT_ACCESSED_CU)){
-                l.unlock();
+                HTTWAN_INTERFACE_DBG_ << "* pruning \"" << i->first << "\" because elapsed " << ((1.0 * elapsed) / 1000000.0) << " s last time access:" << ((i->second)->lastAccess() / 1000000.0) << " s ago";
+                removeFromQueue(i->first);
+
                 ChaosWriteLock ll(devio_mutex);
 
                 HTTWAN_INTERFACE_DBG_ << "* removing \"" << i->first << "\" from known devices";

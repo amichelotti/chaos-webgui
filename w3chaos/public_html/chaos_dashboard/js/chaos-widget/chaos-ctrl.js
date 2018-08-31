@@ -3598,7 +3598,7 @@ function executeAlgoMenuCmd(cmd, opt) {
 
           if (status == 'Start') {
             
-            if(el.hasOwnProperty('system')&&el.system.hasOwnProperty(cudk_burst_state)&&el.system.cudk_burst_state){
+            if(el.hasOwnProperty('system')&&el.system.hasOwnProperty("cudk_burst_state")&&el.system.cudk_burst_state){
               $("#" + name_id + "_health_status").html('<i class="material-icons verde">videocam</i>');
               $("#" + name_id + "_health_status").attr('title',"TAG:'"+el.system.cudk_burst_tag+"'");
             } else {
