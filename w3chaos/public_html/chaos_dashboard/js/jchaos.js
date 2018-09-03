@@ -131,9 +131,7 @@
 			var str_url_cu = "/api/v1/producer/jsonregister/" + cuid;
 		    var dd = Date.now();
 		    jchaos.normalizeDataset(obj);
-
-
-			jchaos.basicPost(str_url_cu, JSON.stringify(obj), function (datav) { handleFunc(datav); });
+			jchaos.basicPost(str_url_cu, JSON.stringify(obj), handleFunc);
 		}
 
 		jchaos.pushCU = function (cuid, obj, handleFunc) {
@@ -346,7 +344,13 @@
 
 			return jchaos.mdsBase("log", opt, handleFunc);
 		}
-
+		/**
+		 * 
+		 * @param {string} _name is the substring of what you want search
+		 * @param {string} _what is one of "cu,us"
+		 * @param {boolean} _alive search among alive (true) or all(false)
+		 * @param {*} handleFunc handler
+		 */
 		jchaos.search = function (_name, _what, _alive, handleFunc) {
 
 			var opt = {
@@ -363,6 +367,33 @@
 				return jchaos.mdsBase("search", optv, handleFunc);
 			}
 			return jchaos.mdsBase("search", opt, handleFunc);
+		}
+		/**
+		 * Find an array of CU with the given implementation
+		 * @param {string} impl C++ implementation name to find
+		 * @param {bool} alive search from alive or all
+		 * @param {function} handleFunc call back function
+			 
+		 }}
+		 */
+		jchaos.findCUByImplementation=function(impl,alive,handleFunc){
+			var implList=[];
+			jchaos.search("","cu",alive,function(lscu){
+				jchaos.getDesc(lscu,function(desc){
+
+					desc.forEach(function(elem){
+						if(elem.instance_description.control_unit_implementation.includes(impl)){
+							implList.push(elem.ndk_uid);
+
+						}
+
+					});
+					handleFunc(implList);
+
+					});
+				});
+				
+		
 		}
 		/**
 		 * Recover CU alive status
@@ -603,8 +634,20 @@
 			}
 			jchaos.basicPost("CU", str_url_cu, function (datav) { jchaos.lastChannel = datav; handleFunc(datav); });
 		}
+		/**
+		 * 
+		 * @param {string} devs 
+		 * @param {integer} channel 
+		 * @param {epoch timestamp in ms} start 
+		 * @param {epoch timestamp in ms} stop 
+		 * @param {string variable name optional} varname 
+		 * @param {handler} handleFunc
+		 * @param {string[] tags optional} tagsv 
+		 * @param {string fmtType optional} fmtType optional format type (i.e tgz) 
 
-		jchaos.getHistory = function (devs, channel, start, stop, varname, handleFunc) {
+
+		 */
+		jchaos.getHistory = function (devs, channel, start, stop, varname,handleFunc,tagsv,fmtType) {
 			var result = {
 				X: [],
 				Y: []
@@ -623,9 +666,25 @@
 			} else {
 				opt['end'] = stop;
 			}
+			if (tagsv instanceof Array){
+				opt['tags']=tagsv;
+			}
+			if (fmtType instanceof String){
+				opt['fmtType']=fmtType;
+			}
 			opt['channel'] = channel;
 			opt['page'] = jchaos.options.history_page_len;
-			opt['var'] = varname;
+			if(varname!=="undefined" && (typeof varname !=="string")){
+				opt['var'] = varname;
+			}
+			if(tagsv !=="undefined"){
+				if(tagsv instanceof Array){
+					opt["tags"]=tagsv;
+				} else {
+					opt["tags"]=[tagsv];
+
+				}
+			}
 
 			jchaos.getHistoryBase(devs, opt, 1,0, result, handleFunc);
 
@@ -673,12 +732,15 @@
 		}
 
 
+
+		
 		/**
 		 * This function check for a variable change on a 'devlist', for 'retry' times, checking every 'checkFreq'
 		 * 'checkFunc' takes in input the live and realize the check 
 		 * okhandle is called if success
 		 * nokhandle if fails
 		 * */
+
 		jchaos.checkLive = function (str,devlist, retry, checkFreq, checkFunc, okhandle, nokhandle) {
 			var tot_ok = 0;
 			//console.log(" checking Live of " + devlist + " every:" + checkFreq + " ms");
@@ -686,9 +748,13 @@
 				ds.forEach(function (elem) {
 					if (checkFunc(elem)) {
 					    tot_ok++;
-					    console.log(str+"\t+ " + elem.health.ndk_uid + " ok " + tot_ok + "/" + devlist.length);
+					    console.log("\x1B[1m"+str+"\x1B[1m\t\x1B[32m\x1B[1mOK\x1B[22m\x1B[39m \x1B[1m" + elem.health.ndk_uid + "\x1B[22m " + tot_ok + "/" + devlist.length);
 					} else {
-					    console.log(str+"\t- " + elem.health.ndk_uid + " NOT YET " + tot_ok + "/" + devlist.length);
+						if(retry>1){
+							console.log("\x1B[1m"+str+"\x1B[1m\t-"+retry+"- \x1B[33m\x1B[1m" + elem.health.ndk_uid + "\x1B[22m\x1B[39m " + tot_ok + "/" + devlist.length);
+						} else {
+							console.log("\x1B[1m"+str+"\x1B[1m\t-"+retry+"- \x1B[31m\x1B[1m" + elem.health.ndk_uid + "\x1B[22m\x1B[39m " + tot_ok + "/" + devlist.length);
+						}
 					}
 				});
 			});

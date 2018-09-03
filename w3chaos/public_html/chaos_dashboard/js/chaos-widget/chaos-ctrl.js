@@ -2218,7 +2218,7 @@
       },"Cancel");  
      
     } else if(cmd=="tag-cu"){
-      getNEntryWindow("Tagging",["Tag Name","Duration Type","Duration"], ["NONAME_"+instUnique,"1","1"],"Create",function(inst_name){
+      getNEntryWindow("Tagging",["Tag Name","Duration Type (1=time,2=push)","Duration"], ["NONAME_"+instUnique,"1","1"],"Create",function(inst_name){
         if(Number(inst_name[1])==1){
           jchaos.tag(inst_name[0], node_multi_selected,Number(inst_name[1]),Number(inst_name[2]), function () {
           
@@ -2309,6 +2309,30 @@
         }
       });
 
+    } else if(cmd == "history-cu") {
+      element_sel("#select-tag",[],1);
+      $("#mdl-query").modal("show");
+      $("#query-run").on("click", function () {
+        var qstart = $("#query-start").val();
+        var qstop = $("#query-stop").val();
+        var qtag=$("#query-tag").val();
+        var page = $("#query-page").val();
+        node_multi_selected.forEach(function(elem){
+
+        jchaos.getHistory(elem,0, qstart, qstop, "", function (data) {
+          if(node_name_to_desc[elem].hasOwnProperty('instance_description') && node_name_to_desc[elem].instance_description.hasOwnProperty("control_unit_implementation") && (node_name_to_desc[elem].instance_description.control_unit_implementation.indexOf("Camera"))){
+            // its camera iterface
+          } else {
+
+          }
+         
+        },qtag);
+
+        });
+      });
+      $("#query-close").on("click", function () {
+        $("#mdl-query").modal("hide");
+      });
     } else {
       jchaos.sendCUCmd(node_multi_selected, cmd, "", function (data) {
         instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
@@ -3595,6 +3619,7 @@ function executeAlgoMenuCmd(cmd, opt) {
           if ((off_line[name_device_db] == true) && (status != "Unload")) {
             status = "Dead";
           }
+          $("#" + name_id + "_health_status").attr('title', "Device status:" + status);
 
           if (status == 'Start') {
             
@@ -3635,7 +3660,6 @@ function executeAlgoMenuCmd(cmd, opt) {
 
           }
         }
-        $("#" + name_id + "_health_status").attr('title', "Device status:" + status);
         if (el.hasOwnProperty('system') && (status != "Dead")) {   //if el system
           $("#" + name_id + "_system_command").html(el.system.dp_sys_que_cmd);
 
@@ -4102,7 +4126,11 @@ function executeAlgoMenuCmd(cmd, opt) {
     html += '<input class="input-xlarge focused span9" id="query-start" title="Start of the query (epoch in ms or hhmmss offset )" type="text" value="">';
     html += '<label class="label span3">Stop </label>';
     html += '<input class="input-xlarge focused span9" id="query-stop" title="End of the query (empty means: now)" type="text" value="NOW">';
-
+    html += '<label class="label span3">Available Tag</label>';
+    html += '<select class="span9" id="select-tag" title="Existing tags"></select>';
+    html += '<label class="label span3">Tag Name </label>';
+    html += '<input class="input-xlarge focused span9" id="query-tag" title="Tag Name" type="text" value="">';
+    
     html += '<label class="label span3">Page </label>';
     html += '<input class="input-xlarge focused span9" id="query-page" title="page length" type="number" value="100">';
     html += '</div>';
@@ -4578,6 +4606,7 @@ function executeAlgoMenuCmd(cmd, opt) {
 
                 var qstart = $("#query-start").val();
                 var qstop = $("#query-stop").val();
+                var qtag=$("#query-tag").val();
                 var page = $("#query-page").val();
                 jchaos.options.history_page_len = Number(page);
                 jchaos.options.updateEachCall = true;
@@ -4665,7 +4694,7 @@ function executeAlgoMenuCmd(cmd, opt) {
                             }
                           }
                         }
-                      });
+                      },qtag);
                     }
                   };
                   // ok plot
@@ -4745,7 +4774,7 @@ function executeAlgoMenuCmd(cmd, opt) {
                         chart.redraw();
                         // true until close if false the history loop retrive breaks
                         return active_plots.hasOwnProperty(graphname);
-                      });
+                      },qtag);
                     }
                   });
                 }
@@ -5696,10 +5725,28 @@ function executeAlgoMenuCmd(cmd, opt) {
     // html += "</div>";
 
 
-    html += "<div class='span8'>";
-    html += '<h2 class="span2">Available Commands</h2>';
-    html += '<select class="span6" id="cu_full_commands" data-toggle="modal"> </select>';
+    html += "<div class='span9'>";
+    
+    html += "<div class='span5'>";
+    html += '<h2>Available Commands</h2>';
+    html += '<select id="cu_full_commands" data-toggle="modal"> </select>';
+    html += '</div>'
+
+    html += "<div class='span4'>";
+    html += '<div class="span2">'
+    html += '<label for="live-enable">enable live</label><input class="input-xlarge" id="live-true" title="Enable Live" name="live-enable" type="radio" value="true">';
+    html += '<label for="live-enable">disable live</label><input class="input-xlarge" id="live-false" title="Disable Live" name="live-enable" type="radio" value="false">';
+    html += '</div>'
+    
+    html += '<div class="span2">'
+    html += '<label for="histo-enable">enable history</label><input class="input-xlarge" id="histo-true" title="Enable History" name="histo-enable" type="radio" value="true">';
+    html += '<label for="histo-enable">disable history</label><input class="input-xlarge" id="histo-false" title="Disable History" name="histo-enable" type="radio" value="false">';
+    html += '</div>'
+    
+    html += '</div>'
     html += '</div>';
+    
+    
 
     html += "</div>";
 
@@ -6033,6 +6080,8 @@ function executeAlgoMenuCmd(cmd, opt) {
       items['load'] = { name: "Load", icon: "load" };
 
     }
+    items['history-cu']= { name: "Retrive History for...", icon: "histo" };
+
     items['sep1'] = "---------";
     //node_name_to_desc[node_multi_selected[0]]
     var desc = node_name_to_desc[encodeName(node_multi_selected[0])];
