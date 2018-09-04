@@ -5506,13 +5506,18 @@ function executeAlgoMenuCmd(cmd, opt) {
     html += '</a>';
     html += '</li>';
 
-
+    html += '<li class="black">';
+    html += '<a href="./chaos_jshell.php" role="button" class="show_alog" data-toggle="modal">';
+    html += '<i class="icon-file red"></i><span class="opt-menu hidden-tablet">ChaosShell</span>';
+    html += '</a>';
+    html += '</li>';
+    /*
     html += '<li class="black">';
     html += '<a href="./chaos_algo.php" role="button" class="show_alog" data-toggle="modal">';
     html += '<i class="icon-file red"></i><span class="opt-menu hidden-tablet">Algo</span>';
     html += '</a>';
     html += '</li>';
-
+*/
     html += '</ul>';
     html += '</div>';
     html += '</div>';
