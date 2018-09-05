@@ -14,7 +14,9 @@
 			uri: "localhost",
 			async: true,
 			limit_on_going: 10000,
-			history_page_len: 1000
+			history_page_len: 1000,
+			console_log:function(str){console.log(str);},
+			console_err:function(str){console.error(str);}
 
 		};
 		jchaos.setOptions = function (opt) {
@@ -26,8 +28,13 @@
 
 
 		}
-
-		jchaos.basicPost = function (func, params, handleFunc) {
+		jchaos.print= function(str){
+			 jchaos.options['console_log'](str);
+		}
+		jchaos.perror= function(str){
+			 jchaos.options['console_err'](str);
+		}
+		jchaos.basicPost = function (func, params, handleFunc,handleFuncErr) {
 			var request;
 			if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 				XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
@@ -80,16 +87,23 @@
 							//console.error(str);
 							console.log(str);
 							//throw str;
-							if (could_make_async) {
-								handleFunc(request.responseText);
+							if(handleFuncErr!=null && (typeof handleFuncErr === "function")){
+								handleFuncErr(request.responseText);
 							} else {
-								return request.responseText;
+								if (could_make_async) {
+									handleFunc(request.responseText);
+								} else {
+									return request.responseText;
+								}
 							}
 
 						}
 					} else {
 						var str = "POST " + url + " body:\"" + params + "\" went wrong, result:" + request.status + " state:" + request.readyState; 
 						console.error(str);
+						if(handleFuncErr!=null && (typeof handleFuncErr === "function")){
+							handleFuncErr(request.responseText);
+						}
 					}
 				}
 
@@ -379,21 +393,18 @@
 		jchaos.findCUByImplementation=function(impl,alive,handleFunc){
 			var implList=[];
 			jchaos.search("","cu",alive,function(lscu){
-				jchaos.getDesc(lscu,function(desc){
-
-					desc.forEach(function(elem){
-						if(elem.instance_description.control_unit_implementation.includes(impl)){
+				desclist=jchaos.getDesc(lscu,null);
+				desclist.forEach(function(elem){
+					if(elem.instance_description.control_unit_implementation.includes(impl)){
 							implList.push(elem.ndk_uid);
 
-						}
+					}
+					
 
-					});
-					handleFunc(implList);
-
-					});
 				});
-				
-		
+				handleFunc(implList);
+
+			});
 		}
 		/**
 		 * Recover CU alive status
@@ -604,10 +615,10 @@
 		 * Send a command to a set of devices
 		 * 
 		 * */
-		jchaos.sendCUCmd = function (devs, cmd, param,handleFunc) {
-			jchaos.sendCUFullCmd(devs,cmd,param,0,0,handleFunc);
+		jchaos.sendCUCmd = function (devs, cmd, param,handleFunc,handleFuncErr) {
+			jchaos.sendCUFullCmd(devs,cmd,param,0,0,handleFunc,handleFuncErr);
 		}
-		jchaos.sendCUFullCmd = function (devs, cmd, param, force,prio,handleFunc) {
+		jchaos.sendCUFullCmd = function (devs, cmd, param, force,prio,handleFunc,handleFuncErr) {
 			var dev_array = jchaos.convertArray2CSV(devs);
 			var params = "";
 			if (dev_array == "") {
@@ -632,7 +643,7 @@
 			if ((typeof handleFunc !== "function")) {
 				return jchaos.basicPost("CU", str_url_cu, null);
 			}
-			jchaos.basicPost("CU", str_url_cu, function (datav) { jchaos.lastChannel = datav; handleFunc(datav); });
+			jchaos.basicPost("CU", str_url_cu, handleFunc,handleFuncErr );
 		}
 		/**
 		 * 
@@ -643,11 +654,9 @@
 		 * @param {string variable name optional} varname 
 		 * @param {handler} handleFunc
 		 * @param {string[] tags optional} tagsv 
-		 * @param {string fmtType optional} fmtType optional format type (i.e tgz) 
-
 
 		 */
-		jchaos.getHistory = function (devs, channel, start, stop, varname,handleFunc,tagsv,fmtType) {
+		jchaos.getHistory = function (devs, channel, start, stop, varname,handleFunc,tagsv) {
 			var result = {
 				X: [],
 				Y: []
@@ -669,9 +678,7 @@
 			if (tagsv instanceof Array){
 				opt['tags']=tagsv;
 			}
-			if (fmtType instanceof String){
-				opt['fmtType']=fmtType;
-			}
+
 			opt['channel'] = channel;
 			opt['page'] = jchaos.options.history_page_len;
 			if(varname!=="undefined" && (typeof varname !=="string")){

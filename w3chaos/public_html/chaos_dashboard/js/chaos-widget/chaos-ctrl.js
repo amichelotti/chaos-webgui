@@ -407,12 +407,18 @@
       }
     });
   }
-  function instantMessage(msghead, msg, tim) {
+  function instantMessage(msghead, msg, tim,sizex,sizey) {
+    if(sizex==null){
+      sizex=350;
+    }
+    if(sizey==null){
+      sizex=200;
+    }
     var instant = $('<div></div>').html(msg).dialog({
-      width: 350,
-      height: 100,
+      width: sizex,
+      height: sizey,
       title: msghead,
-      position: "center",
+      position: "left",
       open: function () {
         console.log(msghead + ":" + msg);
         $(this).css("opacity", 0.5);
@@ -2023,6 +2029,9 @@
           pp = cmdparam;
         }
         instantMessage(cuselection, "Command:\"" + alias + "\" params:\"" + pp + "\" sent", 1000)
+      },function (d) {
+        instantMessage(cuselection, "ERROR OCCURRED:"+d, 2000,350,400);
+
       });
 
     });
@@ -2085,6 +2094,9 @@
         jchaos.sendCUCmd(cuselection, cmd, "", function (data) {
           instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
 
+        },function (d) {
+          instantMessage(cuselection, "ERROR OCCURRED:"+d, 2000,350,400);
+  
         });
 
       }
@@ -2113,14 +2125,17 @@
         $("#mdl-commands").modal("hide");
         instantMessage("Command ", "Command:\"" + cmdselected + "\"  params:" + parm + " sent", 1000);
 
+      },function (d) {
+        instantMessage(cuselection, "ERROR OCCURRED:"+d, 2000,350,400)
+
       });
     });
     $("#command-close").click(function () {
       $("#mdl-commands").modal("hide");
 
     });
-
-    $("#cu_full_commands").change(function (e) {
+    
+    $("#cu_full_commands_send").click(function (e) {
       //show the command
       var cmdselected = $("#cu_full_commands option:selected").val();
       var arguments = retriveCurrentCmdArguments(cmdselected);
@@ -2337,6 +2352,9 @@
       jchaos.sendCUCmd(node_multi_selected, cmd, "", function (data) {
         instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
         //   $('.context-menu-list').trigger('contextmenu:hide')
+
+      },function (d) {
+        instantMessage(cuselection, "ERROR OCCURRED:"+d, 2000)
 
       });
     }
@@ -5723,19 +5741,20 @@ function executeAlgoMenuCmd(cmd, opt) {
     html += "<div class='span3 statbox'>";
     html += "<h3 id='scheduling_title'></h3>";
     html += "<input type='text' class='setSchedule'>";
-
     html += "</div>";
 
     // html += "<div class='span3'>";
     // html += "</div>";
 
+    html += "<div class='span4 statbox'>";
+    html += "<h3>Available Commands</h3>";
+    html += "<div class='row-fluid' >";
+    html += "<a class='quick-button-small span2 btn-cmd' id='cu_full_commands_send'><i class='material-icons verde'>send</i></a>";
+    html += '<select id="cu_full_commands" class="span8" data-toggle="modal"></select>';
+    html += "</div>";
 
-    html += "<div class='span9'>";
-    
-    html += "<div class='span5'>";
-    html += '<h2>Available Commands</h2>';
-    html += '<select id="cu_full_commands" data-toggle="modal"> </select>';
-    html += '</div>'
+    html += "</div>";
+
 
     html += "<div class='span4'>";
     html += '<div class="span2">'

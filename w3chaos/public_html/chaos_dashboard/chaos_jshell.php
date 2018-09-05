@@ -86,12 +86,29 @@ require_once('header.php');
 	 methods.forEach(function(elem){
 		methods_full.push("jchaos."+elem);
 	 });
+	
 	  $('#terminal').terminal(function(command) {
         if (command !== '') {
             try {
 				if(command == "help"){
 					return;
 				}
+				var regxp=/^\s*console\.([a-z]{3,})\((.*)\)\s*;/;
+				var match = regxp.exec(command);
+ 
+				if(match!=null){
+					
+					var result = window.eval(match[2]);
+					if (result !== undefined) {
+						if(match[1]=="error"){
+							this.error(new String(result));
+
+						} else{
+							this.echo(new String(result));
+						} 
+					}
+				}
+				
 				var result = window.eval(command);
 				dump_script+=command;
 
@@ -118,7 +135,7 @@ require_once('header.php');
     }*/
     });
 	 //$("#upload_selection").multiSelect("select_all");
-
+	jchaos.setOptions({"console_log":$('#terminal').terminal().echo,"console_err":$('#terminal').terminal().error});
 	  $("#save-script").on("click",function(){
 		var blob = new Blob([dump_script], {type: "text/plain;charset=utf-8"});
     	  saveAs(blob, "jchaosshell.js");
