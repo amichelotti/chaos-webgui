@@ -407,21 +407,47 @@
       }
     });
   }
-  function instantMessage(msghead, msg, tim,sizex,sizey) {
+  function instantMessage(msghead, msg, tim,sizex,sizey,ok) {
+    
     if(sizex==null){
       sizex=350;
     }
     if(sizey==null){
-      sizex=200;
+      sizey=200;
+    }
+    if(typeof(sizex) === "boolean" ){
+      ok=sizex;
+      sizex=350;
+    }
+    if(typeof(sizey) === "boolean" ){
+      ok=sizey;
+      sizey=200;
     }
     var instant = $('<div></div>').html(msg).dialog({
       width: sizex,
       height: sizey,
       title: msghead,
       position: "left",
+      dialogClass: 'instantOk',
       open: function () {
-        console.log(msghead + ":" + msg);
+        if(ok!=null){
+          if(ok){
+            console.log(msghead + ":" + msg);
+            $(this).prev().css("background", "green");
+            //$(this).dialog({dialogClass: 'instantOk'});
+          } else {
+            console.error(msghead + ":" + msg);
+            $(this).prev().css("background", "red");
+
+           // $(this).dialog({dialogClass: 'instantError'});
+
+          }
+        } else {
+          console.log(msghead + ":" + msg);
+        }
+
         $(this).css("opacity", 0.5);
+
         setTimeout(function () {
           $(instant).dialog("close");
         }
@@ -1622,7 +1648,10 @@
         var id = this.id;
         var attr = id.split("-")[1];
         jchaos.setAttribute(node_selected, attr, this.value, function () {
-          instantMessage("Attribute ", "\"" + attr + "\"=\"" + this.value + "\" sent", 1000)
+          instantMessage("Attribute ", "\"" + attr + "\"=\"" + this.value + "\" sent", 1000,null,null,true)
+
+        },function () {
+          instantMessage("Attribute Error", "\"" + attr + "\"=\"" + this.value + "\" sent", 1000,null,null,false)
 
         });
         $("#" + this.id).toggle();
@@ -2028,9 +2057,9 @@
         } else {
           pp = cmdparam;
         }
-        instantMessage(cuselection, "Command:\"" + alias + "\" params:\"" + pp + "\" sent", 1000)
+        instantMessage(cuselection, "Command:\"" + alias + "\" params:\"" + pp + "\" sent", 1000,true)
       },function (d) {
-        instantMessage(cuselection, "ERROR OCCURRED:"+d, 2000,350,400);
+        instantMessage(cuselection, "ERROR OCCURRED:"+d, 2000,350,400,false);
 
       });
 
@@ -2047,55 +2076,79 @@
       if (cuselection != null && cmd != null) {
         if (cmd == "init") {
           jchaos.node(cuselection, "init", "cu", null, function (data) {
-            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
+            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000,true);
+
+          }, function (data) {
+            instantMessage("Command ERROR", "Command:\"" + cmd + "\" sent", 1000,false);
 
           });
         } else if (cmd == "deinit") {
           jchaos.node(cuselection, "deinit", "cu", null, function (data) {
-            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
+            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000,true);
+
+          }, function (data) {
+            instantMessage("Command ERROR", "Command:\"" + cmd + "\" sent", 1000,false);
 
           });
         } else if (cmd == "bypasson") {
           jchaos.setBypass(cuselection, true, function (data) {
-            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
+            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000,true);
+
+          }, function (data) {
+            instantMessage("Command ERROR", "Command:\"" + cmd + "\" sent", 1000,false);
 
           });
           return;
         } else if (cmd == "bypassoff") {
           jchaos.setBypass(cuselection, false, function (data) {
-            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
+            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000,true);
+
+          }, function (data) {
+            instantMessage("Command ERROR", "Command:\"" + cmd + "\" sent", 1000,false);
 
           });
           return;
         } else if (cmd == "load") {
           jchaos.loadUnload(cuselection, true, function (data) {
-            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
+            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000,true);
+
+          }, function (data) {
+            instantMessage("Command ERROR", "Command:\"" + cmd + "\" sent", 1000,false);
 
           });
           return;
         } else if (cmd == "unload") {
           jchaos.loadUnload(cuselection, false, function (data) {
-            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
+            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000,true);
+
+          }, function (data) {
+            instantMessage("Command ERROR", "Command:\"" + cmd + "\" sent", 1000,false);
 
           });
           return;
         } else if (cmd == "start") {
           jchaos.node(cuselection, "start", "cu", null, function (data) {
-            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
+            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000,true);
+
+          }, function (data) {
+            instantMessage("Command ERROR", "Command:\"" + cmd + "\" sent", 1000,false);
 
           });
         } else if (cmd == "stop") {
           jchaos.node(cuselection, "stop", "cu", null, function (data) {
-            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
+            instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000,true);
+
+          }, function (data) {
+            instantMessage("Command ERROR", "Command:\"" + cmd + "\" sent", 1000,false);
 
           });
         }
 
         jchaos.sendCUCmd(cuselection, cmd, "", function (data) {
-          instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
+          instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000,true);
 
         },function (d) {
-          instantMessage(cuselection, "ERROR OCCURRED:"+d, 2000,350,400);
+          instantMessage(cuselection, "ERROR OCCURRED:"+d, 2000,350,400,false);
   
         });
 
@@ -2123,10 +2176,10 @@
       }
       jchaos.sendCUFullCmd(cuselection, cmdselected, parm, ((force == "normal") ? 0 : 1), 0, function () {
         $("#mdl-commands").modal("hide");
-        instantMessage("Command ", "Command:\"" + cmdselected + "\"  params:" + parm + " sent", 1000);
+        instantMessage("Command ", "Command:\"" + cmdselected + "\"  params:" + parm + " sent", 1000,true);
 
       },function (d) {
-        instantMessage(cuselection, "ERROR OCCURRED:"+d, 2000,350,400)
+        instantMessage(cuselection, "ERROR OCCURRED:"+d, 2000,350,400,false)
 
       });
     });
@@ -2134,7 +2187,24 @@
       $("#mdl-commands").modal("hide");
 
     });
-    
+    $("input[type=radio][name=live-enable]").change(function (e) {
+      var dslive = ($("input[type=radio][name=live-enable]:checked").val() == "true");
+      var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
+      var storage_type=((dslive)?2:0) | ((dshisto)?1:0);
+      jchaos.setProperty(node_multi_selected[0],[{"dsndk_storage_type":storage_type}],
+      function(){instantMessage("Property Set", "dsndk_storage_type:"+storage_type, 1000,true);},
+      function(){instantMessage("ERROR Property Set", "dsndk_storage_type:"+storage_type, 3000,false);});
+      
+    });
+    $("input[type=radio][name=histo-enable]").change(function (e) {
+      var dslive = ($("input[type=radio][name=live-enable]:checked").val() == "true");
+      var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
+      var storage_type=((dslive)?2:0) | ((dshisto)?1:0);
+      jchaos.setProperty(node_multi_selected[0],[{"dsndk_storage_type":storage_type}],
+      function(){instantMessage("Property Set", "dsndk_storage_type:"+storage_type, 1000,true);}
+      ,function(){instantMessage("ERROR Property Set", "dsndk_storage_type:"+storage_type, 3000,false);});
+     
+    });
     $("#cu_full_commands_send").click(function (e) {
       //show the command
       var cmdselected = $("#cu_full_commands option:selected").val();
@@ -2205,7 +2275,10 @@
         var id = this.id;
         var attr = id.split("-")[1];
         jchaos.setAttribute(node_selected, attr, this.value, function () {
-          instantMessage("Attribute ", "\"" + attr + "\"=\"" + this.value + "\" sent", 1000)
+          instantMessage("Attribute ", "\"" + attr + "\"=\"" + this.value + "\" sent", 1000,true);
+
+        },function(){
+          instantMessage("Attribute Error", "\"" + attr + "\"=\"" + this.value + "\" sent", 1000,false);
 
         });
         $("#" + this.id).toggle();
@@ -2225,7 +2298,10 @@
 
       getEntryWindow("Snapshotting","Snap Name", "NONAME_"+instUnique,"Create",function(inst_name){
         jchaos.snapshot(inst_name, "create", node_multi_selected, function () {
-          instantMessage("Snapshot \""+inst_name+"\"", " created ", 1000);
+          instantMessage("Snapshot \""+inst_name+"\"", " created ", 1000,true);
+  
+        }, function () {
+          instantMessage("Snapshot ERROR \""+inst_name+"\"", " created ", 1000,false);
   
         });
        
@@ -2237,13 +2313,21 @@
         if(Number(inst_name[1])==1){
           jchaos.tag(inst_name[0], node_multi_selected,Number(inst_name[1]),Number(inst_name[2]), function () {
           
-            instantMessage("Creating CYCLE Tag \""+inst_name[0]+"\"", " during "+inst_name[2] + " cycles", 3000);
+            instantMessage("Creating CYCLE Tag \""+inst_name[0]+"\"", " during "+inst_name[2] + " cycles", 3000,true);
+    
+          },function () {
+          
+            instantMessage("ERROR Creating CYCLE Tag \""+inst_name[0]+"\"", " during "+inst_name[2] + " cycles", 3000,false);
     
           });    
         } else if(Number(inst_name[1])==2){
           jchaos.tag(inst_name[0], node_multi_selected,Number(inst_name[1]),Number(inst_name[2]), function () {
           
-            instantMessage("Creating TIME Tag \""+inst_name[0]+"\"", " during: "+inst_name[2]+ " ms", 3000);
+            instantMessage("Creating TIME Tag \""+inst_name[0]+"\"", " during: "+inst_name[2]+ " ms", 3000,true);
+    
+          }, function () {
+          
+            instantMessage("ERROR Creating TIME Tag \""+inst_name[0]+"\"", " during: "+inst_name[2]+ " ms", 3000,false);
     
           });
         }
@@ -2254,38 +2338,62 @@
     } else if (cmd == "load") {
 
       jchaos.loadUnload(node_multi_selected, true, function (data) {
-        instantMessage("LOAD ", "Command:\"" + cmd + "\" sent", 1000);
+        instantMessage("LOAD ", "Command:\"" + cmd + "\" sent", 1000,true);
+        //  $('.context-menu-list').trigger('contextmenu:hide')
+
+      },function (data) {
+        instantMessage("ERROR LOAD ", "Command:\"" + cmd + "\" sent", 1000,false);
         //  $('.context-menu-list').trigger('contextmenu:hide')
 
       });
 
     } else if (cmd == "unload") {
       jchaos.loadUnload(node_multi_selected, false, function (data) {
-        instantMessage("UNLOAD ", "Command:\"" + cmd + "\" sent", 1000);
+        instantMessage("UNLOAD ", "Command:\"" + cmd + "\" sent", 1000,true);
+        //   $('.context-menu-list').trigger('contextmenu:hide')
+
+      }, function (data) {
+        instantMessage("ERROR UNLOAD ", "Command:\"" + cmd + "\" sent", 1000,true);
         //   $('.context-menu-list').trigger('contextmenu:hide')
 
       });
     } else if (cmd == "init") {
       jchaos.node(node_multi_selected, "init", "cu", null, null, function (data) {
-        instantMessage("INIT ", "Command:\"" + cmd + "\" sent", 1000);
+        instantMessage("INIT ", "Command:\"" + cmd + "\" sent", 1000,true);
+        //    $('.context-menu-list').trigger('contextmenu:hide')
+
+      }, function (data) {
+        instantMessage("ERROR INIT ", "Command:\"" + cmd + "\" sent", 1000,false);
         //    $('.context-menu-list').trigger('contextmenu:hide')
 
       });
     } else if (cmd == "deinit") {
       jchaos.node(node_multi_selected, "deinit", "cu", null, null, function (data) {
-        instantMessage("DEINIT ", "Command:\"" + cmd + "\" sent", 1000);
+        instantMessage("DEINIT ", "Command:\"" + cmd + "\" sent", 1000,true);
+        //    $('.context-menu-list').trigger('contextmenu:hide')
+
+      }, function (data) {
+        instantMessage("ERROR DEINIT ", "Command:\"" + cmd + "\" sent", 1000,false);
         //    $('.context-menu-list').trigger('contextmenu:hide')
 
       });
     } else if (cmd == "start") {
       jchaos.node(node_multi_selected, "start", "cu", null, null, function (data) {
-        instantMessage("START ", "Command:\"" + cmd + "\" sent", 1000);
+        instantMessage("START ", "Command:\"" + cmd + "\" sent", 1000,true);
+        //    $('.context-menu-list').trigger('contextmenu:hide')
+
+      },function (data) {
+        instantMessage("ERROR START ", "Command:\"" + cmd + "\" sent", 1000,false);
         //    $('.context-menu-list').trigger('contextmenu:hide')
 
       });
     } else if (cmd == "stop") {
       jchaos.node(node_multi_selected, "stop", "cu", null, null, function (data) {
-        instantMessage("STOP ", "Command:\"" + cmd + "\" sent", 1000);
+        instantMessage("STOP ", "Command:\"" + cmd + "\" sent", 1000,true);
+        //    $('.context-menu-list').trigger('contextmenu:hide')
+
+      }, function (data) {
+        instantMessage("STOP ", "Command:\"" + cmd + "\" sent", 1000,false);
         //    $('.context-menu-list').trigger('contextmenu:hide')
 
       });
@@ -2350,11 +2458,11 @@
       });
     } else {
       jchaos.sendCUCmd(node_multi_selected, cmd, "", function (data) {
-        instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000);
+        instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000,true);
         //   $('.context-menu-list').trigger('contextmenu:hide')
 
       },function (d) {
-        instantMessage(cuselection, "ERROR OCCURRED:"+d, 2000)
+        instantMessage(cuselection, "ERROR OCCURRED:"+d, 2000,false)
 
       });
     }
@@ -2699,12 +2807,17 @@
       return;
     } else if (cmd == "start-node") {
       jchaos.node(node_selected, "start", "us", function () {
-        instantMessage("US START", "Starting " + node_selected + " via agent", 1000);
+        instantMessage("US START", "Starting " + node_selected + " via agent", 1000,true);
+      }, function () {
+        instantMessage("ERROR US START", "Starting " + node_selected + " via agent", 1000,false);
       });
       return;
     } else if (cmd == "stop-node") {
       jchaos.node(node_selected, "stop", "us", function () {
-        instantMessage("US STOP", "Stopping " + node_selected + " via agent", 1000);
+        instantMessage("US STOP", "Stopping " + node_selected + " via agent", 1000,true);
+
+      }, function () {
+        instantMessage("ERROR US STOP", "Stopping " + node_selected + " via agent", 1000,false);
 
       });
       return;
@@ -2717,7 +2830,9 @@
       confirm("Do you want to KILL?", "Pay attention ANY CU will be killed as well", "Kill",
         function () {
           jchaos.node(node_selected, "kill", "us", function () {
-            instantMessage("US KILL", "Killing " + node_selected + " via agent", 1000);
+            instantMessage("US KILL", "Killing " + node_selected + " via agent", 1000,true);
+          }, function () {
+            instantMessage("ERROR US KILL", "Killing " + node_selected + " via agent", 1000,false);
           })
         }, "Joke", function () { });
       return;
@@ -2725,7 +2840,9 @@
       confirm("Do you want to RESTART?", "Pay attention ANY CU will be restarted as well", "Restart",
         function () {
           jchaos.node(node_selected, "restart", "us", function () {
-            instantMessage("US RESTARTING", "Restarting " + node_selected + " via agent", 1000);
+            instantMessage("US RESTARTING", "Restarting " + node_selected + " via agent", 1000,true);
+          }, function () {
+            instantMessage("US RESTARTING", "Restarting " + node_selected + " via agent", 1000,false);
           })
         }, "Joke", function () { });
       return;
@@ -3638,15 +3755,11 @@ function executeAlgoMenuCmd(cmd, opt) {
             status = "Dead";
           }
           $("#" + name_id + "_health_status").attr('title', "Device status:" + status);
+          
 
+          
           if (status == 'Start') {
-            
-            if(el.hasOwnProperty('system')&&el.system.hasOwnProperty("cudk_burst_state")&&el.system.cudk_burst_state){
-              $("#" + name_id + "_health_status").html('<i class="material-icons verde">videocam</i>');
-              $("#" + name_id + "_health_status").attr('title',"TAG:'"+el.system.cudk_burst_tag+"'");
-            } else {
-              $("#" + name_id + "_health_status").html('<i class="material-icons verde">play_arrow</i>');
-            }
+            $("#" + name_id + "_health_status").html('<i class="material-icons verde">play_arrow</i>');
           } else if (status == 'Stop') {
             $("#" + name_id + "_health_status").html('<i class="material-icons arancione">stop</i>');
           } else if (status == 'Init') {
@@ -3680,7 +3793,25 @@ function executeAlgoMenuCmd(cmd, opt) {
         }
         if (el.hasOwnProperty('system') && (status != "Dead")) {   //if el system
           $("#" + name_id + "_system_command").html(el.system.dp_sys_que_cmd);
+          if(el.system.hasOwnProperty("cudk_burst_state")&&el.system.cudk_burst_state){
+            $("#" + name_id + "_health_status").html('<i class="material-icons verde">videocam</i>');
+            $("#" + name_id + "_health_status").attr('title',"TAG:'"+el.system.cudk_burst_tag+"'");
+          } 
+          if(el.system.hasOwnProperty("dsndk_storage_type")){
+            if(el.system.dsndk_storage_type&0x2){
+              $("input[name=live-enable][value='true']").prop("checked",true);
+            } else {
+              $("input[name=live-enable][value='false']").prop("checked",true);
+            }
+            if(el.system.dsndk_storage_type&0x1){
+              $("input[name=histo-enable][value='true']").prop("checked",true);
+            } else {
+              $("input[name=histo-enable][value='false']").prop("checked",true);
 
+            }
+            
+          }
+          
 
           if (el.system.cudk_bypass_state == false) {
             $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">usb</i>');

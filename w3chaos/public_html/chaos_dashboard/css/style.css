@@ -3015,3 +3015,10 @@ ul.messagesList li span.date {
 .ui-dialog-titlebar-close {
     visibility: hidden;
 }
+	
+.instantError.ui-dialog-titlebar {
+	background:red
+} 
+.instantOk.ui-dialog-titlebar {
+	background:green
+} 
