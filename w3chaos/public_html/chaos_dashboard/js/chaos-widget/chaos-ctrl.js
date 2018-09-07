@@ -2154,39 +2154,8 @@
 
       }
     });
-    $("#command-send").click(function () {
-      var cuselection;
-      var cmdselected = $("#cu_full_commands option:selected").val();
-      var arguments = retriveCurrentCmdArguments(cmdselected);
-      var force = $("#cmd-force option:selected").val();
-
-      arguments.forEach(function (item, index) {
-        var value = $("#" + cmdselected + "_" + item["name"]).val();
-        if ((value == null || value == "") && (item["optional"] == false)) {
-          alert("argument '" + item['name'] + "' is required in command:'" + cmdselected + "'");
-          return;
-        }
-        item['value'] = value;
-      });
-      var parm = buildCmdParams(arguments);
-      if (node_multi_selected.length > 0) {
-        cuselection = node_multi_selected;
-      } else {
-        cuselection = node_selected;
-      }
-      jchaos.sendCUFullCmd(cuselection, cmdselected, parm, ((force == "normal") ? 0 : 1), 0, function () {
-        $("#mdl-commands").modal("hide");
-        instantMessage("Command ", "Command:\"" + cmdselected + "\"  params:" + parm + " sent", 1000,true);
-
-      },function (d) {
-        instantMessage(cuselection, "ERROR OCCURRED:"+d, 2000,350,400,false)
-
-      });
-    });
-    $("#command-close").click(function () {
-      $("#mdl-commands").modal("hide");
-
-    });
+    
+    
     $("input[type=radio][name=live-enable]").change(function (e) {
       var dslive = ($("input[type=radio][name=live-enable]:checked").val() == "true");
       var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
@@ -2205,31 +2174,28 @@
       ,function(){instantMessage("ERROR Property Set", "dsndk_storage_type:"+storage_type, 3000,false);});
      
     });
+    $("#cu_clear_current_cmd").click(function (e) {
+      jchaos.node(node_multi_selected[0],"killcmd","cu",null,null,function(){
+        instantMessage("Clear Current Command", node_multi_selected[0] +":Clearing last command OK", 1000,true);
+      },function(){
+        instantMessage("ERROR Clear Current Command", node_multi_selected[0] +":Clearing last command ", 3000,false);
+      });
+    });
+    
+    $("#cu_clear_queue").click(function (e) {
+      jchaos.node(node_multi_selected[0],"clrcmdq","cu",null,null,function(){
+        instantMessage("Clear  Command Queue", node_multi_selected[0] +":Clearing Command Queue OK", 1000,true);
+      },function(){
+        instantMessage("ERROR Command Queue", node_multi_selected[0] +":Clearing Command Queue ", 3000,false);
+      });
+
+    });
+    
     $("#cu_full_commands_send").click(function (e) {
       //show the command
       var cmdselected = $("#cu_full_commands option:selected").val();
-      var arguments = retriveCurrentCmdArguments(cmdselected);
-      var input_type = "number";
-      if (arguments.length == 0) {
-        $("#list_command_argument").html("Command \"" + cmdselected + "\" NO ARGUMENTS");
-      } else {
-        $("#list_command_argument").html("Command \"" + cmdselected + "\"");
-      }
-      $("#commands_argument_table").find("tr:gt(0)").remove();
-      arguments.forEach(function (item) {
-        if (item['type'] == "string") {
-          input_type = "text";
-        }
-        if (item["optional"]) {
-          $('#commands_argument_table').append('<tr class="row_element" ><td>' + item["name"] + '</td><td>' + item["desc"] + '</td><td>' + item["type"] + '</td><td><input class="input focused" id="' + cmdselected + '_' + item["name"] + '" type="' + input_type + '"></td></tr>');
-        } else {
-          $('#commands_argument_table').append('<tr class="row_element" ><td><b>' + item["name"] + '</b></td><td>' + item["desc"] + '</td><td>' + item["type"] + '</td><td><input class="input focused" id="' + cmdselected + '_' + item["name"] + '" type="' + input_type + '"></td></tr>');
-        }
-
-      });
-      $("#mdl-commands").draggable();
-
-      $("#mdl-commands").modal("show");
+      generateCmdModal(cmdselected,curr_cu_selected);
+    
     });
     $.contextMenu({
       selector: '.cuMenu',
@@ -5511,11 +5477,16 @@ function executeAlgoMenuCmd(cmd, opt) {
     html += '</div>';
     return html;
   }
-  function generateCmdModal() {
-    var html = '<div class="modal hide fade" id="mdl-commands">';
-    html += '<div class="modal-header">';
-    html += '<button type="button" class="close" data-dismiss="modal">×</button>';
-    html += '<h3 id="list_command_argument"></h3>';
+  function generateCmdModal(cmdselected,cu) {
+    var arguments = retriveCurrentCmdArguments(cmdselected);
+    var input_type = "number";
+    var html="";
+    if (arguments.length == 0) {
+      html += '<h3>"Command \"' + cmdselected + '\" NO ARGUMENTS</h3>';
+
+    } else {
+      html += '<h3>Command \"' + cmdselected + '\"</h3>';
+    }
     html += '</div>';
 
     html += '<div class="modal-body">';
@@ -5527,6 +5498,17 @@ function executeAlgoMenuCmd(cmd, opt) {
     html += '<th>Type</th>';
     html += '<th>Value</th>';
     html += '</tr>';
+    arguments.forEach(function (item) {
+      if (item['type'] == "string") {
+        input_type = "text";
+      }
+      if (item["optional"]) {
+        html += '<tr class="row_element" ><td>' + item["name"] + '</td><td>' + item["desc"] + '</td><td>' + item["type"] + '</td><td><input class="input focused" id="' + cmdselected + '_' + item["name"] + '" type="' + input_type + '"></td></tr>';
+      } else {
+        html +='<tr class="row_element" ><td><b>' + item["name"] + '</b></td><td>' + item["desc"] + '</td><td>' + item["type"] + '</td><td><input class="input focused" id="' + cmdselected + '_' + item["name"] + '" type="' + input_type + '"></td></tr>';
+      }
+
+    });
     html += '</thead>';
     html += '</table>';
     html += '</div>';
@@ -5537,12 +5519,59 @@ function executeAlgoMenuCmd(cmd, opt) {
     html += '<option value="force">Force</option>';
     html += '</select>';
 
-    html += '<a href="#" class="btn btn-primary" id="command-send">Send</a>';
-    html += '<a href="#" class="btn btn-primary" id="command-close">Close</a>';
-    html += '</div>';
+   // html += '<a href="#" class="btn btn-primary" id="command-send">Send</a>';
 
-    html += '</div>';
-    return html;
+    var instant = $('<div></div>').html(html).dialog({
+      width:640,
+      height:480,
+      title:node_selected + " Setup "+ cmdselected,
+      open:function(){
+      },
+      buttons:[
+        {
+          text:"SEND",
+          click:function(e){
+            var cuselection;
+          var cmdselected = $("#cu_full_commands option:selected").val();
+          var arguments = retriveCurrentCmdArguments(cmdselected);
+          var force = $("#cmd-force option:selected").val();
+    
+          arguments.forEach(function (item, index) {
+            var value = $("#" + cmdselected + "_" + item["name"]).val();
+            if ((value == null || value == "") && (item["optional"] == false)) {
+              alert("argument '" + item['name'] + "' is required in command:'" + cmdselected + "'");
+              return;
+            }
+            item['value'] = value;
+          });
+          var parm = buildCmdParams(arguments);
+          if (node_multi_selected.length > 0) {
+            cuselection = node_multi_selected;
+          } else {
+            cuselection = node_selected;
+          }
+          jchaos.sendCUFullCmd(cuselection, cmdselected, parm, ((force == "normal") ? 0 : 1), 0, function () {
+            instantMessage("Command", "Command:\"" + cmdselected + "\"  params:" + JSON.stringify(parm) + " sent", 1000,true);
+    
+          },function (d) {
+            instantMessage(cuselection, "ERROR OCCURRED:"+d, 2000,350,400,false)
+    
+          });
+          $(this).dialog('destroy');
+
+          }
+
+        },{
+          text:"Close",
+          click:function(e){
+            $(this).dialog('destroy');
+
+          }
+        }
+      ]
+    });
+
+    //return html;
   }
 
   function generateAlarms(cuid) {
@@ -5603,7 +5632,7 @@ function executeAlgoMenuCmd(cmd, opt) {
     html += generateDescription();
     html += generateSnapshotTable();
     html += generateAlarms();
-    html += generateCmdModal();
+   // html += generateCmdModal();
     html += generateLog();
     html += generateGraphTable();
     html += generateGraphList();
@@ -5880,8 +5909,13 @@ function executeAlgoMenuCmd(cmd, opt) {
     html += "<div class='span4 statbox'>";
     html += "<h3>Available Commands</h3>";
     html += "<div class='row-fluid' >";
-    html += "<a class='quick-button-small span2 btn-cmd' id='cu_full_commands_send'><i class='material-icons verde'>send</i></a>";
+    html += "<a class='quick-button-small span2 btn-cmd' id='cu_full_commands_send'  title='Send selected command'><i class='material-icons verde'>send</i></a>";
     html += '<select id="cu_full_commands" class="span8" data-toggle="modal"></select>';
+    html += "</div>";
+    
+    html += "<div class='row-fluid' >";
+    html += "<a class='quick-button-small span2 btn-cmd' id='cu_clear_current_cmd' title='Clear current command'><i class='material-icons verde'>clear</i></a>";
+    html += "<a class='quick-button-small span2 btn-cmd' id='cu_clear_queue' title='Clear ALL command queue'><i class='material-icons verde'>layers_clear</i></a>";
     html += "</div>";
 
     html += "</div>";
@@ -6405,8 +6439,14 @@ function executeAlgoMenuCmd(cmd, opt) {
             } else if (type == "error") {
               $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td class="wrap">' + dat + '</td><td>' + nam + '</td><td class="wrap">' + msg + '</td><td class="wrap">' + origin + '</td></tr>').css('color', 'red');;
             } else if (type == "command") {
+               msg = item.mdsndk_nl_c_s_desc;
+               origin = item.mdsndk_nl_lsubj;
+
               $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td class="wrap">' + dat + '</td><td>' + nam + '</td><td class="wrap">' + msg + '</td><td class="wrap">' + origin + '</td></tr>').css('color', 'green');;
             } else {
+               msg = item.mdsndk_nl_l_m;
+               origin = item.mdsndk_nl_lsubj;
+
               $('#table_logs').append('<tr class="row_element" id="' + dat + '"><td class="wrap">' + dat + '</td><td>' + nam + '</td><td class="wrap">' + msg + '</td><td class="wrap">' + origin + '</td></tr>');
 
             }
