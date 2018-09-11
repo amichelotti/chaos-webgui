@@ -2275,7 +2275,7 @@
       },"Cancel");  
      
     } else if(cmd=="tag-cu"){
-      getNEntryWindow("Tagging",["Tag Name","Duration Type (1=time,2=push)","Duration"], ["NONAME_"+instUnique,"1","1"],"Create",function(inst_name){
+      getNEntryWindow("Tagging",["Tag Name","Duration Type (1=cycle,2=time(ms))","Duration"], ["NONAME_"+instUnique,"1","1"],"Create",function(inst_name){
         if(Number(inst_name[1])==1){
           jchaos.tag(inst_name[0], node_multi_selected,Number(inst_name[1]),Number(inst_name[2]), function () {
           
@@ -2402,22 +2402,20 @@
       element_sel("#select-tag",[],1);
       $("#mdl-query").modal("show");
       $("#query-run").on("click", function () {
+        var vcameras=[];
         var qstart = $("#query-start").val();
         var qstop = $("#query-stop").val();
         var qtag=$("#query-tag").val();
         var page = $("#query-page").val();
         node_multi_selected.forEach(function(elem){
-
-        jchaos.getHistory(elem,0, qstart, qstop, "", function (data) {
-          if(node_name_to_desc[elem].hasOwnProperty('instance_description') && node_name_to_desc[elem].instance_description.hasOwnProperty("control_unit_implementation") && (node_name_to_desc[elem].instance_description.control_unit_implementation.indexOf("Camera"))){
-            // its camera iterface
-          } else {
-
+          var enc=encodeName(elem);
+          if(node_name_to_desc[enc].hasOwnProperty('instance_description') && node_name_to_desc[enc].instance_description.hasOwnProperty("control_unit_implementation") && (node_name_to_desc[enc].instance_description.control_unit_implementation.indexOf("Camera"))){
+            vcameras.push(elem);
           }
-         
-        },qtag);
 
         });
+        jchaos.fetchHistoryCameraToZip("immagini",vcameras,qstart,qstop,qtag);
+    
       });
       $("#query-close").on("click", function () {
         $("#mdl-query").modal("hide");

@@ -84,6 +84,7 @@
 			echo '<script src="'.$main_dir.'/js/jquery.ui.position.min.js"></script>';
 			echo '<script src="'.$main_dir.'/js/jsoneditor.min.js"></script>';
 			echo '<script src="'.$main_dir.'/js/FileSaver.js"></script>';			
+			echo '<script src="'.$main_dir.'/js/jszip.min.js"></script>';			
 
 			echo '<script src="'.$main_dir.'/js/json-viewer/jquery.json-viewer.js"></script>';			
 			echo '<script src="'.$main_dir.'/js/chaos-widget/chaos-ctrl.js"></script>';
