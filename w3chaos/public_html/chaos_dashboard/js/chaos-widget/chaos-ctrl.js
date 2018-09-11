@@ -2401,21 +2401,23 @@
     } else if(cmd == "history-cu") {
       element_sel("#select-tag",[],1);
       $("#mdl-query").modal("show");
-      $("#query-run").on("click", function () {
+      $("#query-run").off().on("click", function () {
         var vcameras=[];
         var qstart = $("#query-start").val();
         var qstop = $("#query-stop").val();
         var qtag=$("#query-tag").val();
         var page = $("#query-page").val();
-        node_multi_selected.forEach(function(elem){
+        $("#mdl-query").modal("hide");
+
+       /* node_multi_selected.forEach(function(elem){
           var enc=encodeName(elem);
           if(node_name_to_desc[enc].hasOwnProperty('instance_description') && node_name_to_desc[enc].instance_description.hasOwnProperty("control_unit_implementation") && (node_name_to_desc[enc].instance_description.control_unit_implementation.indexOf("Camera"))){
             vcameras.push(elem);
           }
 
-        });
-        jchaos.fetchHistoryCameraToZip("immagini",vcameras,qstart,qstop,qtag);
-    
+        });*/
+        jchaos.fetchHistoryToZip(qtag,node_multi_selected,qstart,qstop,qtag);
+
       });
       $("#query-close").on("click", function () {
         $("#mdl-query").modal("hide");
@@ -3544,7 +3546,7 @@ function executeAlgoMenuCmd(cmd, opt) {
         if (nrows > last_index_selected) {
           //$('#main_table tr:gt('+(last_index_selected)+'):lt('+(nrows)+')').addClass("row_snap_selected");
           $("#" + id + " tr").slice(last_index_selected + 1, nrows + 1).addClass("row_snap_selected");
-          for (var cnt = last_index_selected; cnt <= nrows; cnt++) {
+          for (var cnt = last_index_selected; cnt < nrows; cnt++) {
             node_multi_selected.push(node_list[cnt]);
 
           }
@@ -3736,7 +3738,7 @@ function executeAlgoMenuCmd(cmd, opt) {
             //$("#status_" + name_id).html('<a id="fatalError_' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" onclick="return show_fatal_error(this.id);"><i style="cursor:pointer;" class="material-icons rosso">error</i></a>');
             $("#" + name_id + "_health_status").html('<a id="Error-' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" ><i style="cursor:pointer;" class="material-icons rosso">cancel</i></a>');
 
-            $("#Error-" + name_id).on("click", function () {
+            $("#Error-" + name_id).off().on("click", function () {
               $("#name-FE-device").html(el.health.ndk_uid);
               $("#status_message").html(status);
 
@@ -4711,7 +4713,7 @@ function executeAlgoMenuCmd(cmd, opt) {
               }
               $("#mdl-query").modal("show");
               $("#query-run").attr("graphname", graphname);
-              $("#query-run").on("click", function () {
+              $("#query-run").off().on("click", function () {
                 $("#mdl-query").modal("hide");
 
                 var graphname = $(this).attr("graphname");
