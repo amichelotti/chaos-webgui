@@ -125,8 +125,47 @@
     }
     return null;
   }
+  /*
+  function progressBar(msg,id,lab){
+    var instant = $('<div id='+id+'></div>').progressbar({
+      value:false,
+      open: function () {
+     
+      },
+      complete: function() {
+       // $(this).dialog("close");
+      }
+  
+   }).dialog({ 
+      title: msg,
+      position: "top",
+      
 
-
+    })
+  }*/
+  function progressBar(msg,id,lab){
+    var progressbar;
+    var instant = $('<div></div>').html('<div id="'+id+'"><div class="progress-label">'+lab+'</div></div>').dialog({
+      
+      title: msg,
+      position: "top",
+      open: function () {
+        progressbar=$( "#"+id )
+        var progressLabel = $( ".progress-label" );
+        progressbar.progressbar({
+          value: false,
+        change: function() {
+          var val=progressbar.progressbar( "value" );
+          progressLabel.text( val + "%" );
+      },
+      complete: function() {
+        $(this).parent().dialog("close");
+      }
+    });
+   },close:function(){
+     $(this).remove();
+   }});
+  }
   function getFile(msghead, msg, handler) {
     var instant = $('<div></div>').html('<div><p>' + msg + '</p></div><div><input type="file" id="upload-file" class="span3" /></div>').dialog({
       width: 680,
@@ -2416,12 +2455,18 @@
           }
 
         });*/
-        jchaos.fetchHistoryToZip(qtag,node_multi_selected,qstart,qstop,qtag);
-
+        progressBar("Retrive and Zip","zipprogress","zipping");
+       
+        jchaos.fetchHistoryToZip(qtag,node_multi_selected,qstart,qstop,qtag,function(meta){
+          $("#zipprogress").progressbar("value",parseInt(meta.percent.toFixed(2)));
+         
+      
       });
+    
       $("#query-close").on("click", function () {
         $("#mdl-query").modal("hide");
       });
+    });
     } else {
       jchaos.sendCUCmd(node_multi_selected, cmd, "", function (data) {
         instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000,true);
@@ -5700,7 +5745,6 @@ function executeAlgoMenuCmd(cmd, opt) {
     html += '</div>';
     html += '</div>';
 
-    html += '<div id="progressbar"></div>';
 
     return html;
   }

@@ -50,7 +50,9 @@
 			//link script
 			echo '<script src="'.$main_dir.'/js/jquery-1.9.1.min.js"></script>';
 			echo '<script src="'.$main_dir.'/js/jquery-migrate-1.0.0.min.js"></script>';
-			echo '<script src="'.$main_dir.'/js/jquery-ui-1.10.0.custom.min.js"></script>';
+			echo '<script src="'.$main_dir.'/js/jquery-ui.min.js"></script>';
+			//echo '<link href="' .$main_dir. '/js/jquery-ui.min.css" rel="stylesheet">';
+
 			echo '<script src="'.$main_dir.'/js/jquery.ui.touch-punch.js"></script>';
 			echo '<script src="'.$main_dir.'/js/modernizr.js"></script>';
 			echo '<script src="'.$main_dir.'/js/bootstrap.min.js"></script>';
