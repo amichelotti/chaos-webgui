@@ -3722,7 +3722,7 @@ function executeAlgoMenuCmd(cmd, opt) {
       html += "<tr class='row_element cuMenu' cuname='" + cu[i] + "' id='" + cuname + "'>";
       html += "<td class='name_element'>" + cu[i] + "</td>";
       html += "<td id='" + cuname + "_health_status'></td>";
-      html += "<td id='" + cuname + "_output_busy'></td>";
+      html += "<td id='" + cuname + "_system_busy'></td>";
       html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
       html += "<td id='" + cuname + "_health_timestamp'></td>";
       html += "<td id='" + cuname + "_health_uptime'></td>";
@@ -3822,7 +3822,17 @@ function executeAlgoMenuCmd(cmd, opt) {
             }
             
           }
-          
+          var busy = $.trim(el.system.busy);
+          if (busy == 'true') {
+            $("#" + name_id + "_system_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd);
+            if (el.output.dpck_seq_id & 1) {
+              $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_empty</i>');
+            } else {
+              $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_full</i>');
+            }
+          } else {
+            $("#" + name_id + "_system_busy").html('');
+          }
 
           if (el.system.cudk_bypass_state == false) {
             $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">usb</i>');
@@ -3835,7 +3845,6 @@ function executeAlgoMenuCmd(cmd, opt) {
           }
         }
         if (el.hasOwnProperty('output')) {   //if el output
-          var busy = $.trim(el.output.busy);
           var dev_alarm = $.trim(el.output.device_alarm);
           var cu_alarm = $.trim(el.output.cu_alarm);
           if (dev_alarm == 1) {
@@ -3869,16 +3878,7 @@ function executeAlgoMenuCmd(cmd, opt) {
             show_cu_alarm(id);
           });
 
-          if (busy == 'true') {
-            $("#" + name_id + "_output_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd);
-            if (el.output.dpck_seq_id & 1) {
-              $("#" + name_id + "_output_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_empty</i>');
-            } else {
-              $("#" + name_id + "_output_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_full</i>');
-            }
-          } else {
-            $("#" + name_id + "_output_busy").html('');
-          }
+          
         }
       } catch (e) {
         console.log(name_device_db + " warning :", e);
@@ -4059,7 +4059,7 @@ function executeAlgoMenuCmd(cmd, opt) {
       html += "<td class='td_element' id='" + cuname + "_output_polarity'></td>";
       html += "<td class='td_element' title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
       html += "<td class='td_element' title='Local controlled' id='" + cuname + "_output_local'></td>";
-      html += "<td class='td_element' id='" + cuname + "_output_busy'></td>";
+      html += "<td class='td_element' id='" + cuname + "_system_busy'></td>";
       html += "<td class='td_element' title='Control Unit alarms' id='" + cuname + "_output_cu_alarm'></td>";
       html += "<td class='td_element' title='Device alarms' id='" + cuname + "_output_device_alarm'></td></tr>";
     });
