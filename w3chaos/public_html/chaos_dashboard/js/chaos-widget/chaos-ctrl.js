@@ -3744,6 +3744,12 @@ function executeAlgoMenuCmd(cmd, opt) {
 
 
   function updateGenericTableDataset(cu) {
+    if(updateGenericTableDataset.count == undefined){
+      updateGenericTableDataset.count = 1;
+    }
+    else{
+      updateGenericTableDataset.count ++;
+    }
     cu.forEach(function (el) {  // cu forEach
       var name_device_db, name_id;
       var status;
@@ -3825,7 +3831,7 @@ function executeAlgoMenuCmd(cmd, opt) {
           var busy = $.trim(el.system.busy);
           if (busy == 'true') {
             $("#" + name_id + "_system_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd);
-            if (el.output.dpck_seq_id & 1) {
+            if (updateGenericTableDataset.count & 1) {
               $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_empty</i>');
             } else {
               $("#" + name_id + "_system_busy").html('<i id="busy_' + name_id + '" class="material-icons verde">hourglass_full</i>');
