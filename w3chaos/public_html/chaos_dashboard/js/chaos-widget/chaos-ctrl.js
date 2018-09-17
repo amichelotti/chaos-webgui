@@ -466,7 +466,7 @@
       width: sizex,
       height: sizey,
       title: msghead,
-      position: "left",
+      position: "center",
       dialogClass: 'instantOk',
       open: function () {
         if(ok!=null){
@@ -3710,7 +3710,7 @@ function executeAlgoMenuCmd(cmd, opt) {
     html += '<th>Timestamp</th>';
     html += '<th>Uptime</th>';
     html += '<th colspan="2">Time sys/usr [%]</th>';
-    html += '<th>Command Queue</th>';
+    html += '<th colspan="2">Command Current/Queue</th>';
     html += '<th colspan="2">Alarms dev/cu</th>';
     html += '<th>Push rate</th>';
     html += '</tr>';
@@ -3728,6 +3728,7 @@ function executeAlgoMenuCmd(cmd, opt) {
       html += "<td id='" + cuname + "_health_uptime'></td>";
       html += "<td id='" + cuname + "_health_systemtime'></td>";
       html += "<td id='" + cuname + "_health_usertime'></td>";
+      html += "<td id='" + cuname + "_system_current_command'></td>";
       html += "<td id='" + cuname + "_system_command'></td>";
       html += "<td title='Device alarms' id='" + cuname + "_output_device_alarm'></td>";
       html += "<td title='Control Unit alarms' id='" + cuname + "_output_cu_alarm'></td>";
@@ -3809,7 +3810,22 @@ function executeAlgoMenuCmd(cmd, opt) {
           }
         }
         if (el.hasOwnProperty('system') && (status != "Dead")) {   //if el system
+          var busy = $.trim(el.system.busy);
+          if(el.system.hasOwnProperty("running_cmd_alias")){
+            if(busy == "true"){
+              if (updateGenericTableDataset.count & 1) {
+                $("#" + name_id + "_system_current_command").html("<b>"+el.system.running_cmd_alias+"</b>");
+              } else {
+                $("#" + name_id + "_system_current_command").html(el.system.running_cmd_alias);
+              }
+            } else {
+              $("#" + name_id + "_system_current_command").html(el.system.running_cmd_alias);
+            }
+          } else {
+            $("#" + name_id + "_system_current_command").html("NA");
+          }
           $("#" + name_id + "_system_command").html(el.system.dp_sys_que_cmd);
+
           if(el.system.hasOwnProperty("cudk_burst_state")&&el.system.cudk_burst_state){
             $("#" + name_id + "_health_status").html('<i class="material-icons verde">videocam</i>');
             $("#" + name_id + "_health_status").attr('title',"TAG:'"+el.system.cudk_burst_tag+"'");
@@ -3828,7 +3844,7 @@ function executeAlgoMenuCmd(cmd, opt) {
             }
             
           }
-          var busy = $.trim(el.system.busy);
+        
           if (busy == 'true') {
             $("#" + name_id + "_system_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd);
             if (updateGenericTableDataset.count & 1) {
