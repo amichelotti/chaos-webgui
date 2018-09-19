@@ -741,7 +741,10 @@
 						zipf.generateAsync({type:"blob"},updateCall).then(function (content) {
 							saveAs(content, zipname);
 						});
-					}
+					}/* else {
+						per = 100*(vcams.length)/(vcams.length-cnt);
+						updateCall({percent:per});
+					}*/
 				},tagsv);
 			});
 			
