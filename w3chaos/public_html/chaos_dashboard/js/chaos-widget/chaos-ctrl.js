@@ -5998,6 +5998,14 @@ function executeAlgoMenuCmd(cmd, opt) {
     html += '<label for="histo-enable">disable history</label><input class="input-xlarge" id="histo-false" title="Disable History" name="histo-enable" type="radio" value="false">';
     html += '</div>'
     
+    html += '<div class="span2">'
+    html += '<label for="restore-enable">restore on init</label><input class="input-xlarge" id="restore-true" title="Enable Restore on init" name="restore-enable" type="radio" value="true">';
+    html += '<label for="restore-enable">disable restore</label><input class="input-xlarge" id="restore-false" title="Disable Restore on init" name="restore-enable" type="radio" value="false">';
+    html += '</div>'
+    html += '<div class="span2">';
+    html += '<label for="restore-type">Restore Type/tagname</label>';
+    html += '<input id="restore-type" type="text" title="Restore Type/tagname">';
+    html += '</div>';
     html += '</div>'
     html += '</div>';
     
