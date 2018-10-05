@@ -38,8 +38,8 @@ namespace chaos {
 	namespace wan_proxy {
 		namespace api {
 			
+			//typedef std::map<std::string,AbstractApi*> ApiHashMap;
 			typedef utility::TypedConstrainedHashMap<AbstractApi> ApiHashMap;
-			
 			//! define the abstract group of api
 			class AbstractApiGroup:
 			public PersistenceAccessor,
