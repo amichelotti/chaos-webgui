@@ -24,8 +24,8 @@
 #include <vector>
 #include <string>
 #include <chaos/common/ChaosCommon.h>
+#include <chaos/common/chaos_types.h>
 #include "AbstractWANInterfaceResponse.h"
-#include "../utility/TypedConstrainedHashMap.h"
 #include "../api/AbstractApiGroup.h"
 #include "../api/PersistenceAccessor.h"
 
@@ -35,11 +35,11 @@ namespace chaos {
     namespace wan_proxy {
         namespace wan_interface {
 			
-			typedef chaos::wan_proxy::utility::TypedConstrainedHashMap<api::AbstractApiGroup> ApiGroupHashMap;
+			CHAOS_DEFINE_MAP_FOR_TYPE(std::string, ChaosSharedPtr<api::AbstractApiGroup>, ApiGroupHashMap);
 			
 			//! collect all group of api that respetc a specified version
-			struct ApiGroupVersionDomain:
-			public ApiGroupHashMap {
+			struct ApiGroupVersionDomain {
+				ApiGroupHashMap group_map;
 				ApiGroupVersionDomain();
 				~ApiGroupVersionDomain();
 				
@@ -47,12 +47,16 @@ namespace chaos {
 								 const Json::Value& input_data,
 								 std::map<std::string, std::string>& output_header,
 								 Json::Value& output_data);
-			protected:
-				
-				//! inherited from AbstractApiHashMap
-				void clearHashTableElement(const void *key,
-										   uint32_t key_len,
-										   api::AbstractApiGroup *element);
+
+				template <typename A, typename P>
+				void addTypeWithParam(P param) {
+					ChaosUniquePtr<INSTANCER_P1(A, api::AbstractApiGroup, P)> i(ALLOCATE_INSTANCER_P1(A, api::AbstractApiGroup, P));
+					ChaosSharedPtr<api::AbstractApiGroup> instance(i->getInstance(param));
+					if(instance) {
+						group_map.insert(ApiGroupHashMapPair(instance->getName(),
+															instance));
+					}
+				}				 
 			};
 			
 			

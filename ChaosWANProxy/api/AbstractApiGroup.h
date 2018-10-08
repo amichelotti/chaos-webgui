@@ -24,58 +24,61 @@
 #include "AbstractApi.h"
 #include "PersistenceAccessor.h"
 
-#include "../utility/TypedConstrainedHashMap.h"
-
 #include <string>
 
+#include <chaos/common/chaos_types.h>
 #include <chaos/common/utility/NamedService.h>
 #include <chaos/common/utility/ObjectInstancer.h>
-#include <chaos/common/utility/TemplatedKeyValueHashMap.h>
 
 #include <json/json.h>
 
-namespace chaos {
-	namespace wan_proxy {
-		namespace api {
-			
-			//typedef std::map<std::string,AbstractApi*> ApiHashMap;
-			typedef utility::TypedConstrainedHashMap<AbstractApi> ApiHashMap;
-			//! define the abstract group of api
-			class AbstractApiGroup:
-			public PersistenceAccessor,
-			public chaos::common::utility::NamedService,
-			protected ApiHashMap {
-				
-				//! inherited from AbstractApiHashMap
-				void clearHashTableElement(const void *key,
-										   uint32_t key_len,
-										   AbstractApi *element);
-			protected:
-				template<typename A>
-				void addApi() {
-					addTypeWithParam<A, persistence::AbstractPersistenceDriver*>(getPersistenceDriver());
-				}
-			public:
-				//! construct the group with a name
-				AbstractApiGroup(const std::string& name,
-								 persistence::AbstractPersistenceDriver *_persistence_driver);
-				
-				//! default destructor
-				virtual ~AbstractApiGroup();
-				
-				//! remove all api
-				void removeAllApi();
-				
-				//! remove by name
-				void removeApiByName(const std::string name);
-				
-				int callApi(std::vector<std::string>& api_tokens,
-							const Json::Value& input_data,
-							std::map<std::string, std::string>& output_header,
-							Json::Value& output_data);
-			};
+namespace chaos
+{
+namespace wan_proxy
+{
+namespace api
+{
+
+CHAOS_DEFINE_MAP_FOR_TYPE(std::string, ChaosSharedPtr<chaos::wan_proxy::api::AbstractApi>, ApiHashMap);
+//! define the abstract group of api
+class AbstractApiGroup : public PersistenceAccessor,
+						 public chaos::common::utility::NamedService
+{
+	ApiHashMap api_map;
+
+  protected:
+	template <typename A>
+	void addApi()
+	{
+		ChaosUniquePtr<INSTANCER_P1(A, AbstractApi, persistence::AbstractPersistenceDriver *)> i(ALLOCATE_INSTANCER_P1(A, AbstractApi, persistence::AbstractPersistenceDriver *));
+		ChaosSharedPtr<AbstractApi> instance(i->getInstance(getPersistenceDriver()));
+		if (instance)
+		{
+			api_map.insert(ApiHashMapPair(instance->getName(), instance));
 		}
 	}
-}
+
+  public:
+	//! construct the group with a name
+	AbstractApiGroup(const std::string &name,
+					 persistence::AbstractPersistenceDriver *_persistence_driver);
+
+	//! default destructor
+	virtual ~AbstractApiGroup();
+
+	//! remove all api
+	void removeAllApi();
+
+	//! remove by name
+	void removeApiByName(const std::string name);
+
+	int callApi(std::vector<std::string> &api_tokens,
+				const Json::Value &input_data,
+				std::map<std::string, std::string> &output_header,
+				Json::Value &output_data);
+};
+} // namespace api
+} // namespace wan_proxy
+} // namespace chaos
 
 #endif /* defined(__CHAOSFramework__AbstractApiGroup__) */

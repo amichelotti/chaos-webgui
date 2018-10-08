@@ -23,6 +23,7 @@
 #include "HTTPWANInterfaceStringResponse.h"
 #include <map>
 #include <vector>
+#include <chaos/common/async_central/async_central.h>
 #include <chaos/common/utility/TimingUtil.h>
 
 #include <boost/regex.hpp>

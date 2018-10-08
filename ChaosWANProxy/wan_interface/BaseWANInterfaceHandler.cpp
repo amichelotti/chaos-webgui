@@ -26,19 +26,9 @@ using namespace chaos::wan_proxy::api;
 using namespace chaos::wan_proxy::wan_interface;
 
 #pragma mark ApiGroupVersionDomain
-ApiGroupVersionDomain::ApiGroupVersionDomain():
-//set the hash map power to 8
-ApiGroupHashMap(8){}
+ApiGroupVersionDomain::ApiGroupVersionDomain(){}
 
-ApiGroupVersionDomain::~ApiGroupVersionDomain() {}
-
-// inherited from AbstractApiHashMap
-void ApiGroupVersionDomain::clearHashTableElement(const void *key,
-												  uint32_t key_len,
-												  api::AbstractApiGroup *element) {
-	//delete the element
-	delete(element);
-}
+ApiGroupVersionDomain::~ApiGroupVersionDomain(){}
 
 int ApiGroupVersionDomain::callGroupApi(std::vector<std::string>& api_tokens,
 										const Json::Value& input_data,
@@ -53,19 +43,19 @@ int ApiGroupVersionDomain::callGroupApi(std::vector<std::string>& api_tokens,
         return -1;
     }
 	const std::string& group_name = api_tokens.front();
-	AbstractApiGroup *api_group_selected = NULL;
-	if((err = getElement(group_name.c_str(), (uint32_t)group_name.size(), &api_group_selected)) ||
-	   !api_group_selected) {
-		//error or not found
+	ChaosSharedPtr<api::AbstractApiGroup> api_group_selected;
+	ApiGroupHashMapIterator api_it = group_map.find(group_name);
+	if(api_it == group_map.end()) {
+		//error or not found	
 	} else {
 		//remove the group name
 		api_tokens.erase(api_tokens.begin());
-		
+		api_group_selected = api_it->second;
 		//forward call to the found group
-		err=api_group_selected->callApi(api_tokens,
-									input_data,
-									output_header,
-									output_data);
+		err = api_group_selected->callApi(api_tokens,
+										  input_data,
+										  output_header,
+										  output_data);
 	}
 	return err;
 }
