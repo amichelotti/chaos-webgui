@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width">
+    <title>Add Dataset Variable to your CU</title>
+    
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300|Bitter|Ubuntu+Mono' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="style.css">
+    <script  src="combobox.js"></script>
+   
+  </head>
+  <body>
+        
+        <div class="wrapper">
+                <h1>Dataset variable</h1>
+                <div w3-include-html="menubar.html"></div>
+                <div class="tabcontainer">
+                        <form>
+                        <table class="invisible">
+                                <tr>
+
+                                <th>
+                                <div>
+                                        <label for="AttributeName">Attribute name:</label>
+                                        <input class="text" id="AttrName">
+                                </div>
+                                <div>
+                                        <label for="AttributeDesc">Attribute Description:</label>
+                                        <input class="text" id="AttrDesc">
+                                </div>
+                                <div>
+                                        <label for="AttributeType">Type:</label>
+                                        <select id="AttrType" onchange="disablestrLenForm()">
+                                        <option value="TYPE_INT32">TYPE_INT32</option>
+                                        <option value="TYPE_INT64">TYPE_INT64</option>
+                                        <option value="TYPE_DOUBLE">TYPE_DOUBLE</option>
+                                        <option value="TYPE_STRING">TYPE_STRING</option>
+                                        <option value="TYPE_BOOLEAN">TYPE_BOOLEAN</option>
+                                        </select>
+                                </div>
+                                <div>
+                                        <label for="AttributeDirection">Direction:</label>
+                                        <select id="AttrDir" onchange="manageHandlerCheckBox(this)">
+                                        <option value="Input">Input</option>
+                                        <option value="Output">Output</option>
+                                        <option value="Bidirectional">Bidirectional</option>
+                                        </select>
+                                </div>
+                                <div>
+                                        <label for="AttributeStringLength">String length:</label>
+                                        <input type="number" id="AttrStrLen" min="32" max="8192" step="32" value="256" disabled=true>
+                                </div>
+                        
+
+
+                        </th>
+                        <th>
+                                        <div>
+                                               <input type="checkbox" id="isVector" onchange="showVectorLength(this)"> As a Binary Vector<br> 
+                                               <label for="lVectorLength" id="labelVLen" hidden=true>Vector length:</label>
+                                               <input type="number" id="VectorLength" min="2" max="8192" step="1" value="10" hidden=true>
+                                        </div>
+                                        <div>
+                                                <input type="checkbox" id="addHandler"  onchange="showHandlerCombo(this)"> Add handler<br> 
+                                        
+                                                <label for="HandlerLab" id="labelHandler" hidden=true>Custom Handler:</label>
+                                                <input type="radio" name="handlerSource" id="customFunction"  checked hidden=true onchange="radioSelectHandler()"><br>
+
+                                                <label for="HandlerLab" id="labelCommandHandler" hidden=true>From Command:</label>
+                                                <input type="radio" name="handlerSource" id="driverCommand" hidden=true onchange="radioSelectHandler()"><br>
+
+
+                                                <select style='width:270px;' id="comboHandler" name="alfa1" hidden=true >
+                                                <!--   <option value='A. NAGAR'>A. NAGAR</option>
+                                                        <option value='AAGAR'>AAGAR</option>-->
+                                                </select>
+                                                <label for="customHandler" id="labelCustomHandler" hidden=true>Custom Function Name:</label>
+                                                <input type="text" id="customHandler" hidden=true>
+                                                <!--<script>
+                                                        var z=SuggestComboDropDown("comboHandler");
+                                                        z.enableFilteringMode(true);
+                                                        z.attachEvent("onOpen",function(){
+                                                        //var i=z.getSelectedIndex();
+                                                        //alert("cuai "+ i);
+                                                        var text = z.getComboText();
+                                                        window.setTimeout(function(){
+                                                        z.setComboText("");
+                                                        z.filterSelf();
+                                                        z.setComboText(text);
+                                                        z.DOMelem_input.focus();
+                                                        },0)
+                                                        });
+                                                </script> -->
+
+                                        </div>
+                                       
+                                        <div>
+                                                <input type="button" id = "AddAttribute" value="Add to CU">
+                                        </div>
+                                </th>
+                        </tr>
+                        </table>
+                        </form>
+                </div>
+        </div>
+  </body>
+  <script src="controlUnit.js"></script>
+  <script>includeHTML();</script>
+  <script src="datasetVariable.js"></script>
+  <script src="CmdParameter.js"></script>
+  <script src="dataset.js"></script>
+</html>

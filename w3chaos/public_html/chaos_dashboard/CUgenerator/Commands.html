@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width">
+    <title>Control Unit Add Command</title>
+    
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300|Bitter|Ubuntu+Mono' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="style.css">
+    
+
+  </head>
+  <body>
+        <div class="wrapper">
+          <h1>Commands</h1>
+          <div w3-include-html="menubar.html"></div>
+          <div class="tabcontainer">
+          
+          <table class="tab">
+                <tr>
+                    <th class="PlaceLeft">
+                        
+                            <div >
+                                    <label  for="lComName">Command Name:</label><br/>
+                                    <input class="text" id="CommandName">
+                                    
+                                   
+                            </div>
+                           
+                            <div >
+                            
+                                    <label for="lComDesc">Description:</label><br/>
+                                    <input type="text" class="largeText" id="CommandDesc">
+                            </div >
+                            <div class="rigthLab">
+                                        <div class="tooltip">
+                                                    <input type="checkbox" id="onlyDriver"  onchange="manageOnlyDriverCheckbox(this)"> Driver Only<br/>
+                                                    <span class="tooltiptext">If checked your command won't have an User Interface</span>
+                                        </div>
+                                        </div>
+                            <div class="PlaceLeft">
+                            <input type="button" id = "AddCommand" value="Add Command to CU"><br/>
+                            </div>
+                        
+                    </th>
+                   
+                    <th class="PlaceLeft">
+                            <div>
+                                    <label for="lComPar" class="curParLabel">Current Parameters:</label><br/>
+                                    <textarea rows="6" id="CommandParametersTextBox" cols="30" onselect="checkRemoveParButton(this)"></textarea>
+                            </div>
+                    </th>
+                   
+                </tr>
+                <tr>
+                    <th class="rigthLab">
+                        
+                        
+        
+                        
+                        <div>
+                                        <div class="rigthLab">
+                                                        <fieldset class="passingParS" id="passingPar" hidden=true>
+                                                                        <legend>Passing Parameter as:</legend>
+                                                                        <label for="labCopy" id="IdLasCopy">copy:</label>
+                                                                        <input type="radio" name="passingParameter" id="radioAsCopy" checked><br>
+                                                                        <label for="labReference" id="IdLReference">reference:</label>
+                                                                        <input type="radio" name="passingParameter" id="radioAsReference"><br>
+                                                                        <label for="labPointer" id="IdLPointer">pointer:</label>
+                                                                        <input type="radio" name="passingParameter" id="radioAsPointer"><br>
+                                                        </fieldset>
+                                        </div>
+                                        
+                        </div>
+                   
+                    </th>
+                   
+                    <th class="PlaceLeft">
+                           
+                                    
+                        
+                                
+
+                                <div>
+                                        <label for="lParName">Parameter Name:</label><br/>
+                                        <input class="text" id="ParamName">
+                                </div>
+                                <div>
+                                        <label for="lParDesc">Description:</label><br/>
+                                        <input type="text" class="largeText" id="ParamDesc">
+                                </div>
+                                <div>
+                                        <label for="lParType">Parameter Type:</label><br/>
+                                        <select style='width:150px;' id="paramType"  >
+                                                <option value='double'>double</option>
+                                                <option value='int32_t'>int32_t</option>
+                                                <option value='int64_t'>int64_t</option>
+                                                <option value='string'>std::string</option>
+                                        </select>
+                                        
+                                </div>
+                                <div class="rigthLab">
+                                                <input type="checkbox" id="mandatory" checked disabled>Mandatory<br>
+                                </div>
+                                <div >
+                                                <input type="button" id = "AddParameter" value="Add Parameter">
+                                                <div class="tooltip">
+                                                        <input type="button" id = "RemoveParameter" value="Remove Parameter">
+                                                        <span class="tooltiptext">Select Parameter name then press this button  to remove</span>
+                                                </div>
+                                </div>
+                      </th>
+                           
+                           
+                                       
+                                   
+                            
+                    
+                    
+                </tr>
+          </table>
+        
+
+
+
+        </div>
+    </body>
+    <script src="controlUnit.js"></script>
+   <script>includeHTML();</script>
+   <script src="CmdParameter.js"></script>
+   <script src="Commands.js"></script>
+   </html>
