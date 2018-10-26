@@ -495,28 +495,15 @@
     });
   }
   function copyToClipboard(testo) {
-    // $("#inputClipBoard").focus();
-    //var $temp=$("<input>");
-    //$("body").append($temp);
-    //$temp.val(testo).select();
-    $("#inputClipBoard").val(testo).select();
-    //document.execCommand("Copy");
-    //$temp.remove();
-
-    /*
-    var $temp = $("<div>");
-    $("body").append($temp);
-    $temp.attr("contenteditable", true)
-         .html(testo).select()
-         .on("focus", function() { 
-        document.execCommand('selectAll',false,null);
-         document.execCommand("copy");
-
-
-        }).focus();
-    $temp.remove();
-  */
-    //    instantMessage("Copy","copied to clipboard",900);
+      var $temp = $("<textarea>");
+    
+      $("body").append($temp); 
+      var brRegex = /<br\s*[\/]?>/gi;
+      testo.replace(brRegex, "\r\n");
+      $temp.val(testo);
+      $temp.select();
+      document.execCommand("copy");
+      $temp.remove();
   }
   function encodeCUPath(path) {
     if (path == null || path == "timestamp") {
@@ -756,6 +743,8 @@
         retlist.push(name);
       }
     });
+
+
     return retlist;
   }
   //Funzione per controllare che il timestamp di ogni singolo magnete si stia aggiornando
@@ -3123,9 +3112,18 @@ function executeAlgoMenuCmd(cmd, opt) {
 
     jchaos.node(node_list, "desc", cutype, null, null, function (data) {
       var cnt = 0;
+      var us_list=[];
+      var cu_list=[];
       node_list.forEach(function (elem, index) {
         var type = data[index].ndk_type;
         node_name_to_desc[elem] = { desc: data[index], parent: null, detail: null };
+        if ((type == "nt_control_unit")) {
+          cu_list.push(elem);
+        } else if((type == "nt_unit_server")){
+          us_list.push(elem);
+        }
+        
+        /*
         if ((type == "nt_control_unit")) {
           jchaos.getDesc(elem, function (data) {
             if (data[0].hasOwnProperty("instance_description")) {
@@ -3140,8 +3138,31 @@ function executeAlgoMenuCmd(cmd, opt) {
           }
 
         }
+        */
       });
-
+      if(cu_list.length>0){
+        jchaos.getDesc(cu_list, function (data) {
+          var cnt=0;
+          data.forEach(function(cu){
+            if(cu.hasOwnProperty("instance_description")){
+              node_name_to_desc[cu_list[cnt]].detail = cu.instance_description;
+              node_name_to_desc[cu_list[cnt]].parent = cu.instance_description.ndk_parent;
+            }
+            cnt++;
+          });
+        });
+      }
+      if(us_list.length>0){
+        jchaos.node(us_list, "parent", "us", null, null,function(data){
+          var cnt=0;
+          data.forEach(function(us){
+            if (us.hasOwnProperty("ndk_uid") && us.ndk_uid != "") {
+              node_name_to_desc[us_list[cnt]].parent = us.ndk_uid;
+            }
+            cnt++;
+          });
+        });
+      }
     });
 
 
@@ -6702,7 +6723,7 @@ function executeAlgoMenuCmd(cmd, opt) {
         var html = "";
         html += buildNodeBody();
         html += generateEditJson();
-        html += '<input id="inputClipBoard" value=" "/>';
+     //   html += '<input id="inputClipBoard" value=" "/>';
 
         html += '<div class="specific-table-node"></div>';
 

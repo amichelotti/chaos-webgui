@@ -395,7 +395,7 @@
 			jchaos.search("","cu",alive,function(lscu){
 				desclist=jchaos.getDesc(lscu,null);
 				desclist.forEach(function(elem){
-					if(elem.instance_description.control_unit_implementation.includes(impl)){
+					if(String(elem.instance_description.control_unit_implementation).includes(impl)){
 							implList.push(elem.ndk_uid);
 
 					}
@@ -452,7 +452,7 @@
 			return dev_array;
 		}
 
-		jchaos.getChannel = function (devs, channel_id, handleFunc) {
+		jchaos.getChannel = function (devs, channel_id, handleFunc,badfunc) {
 
 			var dev_array = jchaos.convertArray2CSV(devs);
 
@@ -470,7 +470,7 @@
 			if ((typeof handleFunc !== "function")) {
 				return jchaos.basicPost("CU", str_url_cu, null);
 			}
-			jchaos.basicPost("CU", str_url_cu, function (datav) { jchaos.lastChannel = datav; handleFunc(datav); });
+			jchaos.basicPost("CU", str_url_cu, function (datav) { jchaos.lastChannel = datav; handleFunc(datav); },badfunc);
 		}
 		jchaos.getDesc = function (devs, handleFunc) {
 
@@ -741,10 +741,7 @@
 						zipf.generateAsync({type:"blob"},updateCall).then(function (content) {
 							saveAs(content, zipname);
 						});
-					}/* else {
-						per = 100*(vcams.length)/(vcams.length-cnt);
-						updateCall({percent:per});
-					}*/
+					}
 				},tagsv);
 			});
 			
@@ -793,6 +790,21 @@
 
 
 
+		jchaos.checkPeriodiocally=function(str,retry, checkFreq, checkFunc, okhandle, nokhandle) {
+			setTimeout(function () {
+				if (checkFunc()) {
+					okhandle();
+				} else if (--retry > 0) {
+					console.log(str+" retry check... " + retry);
+
+					jchaos.checkPeriodiocally(str, retry, checkFreq, checkFunc, okhandle, nokhandle);
+				} else {
+					console.log(str+ " expired maximum number of retry...");
+
+					nokhandle();
+				}
+			}, checkFreq);
+		};
 		
 		/**
 		 * This function check for a variable change on a 'devlist', for 'retry' times, checking every 'checkFreq'
@@ -805,23 +817,42 @@
 			var tot_ok = 0;
 			//console.log(" checking Live of " + devlist + " every:" + checkFreq + " ms");
 			jchaos.getChannel(devlist, -1, function (ds) {
+				var cnt=0;
 				ds.forEach(function (elem) {
-					if (checkFunc(elem)) {
-					    tot_ok++;
-					    console.log("\x1B[1m"+str+"\x1B[1m\t\x1B[32m\x1B[1mOK\x1B[22m\x1B[39m \x1B[1m" + elem.health.ndk_uid + "\x1B[22m " + tot_ok + "/" + devlist.length);
-					} else {
-						if(retry>1){
-							console.log("\x1B[1m"+str+"\x1B[1m\t-"+retry+"- \x1B[33m\x1B[1m" + elem.health.ndk_uid + "\x1B[22m\x1B[39m " + tot_ok + "/" + devlist.length);
+					if(elem.hasOwnProperty("health") && elem.health.hasOwnProperty("ndk_uid")){
+						if (checkFunc(elem)) {
+							tot_ok++;
+							console.log("\x1B[1m"+str+"\x1B[1m\t\x1B[32m\x1B[1mOK\x1B[22m\x1B[39m \x1B[1m" + elem.health.ndk_uid + "\x1B[22m " + tot_ok + "/" + devlist.length);
+				
 						} else {
-							console.log("\x1B[1m"+str+"\x1B[1m\t-"+retry+"- \x1B[31m\x1B[1m" + elem.health.ndk_uid + "\x1B[22m\x1B[39m " + tot_ok + "/" + devlist.length);
+							if(retry>1){
+								console.log("\x1B[1m"+str+"\x1B[1m\t-"+retry+"- \x1B[33m\x1B[1m" + elem.health.ndk_uid + "\x1B[22m\x1B[39m " + tot_ok + "/" + devlist.length);
+							} else {
+								console.log("\x1B[1m"+str+"\x1B[1m\t-"+retry+"- \x1B[31m\x1B[1m" + elem.health.ndk_uid + "\x1B[22m\x1B[39m " + tot_ok + "/" + devlist.length);
+							}
 						}
+				} else {
+					if(retry>1){
+						console.log("\x1B[1m"+str+"\x1B[1m\t-"+retry+"- \x1B[33m\x1B[1m missing/malformed health " + devlist[cnt]+ "\x1B[22m\x1B[39m " + tot_ok + "/" + devlist.length);
+					} else {
+						console.log("\x1B[1m"+str+"\x1B[1m\t-"+retry+"- \x1B[31m\x1B[1m missing/malformed health " + devlist[cnt] + "\x1B[22m\x1B[39m " + tot_ok + "/" + devlist.length);
 					}
+				}
+				cnt++;
 				});
+			},function(){
+				console.log(str+" getChannel failed " + retry);
+
+				if (tot_ok == devlist.length) {
+					okhandle();
+					return;
+				}
 			});
 			
 			setTimeout(function () {
 				if (tot_ok == devlist.length) {
 					okhandle();
+					return;
 				} else if (--retry > 0) {
 					console.log(str+" retry check... " + retry);
 
