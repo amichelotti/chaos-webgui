@@ -340,8 +340,8 @@
           }
           if (!stop_update) {
             jchaos.getChannel(cuname, -1, function (imdata) {
-              last_dataset = imdata;
-              var converted = convertBinaryToArrays(imdata);
+              last_dataset = imdata[0];
+              var converted = convertBinaryToArrays(imdata[0]);
               var jsonhtml = json2html(converted, options, cuname);
               if (isCollapsable(converted)) {
                 jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
@@ -736,10 +736,12 @@
   function cusWithInterface(culist, interface) {
     var retlist = [];
     culist.forEach(function (name) {
-      var desc = jchaos.getDesc(name, null);
-      node_name_to_desc[name] = desc[0];
-
-      if (desc[0].hasOwnProperty('instance_description') && desc[0].instance_description.hasOwnProperty("control_unit_implementation") && (desc[0].instance_description.control_unit_implementation.indexOf(interface) != -1)) {
+      if (node_name_to_desc[name] == null) {
+        var desc = jchaos.getDesc(name, null);
+        node_name_to_desc[name] = desc[0];
+      }
+   
+      if (node_name_to_desc[name].hasOwnProperty('instance_description') && node_name_to_desc[name].instance_description.hasOwnProperty("control_unit_implementation") && (node_name_to_desc[name].instance_description.control_unit_implementation.indexOf(interface) != -1)) {
         retlist.push(name);
       }
     });
@@ -1407,6 +1409,24 @@
     });
   }
   function snapSetup() {
+    $("#snap-load").on('click', function () {
+      $("#mdl-snap").modal("hide");
+      getFile("LOAD JSON SNAPSHOT/SETPOINT", "select the JSON to load", function (config) {
+        getEntryWindow("JSON Loaded","Snapshot Name","name","Save",function(name){
+          var vsets;
+          if(config instanceof Array){
+            vsets=config;
+          } else {
+            vsets=[config];
+          }
+          vsets.forEach(function(elem){
+            jchaos.snapshot(name, "set", "", JSON.stringify(elem), function (d) {
+              console.log("saving "+elem.name+ " in "+name);
+            });
+          });
+        },"Cancel");
+      });
+    });
     $("#snap-save").on('click', function () {
       var value = $("#snap_save_name").val();
       if (node_multi_selected.length > 1) {
@@ -1443,6 +1463,7 @@
       }
     });
     $("#snap-show").on('click', function (e) {
+      $("#mdl-snap").modal("hide");
 
       if (snap_selected != "") {
         var dataset = jchaos.snapshot(snap_selected, "load", null, "", null);
@@ -1480,22 +1501,24 @@
     $("#description-close").on('click', function () {
       $("#mdl-description").modal("hide");
     });
-
+    /*
     $("a.show_description").click(function () {
-      var dataset = jchaos.getDesc(node_selected, null);
-      var jsonhtml = json2html(dataset, options, node_selected);
-      save_obj = {
-        obj: dataset,
-        fname: "description_" + encodeName(node_selected),
-        fext: "json"
-      };
-      if (isCollapsable(dataset)) {
-        jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
-      }
-      $("#desc_text").html("Description of " + node_selected);
-      $("#cu-description").html(jsonhtml);
+      jchaos.getDesc(node_selected, function(dataset){
+        node_name_to_desc[node_selected]=dataset[0];
+        var jsonhtml = json2html(dataset[0], options, node_selected);
+        save_obj = {
+          obj: dataset[0],
+          fname: "description_" + encodeName(node_selected),
+          fext: "json"
+        };
+        if (isCollapsable(dataset)) {
+          jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+        }
+        $("#desc_text").html("Description of " + node_selected);
+        $("#cu-description").html(jsonhtml);
+      });
     });
-
+    */
   }
 
   function jsonEnableContext() {
@@ -2404,7 +2427,9 @@
       showDataset(node_multi_selected[0], node_multi_selected[0], 1000);
     } else if (cmd == "show-desc") {
       jchaos.getDesc(node_multi_selected[0], function (data) {
-        showJson("Description " + node_multi_selected[0], node_multi_selected[0], data);
+        node_name_to_desc[node_multi_selected[0]]=data[0];
+
+        showJson("Description " + node_multi_selected[0], node_multi_selected[0], data[0]);
       });
 
     } else if (cmd == "show-picture") {
@@ -2682,7 +2707,7 @@
       return;
     } else if (cmd == "del-nt_control_unit") {
       node_multi_selected.forEach(function (nod) {
-        var desc = jchaos.getDesc(nod, null);
+        jchaos.getDesc(nod, function(desc){
         if (desc[0] != null && desc[0].hasOwnProperty("instance_description")) {
           var parent = desc[0].instance_description.ndk_parent;
           confirm("Delete CU", "Your are deleting CU: \"" + nod + "\"(" + parent + ")", "Ok", function () {
@@ -2690,6 +2715,7 @@
           }, "Cancel");
         }
       });
+    });
       return;
     } else if (cmd == "copy-nt_control_unit") {
 
@@ -3118,7 +3144,7 @@ function executeAlgoMenuCmd(cmd, opt) {
         var type = data[index].ndk_type;
         node_name_to_desc[elem] = { desc: data[index], parent: null, detail: null };
         if ((type == "nt_control_unit")) {
-          cu_list.push(elem);
+            cu_list.push(elem);
         } else if((type == "nt_unit_server")){
           us_list.push(elem);
         }
@@ -3591,12 +3617,13 @@ function executeAlgoMenuCmd(cmd, opt) {
     $(e.currentTarget).addClass("row_snap_selected");
     if (type == "cu") {
       if (node_name_to_desc[name] == null) {
-        var desc = jchaos.getDesc(node_selected, null);
-        if (desc != null) {
-          node_name_to_desc[name] = desc[0];
-        }
+        jchaos.getDesc(node_selected, function(desc){
+          if (desc[0] != null) {
+            node_name_to_desc[name] = desc[0];
+          }
+      });
       }
-      if (node_selected != null && node_name_to_desc[name].hasOwnProperty("cudk_ds_desc") && node_name_to_desc[name].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
+      if (node_selected != null && (node_name_to_desc[name] != null) && node_name_to_desc[name].hasOwnProperty("cudk_ds_desc") && node_name_to_desc[name].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
         var desc = node_name_to_desc[name].cudk_ds_desc.cudk_ds_command_description;
         $("#cu_full_commands").add("<option>--Select--</option>");
 
@@ -5380,7 +5407,7 @@ function executeAlgoMenuCmd(cmd, opt) {
 
     html += '<div class="modal-header">';
     html += '<button type="button" class="close" data-dismiss="modal">×</button>';
-    html += '<h3 id="list_snapshot">List Snapshots</h3>';
+    html += '<h3 id="list_snapshot">Snapshot Editor</h3>';
     html += '</div>';
 
     html += '<div class="modal-body">';
@@ -5418,6 +5445,8 @@ function executeAlgoMenuCmd(cmd, opt) {
     html += '<a href="#" class="btn" id="snap-show">Show</a>';
     html += '<a href="#" class="btn" id="snap-apply">Apply</a>';
     html += '<a href="#" class="btn" id="snap-delete">Delete</a>';
+    html += '<a href="#" class="btn" id="snap-load">Upload</a>';
+
     html += '<a href="#" class="btn" id="snap-save">Save</a>';
     html += '<a href="#" class="btn" id="snap-close">Close</a>';
     html += '</div>';
@@ -6496,14 +6525,19 @@ function executeAlgoMenuCmd(cmd, opt) {
             name = elem.input.ndk_uid;
           } else if (elem.hasOwnProperty("output")) {
             name = elem.output.ndk_uid;
-
+          } else if(elem.hasOwnProperty("name")){
+            name=elem.name;
           }
-          cu_name_to_saved[name] = elem;
-
-          var desc = jchaos.getDesc(name, null);
-          var type = findImplementationName(desc[0].instance_description.control_unit_implementation);
-          $('#table_snap_nodes').append('<tr class="row_element" id="' + name + '"><td>' + name + '</td><td>' + type + '</td></tr>');
-
+          if(name !== 'undefined'){
+            cu_name_to_saved[name] = elem;
+            if(node_name_to_desc[name]==null){
+              var desc = jchaos.getDesc(name, null);
+              node_name_to_desc[name]=desc[0];
+            }
+           
+            var type = findImplementationName(node_name_to_desc[name].instance_description.control_unit_implementation);
+            $('#table_snap_nodes').append('<tr class="row_element" id="' + name + '"><td>' + name + '</td><td>' + type + '</td></tr>');
+          }
         });
         $("#snap-apply").show();
         $("#snap-show").show();
