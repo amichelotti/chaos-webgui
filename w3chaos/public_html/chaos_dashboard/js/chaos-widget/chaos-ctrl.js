@@ -3778,8 +3778,8 @@ function executeAlgoMenuCmd(cmd, opt) {
       html += "<td id='" + cuname + "_health_usertime'></td>";
       html += "<td id='" + cuname + "_system_current_command'></td>";
       html += "<td id='" + cuname + "_system_command'></td>";
-      html += "<td title='Device alarms' id='" + cuname + "_output_device_alarm'></td>";
-      html += "<td title='Control Unit alarms' id='" + cuname + "_output_cu_alarm'></td>";
+      html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
+      html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";
       html += "<td id='" + cuname + "_health_prate'></td></tr>";
     });
 
@@ -3859,15 +3859,58 @@ function executeAlgoMenuCmd(cmd, opt) {
         }
         if (el.hasOwnProperty('system') && (status != "Dead")) {   //if el system
           var busy = $.trim(el.system.busy);
+          var dev_alarm = Number(el.system.cudk_dalrm_lvl);
+          var cu_alarm = Number(el.system.cudk_calrm_lvl);
+          if (dev_alarm == 1) {
+            $("#" + name_id + "_system_device_alarm").attr('title', "Device Warning");
+            $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error</i></a>');
+          } else if (dev_alarm == 2) {
+            $("#" + name_id + "_system_device_alarm").attr('title', "Device Error");
+            $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons rosso">error</i></a>');
+          } else {
+            $("#" + name_id + "_system_device_alarm").html('');
+          }
+
+          if (cu_alarm == 1) {
+            $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit Warning");
+
+            $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error_outline</i></a>');
+          } else if (cu_alarm == 2) {
+            $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit Error");
+
+            $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal"><i  class="material-icons rosso">error_outline</i></a>');
+          } else {
+            $("#" + name_id + "_system_cu_alarm").html('');
+          }
+          $("a.device-alarm").click(function (e) {
+            var id = $(this).attr("cuname");
+            show_dev_alarm(id);
+          });
+          $("a.cu-alarm").click(function (e) {
+            var id = $(this).attr("cuname");
+
+            show_cu_alarm(id);
+          });
           if(el.system.hasOwnProperty("running_cmd_alias")){
+            var cmd_state=el.system.running_cmd_alias;
+            if(el.system.hasOwnProperty("cudk_set_tag") && el.system.hasOwnProperty("cudk_set_state")){
+              if(el.system.cudk_set_state == 3){
+                cmd_state=el.system.running_cmd_alias+" (<b>"+el.system.cudk_set_tag+"</b>)";
+              } else if(el.system.cudk_set_state <0){
+                cmd_state=el.system.running_cmd_alias+' (<font color="red">'+el.system.cudk_set_tag+'</font>)';
+              } else {
+                cmd_state=el.system.running_cmd_alias+" ("+el.system.cudk_set_tag+")";
+
+              }
+            }
             if(busy == "true"){
               if (updateGenericTableDataset.count & 1) {
-                $("#" + name_id + "_system_current_command").html("<b>"+el.system.running_cmd_alias+"</b>");
+                $("#" + name_id + "_system_current_command").html("<b>"+cmd_state+"</b>");
               } else {
-                $("#" + name_id + "_system_current_command").html(el.system.running_cmd_alias);
+                $("#" + name_id + "_system_current_command").html(cmd_state);
               }
             } else {
-              $("#" + name_id + "_system_current_command").html(el.system.running_cmd_alias);
+              $("#" + name_id + "_system_current_command").html(cmd_state);
             }
           } else {
             $("#" + name_id + "_system_current_command").html("NA");
@@ -3914,42 +3957,7 @@ function executeAlgoMenuCmd(cmd, opt) {
             $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons yellow">cached</i>');
           }
         }
-        if (el.hasOwnProperty('output')) {   //if el output
-          var dev_alarm = $.trim(el.output.device_alarm);
-          var cu_alarm = $.trim(el.output.cu_alarm);
-          if (dev_alarm == 1) {
-            $("#" + name_id + "_output_device_alarm").attr('title', "Device Warning");
-            $("#" + name_id + "_output_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error</i></a>');
-          } else if (dev_alarm == 2) {
-            $("#" + name_id + "_output_device_alarm").attr('title', "Device Error");
-            $("#" + name_id + "_output_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons rosso">error</i></a>');
-          } else {
-            $("#" + name_id + "_output_device_alarm").html('');
-          }
 
-          if (cu_alarm == 1) {
-            $("#" + name_id + "_output_cu_alarm").attr('title', "Control Unit Warning");
-
-            $("#" + name_id + "_output_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error_outline</i></a>');
-          } else if (cu_alarm == 2) {
-            $("#" + name_id + "_output_cu_alarm").attr('title', "Control Unit Error");
-
-            $("#" + name_id + "_output_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal"><i  class="material-icons rosso">error_outline</i></a>');
-          } else {
-            $("#" + name_id + "_output_cu_alarm").html('');
-          }
-          $("a.device-alarm").click(function (e) {
-            var id = $(this).attr("cuname");
-            show_dev_alarm(id);
-          });
-          $("a.cu-alarm").click(function (e) {
-            var id = $(this).attr("cuname");
-
-            show_cu_alarm(id);
-          });
-
-          
-        }
       } catch (e) {
         console.log(name_device_db + " warning :", e);
       }
@@ -3977,7 +3985,7 @@ function executeAlgoMenuCmd(cmd, opt) {
       html += "<tr class='row_element cuMenu' cuname='" + cu[i] + "' id='" + cuname + "'><td class='name_element'>" + cu[i]
         + "</td><td class='position_element' id='" + cuname + "_output_position'></td><td class='position_element' id='" + cuname
         + "_input_position'></td><td id='" + cuname + "_input_saved_position'></td><td id='" + cuname + "_input_saved_status'></td><td id='" + cuname + "_output_status'></td><td id='" + cuname
-        + "_in'></td><td id='" + cuname + "_out'></td><td  title='Device alarms' id='" + cuname + "_output_device_alarm'></td><td title='Control Unit alarms' id='" + cuname + "_cu_alarm'></td></tr>";
+        + "_in'></td><td id='" + cuname + "_out'></td><td  title='Device alarms' id='" + cuname + "_system_device_alarm'></td><td title='Control Unit alarms' id='" + cuname + "_cu_alarm'></td></tr>";
     });
 
     html += '</table>';
@@ -4130,8 +4138,8 @@ function executeAlgoMenuCmd(cmd, opt) {
       html += "<td class='td_element' title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
       html += "<td class='td_element' title='Local controlled' id='" + cuname + "_output_local'></td>";
       html += "<td class='td_element' id='" + cuname + "_system_busy'></td>";
-      html += "<td class='td_element' title='Control Unit alarms' id='" + cuname + "_output_cu_alarm'></td>";
-      html += "<td class='td_element' title='Device alarms' id='" + cuname + "_output_device_alarm'></td></tr>";
+      html += "<td class='td_element' title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";
+      html += "<td class='td_element' title='Device alarms' id='" + cuname + "_system_device_alarm'></td></tr>";
     });
     html += '</table>';
     html += '</div>';
