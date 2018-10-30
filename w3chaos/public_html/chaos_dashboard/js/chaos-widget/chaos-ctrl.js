@@ -3899,8 +3899,12 @@ function executeAlgoMenuCmd(cmd, opt) {
               } else if(el.system.cudk_set_state <0){
                 cmd_state=el.system.running_cmd_alias+' (<font color="red">'+el.system.cudk_set_tag+'</font>)';
               } else {
-                cmd_state=el.system.running_cmd_alias+" ("+el.system.cudk_set_tag+")";
+                if (updateGenericTableDataset.count & 1) {
+                  cmd_state=el.system.running_cmd_alias+' (<font color="yellow"><b>'+el.system.cudk_set_tag+'</b></font>)';
+                } else {
+                  cmd_state=el.system.running_cmd_alias+' (<font color="orange"><b>'+el.system.cudk_set_tag+'</b></font>)';
 
+                }
               }
             }
             if(busy == "true"){

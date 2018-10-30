@@ -189,6 +189,38 @@
 			}
 			return jchaos.snapshot("", "burst", "", JSON.stringify(value), handleFunc, nok);
 		}
+		/**
+		 * Check if a list of CU have done a correct restore, the check is performed every timeout/10 ms for maximum timeout
+		 * @param {*} _tagname tag name
+		 * @param {*} _node_list a list of nodes (if null retrive the CU that have the given tagname)
+		 * @param {*} _timeout maximum time in ms 
+		 * @param {*} _okhandler handler called when ok
+		 * @param {*} _nokhandler handler called when nok
+		 */
+		jchaos.checkRestore=function(_tagname,_node_list,_timeout,_okhandler,_nokhandler){
+			var checkFreq=_timeout/10;
+			var retry=10;
+			if(_node_list == null){
+				_node_list=jchaos.search(_tagname,"insnapshot",true);
+			}
+			jchaos.checkPeriodiocally("checkRestore", retry, checkFreq, function(){
+				var data=jchaos.getChannel(_node_list,3,null);
+				var oks=0;
+				data.forEach(function(ds){
+					if((ds.busy == false)&&(ds.cudk_set_tag==_tagname)&&(ds.cudk_set_state==3)){
+						jchaos.print(ds.ndk_uid + " OK reached");
+						oks++;
+					} else {
+						jchaos.print(ds.ndk_uid + " NOT YET busy:"+ds.busy+ " restore state:"+ds.cudk_set_state);
+
+					}
+				});
+				if(oks==_node_list.length){
+					return true;
+				}
+				return false;	
+			}, _okhandler, _nokhandler);
+		}
 		jchaos.snapshot = function (_name, _what, _node_list, value_, handleFunc, nok) {
 			var opt = {};
 			if (_name instanceof Array) {

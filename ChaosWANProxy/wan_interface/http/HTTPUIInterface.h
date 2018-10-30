@@ -88,6 +88,7 @@ namespace chaos {
                     bool checkForContentType(mongoose::mg_connection *connection,
                                                                const std::string& type);
                     static ChaosSharedMutex devio_mutex;
+                    static boost::mutex devurl_mutex;
                     static uint64_t last_check_activity;
 
                     void checkActivity();
