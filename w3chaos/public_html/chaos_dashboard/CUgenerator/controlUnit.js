@@ -323,6 +323,14 @@ function isRelativePath(str) {
   return true;
 }
 
+function isAValidDescription(str) {
+if (str.includes("\""))
+  return false;
+if (str.includes("\\"))
+  return false;
+
+return true;
+}
 
 function isCorrectCNameVariable(str)
  {

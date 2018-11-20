@@ -260,7 +260,21 @@ function AddInterfaceCall(wr,CU,cmd) {
         wr.WriteLine("return;");
         wr.delIndent();
         wr.WriteLine("}");
-        wr.WriteLine(par.Type + " tmp_" + par.Name + "=data->" + getRetrievingDataWrapperFunction(par.Type) + "(" + par.getParamAlias(CU.Prefix, cmd.Name) + ");");
+        var typeToDeclare;
+        if (par.Type.includes("string") || par.Type.startsWith("vector"))
+        {
+          typeToDeclare="std::"+par.Type;
+        }
+        else
+        {
+            typeToDeclare=par.Type;
+        }
+        wr.WriteLine(typeToDeclare + " tmp_" + par.Name + "=data->" + getRetrievingDataWrapperFunction(par.Type) + "(" + par.getParamAlias(CU.Prefix, cmd.Name) + ");\n");
+    }
+    //EXCLUDE IF NO DRIVER
+    if (checkboxGenerateDriver.checked == false)
+    {
+        wr.WriteLine("/* REMOVE COMMENT IF YOU ADD DRIVER");
     }
     wr.WriteLine("int err=0;");
     wr.Write("if ((err="+ CU.getAbstractDriver() +"->"+cmd.Name+"("  );
@@ -280,6 +294,11 @@ function AddInterfaceCall(wr,CU,cmd) {
     if (CU.HaveAlarm(DrvErr))
         wr.WriteLine("setStateVariableSeverity(StateVariableTypeAlarmCU,\"" + DrvErr.Name + "\",chaos::common::alarm::MultiSeverityAlarmLevelHigh);");
     wr.delIndent(); wr.WriteLine("}");
+    if (checkboxGenerateDriver.checked == false)
+    {
+        wr.WriteLine("REMOVE COMMENT IF YOU ADD DRIVER    */");
+    }
+    //EXCLUDE UNTIL HERE
     wr.WriteLine("setWorkState(true);");
   }
 
@@ -780,16 +799,17 @@ function CalculateInterfaceParamStruct() {
         {
            
             var param=cmd.Parameters[iparam];
-            //alert("Calculating interfaceParamStruct ALEDEBUG: " +param.Type)
+            //alert("Calculating interfaceParamStruct ALEDEBUG: "+param.Name+" " +param.Type)
             var found=false;
             for (var  iElem in typeOfCmdParameters)
             {
                 var Elem=NTPcreate(typeOfCmdParameters[iElem]);
                 if (Elem.Type == param.Type)
                 {
-                    
+                    //alert("actually needed: "+typeOfCmdParameters[iElem].needed);
                     found=true;
-                    Elem.needed++;
+                    typeOfCmdParameters[iElem].needed++;
+                   
                 }
             }
             if (!found)
@@ -814,7 +834,7 @@ function CalculateInterfaceParamStruct() {
                 {
                     found=true;
                     alert("already found incrementing needed")
-                    Elem2.needed= Math.max(Elem.needed,Elem2.needed);
+                    typeOfParameters[iElem2].needed= Math.max(Elem.needed,Elem2.needed);
                     break;
                 }
             }

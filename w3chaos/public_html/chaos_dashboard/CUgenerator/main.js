@@ -241,7 +241,7 @@ function setDownloadJSONDescription()
     
 }
 
-var STOCAZZO;
+
 function myFunc(evt) {
     var file=evt.target.files[0];
     //var fileName = this.files[0].name;
