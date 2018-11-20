@@ -47,7 +47,7 @@ using namespace chaos::common::async_central;
 #define API_PATH_REGEX_V1(p) API_PREFIX_V1 p
 
 #define HTTWANINTERFACE_LOG_HEAD "[HTTPUIInterface" << current_index << "] -"
-#define LOG_CONNECTION "[" << connection->remote_ip << ":" << std::dec << connection->remote_port << "] "
+#define LOG_CONNECTION "[" << connection->remote_ip << ":" << std::dec << connection->remote_port << ","<<connection->server_param<<"] "
 
 #define HTTWAN_INTERFACE_APP_ INFO_LOG(HTTPUIInterface)
 #define HTTWAN_INTERFACE_DBG_ DBG_LOG(HTTPUIInterface)
@@ -56,26 +56,35 @@ static const boost::regex REG_API_URL_FORMAT(API_PATH_REGEX_V1("((/[a-zA-Z0-9_]+
 
 std::map<std::string, ::driver::misc::ChaosController *> HTTPUIInterface::devs;
 ChaosSharedMutex HTTPUIInterface::devio_mutex;
+boost::mutex HTTPUIInterface::devurl_mutex;
+
 uint64_t HTTPUIInterface::last_check_activity = 0;
 
 /**
  * The handlers below are written in C to do the binding of the C mongoose with
  * the C++ API
  */
+ChaosSharedMutex http_mutex;
 static int event_handler(struct mg_connection *connection, enum mg_event ev)
 {
+
     if ((ev == MG_REQUEST) && (connection->server_param != NULL))
     {
-        if ((strstr(connection->uri, API_PREFIX_V1)) && ((HTTPUIInterface *)connection->server_param)->handle(connection))
+        HTTPUIInterface *ptr=(HTTPUIInterface *)connection->server_param;
+        if ((strstr(connection->uri, API_PREFIX_V1)) && ptr->handle(connection))
         {
-            ((HTTPUIInterface *)connection->server_param)->processRest(connection);
+            ptr->processRest(connection);
         }
         else
         {
 
-            ((HTTPUIInterface *)connection->server_param)->process(connection);
+            ptr->process(connection);
         }
-        return MG_TRUE;
+        return MG_MORE;
+    } else if(ev == MG_POLL){
+        if(connection->server_param==0){
+            return MG_TRUE;
+        }
     }
     else if (ev == MG_AUTH)
     {
@@ -100,6 +109,7 @@ static void flush_response(struct mg_connection *connection,
     uint32_t body_len = 0;
     const char *body = response->getBody(body_len);
     mg_send_data(connection, body, body_len);
+    connection->server_param=0;
 }
 
 DEFINE_CLASS_FACTORY(HTTPUIInterface, AbstractWANInterface);
@@ -276,15 +286,24 @@ void HTTPUIInterface::addDevice(std::string name, ::driver::misc::ChaosControlle
 {
     devs[name] = d;
 }
+template<char delimiter>
+class WordDelimitedBy : public std::string
+{};
 
-static std::map<std::string, std::string> mappify(std::string const &s)
+static std::map<std::string, std::string> mappify(const std::string &s)
 {
     std::map<std::string, std::string> m;
     std::vector<std::string> api_token_list0;
     boost::regex regx("([a-zA-Z_]+)=(.+)");
-    boost::algorithm::split(api_token_list0, s, boost::algorithm::is_any_of("&"), boost::algorithm::token_compress_on);
     try
     {
+        /*
+        std::istringstream iss(s);
+        std::vector<std::string> api_token_list0((std::istream_iterator<WordDelimitedBy<'&'>>(iss)),
+                                 std::istream_iterator<WordDelimitedBy<'&'>>());
+                                 */          
+        boost::split(api_token_list0, s, boost::is_any_of("&"));
+
         for (std::vector<std::string>::iterator i = api_token_list0.begin(); i != api_token_list0.end(); i++)
         {
             boost::match_results<std::string::const_iterator> what;
@@ -309,8 +328,10 @@ int HTTPUIInterface::removeFromQueue(const std::string &devname)
     int cntt = 0;
     ChaosReadLock l(devio_mutex);
 
-    for (int cnt = 0; cnt < chaos_thread_number; cnt++){
-        if (sched_cu_v[cnt]->remove(devname)){
+    for (int cnt = 0; cnt < chaos_thread_number; cnt++)
+    {
+        if (sched_cu_v[cnt]->remove(devname))
+        {
             cntt++;
             HTTWAN_INTERFACE_DBG_ << "* removing \"" << devname << "\" from scheduler " << cnt << " inst:" << cntt;
         }
@@ -321,19 +342,20 @@ int HTTPUIInterface::removeDevice(const std::string &devname)
 {
 
     std::map<std::string, ::driver::misc::ChaosController *>::iterator i = devs.find(devname);
-    if (i != devs.end()){
+    if (i != devs.end())
+    {
 
         //        boost::mutex::scoped_lock l(devio_mutex);
         HTTWAN_INTERFACE_DBG_ << "* removing \"" << devname << "\" from known devices";
         ChaosWriteLock ll(devio_mutex);
         devs.erase(i);
         delete i->second;
-       
+
         return 1;
     }
     return 0;
 }
-int HTTPUIInterface::process(struct mg_connection *connection)
+int HTTPUIInterface::process(mongoose::mg_connection *connection)
 {
     CHAOS_ASSERT(handler)
     int err = 0;
@@ -345,56 +367,63 @@ int HTTPUIInterface::process(struct mg_connection *connection)
     Json::Reader json_reader;
     HTTPWANInterfaceStringResponse response("text/html");
     response.addHeaderKeyValue("Access-Control-Allow-Origin", "*");
+
     ::driver::misc::ChaosController *controller = NULL;
+
     //scsan for content type request
-    const std::string method = connection->request_method;
-    const std::string url = connection->uri;
+
     std::map<std::string, std::string> request;
     //	const std::string api_uri = url.substr(strlen(API_PREFIX_V1)+1);
     //const bool        json    = checkForContentType(connection,"application/json");
     try
     {
-        //remove the prefix and tokenize the url
-        if (method == "GET")
         {
-            if (connection->query_string == NULL)
+            boost::mutex::scoped_lock lurl(devurl_mutex);
+            const std::string method = connection->request_method;
+            const std::string url = connection->uri;
+            //remove the prefix and tokenize the url
+            if (method == "GET")
             {
-                // sometimes web browser ask for favicon
-                //   HTTWAN_INTERFACE_ERR_<<LOG_CONNECTION<<"Bad query GET params";
-                response.setCode(200);
-                flush_response(connection, &response);
-                return 1;
-            }
-            int size_query = strlen(connection->query_string) + 2;
-            char decoded[size_query];
-            mg_url_decode(connection->query_string, size_query, decoded, size_query, 0);
-            HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION << "GET:\"" << decoded << "\"";
+                if (connection->query_string == NULL)
+                {
+                    // sometimes web browser ask for favicon
+                    //   HTTWAN_INTERFACE_ERR_<<LOG_CONNECTION<<"Bad query GET params";
+                    response.setCode(200);
+                    flush_response(connection, &response);
+                    return 1;
+                }
+                int size_query = strlen(connection->query_string) + 2;
+                char decoded[size_query];
+                mg_url_decode(connection->query_string, size_query, decoded, size_query, 0);
+                HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION << "GET:\"" << decoded << "\"";
 
-            std::string query = decoded;
-            request = mappify(query);
-        }
-        else if (method == "POST")
-        {
-            if (connection->content == NULL)
+                std::string query = decoded;
+                request = mappify(query);
+            }
+            else if (method == "POST")
             {
-                HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION << "Bad query POST params";
+                if (connection->content == NULL)
+                {
+                    HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION << "Bad query POST params";
+                    response.setCode(400);
+                    flush_response(connection, &response);
+                    return 1;
+                }
+                char decoded[connection->content_len + 2];
+                connection->content[connection->content_len] = 0;
+                mg_url_decode(connection->content, connection->content_len + 1, decoded, connection->content_len + 1, 0);
+
+                std::string content_data(decoded);
+                HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION << "POST:\"" << content_data << "\"";
+                request = mappify(content_data);
+            }
+            else
+            {
+                HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION << "UNSUPPORTED METHOD:" << method << " data:" << connection->content;
                 response.setCode(400);
                 flush_response(connection, &response);
                 return 1;
             }
-            char decoded[connection->content_len + 2];
-            connection->content[connection->content_len] = 0;
-            mg_url_decode(connection->content, connection->content_len + 1, decoded, connection->content_len + 1, 0);
-            std::string content_data(decoded);
-            HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION << "POST:" << content_data;
-            request = mappify(content_data);
-        }
-        else
-        {
-            HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION << "UNSUPPORTED METHOD:" << method << " data:" << connection->content;
-            response.setCode(400);
-            flush_response(connection, &response);
-            return 1;
         }
         std::string cmd, parm, dev_param;
         dev_param = request["dev"];
@@ -516,11 +545,13 @@ int HTTPUIInterface::process(struct mg_connection *connection)
         response << "{}";
         response.setCode(400);
     }
-
-    flush_response(connection, &response);
-    DEBUG_CODE(execution_time_end = TimingUtil::getTimeStampInMicroseconds();)
-    DEBUG_CODE(uint64_t duration = execution_time_end - execution_time_start;)
-    DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION << "Execution time is:" << duration * 1.0 / 1000.0 << " ms";)
+    {
+        boost::mutex::scoped_lock lurl(devurl_mutex);
+        flush_response(connection, &response);
+        DEBUG_CODE(execution_time_end = TimingUtil::getTimeStampInMicroseconds();)
+        DEBUG_CODE(uint64_t duration = execution_time_end - execution_time_start;)
+        DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION << "Execution time is:" << duration * 1.0 / 1000.0 << " ms";)
+    }
     return 1; //
 }
 void HTTPUIInterface::checkActivity()
@@ -533,7 +564,7 @@ void HTTPUIInterface::checkActivity()
     last_check_activity = now;
     */
     HTTWAN_INTERFACE_DBG_ << " check activity";
-/*
+    /*
     for (std::map<std::string, ::driver::misc::ChaosController *>::iterator i = devs.begin(); i != devs.end(); i++)
     {
         if ((i->second->lastAccess() > 0))
@@ -545,32 +576,39 @@ void HTTPUIInterface::checkActivity()
             }
         }
     }*/
-     std::map<std::string, ::driver::misc::ChaosController *>::iterator i;
+    std::map<std::string, ::driver::misc::ChaosController *>::iterator i;
     {
         ChaosReadLock l(devio_mutex);
-       i= devs.begin();
+        i = devs.begin();
     }
 
-    while(i!=devs.end()){
+    while (i != devs.end())
+    {
 
-        if ((i->second->lastAccess() > 0)){
+        if ((i->second->lastAccess() > 0))
+        {
             int64_t elapsed = (now - (i->second)->lastAccess());
-            if ((elapsed > PRUNE_NOT_ACCESSED_CU)){
+            if ((elapsed > PRUNE_NOT_ACCESSED_CU))
+            {
                 HTTWAN_INTERFACE_DBG_ << "* pruning \"" << i->first << "\" because elapsed " << ((1.0 * elapsed) / 1000000.0) << " s last time access:" << ((i->second)->lastAccess() / 1000000.0) << " s ago";
                 removeFromQueue(i->first);
 
                 ChaosWriteLock ll(devio_mutex);
 
                 HTTWAN_INTERFACE_DBG_ << "* removing \"" << i->first << "\" from known devices";
-                ::driver::misc::ChaosController *tmp=i->second;
+                ::driver::misc::ChaosController *tmp = i->second;
                 devs.erase(i++);
                 delete tmp;
-            } else {
+            }
+            else
+            {
                 ++i;
             }
-        } else {
+        }
+        else
+        {
             ++i;
-        } 
+        }
     }
 }
 
@@ -603,7 +641,7 @@ bool HTTPUIInterface::checkForContentType(struct mg_connection *connection,
     return result;
 }
 
-int HTTPUIInterface::processRest(struct mg_connection *connection)
+int HTTPUIInterface::processRest(mongoose::mg_connection *connection)
 {
     CHAOS_ASSERT(handler)
     int err = 0;
@@ -616,8 +654,8 @@ int HTTPUIInterface::processRest(struct mg_connection *connection)
     HTTPWANInterfaceStringResponse response("application/json");
 
     //scsan for content type request
-    const std::string method = connection->request_method;
     const std::string url = connection->uri;
+    const std::string method = connection->request_method;
     const std::string api_uri = url.substr(strlen(API_PREFIX_V1) + 1);
     const bool json = true; /*checkForContentType(connection,
                                                    "application/json");*/

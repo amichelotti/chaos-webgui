@@ -340,8 +340,8 @@
           }
           if (!stop_update) {
             jchaos.getChannel(cuname, -1, function (imdata) {
-              last_dataset = imdata;
-              var converted = convertBinaryToArrays(imdata);
+              last_dataset = imdata[0];
+              var converted = convertBinaryToArrays(imdata[0]);
               var jsonhtml = json2html(converted, options, cuname);
               if (isCollapsable(converted)) {
                 jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
@@ -495,28 +495,15 @@
     });
   }
   function copyToClipboard(testo) {
-    // $("#inputClipBoard").focus();
-    //var $temp=$("<input>");
-    //$("body").append($temp);
-    //$temp.val(testo).select();
-    $("#inputClipBoard").val(testo).select();
-    //document.execCommand("Copy");
-    //$temp.remove();
-
-    /*
-    var $temp = $("<div>");
-    $("body").append($temp);
-    $temp.attr("contenteditable", true)
-         .html(testo).select()
-         .on("focus", function() { 
-        document.execCommand('selectAll',false,null);
-         document.execCommand("copy");
-
-
-        }).focus();
-    $temp.remove();
-  */
-    //    instantMessage("Copy","copied to clipboard",900);
+      var $temp = $("<textarea>");
+    
+      $("body").append($temp); 
+      var brRegex = /<br\s*[\/]?>/gi;
+      testo.replace(brRegex, "\r\n");
+      $temp.val(testo);
+      $temp.select();
+      document.execCommand("copy");
+      $temp.remove();
   }
   function encodeCUPath(path) {
     if (path == null || path == "timestamp") {
@@ -749,13 +736,17 @@
   function cusWithInterface(culist, interface) {
     var retlist = [];
     culist.forEach(function (name) {
-      var desc = jchaos.getDesc(name, null);
-      node_name_to_desc[name] = desc[0];
-
-      if (desc[0].hasOwnProperty('instance_description') && desc[0].instance_description.hasOwnProperty("control_unit_implementation") && (desc[0].instance_description.control_unit_implementation.indexOf(interface) != -1)) {
+      if (node_name_to_desc[name] == null) {
+        var desc = jchaos.getDesc(name, null);
+        node_name_to_desc[name] = desc[0];
+      }
+   
+      if (node_name_to_desc[name].hasOwnProperty('instance_description') && node_name_to_desc[name].instance_description.hasOwnProperty("control_unit_implementation") && (node_name_to_desc[name].instance_description.control_unit_implementation.indexOf(interface) != -1)) {
         retlist.push(name);
       }
     });
+
+
     return retlist;
   }
   //Funzione per controllare che il timestamp di ogni singolo magnete si stia aggiornando
@@ -1418,6 +1409,24 @@
     });
   }
   function snapSetup() {
+    $("#snap-load").on('click', function () {
+      $("#mdl-snap").modal("hide");
+      getFile("LOAD JSON SNAPSHOT/SETPOINT", "select the JSON to load", function (config) {
+        getEntryWindow("JSON Loaded","Snapshot Name","name","Save",function(name){
+          var vsets;
+          if(config instanceof Array){
+            vsets=config;
+          } else {
+            vsets=[config];
+          }
+          vsets.forEach(function(elem){
+            jchaos.snapshot(name, "set", "", JSON.stringify(elem), function (d) {
+              console.log("saving "+elem.name+ " in "+name);
+            });
+          });
+        },"Cancel");
+      });
+    });
     $("#snap-save").on('click', function () {
       var value = $("#snap_save_name").val();
       if (node_multi_selected.length > 1) {
@@ -1454,6 +1463,7 @@
       }
     });
     $("#snap-show").on('click', function (e) {
+      $("#mdl-snap").modal("hide");
 
       if (snap_selected != "") {
         var dataset = jchaos.snapshot(snap_selected, "load", null, "", null);
@@ -1491,22 +1501,24 @@
     $("#description-close").on('click', function () {
       $("#mdl-description").modal("hide");
     });
-
+    /*
     $("a.show_description").click(function () {
-      var dataset = jchaos.getDesc(node_selected, null);
-      var jsonhtml = json2html(dataset, options, node_selected);
-      save_obj = {
-        obj: dataset,
-        fname: "description_" + encodeName(node_selected),
-        fext: "json"
-      };
-      if (isCollapsable(dataset)) {
-        jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
-      }
-      $("#desc_text").html("Description of " + node_selected);
-      $("#cu-description").html(jsonhtml);
+      jchaos.getDesc(node_selected, function(dataset){
+        node_name_to_desc[node_selected]=dataset[0];
+        var jsonhtml = json2html(dataset[0], options, node_selected);
+        save_obj = {
+          obj: dataset[0],
+          fname: "description_" + encodeName(node_selected),
+          fext: "json"
+        };
+        if (isCollapsable(dataset)) {
+          jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
+        }
+        $("#desc_text").html("Description of " + node_selected);
+        $("#cu-description").html(jsonhtml);
+      });
     });
-
+    */
   }
 
   function jsonEnableContext() {
@@ -2415,7 +2427,9 @@
       showDataset(node_multi_selected[0], node_multi_selected[0], 1000);
     } else if (cmd == "show-desc") {
       jchaos.getDesc(node_multi_selected[0], function (data) {
-        showJson("Description " + node_multi_selected[0], node_multi_selected[0], data);
+        node_name_to_desc[node_multi_selected[0]]=data[0];
+
+        showJson("Description " + node_multi_selected[0], node_multi_selected[0], data[0]);
       });
 
     } else if (cmd == "show-picture") {
@@ -2693,7 +2707,7 @@
       return;
     } else if (cmd == "del-nt_control_unit") {
       node_multi_selected.forEach(function (nod) {
-        var desc = jchaos.getDesc(nod, null);
+        jchaos.getDesc(nod, function(desc){
         if (desc[0] != null && desc[0].hasOwnProperty("instance_description")) {
           var parent = desc[0].instance_description.ndk_parent;
           confirm("Delete CU", "Your are deleting CU: \"" + nod + "\"(" + parent + ")", "Ok", function () {
@@ -2701,6 +2715,7 @@
           }, "Cancel");
         }
       });
+    });
       return;
     } else if (cmd == "copy-nt_control_unit") {
 
@@ -3123,9 +3138,18 @@ function executeAlgoMenuCmd(cmd, opt) {
 
     jchaos.node(node_list, "desc", cutype, null, null, function (data) {
       var cnt = 0;
+      var us_list=[];
+      var cu_list=[];
       node_list.forEach(function (elem, index) {
         var type = data[index].ndk_type;
         node_name_to_desc[elem] = { desc: data[index], parent: null, detail: null };
+        if ((type == "nt_control_unit")) {
+            cu_list.push(elem);
+        } else if((type == "nt_unit_server")){
+          us_list.push(elem);
+        }
+        
+        /*
         if ((type == "nt_control_unit")) {
           jchaos.getDesc(elem, function (data) {
             if (data[0].hasOwnProperty("instance_description")) {
@@ -3140,8 +3164,31 @@ function executeAlgoMenuCmd(cmd, opt) {
           }
 
         }
+        */
       });
-
+      if(cu_list.length>0){
+        jchaos.getDesc(cu_list, function (data) {
+          var cnt=0;
+          data.forEach(function(cu){
+            if(cu.hasOwnProperty("instance_description")){
+              node_name_to_desc[cu_list[cnt]].detail = cu.instance_description;
+              node_name_to_desc[cu_list[cnt]].parent = cu.instance_description.ndk_parent;
+            }
+            cnt++;
+          });
+        });
+      }
+      if(us_list.length>0){
+        jchaos.node(us_list, "parent", "us", null, null,function(data){
+          var cnt=0;
+          data.forEach(function(us){
+            if (us.hasOwnProperty("ndk_uid") && us.ndk_uid != "") {
+              node_name_to_desc[us_list[cnt]].parent = us.ndk_uid;
+            }
+            cnt++;
+          });
+        });
+      }
     });
 
 
@@ -3570,12 +3617,13 @@ function executeAlgoMenuCmd(cmd, opt) {
     $(e.currentTarget).addClass("row_snap_selected");
     if (type == "cu") {
       if (node_name_to_desc[name] == null) {
-        var desc = jchaos.getDesc(node_selected, null);
-        if (desc != null) {
-          node_name_to_desc[name] = desc[0];
-        }
+        jchaos.getDesc(node_selected, function(desc){
+          if (desc[0] != null) {
+            node_name_to_desc[name] = desc[0];
+          }
+      });
       }
-      if (node_selected != null && node_name_to_desc[name].hasOwnProperty("cudk_ds_desc") && node_name_to_desc[name].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
+      if (node_selected != null && (node_name_to_desc[name] != null) && node_name_to_desc[name].hasOwnProperty("cudk_ds_desc") && node_name_to_desc[name].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
         var desc = node_name_to_desc[name].cudk_ds_desc.cudk_ds_command_description;
         $("#cu_full_commands").add("<option>--Select--</option>");
 
@@ -3730,8 +3778,8 @@ function executeAlgoMenuCmd(cmd, opt) {
       html += "<td id='" + cuname + "_health_usertime'></td>";
       html += "<td id='" + cuname + "_system_current_command'></td>";
       html += "<td id='" + cuname + "_system_command'></td>";
-      html += "<td title='Device alarms' id='" + cuname + "_output_device_alarm'></td>";
-      html += "<td title='Control Unit alarms' id='" + cuname + "_output_cu_alarm'></td>";
+      html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
+      html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";
       html += "<td id='" + cuname + "_health_prate'></td></tr>";
     });
 
@@ -3811,15 +3859,62 @@ function executeAlgoMenuCmd(cmd, opt) {
         }
         if (el.hasOwnProperty('system') && (status != "Dead")) {   //if el system
           var busy = $.trim(el.system.busy);
+          var dev_alarm = Number(el.system.cudk_dalrm_lvl);
+          var cu_alarm = Number(el.system.cudk_calrm_lvl);
+          if (dev_alarm == 1) {
+            $("#" + name_id + "_system_device_alarm").attr('title', "Device Warning");
+            $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error</i></a>');
+          } else if (dev_alarm == 2) {
+            $("#" + name_id + "_system_device_alarm").attr('title', "Device Error");
+            $("#" + name_id + "_system_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons rosso">error</i></a>');
+          } else {
+            $("#" + name_id + "_system_device_alarm").html('');
+          }
+
+          if (cu_alarm == 1) {
+            $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit Warning");
+
+            $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error_outline</i></a>');
+          } else if (cu_alarm == 2) {
+            $("#" + name_id + "_system_cu_alarm").attr('title', "Control Unit Error");
+
+            $("#" + name_id + "_system_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal"><i  class="material-icons rosso">error_outline</i></a>');
+          } else {
+            $("#" + name_id + "_system_cu_alarm").html('');
+          }
+          $("a.device-alarm").click(function (e) {
+            var id = $(this).attr("cuname");
+            show_dev_alarm(id);
+          });
+          $("a.cu-alarm").click(function (e) {
+            var id = $(this).attr("cuname");
+
+            show_cu_alarm(id);
+          });
           if(el.system.hasOwnProperty("running_cmd_alias")){
+            var cmd_state=el.system.running_cmd_alias;
+            if(el.system.hasOwnProperty("cudk_set_tag") && el.system.hasOwnProperty("cudk_set_state")){
+              if(el.system.cudk_set_state == 3){
+                cmd_state=el.system.running_cmd_alias+" (<b>"+el.system.cudk_set_tag+"</b>)";
+              } else if(el.system.cudk_set_state <0){
+                cmd_state=el.system.running_cmd_alias+' (<font color="red">'+el.system.cudk_set_tag+'</font>)';
+              } else {
+                if (updateGenericTableDataset.count & 1) {
+                  cmd_state=el.system.running_cmd_alias+' (<font color="yellow"><b>'+el.system.cudk_set_tag+'</b></font>)';
+                } else {
+                  cmd_state=el.system.running_cmd_alias+' (<font color="orange"><b>'+el.system.cudk_set_tag+'</b></font>)';
+
+                }
+              }
+            }
             if(busy == "true"){
               if (updateGenericTableDataset.count & 1) {
-                $("#" + name_id + "_system_current_command").html("<b>"+el.system.running_cmd_alias+"</b>");
+                $("#" + name_id + "_system_current_command").html("<b>"+cmd_state+"</b>");
               } else {
-                $("#" + name_id + "_system_current_command").html(el.system.running_cmd_alias);
+                $("#" + name_id + "_system_current_command").html(cmd_state);
               }
             } else {
-              $("#" + name_id + "_system_current_command").html(el.system.running_cmd_alias);
+              $("#" + name_id + "_system_current_command").html(cmd_state);
             }
           } else {
             $("#" + name_id + "_system_current_command").html("NA");
@@ -3866,42 +3961,7 @@ function executeAlgoMenuCmd(cmd, opt) {
             $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons yellow">cached</i>');
           }
         }
-        if (el.hasOwnProperty('output')) {   //if el output
-          var dev_alarm = $.trim(el.output.device_alarm);
-          var cu_alarm = $.trim(el.output.cu_alarm);
-          if (dev_alarm == 1) {
-            $("#" + name_id + "_output_device_alarm").attr('title', "Device Warning");
-            $("#" + name_id + "_output_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error</i></a>');
-          } else if (dev_alarm == 2) {
-            $("#" + name_id + "_output_device_alarm").attr('title', "Device Error");
-            $("#" + name_id + "_output_device_alarm").html('<a id="device-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="device-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons rosso">error</i></a>');
-          } else {
-            $("#" + name_id + "_output_device_alarm").html('');
-          }
 
-          if (cu_alarm == 1) {
-            $("#" + name_id + "_output_cu_alarm").attr('title', "Control Unit Warning");
-
-            $("#" + name_id + "_output_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal" ><i class="material-icons giallo">error_outline</i></a>');
-          } else if (cu_alarm == 2) {
-            $("#" + name_id + "_output_cu_alarm").attr('title', "Control Unit Error");
-
-            $("#" + name_id + "_output_cu_alarm").html('<a id="cu-alarm-butt-' + name_id + '" cuname="' + name_device_db + '" class="cu-alarm" href="#mdl-device-alarm-cu" role="button" data-toggle="modal"><i  class="material-icons rosso">error_outline</i></a>');
-          } else {
-            $("#" + name_id + "_output_cu_alarm").html('');
-          }
-          $("a.device-alarm").click(function (e) {
-            var id = $(this).attr("cuname");
-            show_dev_alarm(id);
-          });
-          $("a.cu-alarm").click(function (e) {
-            var id = $(this).attr("cuname");
-
-            show_cu_alarm(id);
-          });
-
-          
-        }
       } catch (e) {
         console.log(name_device_db + " warning :", e);
       }
@@ -3929,7 +3989,7 @@ function executeAlgoMenuCmd(cmd, opt) {
       html += "<tr class='row_element cuMenu' cuname='" + cu[i] + "' id='" + cuname + "'><td class='name_element'>" + cu[i]
         + "</td><td class='position_element' id='" + cuname + "_output_position'></td><td class='position_element' id='" + cuname
         + "_input_position'></td><td id='" + cuname + "_input_saved_position'></td><td id='" + cuname + "_input_saved_status'></td><td id='" + cuname + "_output_status'></td><td id='" + cuname
-        + "_in'></td><td id='" + cuname + "_out'></td><td  title='Device alarms' id='" + cuname + "_output_device_alarm'></td><td title='Control Unit alarms' id='" + cuname + "_cu_alarm'></td></tr>";
+        + "_in'></td><td id='" + cuname + "_out'></td><td  title='Device alarms' id='" + cuname + "_system_device_alarm'></td><td title='Control Unit alarms' id='" + cuname + "_cu_alarm'></td></tr>";
     });
 
     html += '</table>';
@@ -4082,8 +4142,8 @@ function executeAlgoMenuCmd(cmd, opt) {
       html += "<td class='td_element' title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
       html += "<td class='td_element' title='Local controlled' id='" + cuname + "_output_local'></td>";
       html += "<td class='td_element' id='" + cuname + "_system_busy'></td>";
-      html += "<td class='td_element' title='Control Unit alarms' id='" + cuname + "_output_cu_alarm'></td>";
-      html += "<td class='td_element' title='Device alarms' id='" + cuname + "_output_device_alarm'></td></tr>";
+      html += "<td class='td_element' title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";
+      html += "<td class='td_element' title='Device alarms' id='" + cuname + "_system_device_alarm'></td></tr>";
     });
     html += '</table>';
     html += '</div>';
@@ -5359,7 +5419,7 @@ function executeAlgoMenuCmd(cmd, opt) {
 
     html += '<div class="modal-header">';
     html += '<button type="button" class="close" data-dismiss="modal">×</button>';
-    html += '<h3 id="list_snapshot">List Snapshots</h3>';
+    html += '<h3 id="list_snapshot">Snapshot Editor</h3>';
     html += '</div>';
 
     html += '<div class="modal-body">';
@@ -5397,6 +5457,8 @@ function executeAlgoMenuCmd(cmd, opt) {
     html += '<a href="#" class="btn" id="snap-show">Show</a>';
     html += '<a href="#" class="btn" id="snap-apply">Apply</a>';
     html += '<a href="#" class="btn" id="snap-delete">Delete</a>';
+    html += '<a href="#" class="btn" id="snap-load">Upload</a>';
+
     html += '<a href="#" class="btn" id="snap-save">Save</a>';
     html += '<a href="#" class="btn" id="snap-close">Close</a>';
     html += '</div>';
@@ -6475,14 +6537,19 @@ function executeAlgoMenuCmd(cmd, opt) {
             name = elem.input.ndk_uid;
           } else if (elem.hasOwnProperty("output")) {
             name = elem.output.ndk_uid;
-
+          } else if(elem.hasOwnProperty("name")){
+            name=elem.name;
           }
-          cu_name_to_saved[name] = elem;
-
-          var desc = jchaos.getDesc(name, null);
-          var type = findImplementationName(desc[0].instance_description.control_unit_implementation);
-          $('#table_snap_nodes').append('<tr class="row_element" id="' + name + '"><td>' + name + '</td><td>' + type + '</td></tr>');
-
+          if(name !== 'undefined'){
+            cu_name_to_saved[name] = elem;
+            if(node_name_to_desc[name]==null){
+              var desc = jchaos.getDesc(name, null);
+              node_name_to_desc[name]=desc[0];
+            }
+           
+            var type = findImplementationName(node_name_to_desc[name].instance_description.control_unit_implementation);
+            $('#table_snap_nodes').append('<tr class="row_element" id="' + name + '"><td>' + name + '</td><td>' + type + '</td></tr>');
+          }
         });
         $("#snap-apply").show();
         $("#snap-show").show();
@@ -6702,7 +6769,7 @@ function executeAlgoMenuCmd(cmd, opt) {
         var html = "";
         html += buildNodeBody();
         html += generateEditJson();
-        html += '<input id="inputClipBoard" value=" "/>';
+     //   html += '<input id="inputClipBoard" value=" "/>';
 
         html += '<div class="specific-table-node"></div>';
 
