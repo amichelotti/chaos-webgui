@@ -1986,12 +1986,18 @@ function AddInstallScript(){
         
         wr.WriteLine("mkdir -p "+driverfolder);
         wr.WriteLine("mkdir -p "+driverfolder+"core/");
-        wr.WriteLine("mkdir -p "+driverfolder+"models/");
-        wr.WriteLine("mkdir -p "+driverfolder+"models/"+CU.DriverName+"/");
+        if (checkboxGenerateDriver.checked)
+        {
+            wr.WriteLine("mkdir -p "+driverfolder+"models/");
+            wr.WriteLine("mkdir -p "+driverfolder+"models/"+CU.DriverName+"/");
+        }
         wr.WriteLine("mkdir -p "+commonfolder);
         wr.WriteLine("mkdir -p "+commonfolder+"core/");
-        wr.WriteLine("mkdir -p "+commonfolder+"models/");
-        wr.WriteLine("mkdir -p "+commonfolder+"models/"+CU.DriverName+"/");
+        if (checkboxGenerateDriver.checked)
+        {
+            wr.WriteLine("mkdir -p "+commonfolder+"models/");
+            wr.WriteLine("mkdir -p "+commonfolder+"models/"+CU.DriverName+"/");
+        }
         //wr.WriteLine("errs=0");
         for (var i=0; i < inputs.length;i++)
         {
