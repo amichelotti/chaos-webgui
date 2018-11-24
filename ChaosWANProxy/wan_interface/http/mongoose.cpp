@@ -14,7 +14,7 @@
 //
 // Alternatively, you can license this library under a commercial
 // license, as set out in <http://cesanta.com/>.
-
+//#define NS_ENABLE_DEBUG
 #ifdef NOEMBED_NET_SKELETON
 #include "net_skeleton.h"
 #else

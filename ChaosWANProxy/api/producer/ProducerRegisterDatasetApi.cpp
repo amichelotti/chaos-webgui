@@ -59,6 +59,8 @@ int ProducerRegisterDatasetApi::execute(std::vector<std::string>& api_tokens,
 	std::string err_msg;
 	std::string producer_name;
 	int cnt;
+
+	#if 0
 	if(api_tokens.size() == 0) {
 		err_msg = "no producer name in the uri";
 		PRA_LERR << err_msg;
@@ -74,7 +76,15 @@ int ProducerRegisterDatasetApi::execute(std::vector<std::string>& api_tokens,
 	    producer_name=producer_name + api_tokens[cnt] ;
 	  }
 	}
-
+#endif
+	const Json::Value& pname = input_data[chaos::NodeDefinitionKey::NODE_UNIQUE_ID];
+	if(pname.isNull()){
+		err_msg = "no producer name specified ";
+		PRA_LERR << err_msg;
+		PRODUCER_REGISTER_ERR(output_data, -1, err_msg);
+		return err;
+	}
+	producer_name=pname.asCString();
 	//we can proceed
 	//const std::string& producer_name = api_tokens[0];
 	PRA_LDBG << "Start producer registration with id " << producer_name;

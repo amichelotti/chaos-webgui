@@ -728,7 +728,7 @@ int HTTPUIInterface::processRest(mongoose::mg_connection *connection)
                                                response.getHeader(),
                                                json_response)))
                 {
-                    DEBUG_CODE(HTTWAN_INTERFACE_ERR_ << "Error on api call :" << connection->uri << (content_data.size() ? (" with message data: " + content_data) : " with no message data");)
+                    HTTWAN_INTERFACE_ERR_ << "Error on api call :" << connection->uri << (content_data.size() ? (" with message data: " + content_data) : " with no message data");
                     //return the error for the api call
                     response.setCode(400);
                     json_response["error"] = err;
@@ -746,7 +746,7 @@ int HTTPUIInterface::processRest(mongoose::mg_connection *connection)
                 response.setCode(400);
                 json_response["error"] = -1;
                 json_response["error_message"].append("Error parsing the json post data");
-                DEBUG_CODE(HTTWAN_INTERFACE_ERR_ << "Error decoding the request:" << json_writer.write(json_response) << " BODY:'" << connection->content << "'";)
+                HTTWAN_INTERFACE_ERR_ << "Error decoding the request:" << json_writer.write(json_response) << " BODY:'" << connection->content << "'";
             }
         }
         else
@@ -763,7 +763,7 @@ int HTTPUIInterface::processRest(mongoose::mg_connection *connection)
             {
                 json_response["error_message"].append("The content of the request need to be json");
             }
-            DEBUG_CODE(HTTWAN_INTERFACE_ERR_ << "Error decoding the request:" << json_writer.write(json_response) << " BODY:'" << connection->content << "'";)
+            HTTWAN_INTERFACE_ERR_ << "Error decoding the request:" << json_writer.write(json_response) << " BODY:'" << connection->content << "'";
         }
     }
     catch (std::exception e)

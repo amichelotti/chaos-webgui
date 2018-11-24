@@ -59,6 +59,7 @@ int ProducerInsertDatasetApi::execute(std::vector<std::string>& api_tokens,
 	std::vector<std::string> kv_splitted;
 	std::string producer_name;
 	int cnt;
+	#if 0
 	if(api_tokens.size() == 0) {
 		err_msg = "no producer name in the uri";
 		PID_LERR << err_msg;
@@ -79,7 +80,14 @@ int ProducerInsertDatasetApi::execute(std::vector<std::string>& api_tokens,
 	    producer_name=producer_name + api_tokens[cnt] ;
 	  }
 	}
-
+#endif
+	const Json::Value& pname = input_data[chaos::NodeDefinitionKey::NODE_UNIQUE_ID];
+	if(pname.isNull()){
+		err_msg = "no producer name specified ";
+		PID_LERR << err_msg;
+		PRODUCER_INSERT_ERR(output_data, -1, err_msg);
+		return err;
+	}
 
         //we nned to remove the timestamp because is th eonly one that need to be int64
     const Json::Value& dp_timestamp = const_cast<Json::Value&>(input_data).removeMember(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
