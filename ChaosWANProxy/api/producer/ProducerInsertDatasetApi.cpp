@@ -124,12 +124,12 @@ int ProducerInsertDatasetApi::execute(std::vector<std::string>& api_tokens,
 		
 		//check for correctness of the value
 		if(dataset_element.isNull()) {
-			err_msg = "The dataset attribute cant be null";
+		  err_msg = "The dataset attribute \""+std::string(it->c_str())+"\" cant be null";
 			PID_LERR << err_msg;
 			PRODUCER_INSERT_ERR(output_data, -4, err_msg);
 			return err;
 		} else if(!dataset_element.isString()) {
-            err_msg = "The dataset element needs to be only string";
+		  err_msg = "The dataset element \""+std::string(it->c_str())+"\" needs to be only string";
 			PID_LERR << err_msg;
 			PRODUCER_INSERT_ERR(output_data, -5, err_msg);
 			return err;
