@@ -98,15 +98,15 @@ int ProducerRegisterJsonApi::execute(std::vector<std::string>& api_tokens,
 	PRA_LDBG << "Start producer json registration with id " << producer_name;
 	
 	CDataWrapper cu_dataset,mds_registration_pack;
-	CDataWrapper dataset_pack;
 	Json::StyledWriter				json_writer;
 
     std::string json_string=json_writer.write(input_data);
     const char* json_string_p=json_string.c_str();
-    PRA_LDBG << "TO DECODE:"<<json_string_p<<" string size:"<<json_string.size();
-    dataset_pack.setSerializedJsonData(json_string_p);
+    PRA_LDBG << "TO DECODE:"<<json_string_p<<" string size:"<<strlen(json_string_p);
+	CDataWrapper dataset_pack;
+	dataset_pack.setSerializedJsonData(json_string_p);
 
-	PRA_LDBG << dataset_pack.getJSONString();
+	PRA_LDBG <<"CD:"<< dataset_pack.getJSONString();
    //int64_t ts = (boost::posix_time::microsec_clock::universal_time() - time_epoch).total_milliseconds();
     ChaosStringVector all_template_key;
     dataset_pack.getAllKey(all_template_key);
