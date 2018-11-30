@@ -81,7 +81,7 @@ int ProducerInsertJsonApi::execute(std::vector<std::string>& api_tokens,
     //	const std::string& producer_name = api_tokens[0];
     
     // add the node unique id
-	Json::StyledWriter				json_writer;
+	Json::FastWriter				json_writer;
     std::string json_str=json_writer.write(input_data);
 
 

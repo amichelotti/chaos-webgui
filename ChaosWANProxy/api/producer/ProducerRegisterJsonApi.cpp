@@ -98,7 +98,7 @@ int ProducerRegisterJsonApi::execute(std::vector<std::string>& api_tokens,
 	PRA_LDBG << "Start producer json registration with id " << producer_name;
 	
 	CDataWrapper cu_dataset,mds_registration_pack;
-	Json::StyledWriter				json_writer;
+	Json::FastWriter				json_writer;
 
     std::string json_string=json_writer.write(input_data);
     const char* json_string_p=json_string.c_str();
@@ -168,6 +168,7 @@ int ProducerRegisterJsonApi::execute(std::vector<std::string>& api_tokens,
       }
     mds_registration_pack.addCSDataValue(ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_DESCRIPTION, cu_dataset);
     mds_registration_pack.addStringValue(NodeDefinitionKey::NODE_TYPE, NodeType::NODE_TYPE_CONTROL_UNIT);
+	mds_registration_pack.addStringValue(NodeDefinitionKey::NODE_SUB_TYPE,NodeType::NODE_SUBTYPE_DAQ_CONTROL_UNIT );
 	DEBUG_CODE(PRA_LDBG << mds_registration_pack.getJSONString());
 	
 	if((err = persistence_driver->registerDataset(producer_name,
