@@ -267,7 +267,7 @@ int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
     }
 #ifndef HEALTH_ASYNC
     if(i_cuid!=m_cuid.end()){
-        if((ts - i_cuid->second.last_ts) >= (HEALT_FIRE_TIMEOUT / HEALT_FIRE_SLOTS)*1000 ){
+        if((ts - i_cuid->second.last_ts) >= chaos::common::constants::CUTimersTimeoutinMSec /*(HEALT_FIRE_TIMEOUT / HEALT_FIRE_SLOTS)*1000*/ ){
             timeout();
              i_cuid->second.last_ts=ts;
         }
@@ -348,11 +348,11 @@ void DefaultPersistenceDriver::timeout(){
         DPD_LDBG << "Health :"<<i_cuid->first<<" rate:"<<  output_ds_rate << " pkid:"<<i_cuid->second.pckid<<" last pckid:"<<i_cuid->second.last_pckid;
         i_cuid->second.last_ts=rate_acq_ts;
         i_cuid->second.last_pckid=i_cuid->second.pckid;
-
-    }
     #ifndef HEALTH_ASYNC
-     HealtManager::getInstance()->timeout();
+     HealtManager::getInstance()->publishNodeHealt(i_cuid->first);
     #endif
+    }
+   
 
 }
 void DefaultPersistenceDriver::searchMetrics(const std::string&search_string,ChaosStringVector& metrics,bool alive){
