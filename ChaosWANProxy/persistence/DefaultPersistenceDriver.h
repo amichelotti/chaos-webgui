@@ -35,7 +35,6 @@
 #include <chaos/common/network/NetworkBroker.h>
 #include <chaos/common/io/IODirectIODriver.h>
 #include <boost/thread.hpp>
-
 namespace chaos {
 	namespace wan_proxy {
 		namespace persistence {

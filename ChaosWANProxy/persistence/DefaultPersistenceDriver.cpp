@@ -212,6 +212,7 @@ void DefaultPersistenceDriver::handleEvent(DirectIOClientConnection *client_conn
             break;
     }
 }
+static ChaosSharedMutex devio_mutex;
 
 // push a dataset
 int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
@@ -220,6 +221,16 @@ int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
     CHAOS_ASSERT(new_dataset)
             int err = 0;
     //ad producer key
+    DirectIOChannelsInfo	*next_client = static_cast<DirectIOChannelsInfo*>(connection_feeder.getService());
+    
+
+    if(next_client==NULL) {
+        DPD_LERR << "No available socket->loose packet";
+        return -1;
+    }
+    uint64_t ts=chaos::common::utility::TimingUtil::getTimeStamp();
+    ChaosWriteLock l(devio_mutex);
+   // boost::shared_lock<boost::shared_mutex> l(next_client->connection_mutex);
     std::map<std::string,cuids_t>::iterator i_cuid=m_cuid.find(producer_key);
 
     new_dataset->addStringValue(chaos::DataPackCommonKey::DPCK_DEVICE_ID, producer_key);
@@ -242,10 +253,8 @@ int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
     }
     ChaosUniquePtr<SerializationBuffer> serialization(new_dataset->getBSONData());
     //	DPD_LDBG <<" PUSHING:"<<new_dataset->getJSONString();
-    DirectIOChannelsInfo	*next_client = static_cast<DirectIOChannelsInfo*>(connection_feeder.getService());
     serialization->disposeOnDelete = !next_client;
     if(next_client) {
-        boost::shared_lock<boost::shared_mutex>(next_client->connection_mutex);
 
         //free the packet
         serialization->disposeOnDelete = false;
@@ -255,10 +264,16 @@ int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
                                                                                          (chaos::DataServiceNodeDefinitionType::DSStorageType)store_hint))) {
             DPD_LERR << "Error storing dataset with code:" << err;
         }
-    } else {
-        DEBUG_CODE(DPD_LDBG << "No available socket->loose packet");
-        err = -1;
     }
+#ifndef HEALTH_ASYNC
+    if(i_cuid!=m_cuid.end()){
+        if((ts - i_cuid->second.last_ts) >= (HEALT_FIRE_TIMEOUT / HEALT_FIRE_SLOTS)*1000 ){
+            timeout();
+             i_cuid->second.last_ts=ts;
+        }
+
+    }
+#endif
 
     return err;
 }
@@ -294,6 +309,7 @@ int DefaultPersistenceDriver::registerDataset(const std::string& producer_key,
         mdsPack->addStringValue(chaos::NodeDefinitionKey::NODE_UNIQUE_ID, producer_key);
         mdsPack->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE, chaos::NodeType::NODE_TYPE_CONTROL_UNIT);
         ret = mds_message_channel->sendNodeLoadCompletion(MOVE(mdsPack), true, 10000);
+        
         HealtManager::getInstance()->addNewNode(producer_key);
         HealtManager::getInstance()->addNodeMetric(producer_key,
                                                    chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE,
@@ -302,7 +318,11 @@ int DefaultPersistenceDriver::registerDataset(const std::string& producer_key,
                                                         NodeHealtDefinitionKey::NODE_HEALT_STATUS,
                                                         NodeHealtDefinitionValue::NODE_HEALT_STATUS_START,
                                                         true);
+#ifdef HEALTH_ASYNC
         chaos::common::async_central::AsyncCentralManager::getInstance()->addTimer(this, chaos::common::constants::CUTimersTimeoutinMSec, chaos::common::constants::CUTimersTimeoutinMSec);
+#else 
+ HealtManager::getInstance()->stop();
+#endif
         std::map<std::string,cuids_t>::iterator i_cuid=m_cuid.find(producer_key);
         if(i_cuid==m_cuid.end()){
             cuids_t tt;
@@ -324,11 +344,15 @@ void DefaultPersistenceDriver::timeout(){
         double output_ds_rate = (time_offset>0)?( i_cuid->second.pckid-i_cuid->second.last_pckid)/time_offset:0; //rate in seconds
         HealtManager::getInstance()->addNodeMetricValue(i_cuid->first,
                                                         chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE,
-                                                        output_ds_rate,true);
+                                                        output_ds_rate,false);
+        DPD_LDBG << "Health :"<<i_cuid->first<<" rate:"<<  output_ds_rate << " pkid:"<<i_cuid->second.pckid<<" last pckid:"<<i_cuid->second.last_pckid;
         i_cuid->second.last_ts=rate_acq_ts;
         i_cuid->second.last_pckid=i_cuid->second.pckid;
 
     }
+    #ifndef HEALTH_ASYNC
+     HealtManager::getInstance()->timeout();
+    #endif
 
 }
 void DefaultPersistenceDriver::searchMetrics(const std::string&search_string,ChaosStringVector& metrics,bool alive){

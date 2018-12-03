@@ -3951,14 +3951,19 @@ function executeAlgoMenuCmd(cmd, opt) {
             $("#" + name_id + "_system_busy").html('');
           }
 
-          if (el.system.cudk_bypass_state == false) {
-            $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">usb</i>');
-            $("#" + name_id + "_system_bypass").attr('title', "Bypass disabled")
+          if(el.system.hasOwnProperty("cudk_bypass_state")){
+            if (el.system.cudk_bypass_state == false) {
+              $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">usb</i>');
+              $("#" + name_id + "_system_bypass").attr('title', "Bypass disabled")
 
+            } else {
+              $("#" + name_id + "_system_bypass").attr('title', "Bypass enabled")
+
+              $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons yellow">cached</i>');
+            }
           } else {
-            $("#" + name_id + "_system_bypass").attr('title', "Bypass enabled")
-
-            $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons yellow">cached</i>');
+            $("#" + name_id + "_system_bypass").attr('title', "Rest CU")
+            $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">http</i>');
           }
         }
 

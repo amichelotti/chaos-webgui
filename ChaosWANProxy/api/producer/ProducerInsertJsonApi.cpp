@@ -65,6 +65,8 @@ int ProducerInsertJsonApi::execute(std::vector<std::string>& api_tokens,
     std::string producer_name;
     int cnt;
     uint64_t ts;
+    //ChaosWriteLock l(devio_mutex);
+
     try {
     
     const Json::Value& pname = input_data[chaos::NodeDefinitionKey::NODE_UNIQUE_ID];
