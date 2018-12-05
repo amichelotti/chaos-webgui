@@ -241,7 +241,7 @@ int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
         // add timestamp of the datapack
         new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP, i_cuid->second.ts);
     } else {
-        i_cuid->second.ts=new_dataset->getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
+        i_cuid->second.ts=new_dataset->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
     }
     if(!new_dataset->hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID)){
         new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID,i_cuid->second.pckid++ );
@@ -356,7 +356,7 @@ void DefaultPersistenceDriver::timeout(){
         HealtManager::getInstance()->addNodeMetricValue(i_cuid->first,
                                                         chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE,
                                                         i_cuid->second.freq,false);
-        DPD_LDBG << "Health :"<<i_cuid->first<<" rate:"<<  i_cuid->second.freq << " pkid:"<<pkid<<" last pckid:"<<i_cuid->second.last_pckid;
+        DPD_LDBG << "Health :"<<i_cuid->first<<" rate:"<<  i_cuid->second.freq << " pkid:"<<pkid<<"at:"<<ts<<" last pckid:"<<i_cuid->second.last_pckid<<" at:"<<i_cuid->second.last_ts<< " delta packet:"<<(pkid-i_cuid->second.last_pckid)<< " delta time:"<<(ts-i_cuid->second.last_pckid);
         if(pkid>i_cuid->second.last_pckid){
             i_cuid->second.last_ts=ts;
             i_cuid->second.last_pckid=pkid;
