@@ -236,19 +236,20 @@ int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
     new_dataset->addStringValue(chaos::DataPackCommonKey::DPCK_DEVICE_ID, producer_key);
 
     new_dataset->addInt32Value(chaos::DataPackCommonKey::DPCK_DATASET_TYPE, chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
+    i_cuid->second.ts = ts;
     if(!new_dataset->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
-        i_cuid->second.ts = chaos::common::utility::TimingUtil::getTimeStamp();
         // add timestamp of the datapack
         new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP, i_cuid->second.ts);
-    } else {
+    } /*else {
         i_cuid->second.ts=new_dataset->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
-    }
+    }*/
+    i_cuid->second.pckid++;
     if(!new_dataset->hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID)){
-        new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID,i_cuid->second.pckid++ );
-    } else {
+        new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID,i_cuid->second.pckid );
+    }/* else {
         // to evaluate push rate
         i_cuid->second.pckid= new_dataset->getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
-    }
+    }*/
     if(!new_dataset->hasKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID)){
         new_dataset->addInt64Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID,i_cuid->second.runid );
     }
@@ -270,7 +271,7 @@ int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
     if(i_cuid!=m_cuid.end()){
         if((ts - i_cuid->second.last_ts) >= chaos::common::constants::CUTimersTimeoutinMSec /*(HEALT_FIRE_TIMEOUT / HEALT_FIRE_SLOTS)*1000*/ ){
             timeout();
-             i_cuid->second.last_ts=ts;
+            i_cuid->second.last_ts=ts;
         }
 
     }
@@ -345,7 +346,6 @@ void DefaultPersistenceDriver::timeout(){
     for(std::map<std::string,cuids_t>::iterator i_cuid=m_cuid.begin();i_cuid!=m_cuid.end();i_cuid++){
         int64_t pkid=i_cuid->second.pckid;
         int64_t ts=i_cuid->second.ts;
-        if(pkid>i_cuid->second.last_pckid){
         double time_offset = (double(ts - i_cuid->second.last_ts))/1000.0; //time in seconds
         double output_ds_rate = ((time_offset>0)&&((pkid -i_cuid->second.last_pckid)>0))?(pkid -i_cuid->second.last_pckid)/time_offset:0; //rate in seconds
         if(output_ds_rate>0){
@@ -356,13 +356,13 @@ void DefaultPersistenceDriver::timeout(){
         HealtManager::getInstance()->addNodeMetricValue(i_cuid->first,
                                                         chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE,
                                                         i_cuid->second.freq,false);
-        DPD_LDBG << "Health :"<<i_cuid->first<<" rate:"<<  i_cuid->second.freq << " pkid:"<<pkid<<" at:"<<ts<<" last pckid:"<<i_cuid->second.last_pckid<<" at:"<<i_cuid->second.last_ts<< " delta packet:"<<(pkid-i_cuid->second.last_pckid)<< " delta time:"<<(ts-i_cuid->second.last_pckid);
+        DPD_LDBG << "Health :"<<i_cuid->first<<" rate:"<<  i_cuid->second.freq << " pkid:"<<pkid<<" at:"<<ts<<" last pckid:"<<i_cuid->second.last_pckid<<" at:"<<i_cuid->second.last_ts<< " delta packet:"<<(pkid-i_cuid->second.last_pckid)<< " delta time:"<<(ts-i_cuid->second.last_ts);
       
         i_cuid->second.last_ts=ts;
         i_cuid->second.last_pckid=pkid;
 
 
-    }
+    
 #ifndef HEALTH_ASYNC
      HealtManager::getInstance()->publishNodeHealt(i_cuid->first);
 #endif
