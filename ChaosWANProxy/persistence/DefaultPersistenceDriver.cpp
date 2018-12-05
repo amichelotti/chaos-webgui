@@ -222,7 +222,8 @@ int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
             int err = 0;
     //ad producer key
     DirectIOChannelsInfo	*next_client = static_cast<DirectIOChannelsInfo*>(connection_feeder.getService());
-    
+    boost::shared_lock<boost::shared_mutex> ll(next_client->connection_mutex);
+
 
     if(next_client==NULL) {
         DPD_LERR << "No available socket->loose packet";
@@ -230,7 +231,6 @@ int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
     }
     uint64_t ts=chaos::common::utility::TimingUtil::getTimeStamp();
     ChaosWriteLock l(devio_mutex);
-   // boost::shared_lock<boost::shared_mutex> l(next_client->connection_mutex);
     std::map<std::string,cuids_t>::iterator i_cuid=m_cuid.find(producer_key);
 
     new_dataset->addStringValue(chaos::DataPackCommonKey::DPCK_DEVICE_ID, producer_key);
