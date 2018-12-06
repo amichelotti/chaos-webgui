@@ -229,8 +229,9 @@ int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
         DPD_LERR << "No available socket->loose packet";
         return -1;
     }
-    uint64_t ts=chaos::common::utility::TimingUtil::getTimeStamp();
     ChaosWriteLock l(devio_mutex);
+
+    uint64_t ts=chaos::common::utility::TimingUtil::getTimeStamp();
     std::map<std::string,cuids_t>::iterator i_cuid=m_cuid.find(producer_key);
 
     new_dataset->addStringValue(chaos::DataPackCommonKey::DPCK_DEVICE_ID, producer_key);
