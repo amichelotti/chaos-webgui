@@ -236,7 +236,6 @@ int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
     new_dataset->addStringValue(chaos::DataPackCommonKey::DPCK_DEVICE_ID, producer_key);
 
     new_dataset->addInt32Value(chaos::DataPackCommonKey::DPCK_DATASET_TYPE, chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
-    i_cuid->second.ts = ts;
     if(!new_dataset->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
         // add timestamp of the datapack
         new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP, i_cuid->second.ts);
@@ -270,6 +269,8 @@ int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
 #ifndef HEALTH_ASYNC
     if(i_cuid!=m_cuid.end()){
         if((ts - i_cuid->second.last_ts) >= chaos::common::constants::CUTimersTimeoutinMSec /*(HEALT_FIRE_TIMEOUT / HEALT_FIRE_SLOTS)*1000*/ ){
+            i_cuid->second.ts = ts;
+
             timeout();
             i_cuid->second.last_ts=ts;
         }
