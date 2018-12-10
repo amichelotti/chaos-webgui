@@ -11,7 +11,7 @@
 		jchaos.lastChannel = {};
 		jchaos.options = {
 			updateEachCall: false,
-			uri: "localhost",
+			uri: "localhost:8081",
 			async: true,
 			limit_on_going: 10000,
 			history_page_len: 1000,
@@ -22,9 +22,9 @@
 		jchaos.setOptions = function (opt) {
 			for (var attrname in opt) { jchaos.options[attrname] = opt[attrname]; }
 			var str = jchaos.options['uri'];
-			var regex = /\:\d+/;
+		//	var regex = /\:\d+/;
 			//strip eventual port
-			jchaos.options['uri'] = str.replace(regex, "");
+			jchaos.options['uri'] = str;
 
 
 		}
@@ -59,13 +59,17 @@
 		   }});
 		  }
 		/***** */
-		jchaos.basicPost = function (func, params, handleFunc, handleFuncErr) {
+		jchaos.basicPost = function (func, params, handleFunc, handleFuncErr,server) {
 			var request;
 			if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 				XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 			}
 			request = new XMLHttpRequest();
-			var url = "http://" + jchaos.options.uri + ":8081/" + func;
+			var srv=jchaos.options.uri;
+			if (typeof server === "string" ){
+				srv=server;
+			}
+			var url = "http://" + srv + "/" + func;
 			var could_make_async = (typeof handleFunc === "function");
 			if (could_make_async == false) {
 				request.open("POST", url, false);

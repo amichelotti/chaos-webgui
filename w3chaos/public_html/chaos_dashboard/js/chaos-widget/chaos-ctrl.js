@@ -366,6 +366,84 @@
       }
     });
   }
+
+
+  function getConsole(msghead, pid, server, lines, refresh) {
+    var update;
+    var data;
+    var stop_update = false;
+    var instant = $('<div id=console-'+pid+'></div>').dialog({
+      minWidth: hostWidth / 4,
+      minHeight: hostHeight / 4,
+      title: msghead,
+      position: "center",
+      resizable: true,
+      dialogClass: 'no-close',
+      buttons: [
+        {
+          text: "update", id: 'console-update-' + pid, click: function (e) {
+            // var interval=$(this).attr("refresh_time");
+            stop_update = !stop_update;
+
+          }
+        },
+        {
+          text: "close", click: function (e) {
+            // var interval=$(this).attr("refresh_time");
+
+            clearInterval(update);
+            // $(instant).dialog("close");
+            $(this).remove();
+          }
+        }
+
+      ],
+      close: function (event, ui) {
+        //  var interval=$(this).attr("refresh_time");
+
+        clearInterval(update);
+        // $(instant).dialog("close");
+        $(this).remove();
+      },
+      open: function () {
+        console.log(msghead + "opening terminal refresh:" + refresh);
+        var consoleParam={
+          "uid":pid,
+          "type":1,
+          "lines":lines
+        };
+        $('#console-'+pid).terminal(function(command) {
+          if (command !== '') {
+          } else {
+             this.echo('');
+          }
+      }, {
+          greetings: 'Remote Console',
+          name: 'Remote Console',
+          height: 600
+     
+      });
+        update = setInterval(function () {
+          if (stop_update) {
+            $('#console-update-' + pid).text("Update");
+          } else {
+            $('#console-update-' + pid).text("Not Update");
+          }
+          if (!stop_update) {
+            
+            jchaos.basicPost("/api/v1/restconsole/getconsole",JSON.stringify(consoleParam),function(r){
+              $('#console-'+pid).terminal().echo(r.data.console);
+
+            },function(bad){
+              console.log("Some error occur:"+bad);
+            },server);
+          }
+          //$(this).attr("refresh_time",update);
+        }, refresh);
+      }
+    });
+  }
+
   function showPicture(msghead, fmt, cuname, refresh) {
     var update;
     var data;
@@ -2847,11 +2925,13 @@
 
       });
       return;
-    } else if (cmd == "log-node") {
-      jchaos.node(node_selected, "enablelog", "agent", null, null, function (data) {
+    } else if (cmd == "console-node") {
+      /*jchaos.node(node_selected, "enablelog", "agent", null, null, function (data) {
         logNode(node_selected);
 
-      });
+      });*/
+      getConsole("Console","mypid","localhost:8071",2,1000);
+
     } else if (cmd == "kill-node") {
       confirm("Do you want to KILL?", "Pay attention ANY CU will be killed as well", "Kill",
         function () {
@@ -6328,7 +6408,7 @@ function executeAlgoMenuCmd(cmd, opt) {
         items['stop-node'] = { name: "Stop US ..." };
         items['restart-node'] = { name: "Restart US ..." };
         items['kill-node'] = { name: "Kill US ..." };
-        items['log-node'] = { name: "Log US ..." };
+        items['console-node'] = { name: "Console US ..." };
 
 
 
