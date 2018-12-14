@@ -288,7 +288,7 @@ require_once('header.php');
 		
 
 		<script>
-                jchaos.setOptions({"uri":location.host});
+                jchaos.setOptions({"uri":location.host:8081});
 		</script>	
 
 		

@@ -431,7 +431,7 @@
           }
           if (!stop_update) {
             
-            jchaos.basicPost("/api/v1/restconsole/getconsole",JSON.stringify(consoleParam),function(r){
+            jchaos.basicPost("api/v1/restconsole/getconsole",JSON.stringify(consoleParam),function(r){
               $('#console-'+pid).terminal().echo(r.data.console);
 
             },function(bad){
@@ -2926,11 +2926,13 @@
       });
       return;
     } else if (cmd == "console-node") {
-      /*jchaos.node(node_selected, "enablelog", "agent", null, null, function (data) {
-        logNode(node_selected);
-
-      });*/
-      getConsole("Console","mypid","localhost:8071",2,1000);
+      var agentn=node_name_to_desc[node_selected].parent;
+      
+      jchaos.node(agentn, "get", "agent", node_selected,null,function (data) {
+        console.log("->"+JSON.stringify(data));
+        getConsole("Console:"+node_selected,data.association_uid,"localhost:8071",2,1000);
+      });
+    
 
     } else if (cmd == "kill-node") {
       confirm("Do you want to KILL?", "Pay attention ANY CU will be killed as well", "Kill",

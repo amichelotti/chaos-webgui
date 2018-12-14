@@ -114,7 +114,7 @@
 
 
         <script>
-                jchaos.setOptions({"uri":location.host});
+                jchaos.setOptions({"uri":location.host:8081});
 		var url_server =  location.host; //"chaosdev-webui1.chaos.lnf.infn.it";
 		var n_port = "8081";
 
