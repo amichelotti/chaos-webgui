@@ -435,8 +435,15 @@
               $('#console-'+pid).terminal().echo(r.data.console);
 
             },function(bad){
-              console.log("Some error occur:"+bad);
+              console.log("Some error getting console occur:"+bad);
             },server);
+
+           /* jchaos.basicPost("api/v1/restconsole/list",JSON.stringify(consoleParam),function(r){
+              $('#console-'+pid).terminal().echo(r.data.console);
+
+            },function(bad){
+              console.log("Some error occur listing :"+bad);
+            },server);*/
           }
           //$(this).attr("refresh_time",update);
         }, refresh);

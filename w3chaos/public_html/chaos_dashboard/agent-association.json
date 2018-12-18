@@ -14,6 +14,13 @@
 		"required": true,
 	    "description":"Unique Identifier of the association"
 	},
+	"node_init_cfg": {
+		"type": "string",
+		"format":"textarea",
+		"required": true,
+		"default":"log-on-console=1",
+	    "description":"Initialization file"
+	},
 	"node_launch_cmd_line": {
 		"type": "string",
 		"required": true,
@@ -31,7 +38,7 @@
 	"node_log_at_launch": {
 	    "type": "boolean",
 		"description":"Node Keep Alive",
-		"default":true
+		"default":false
 	}
 }
 	

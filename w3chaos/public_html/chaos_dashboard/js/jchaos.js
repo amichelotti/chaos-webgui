@@ -66,6 +66,7 @@
 			}
 			request = new XMLHttpRequest();
 			var srv=jchaos.options.uri;
+			XMLHttpRequest.responseType="json";
 			if (typeof server === "string" ){
 				srv=server;
 			}
