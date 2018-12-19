@@ -36,6 +36,7 @@
   var trace_selected;
   var trace_list = [];
   var high_graphs; // highchart graphs
+  var eu_process;
   var graph_selected;
   var search_string;
   var notupdate_dataset = 1;
@@ -3431,6 +3432,157 @@ function executeAlgoMenuCmd(cmd, opt) {
     });
 
   }
+  function getZoneClassElement(str,list_zone,list_class, list_eu_name){
+    var regex = /(.*)\/(.*)\/(.*)$/;
+    var match=regex.exec(str);
+    if(match!=null){
+      list_zone.push(match[1]);
+      list_class.push(match[2]);
+      list_eu_name.push(match[3]); 
+    }
+  }
+  function searchEu(str,alive,list_zone,list_class, list_eu_name){
+    var list_eu = [];
+    eu_process=jchaos.variable("eu", "get", null, null);
+    for (var g in eu_process) {
+      if(str!=""){
+        if(g.indexOf(str)>0){
+          if(alive==true){
+            if(eu_process[g].alive == true){
+              list_eu.push(g);
+              getZoneClassElement(g,list_zone,list_class, list_eu_name);
+            } 
+          } else {
+            list_eu.push(g);
+            getZoneClassElement(g,list_zone,list_class, list_eu_name);
+
+          }
+        }   
+      } else {
+        if(alive==true){
+          if(eu_process[g].alive == true){
+            list_eu.push(g);
+            getZoneClassElement(g,list_zone,list_class, list_eu_name);
+          } 
+        } else {
+          list_eu.push(g);
+          getZoneClassElement(g,list_zone,list_class, list_eu_name);
+        }
+      }
+    }
+    return list_eu;
+  }
+  function mainEU() {
+    var list_eu = [];
+    var list_eu_full = [];
+
+    var list_class = [];
+    var list_zone = [];
+
+    eu_process=jchaos.variable("eu", "get", null, null);
+    for (var g in eu_process) {
+      getZoneClassElement(g,list_zone,list_class,list_eu);
+      list_eu_full.push(g);
+    }
+    element_sel('#zones', list_zone, 1);
+    element_sel('#classe', list_class, 1);
+    element_sel('#elements', list_eu, 1);
+
+    var $radio = $("input:radio[name=search-alive]");
+    if ($radio.is(":checked") === false) {
+      $radio.filter("[value=true]").prop('checked', true);
+    }
+    $("#zones").change(function () {
+      var zone_selected= $("#zones option:selected").val();
+      var alive = $("[input=search-alive]:checked").val()
+      var str_name= $("#search-chaos").val();
+      search_string = zone_selected;
+      list_class = [];
+      list_zone = [];
+      list_eu = [];
+      if (zone_selected == "--Select--") {        //Disabilito la select dei magneti se non � selezionata la zona
+        $("#elements").attr('disabled', 'disabled');
+      } else {
+        $("#elements").removeAttr('disabled');
+      }
+      if (zone_selected == "ALL") {
+        search_string = "";
+
+      } else {
+        search_string = zone_selected;
+      
+      }
+      list_eu = searchEu(search_string,alive,list_zone,list_class,list_eu);
+
+      buildEUInteface(list_cu);
+    });
+
+    $("#elements").change(function () {
+      var element_selected = $("#elements option:selected").val();
+      var zone_selected = $("#zones option:selected").val();
+      search_string = "";
+      if ((zone_selected != "ALL") && (zone_selected != "--Select--")) {
+        search_string = zone_selected;
+      }
+      if ((element_selected != "ALL") && (node_selected != "--Select--")) {
+        search_string += "/" + element_selected;
+      }
+
+
+      if (element_selected == "--Select--" || zone_selected == "--Select--") {
+        $(".btn-main-function").hasClass("disabled");
+
+      } else {
+        $(".btn-main-function").removeClass("disabled");
+
+      }
+      $("#search-chaos").val(search_string);
+      var alive = $("input[type=radio][name=search-alive]:checked").val()
+
+      list_eu = searchEu(search_string,alive,list_zone,list_class,list_eu);
+
+
+      buildEUInteface(list_eu);
+
+    });
+    $("#classe").change(function () {
+      var interface = $("#classe option:selected").val();
+      var alive = $("input[type=radio][name=search-alive]:checked").val()
+      var zone_selected = $("#zones option:selected").val();
+      search_string = "";
+      if ((zone_selected != "ALL") && (zone_selected != "--Select--")) {
+        search_string = zone_selected;
+      }
+      if ((element_selected != "ALL") && (node_selected != "--Select--")) {
+        search_string += "/" + interface;
+      }
+      list_eu = searchEu(search_string,alive,list_zone,list_class,list_eu);
+
+      buildEUInteface(list_eu);
+
+    });
+    $("#search-chaos").keypress(function (e) {
+      if (e.keyCode == 13) {
+        var interface = $("#classe").val();
+        search_string = $(this).val();
+        var alive = $("input[type=radio][name=search-alive]:checked").val()
+
+        list_eu = searchEu(search_string,alive,list_zone,list_class,list_eu);
+        buildEUInteface(list_eu);
+      }
+      //var tt =prompt('type value');
+    });
+
+    $("input[type=radio][name=search-alive]").change(function (e) {
+      var alive = $("input[type=radio][name=search-alive]:checked").val()
+      list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
+      var interface = $("#classe option:selected").val();
+
+      buildCUInteface(list_cu, implementation_map[interface], "cu");
+    });
+
+
+  }
 
   function mainCU() {
     var list_cu = [];
@@ -3540,7 +3692,7 @@ function executeAlgoMenuCmd(cmd, opt) {
 
   function interface2NodeList(inter, alive) {
     var tmp = [];
-    if ((inter != "agent") && (inter != "us") && (inter != "cu")) {
+    if ((inter != "agent") && (inter != "us") && (inter != "cu") ) {
       var node = jchaos.search(search_string, "us", (alive == "true"), false);
       node.forEach(function (item) {
         tmp.push(item);
@@ -3557,6 +3709,20 @@ function executeAlgoMenuCmd(cmd, opt) {
       tmp = jchaos.search(search_string, inter, (alive == "true"), false);
 
     }
+    if(inter == "eu"){
+      eu_process=jchaos.variable("eu", "get", null, null);
+      for (var g in eu_process) {
+        if(search_string!=""){
+          if(g.indexOf(search_string)){
+            tmp.push(g);
+          } 
+        } else {
+          tmp.push(g);
+        }
+        
+  
+      }
+    }
     return tmp;
   }
 
@@ -3568,7 +3734,7 @@ function executeAlgoMenuCmd(cmd, opt) {
       $radio.filter("[value=true]").prop('checked', true);
     }
 
-    element_sel('#classe', ["us", "agent", "cu"], 1);
+    element_sel('#classe', ["us", "agent", "cu","eu"], 1);
 
 
     $("#search-chaos").keypress(function (e) {
@@ -5877,13 +6043,18 @@ function executeAlgoMenuCmd(cmd, opt) {
 
     html += '<li class="black">';
     html += '<a href="./configuration.php" role="button" class="show_agent" data-toggle="modal">';
-    html += '<i class="icon-key green"></i><span class="opt-menu hidden-tablet">Configuration</span>';
+    html += '<i class="icon-key red"></i><span class="opt-menu hidden-tablet">Configuration</span>';
     html += '</a>';
     html += '</li>';
 
     html += '<li class="black">';
     html += '<a href="./index.php" role="button" class="show_agent" data-toggle="modal">';
     html += '<i class="icon-search green"></i><span class="opt-menu hidden-tablet">CU</span>';
+    html += '</a>';
+    html += '</li>';
+    html += '<li class="black">';
+    html += '<a href="./eu.php" role="button" class="show_agent" data-toggle="modal">';
+    html += '<i class="icon-search red"></i><span class="opt-menu hidden-tablet">EU</span>';
     html += '</a>';
     html += '</li>';
     /*
@@ -6869,6 +7040,17 @@ function executeAlgoMenuCmd(cmd, opt) {
 
         $(this).html(html);
         mainNode(options.template);
+
+      } else if (options.template == "eu") {
+        var html = "";
+        html += buildEUBody();
+        html += generateEditJson();
+     //   html += '<input id="inputClipBoard" value=" "/>';
+
+        html += '<div class="specific-table-eu"></div>';
+
+        $(this).html(html);
+        mainEU(options.template);
 
       } else if (options.template == "ctrl") {
         var html = "";

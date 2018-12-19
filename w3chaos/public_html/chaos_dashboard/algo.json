@@ -22,6 +22,18 @@
 		"description":"Script code"
 		
 	},
+	"eudk_script_cmdline": {
+		"type": "string",
+		"format":"text",
+		"description":"Command Line (if any)"
+		
+	},
+	"eudk_script_state": {
+		"type": "string",
+		"format":"text",
+		"description":"Command Line (if any)"
+		
+	},
 	"cudk_ds_desc":{
 		"type":"array",
 		"format": "tab",
