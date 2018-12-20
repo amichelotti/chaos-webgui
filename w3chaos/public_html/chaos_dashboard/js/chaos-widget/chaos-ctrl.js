@@ -986,7 +986,40 @@
     html += '</div>';
     html += generateActionBox();
     html += '</div>';
+    return html;
+  }
 
+  function buildEUBody() {
+    var html = '<div class="row-fluid">';
+
+    html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
+    html += '<h3>Zones</h3>';
+    html += '<select id="zones" size="auto"></select>';
+    html += '</div>';
+
+    html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
+    html += '<h3>Instances</h3>';
+    html += '<select id="elements" size="auto"></select>';
+    html += '</div>';
+
+    html += '<div class="statbox purple" onTablet="span4" onDesktop="span2">'
+    html += '<h3>Class Algorithm</h3>';
+    html += '<select id="classe" size="auto"></select>';
+    html += '</div>';
+
+    html += '<div class="statbox purple row-fluid" onTablet="span4" onDesktop="span3">'
+    html += '<div class="span3">'
+    html += '<label for="search-alive">Search All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
+    html += '</div>'
+    html += '<div class="span3">'
+    html += '<label for="search-alive">Search Running</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
+    html += '</div>'
+    // html += '<h3 class="span3">Search</h3>';
+
+    html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
+    html += '</div>';
+//    html += generateActionBox();
+    html += '</div>';
     return html;
   }
   function buildNodeBody() {
@@ -1133,7 +1166,63 @@
     return html;
 
   }
+  function generateEUTable(cu, template) {
+    var html = '<div class="row-fluid" id="table-space">';
 
+    html += '<div class="box span12" id="container-main-table">';
+    html += '<div class="box-content span12">';
+
+    html += '<table class="table table-bordered" id="main_table-' + template + '">';
+    html += '<thead class="box-header">';
+    html += '<tr class="nodeMenu">';
+    html += '<th>Node</th>';
+    html += '<th>Type</th>';
+    html += '<th>Registration Timestamp</th>';
+    html += '<th>Hostname</th>';
+    html += '<th>(RPC) address</th>';
+    html += '<th>Status</th>';
+    html += '<th>TimeStamp</th>';
+    html += '<th>Uptime</th>';
+    html += '<th>System Time</th>';
+    html += '<th>User Time</th>';
+    html += '<th>Parent</th>';
+
+    html += '</tr>';
+
+
+    html += '</thead> ';
+    $(cu).each(function (i) {
+      var cuname = encodeName(cu[i]);
+      html += "<tr class='row_element nodeMenu' cuname='" + cu[i] + "' id='" + cuname + "'>";
+      html += "<td class='name_element'>" + cu[i] + "</td>";
+      html += "<td id='" + cuname + "_type'></td>";
+
+      html += "<td id='" + cuname + "_timestamp'></td>";
+      html += "<td id='" + cuname + "_hostname'></td>";
+      html += "<td id='" + cuname + "_rpcaddress'></td>";
+      html += "<td id='" + cuname + "_health_status'></td>";
+      html += "<td id='" + cuname + "_health_timestamp'></td>";
+      html += "<td id='" + cuname + "_health_uptime'></td>";
+      html += "<td id='" + cuname + "_health_systemtime'></td>";
+      html += "<td id='" + cuname + "_health_usertime'></td>";
+      html += "<td id='" + cuname + "_parent'></td></tr>";
+
+    });
+
+    html += '</table>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '<div class="box span12 hide" id="container-table-helper">';
+    html += '<div class="box-content-helper span12">';
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div>';
+
+    return html;
+
+  }
   function generateNodeTable(cu, template) {
     var html = '<div class="row-fluid" id="table-space">';
 
@@ -2578,6 +2667,63 @@
       });
     }
   }
+
+  function buildEUInteface(cuids, cutype, template) {
+    if (cuids == null) {
+      alert("NO EU given!");
+      return;
+    }
+    if (!(cuids instanceof Array)) {
+      node_list = [cuids];
+    } else {
+      node_list = cuids;
+    }
+    
+    // cu_selected = cu_list[0];
+    node_selected = null;
+    var htmlt, htmlc, htmlg;
+    var updateTableFn = new Function;
+    /*****
+     * 
+     * clear all interval interrupts
+     */
+    /**
+     * fixed part
+     */
+    htmlt = generateEUtable(node_list,"eu");
+    htmlc = generateEUCmd("eu");
+    updateTableFn = updateEUtable;
+
+    $("div.specific-table-" + template).html(htmlt);
+    $("div.specific-control-" + template).html(htmlc);
+    $("#main_table-" + template + " tbody tr").click(function (e) {
+      mainTableCommonHandling("main_table-eu", e, "eu");
+    });
+    n = $('#main_table-eu tr').size();
+    if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
+      $("#table-scroll").css('height', '280px');
+    } else {
+      $("#table-scroll").css('height', '');
+    }
+    if ((node_list_interval != null)) {
+      clearInterval(node_list_interval);
+
+    }
+    node_list_interval = setInterval(function () {
+      
+          updateTableFn(node_live_selected, curr_cu_selected);
+      
+
+
+
+      // update all generic
+
+
+    }, options.Interval, updateTableFn);
+
+
+  }
+
   function buildCUInteface(cuids, cutype, template) {
     if (cuids == null) {
       alert("NO CU given!");
