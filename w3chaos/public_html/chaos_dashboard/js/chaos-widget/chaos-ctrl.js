@@ -989,7 +989,7 @@
     return html;
   }
 
-  function buildEUBody() {
+  function buildProcessBody() {
     var html = '<div class="row-fluid">';
 
     html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
@@ -1166,7 +1166,7 @@
     return html;
 
   }
-  function generateEUTable(cu, template) {
+  function generateProcessTable(cu, template) {
     var html = '<div class="row-fluid" id="table-space">';
 
     html += '<div class="box span12" id="container-main-table">';
@@ -1174,12 +1174,11 @@
 
     html += '<table class="table table-bordered" id="main_table-' + template + '">';
     html += '<thead class="box-header">';
-    html += '<tr class="nodeMenu">';
-    html += '<th>Node</th>';
-    html += '<th>Type</th>';
+    html += '<tr class="ProcessMenu">';
+    html += '<th>Process Instance</th>';
+    html += '<th>Language</th>';
     html += '<th>Registration Timestamp</th>';
     html += '<th>Hostname</th>';
-    html += '<th>(RPC) address</th>';
     html += '<th>Status</th>';
     html += '<th>TimeStamp</th>';
     html += '<th>Uptime</th>';
@@ -1193,18 +1192,17 @@
     html += '</thead> ';
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html += "<tr class='row_element nodeMenu' cuname='" + cu[i] + "' id='" + cuname + "'>";
+      html += "<tr class='row_element ProcessMenu' cuname='" + cu[i] + "' id='" + cuname + "'>";
       html += "<td class='name_element'>" + cu[i] + "</td>";
-      html += "<td id='" + cuname + "_type'></td>";
+      html += "<td id='" + cuname + "_language'></td>";
 
       html += "<td id='" + cuname + "_timestamp'></td>";
       html += "<td id='" + cuname + "_hostname'></td>";
-      html += "<td id='" + cuname + "_rpcaddress'></td>";
-      html += "<td id='" + cuname + "_health_status'></td>";
-      html += "<td id='" + cuname + "_health_timestamp'></td>";
-      html += "<td id='" + cuname + "_health_uptime'></td>";
-      html += "<td id='" + cuname + "_health_systemtime'></td>";
-      html += "<td id='" + cuname + "_health_usertime'></td>";
+      html += "<td id='" + cuname + "_status'></td>";
+      html += "<td id='" + cuname + "_timestamp'></td>";
+      html += "<td id='" + cuname + "_uptime'></td>";
+      html += "<td id='" + cuname + "_systemtime'></td>";
+      html += "<td id='" + cuname + "_usertime'></td>";
       html += "<td id='" + cuname + "_parent'></td></tr>";
 
     });
@@ -2668,9 +2666,9 @@
     }
   }
 
-  function buildEUInteface(cuids, cutype, template) {
+  function buildProcessInteface(cuids, cutype, template) {
     if (cuids == null) {
-      alert("NO EU given!");
+      alert("NO Process given!");
       return;
     }
     if (!(cuids instanceof Array)) {
@@ -2690,9 +2688,9 @@
     /**
      * fixed part
      */
-    htmlt = generateEUtable(node_list,"eu");
-    htmlc = generateEUCmd("eu");
-    updateTableFn = updateEUtable;
+    htmlt = generateProcesstable(node_list,"eu");
+    htmlc = generateProcessCmd("eu");
+    updateTableFn = updateProcesstable;
 
     $("div.specific-table-" + template).html(htmlt);
     $("div.specific-control-" + template).html(htmlc);
@@ -3587,9 +3585,36 @@ function executeAlgoMenuCmd(cmd, opt) {
       list_eu_name.push(match[3]); 
     }
   }
+  function updateProcessState(){
+    var proc;
+    jchaos.search("", "agent", true, function(ag){
+      ag.forEach(function(elem){
+        var regx=/ChaosAgent_(.+)\:(.+)/;
+        var match=regx.exec(ag);
+        if(match){
+          console.log("agent "+match[1]);
+          var server=match[1];
+          jchaos.basicPost("api/v1/restconsole/list","{}",function(r){
+            var processes=r.data.processes;
+            processes.forEach(function(p){
+              p['parent']=server;
+              proc[p.uid]=p;
+            });
+          },function(bad){
+            console.log("Some error getting console occur:"+bad);
+          },server+":8071");
+
+        }
+      });
+    });
+    if(proc!=null){
+      jchaos.variable("process", "set", proc, null);
+    }
+    return proc;
+  }
   function searchEu(str,alive,list_zone,list_class, list_eu_name){
     var list_eu = [];
-    eu_process=jchaos.variable("eu", "get", null, null);
+    eu_process=updateProcessState();
     for (var g in eu_process) {
       if(str!=""){
         if(g.indexOf(str)>0){
@@ -3618,7 +3643,7 @@ function executeAlgoMenuCmd(cmd, opt) {
     }
     return list_eu;
   }
-  function mainEU() {
+  function mainProcess() {
     var list_eu = [];
     var list_eu_full = [];
 
@@ -3660,7 +3685,7 @@ function executeAlgoMenuCmd(cmd, opt) {
       }
       list_eu = searchEu(search_string,alive,list_zone,list_class,list_eu);
 
-      buildEUInteface(list_cu);
+      buildProcessInteface(list_cu);
     });
 
     $("#elements").change(function () {
@@ -3688,7 +3713,7 @@ function executeAlgoMenuCmd(cmd, opt) {
       list_eu = searchEu(search_string,alive,list_zone,list_class,list_eu);
 
 
-      buildEUInteface(list_eu);
+      buildProcessInteface(list_eu);
 
     });
     $("#classe").change(function () {
@@ -3704,7 +3729,7 @@ function executeAlgoMenuCmd(cmd, opt) {
       }
       list_eu = searchEu(search_string,alive,list_zone,list_class,list_eu);
 
-      buildEUInteface(list_eu);
+      buildProcessInteface(list_eu);
 
     });
     $("#search-chaos").keypress(function (e) {
@@ -3714,7 +3739,7 @@ function executeAlgoMenuCmd(cmd, opt) {
         var alive = $("input[type=radio][name=search-alive]:checked").val()
 
         list_eu = searchEu(search_string,alive,list_zone,list_class,list_eu);
-        buildEUInteface(list_eu);
+        buildProcessInteface(list_eu);
       }
       //var tt =prompt('type value');
     });
@@ -6200,7 +6225,7 @@ function executeAlgoMenuCmd(cmd, opt) {
     html += '</li>';
     html += '<li class="black">';
     html += '<a href="./eu.php" role="button" class="show_agent" data-toggle="modal">';
-    html += '<i class="icon-search red"></i><span class="opt-menu hidden-tablet">EU</span>';
+    html += '<i class="icon-search red"></i><span class="opt-menu hidden-tablet">Process</span>';
     html += '</a>';
     html += '</li>';
     /*
@@ -7189,14 +7214,14 @@ function executeAlgoMenuCmd(cmd, opt) {
 
       } else if (options.template == "eu") {
         var html = "";
-        html += buildEUBody();
+        html += buildProcessBody();
         html += generateEditJson();
      //   html += '<input id="inputClipBoard" value=" "/>';
 
         html += '<div class="specific-table-eu"></div>';
 
         $(this).html(html);
-        mainEU(options.template);
+        mainProcess(options.template);
 
       } else if (options.template == "ctrl") {
         var html = "";
