@@ -18,16 +18,11 @@
   var snap_selected = "";
   var node_selected = "";
   var pather_selected = "";
-  var node_multi_selected = [];
   var options;
-  var node_live_selected = [{}];
-  var node_list = [];
-  var node_name_to_index = [];
   var cu_name_to_saved = []; // cuname saved state if any
   var node_list_interval; // update interval of the CU list
   var node_list_check; // update interval for CU check live
   var main_dom;
-  var curr_cu_selected = {};
   var last_index_selected = -1;
   var active_plots = [];
   var trace_selected;
@@ -236,7 +231,7 @@
         // interval +1
         orginal_list = node_list;
         console.log(name + " OPEN control interval:" + nintervals);
-        $("#ctrl-" + name).chaosDashboard({ collapsed: true, withQuotes: true, template: "ctrl", cu: cuname, interface: cutype, Interval: refresh });
+        $("#ctrl-" + name).chaosDashboard({ collapsed: true, withQuotes: true, template: "cu", cu: cuname, interface: cutype, Interval: refresh });
       }
     });
   }
@@ -248,7 +243,6 @@
       minWidth: hostWidth / 4,
       minHeight: hostHeight / 4,
       title: msg,
-      position: "center",
       resizable: true,
       buttons: [
         {
@@ -295,7 +289,6 @@
       minWidth: hostWidth / 4,
       minHeight: hostHeight / 4,
       title: msghead,
-      position: "center",
       resizable: true,
       buttons: [
         {
@@ -329,7 +322,7 @@
         $(this).remove();
       },
       open: function () {
-        console.log(cuname + "dataset uodate refresh:" + refresh);
+        console.log(cuname + "dataset update refresh:" + refresh);
         //$(".ui-dialog-titlebar-close", ui.dialog | ui).show();
         update = setInterval(function () {
           if (stop_update) {
@@ -550,7 +543,7 @@
       width: sizex,
       height: sizey,
       title: msghead,
-      position: "center",
+     // position: "center",
       dialogClass: 'instantOk',
       open: function () {
         if (ok != null) {
@@ -817,14 +810,14 @@
     });
     return cmdparam;
   }
-  function cusWithInterface(culist, interface) {
+  function cusWithInterface(tmpObj,culist, interface) {
     var retlist = [];
     culist.forEach(function (name) {
-      if (node_name_to_desc[name] == null) {
+      if (tmpObj.node_name_to_desc[name] == null) {
         var desc = jchaos.getDesc(name, null);
-        node_name_to_desc[name] = desc[0];
+        tmpObj.node_name_to_desc[name] = desc[0];
       }
-
+      var node_name_to_desc=tmpObj.node_name_to_desc;
       if (node_name_to_desc[name].hasOwnProperty('instance_description') && node_name_to_desc[name].instance_description.hasOwnProperty("control_unit_implementation") && (node_name_to_desc[name].instance_description.control_unit_implementation.indexOf(interface) != -1)) {
         retlist.push(name);
       }
@@ -1494,7 +1487,9 @@
 
     });
   }
-  function snapSetup() {
+  function snapSetup(tmpObj) {
+    var node_multi_selected=tmpObj.node_multi_selected;
+    var node_selected=tmpObj.node_selected;
     $("#snap-load").on('click', function () {
       $("#mdl-snap").modal("hide");
       getFile("LOAD JSON SNAPSHOT/SETPOINT", "select the JSON to load", function (config) {
@@ -1516,12 +1511,12 @@
     $("#snap-save").on('click', function () {
       var value = $("#snap_save_name").val();
       if (node_multi_selected.length > 1) {
-        jchaos.snapshot(value, "create", node_multi_selected, function () {
+        jchaos.snapshot(value, "create", node_multi_selected,null, function () {
         });
 
       } else {
-        jchaos.snapshot(value, "create", node_selected, function () {
-          updateSnapshotTable(cu);
+        jchaos.snapshot(value, "create", node_selected,null, function () {
+          updateSnapshotTable(tmpObj);
 
         });
       }
@@ -1536,13 +1531,13 @@
 
     $("a.show_snapshot").click(function () {
 
-      updateSnapshotTable(node_selected);
+      updateSnapshotTable(tmpObj,true);
     });
 
     $("#snap-delete").on('click', function (e) {
       if (snap_selected != "") {
         jchaos.snapshot(snap_selected, "delete", "", "", function () {
-          updateSnapshotTable(node_selected);
+          updateSnapshotTable(tmpObj,true);
 
         });
 
@@ -1562,7 +1557,7 @@
         if (isCollapsable(dataset)) {
           jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
         }
-        updateSnapshotTable(node_selected);
+        updateSnapshotTable(tmpObj,true);
 
         $("#cu-description").html(jsonhtml);
         $("#desc_text").html("Snapshot " + snap_selected);
@@ -2137,6 +2132,11 @@
   // the interface has all the main elements
   function updateInterfaceCU(tmpObj) {
     var template=tmpObj.type;
+    var descs= jchaos.getDesc(tmpObj['elems'], null);
+    descs.forEach(function(elem,id){
+      var name=tmpObj['elems'][id];
+      tmpObj.node_name_to_desc[name] = elem;
+    });
     $("#main_table-" + template + " tbody tr").click(function (e) {
       mainTableCommonHandling(tmpObj, e, "cu");
     });
@@ -2338,9 +2338,8 @@
     $.contextMenu({
       selector: '.cuMenu',
       build: function ($trigger, e) {
-        var cuname = $(e.currentTarget).attr("id");
-        var cindex = node_name_to_index[cuname];
-        var cuitem = updateCUMenu(node_live_selected[cindex], cuname);
+        var cuname = $(e.currentTarget).attr(template+"-name");
+        var cuitem = updateCUMenu(tmpObj, cuname);
         cuitem['sep1'] = "---------";
 
         cuitem['quit'] = {
@@ -2355,7 +2354,7 @@
           callback: function (cmd, options) {
             // $('.context-menu-list').trigger('contextmenu:hide');
 
-            executeCUMenuCmd(cmd, options);
+            executeCUMenuCmd(tmpObj,cmd, options);
             return;
 
           },
@@ -2393,19 +2392,20 @@
     });
 
   }
-  function executeCUMenuCmd(cmd, opt) {
+  function executeCUMenuCmd(tmpObj,cmd, opt) {
     if (cmd == "quit") {
       return;
     }
+    var currsel=tmpObj.node_multi_selected[0];
     if (cmd == "snapshot-cu") {
       var instUnique = (new Date()).getTime();
 
       getEntryWindow("Snapshotting", "Snap Name", "NONAME_" + instUnique, "Create", function (inst_name) {
-        jchaos.snapshot(inst_name, "create", node_multi_selected, function () {
+        jchaos.snapshot(inst_name, "create", tmpObj.node_multi_selected,null, function () {
           instantMessage("Snapshot \"" + inst_name + "\"", " created ", 1000, true);
 
         }, function () {
-          instantMessage("Snapshot ERROR \"" + inst_name + "\"", " created ", 1000, false);
+          instantMessage("Snapshot ERROR \"" + inst_name + "\"", " NOT created ", 1000, false);
 
         });
 
@@ -2415,7 +2415,7 @@
     } else if (cmd == "tag-cu") {
       getNEntryWindow("Tagging", ["Tag Name", "Duration Type (1=cycle,2=time(ms))", "Duration"], ["NONAME_" + instUnique, "1", "1"], "Create", function (inst_name) {
         if (Number(inst_name[1]) == 1) {
-          jchaos.tag(inst_name[0], node_multi_selected, Number(inst_name[1]), Number(inst_name[2]), function () {
+          jchaos.tag(inst_name[0], tmpObj.node_multi_selected, Number(inst_name[1]), Number(inst_name[2]), function () {
 
             instantMessage("Creating CYCLE Tag \"" + inst_name[0] + "\"", " during " + inst_name[2] + " cycles", 3000, true);
 
@@ -2425,7 +2425,7 @@
 
           });
         } else if (Number(inst_name[1]) == 2) {
-          jchaos.tag(inst_name[0], node_multi_selected, Number(inst_name[1]), Number(inst_name[2]), function () {
+          jchaos.tag(inst_name[0], tmpObj.node_multi_selected, Number(inst_name[1]), Number(inst_name[2]), function () {
 
             instantMessage("Creating TIME Tag \"" + inst_name[0] + "\"", " during: " + inst_name[2] + " ms", 3000, true);
 
@@ -2441,7 +2441,7 @@
       }, "Cancel");
     } else if (cmd == "load") {
 
-      jchaos.loadUnload(node_multi_selected, true, function (data) {
+      jchaos.loadUnload(tmpObj.node_multi_selected, true, function (data) {
         instantMessage("LOAD ", "Command:\"" + cmd + "\" sent", 1000, true);
         //  $('.context-menu-list').trigger('contextmenu:hide')
 
@@ -2452,7 +2452,7 @@
       });
 
     } else if (cmd == "unload") {
-      jchaos.loadUnload(node_multi_selected, false, function (data) {
+      jchaos.loadUnload(tmpObj.node_multi_selected, false, function (data) {
         instantMessage("UNLOAD ", "Command:\"" + cmd + "\" sent", 1000, true);
         //   $('.context-menu-list').trigger('contextmenu:hide')
 
@@ -2462,7 +2462,7 @@
 
       });
     } else if (cmd == "init") {
-      jchaos.node(node_multi_selected, "init", "cu", null, null, function (data) {
+      jchaos.node(tmpObj.node_multi_selected, "init", "cu", null, null, function (data) {
         instantMessage("INIT ", "Command:\"" + cmd + "\" sent", 1000, true);
         //    $('.context-menu-list').trigger('contextmenu:hide')
 
@@ -2472,7 +2472,7 @@
 
       });
     } else if (cmd == "deinit") {
-      jchaos.node(node_multi_selected, "deinit", "cu", null, null, function (data) {
+      jchaos.node(tmpObj.node_multi_selected, "deinit", "cu", null, null, function (data) {
         instantMessage("DEINIT ", "Command:\"" + cmd + "\" sent", 1000, true);
         //    $('.context-menu-list').trigger('contextmenu:hide')
 
@@ -2482,7 +2482,7 @@
 
       });
     } else if (cmd == "start") {
-      jchaos.node(node_multi_selected, "start", "cu", null, null, function (data) {
+      jchaos.node(tmpObj.node_multi_selected, "start", "cu", null, null, function (data) {
         instantMessage("START ", "Command:\"" + cmd + "\" sent", 1000, true);
         //    $('.context-menu-list').trigger('contextmenu:hide')
 
@@ -2492,7 +2492,7 @@
 
       });
     } else if (cmd == "stop") {
-      jchaos.node(node_multi_selected, "stop", "cu", null, null, function (data) {
+      jchaos.node(tmpObj.node_multi_selected, "stop", "cu", null, null, function (data) {
         instantMessage("STOP ", "Command:\"" + cmd + "\" sent", 1000, true);
         //    $('.context-menu-list').trigger('contextmenu:hide')
 
@@ -2502,25 +2502,25 @@
 
       });
     } else if (cmd == "open-ctrl") {
-      var desc = node_name_to_desc[encodeName(node_multi_selected[0])];
+      var desc = tmpObj.node_name_to_desc[currsel];
       var tt = getInterfaceFromClass(desc.instance_description.control_unit_implementation);
-      if (node_multi_selected.length > 1) {
-        openControl("Multi Control " + node_multi_selected[0] + "...", node_multi_selected, tt, 1000);
+      if (tmpObj.node_multi_selected.length > 1) {
+        openControl("Multi Control " + currsel+ "...", tmpObj.node_multi_selected, tt, 1000);
       } else {
-        openControl("Control " + node_multi_selected[0], node_multi_selected, tt, 1000);
+        openControl("Control " + currsel, tmpObj.node_multi_selected, tt, 1000);
       }
 
     } else if (cmd == "show-dataset") {
-      showDataset(node_multi_selected[0], node_multi_selected[0], 1000);
+      showDataset(currsel, currsel, 1000);
     } else if (cmd == "show-desc") {
-      jchaos.getDesc(node_multi_selected[0], function (data) {
-        node_name_to_desc[node_multi_selected[0]] = data[0];
+      jchaos.getDesc(currsel, function (data) {
+        tmpObj.node_name_to_desc[currsel] = data[0];
 
-        showJson("Description " + node_multi_selected[0], node_multi_selected[0], data[0]);
+        showJson("Description " +currsel,currsel, data[0]);
       });
 
     } else if (cmd == "show-picture") {
-      jchaos.getChannel(node_multi_selected[0], -1, function (imdata) {
+      jchaos.getChannel(currsel, -1, function (imdata) {
         var cu = imdata[0];
         var refresh = 1000;
         if (cu.hasOwnProperty("health") && cu.health.hasOwnProperty("cuh_dso_prate")) {
@@ -2532,9 +2532,9 @@
           cu.output.FRAMEBUFFER.$binary.hasOwnProperty("base64")) {
           // $("#mdl-dataset").modal("hide");
 
-          showPicture(node_multi_selected[0], "png", node_selected, refresh);
+          showPicture(currsel, "png", node_selected, refresh);
         } else {
-          alert(node_multi_selected[0] + " cannot be viewed as a Picture, missing 'FRAMEBUFFER'");
+          alert(currsel + " cannot be viewed as a Picture, missing 'FRAMEBUFFER'");
         }
       });
 
@@ -2558,7 +2558,7 @@
          });*/
         progressBar("Retrive and Zip", "zipprogress", "zipping");
 
-        jchaos.fetchHistoryToZip(qtag, node_multi_selected, qstart, qstop, qtag, function (meta) {
+        jchaos.fetchHistoryToZip(qtag, tmpObj.node_multi_selected, qstart, qstop, qtag, function (meta) {
           $("#zipprogress").progressbar("value", parseInt(meta.percent.toFixed(2)));
 
 
@@ -2569,7 +2569,7 @@
         });
       });
     } else {
-      jchaos.sendCUCmd(node_multi_selected, cmd, "", function (data) {
+      jchaos.sendCUCmd(tmpObj.node_multi_selected, cmd, "", function (data) {
         instantMessage("Command ", "Command:\"" + cmd + "\" sent", 1000, true);
         //   $('.context-menu-list').trigger('contextmenu:hide')
 
@@ -2897,22 +2897,18 @@
 
 
   }
+  
+  
+  
+
   function updateGenericCU(tmpObj) {
-    jchaos.getChannel(tmpObj['elems'], 255, function (dat) {
-      var node_live_selected = dat;
-      if (node_live_selected.length == 0) {
-        return;
-      }
-      var curr_cu_selected = null;
-      if (tmpObj.node_selected != null) {
-        curr_cu_selected = node_live_selected[tmpObj.index];
-        updateGenericControl(tmpObj,curr_cu_selected);
+    var node_live_selected=tmpObj.data;
+    if (tmpObj.node_selected != null) {
+      curr_cu_selected = node_live_selected[tmpObj.index];
+      updateGenericControl(tmpObj,curr_cu_selected);
 
-      }
-      tmpObj.data=node_live_selected;
-      updateGenericTableDataset(tmpObj,node_live_selected, curr_cu_selected);
-
-    });
+    }
+      updateGenericTableDataset(tmpObj);
   }
 
   function checkLiveCU(tmpObj) {
@@ -2972,6 +2968,7 @@
       tmpObj.index = -1;
       tmpObj.health_time_stamp_old[elem] = 0;
       tmpObj.off_line[elem] = 2;
+      tmpObj.node_name_to_index[elem]=id;
     });
     tmpObj.node_selected = null;
     var htmlt, htmlc;
@@ -2987,13 +2984,26 @@
     }
 
     tmpObj.node_list_interval = setInterval(function () {
-      tmpObj.updateFn(tmpObj);
+      if(tmpObj.upd_chan>-2){
+        jchaos.getChannel(tmpObj['elems'], tmpObj.upd_chan, function (dat) {
+          var node_live_selected = dat;
+          if (node_live_selected.length == 0) {
+            return;
+          }
+         
+          tmpObj.data=node_live_selected;
+          tmpObj.updateFn(tmpObj);    
+        });
+      } else {
+        tmpObj.updateFn(tmpObj);
+      }
       var now=(new Date()).getTime();
       if((now - tmpObj.last_check) > tmpObj.check_interval){
         if(tmpObj.data!=null){
           tmpObj.checkLiveFn(tmpObj);
+          tmpObj.last_check=now;
+
         }
-        tmpObj.last_check=now;
       }
 
     }, options.Interval, tmpObj.updateTableFn);
@@ -3013,11 +3023,11 @@
     }
 
     if (cutype == null) {
-      cutype = "generic";
+      cutype = "cu";
     }
 
-    if ((cutype != "generic") && (cutype != "all") && (cutype != "ALL")) {
-      node_list = cusWithInterface(node_list, cutype);
+    if ((cutype != "cu") && (cutype != "all") && (cutype != "ALL")) {
+      node_list = cusWithInterface(tmpObj,node_list, cutype);
     }
     tmpObj['elems']=node_list;
     /*****
@@ -3027,21 +3037,25 @@
     /**
      * fixed part
      */
-
+    tmpObj.type=cutype;
     if ((cutype.indexOf("SCPowerSupply") != -1)) {
+      tmpObj.upd_chan=-1;
+     
       tmpObj.generateTableFn = generatePStable;
       tmpObj.generateCmdFn = generatePSCmd;
-      tmpObj.updateFn = updatePStable;
-
+      
+      tmpObj.updateFn = updatePS;
+      
     } else if ((cutype.indexOf("SCActuator") != -1)) {
       tmpObj.generateTableFn = generateScraperTable;
       tmpObj.generateCmdFn = generateScraperCmd;
-      tmpObj.updateFn = updateScraperTable;
+      tmpObj.updateFn = updateScraper;
     } else if ((cutype.indexOf("RTCamera") != -1)) {
+      tmpObj.upd_chan=-1;
       tmpObj.generateTableFn = generateCameraTable;
       tmpObj.updateFn = updateCameraTable;
-      htmlt = generateCameraTable(node_list, template);
     } else {
+      tmpObj.upd_chan=255;
       tmpObj.generateTableFn = generateGenericTable;
       tmpObj.generateCmdFn = generateGenericControl;
       tmpObj.updateFn = updateGenericCU;
@@ -4063,6 +4077,7 @@
    * 
    */
   function mainTableCommonHandling(tmpObj, e, type) {
+    var node_list=tmpObj['elems'];
     var id="main_table-" + tmpObj.type;
     $("#mdl-commands").modal("hide");
     if (tmpObj.node_selected == $(e.currentTarget).attr(tmpObj.type+"-name")) {
@@ -4428,7 +4443,9 @@
     });
   }
 
-  function generateScraperTable(cu, template) {
+  function generateScraperTable(tmpObj) {
+    var cu=tmpObj.elems;
+    var template=tmpObj.type;
     var html = '<div class="row-fluid">';
     html += '<div class="box span12">';
     html += '<div class="box-content">';
@@ -4461,7 +4478,9 @@
     return html;
   }
 
-  function updateScraperTable(cu) {
+  function updateScraper(tmpObj) {
+    var cu=tmpObj.data;
+
     cu.forEach(function (elem) {
       if (elem.hasOwnProperty('health') && elem.health.hasOwnProperty("ndk_uid")) {   //if el health
 
@@ -4571,7 +4590,9 @@
 
     return html;
   }
-  function generatePStable(cu, template) {
+  function generatePStable(tmpObj) {
+    var cu=tmpObj.elems;
+    var template=tmpObj.type;
     var html = '<div class="row-fluid">';
     html += '<div class="box span12">';
     html += '<div class="box-content">';
@@ -4612,7 +4633,9 @@
 
     return html;
   }
-  function updateCameraTable(cu, selected) {
+  function updateCameraTable(tmpObj, selected) {
+    var cu=tmpObj.elems;
+
     if (selected != null && selected.hasOwnProperty("output")) {
       $("#cameraName").html("<b>" + selected.output.ndk_uid + "</b>");
       if (selected.output.hasOwnProperty("FRAMEBUFFER")) {
@@ -4639,7 +4662,8 @@
       }
     }
   }
-  function updatePStable(cu) {
+  function updatePS(tmpObj) {
+    var cu=tmpObj.data;
     cu.forEach(function (elem, index) {
       if (elem.hasOwnProperty("health") && elem.health.hasOwnProperty("ndk_uid")) {
 
@@ -6820,12 +6844,13 @@
     return items;
   }
 
-  function updateCUMenu(cu, name) {
+  function updateCUMenu(tmpObj, name) {
     var items = {};
-
+    var cindex = tmpObj.node_name_to_index[name];
+    var cu=tmpObj.data[cindex];
     if (cu != null && cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) {   //if el health
       var status = cu.health.nh_status;
-      if ((off_line[cu.health.ndk_uid] == false)) {
+      if ((tmpObj.off_line[cu.health.ndk_uid] == false)) {
 
         if (status == 'Start') {
           items['stop'] = { name: "Stop", icon: "stop" };
@@ -6876,7 +6901,7 @@
 
     items['sep1'] = "---------";
     //node_name_to_desc[node_multi_selected[0]]
-    var desc = node_name_to_desc[encodeName(node_multi_selected[0])];
+    var desc=tmpObj.node_name_to_desc[name];
     if (desc != null && desc.hasOwnProperty("instance_description") && desc.instance_description.hasOwnProperty("control_unit_implementation")) {
       var tt = getInterfaceFromClass(desc.instance_description.control_unit_implementation);
 
@@ -6884,7 +6909,7 @@
         items['open-ctrl'] = { name: "Open control:" + tt };
       }
     }
-    if (node_multi_selected.length == 1) {
+    if (tmpObj.node_multi_selected.length == 1) {
 
       items['show-dataset'] = { name: "Show Dataset" };
       items['show-desc'] = { name: "Show Description" };
@@ -7000,7 +7025,7 @@
     
   }
 
-  function populateSnapList(snaplist) {
+  function populateSnapList(tmpObj,snaplist) {
     if (snaplist.length > 0) {
       var dataset;
       snap_selected = "";
@@ -7026,9 +7051,10 @@
           }
           if (name !== 'undefined') {
             cu_name_to_saved[name] = elem;
+            var node_name_to_desc=tmpObj.node_name_to_desc;
             if (node_name_to_desc[name] == null) {
               var desc = jchaos.getDesc(name, null);
-              node_name_to_desc[name] = desc[0];
+              tmpObj.node_name_to_desc[name] = desc[0];
             }
 
             var type = findImplementationName(node_name_to_desc[name].instance_description.control_unit_implementation);
@@ -7124,16 +7150,43 @@
 
   }
 
-  function updateSnapshotTable(cu) {
+  function updateSnapshotTable(tmpObj,refresh) {
+    var cu=tmpObj.node_selected;
+    var node_multi_selected=tmpObj.node_multi_selected;
+    var node_selected=tmpObj.node_selected;
+
     $("#table_snap").find("tr:gt(0)").remove();
     $("#table_snap_nodes").find("tr:gt(0)").remove();
     $("#table_snap_nodes").show();
 
-    $("#snap-apply").hide();
     $("#snap-show").hide();
-    $("#snap-delete").hide();
-    $("#snap-save").show();
     $('#table_snap').hide();
+    if(refresh){
+      $("#snap-delete").show();
+      $("#snap-apply").show();
+      $('#table_snap').show();
+      if ((node_multi_selected!=null) && (node_multi_selected.length == 1)){
+        // list of snapshot of selected cu
+        var cu=node_multi_selected[0];
+        $("#list_snapshot").html("List snapshot of " + cu);
+
+        jchaos.search(cu, "snapshotsof", false, function (snaplist) {
+        populateSnapList(tmpObj,snaplist);
+
+        });
+      } else {
+        // list all snapshots
+        jchaos.search("", "snapshots", false, function (snaplist) {
+          populateSnapList(tmpObj,snaplist);
+        });
+      }
+      return;
+    }
+    $("#snap-delete").hide();
+    $("#snap-apply").hide();
+
+    $("#snap-save").show();
+
     var tosnapshot = [];
     if (node_multi_selected.length > 0) {
       tosnapshot = node_multi_selected;
@@ -7147,12 +7200,12 @@
 
       tosnapshot.forEach(function (elem) {
         var type;
-        var name = encodeName(elem);
-        if (node_name_to_desc[elem] == null) {
+        if (tmpObj.node_name_to_desc[elem] == null) {
           var desc = jchaos.getDesc(elem, null);
-          node_name_to_desc[elem] = desc[0];
+          tmpObj.node_name_to_desc[elem] = desc[0];
 
         }
+        var node_name_to_desc=tmpObj.node_name_to_desc;
         if (node_name_to_desc[elem] == null) {
           type = "NA";
         } else {
@@ -7161,24 +7214,8 @@
         $('#table_snap_nodes').append('<tr class="row_element" id="' + name + '"><td>' + name + '</td><td>' + type + '</td></tr>');
 
       });
-    } else {
-      var snap_list = "";
-      $('#table_snap').show();
-      if ((cu == null) || (cu.length == 0)) {
-        $("#list_snapshot").html("List All snapshots");
-
-        jchaos.search("", "snapshots", false, function (snaplist) {
-          populateSnapList(snaplist);
-        });
-      } else {
-        $("#list_snapshot").html("List snapshot of " + cu);
-
-        jchaos.search(cu, "snapshotsof", false, function (snaplist) {
-          populateSnapList(snaplist);
-
-        });
-      }
-    }
+    } 
+    
   }
 
   /**
@@ -7233,18 +7270,21 @@
     return this.each(function () {
       var notupdate_dataset = 1;
       var templateObj = {
+        template:options.template,
         type: options.template,
         filter: "",
         interval: options.Interval,
-        check_interval:5000,
+        check_interval:8000,
         last_check:0,
         node_list_interval: null,
         node_selected: null,
         health_time_stamp_old:{},
         node_name_to_desc:[],
+        node_name_to_index:[],
         off_line:[],
         index: 0,
         data: null,
+        upd_chan:-1,
         buildInterfaceFn: function(){}, /* build the skeleton*/
         setupInterfaceFn:function(){}, /*create and setup table*/
         generateTableFn: function(){}, /* update table */

@@ -108,6 +108,9 @@
 									console.trace("trace:");
 									var str = "handler function error:'" + err + "' url:'" + url + "' post data:'" + params + "' response:'" + request.responseText + "'";
 									console.log(str);
+									if(typeof handleFuncErr === "function"){
+										handleFuncErr(json);
+									}
 								}
 							}
 							return json;
@@ -141,6 +144,9 @@
 			request.onerror = function (e) {
 				console.error("request error:" + request.statusText);
 				//throw "error:" + request.statusText;
+				if (handleFuncErr != null && (typeof handleFuncErr === "function")) {
+					handleFuncErr(request.responseText);
+				}
 			};
 			//console.log("sending:"+params);
 			request.send(params);
