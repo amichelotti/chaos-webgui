@@ -191,13 +191,15 @@
     });
   }
 
-  function openControl(msg, cuname, cutype, refresh) {
-    var name = encodeName(cuname[0]);
-
-
+  function openControl(msg, tmpObj, cutype, refresh) {
+    var newObj=Object.assign({}, tmpObj);
+    var html = '<div><div id="specific-table-ctrl"></div>';
+    html += '<div id="specific-control-ctrl"></div></div>';
+    newObj.template="ctrl";
+    changeView(newObj,cutype);
     var nintervals = 0;
     var orginal_list = [];
-    var instant = $('<div id=ctrl-' + name + '></div>').dialog({
+    var instant = $(html).dialog({
       minWidth: hostWidth / 2,
       minHeight: hostHeight / 4,
       title: msg,
@@ -206,7 +208,7 @@
       buttons: [
         {
           text: "close", click: function (e) {
-            $("#ctrl-" + name).dialog('close');
+            $(this).dialog('close');
 
 
           }
@@ -217,21 +219,25 @@
       close: function (event, ui) {
         var last_interval = setInterval(function () { }, 100000);
         console.log(name + " CLOSING intervals from:" + nintervals + " to :" + last_interval);
-        for (var i = nintervals; i <= last_interval; i++) {
+        /*for (var i = nintervals; i <= last_interval; i++) {
           clearInterval(i);
-        }
+        }*/
         $(this).remove();
-        var interface = $("#classe option:selected").val();
+/*        var interface = $("#classe option:selected").val();
         console.log("restoring view :" + interface);
 
-        buildCUInteface(orginal_list, implementation_map[interface], "cu");
+        buildCUPage(tmpObj, implementation_map[interface], "cu");
+        */
       },
       open: function () {
         nintervals = setInterval(function () { }, 100000);  // Get a reference to the last
         // interval +1
         orginal_list = node_list;
         console.log(name + " OPEN control interval:" + nintervals);
-        $("#ctrl-" + name).chaosDashboard({ collapsed: true, withQuotes: true, template: "cu", cu: cuname, interface: cutype, Interval: refresh });
+        newObj.elems=newObj.node_multi_selected;
+        newObj.node_list_interval=null;
+        updateInterface(newObj);
+
       }
     });
   }
@@ -704,13 +710,15 @@
       });
     }, 10000);
   }
-  function retriveCurrentCmdArguments(alias) {
+  function retriveCurrentCmdArguments(tmpObj,alias) {
     var arglist = [];
     if (node_selected == null) {
       return arglist;
     }
-    var name = encodeName(node_selected);
-    if (node_selected != null && node_name_to_desc[name].hasOwnProperty("cudk_ds_desc") && node_name_to_desc[name].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
+    //var name = encodeName(tmpObj.node_selected);
+    var name = tmpObj.node_selected;
+    var node_name_to_desc=tmpObj.node_name_to_desc;
+    if (tmpObj.node_selected != null && node_name_to_desc[name].hasOwnProperty("cudk_ds_desc") && node_name_to_desc[name].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
       var desc = node_name_to_desc[name].cudk_ds_desc.cudk_ds_command_description;
       desc.forEach(function (item) {
         if (item.bc_alias == alias) {
@@ -1153,7 +1161,7 @@
     html += '</thead> ';
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html += "<tr class='row_element nodeMenu' cuname='" + cu[i] + "' id='" + cuname + "'>";
+      html += "<tr class='row_element nodeMenu' "+template+"-name='" + cu[i] + "' id='" + cuname + "'>";
       html += "<td class='name_element'>" + cu[i] + "</td>";
       html += "<td id='" + cuname + "_type'></td>";
 
@@ -2154,7 +2162,7 @@
       if ((event.which == 13) && (t.attr('class') == "setSchedule")) {
         //  var name = $(t).attr("cuname");
         var value = $(t).attr("value");
-        jchaos.setSched(node_selected, value);
+        jchaos.setSched(tmpObj.node_selected, value);
 
       }
     });
@@ -2163,7 +2171,7 @@
       var parvalue = $(this).attr("cucmdvalue");
       var mult = $(this).attr("cucmdvalueMult");
 
-      var arglist = retriveCurrentCmdArguments(alias);
+      var arglist = retriveCurrentCmdArguments(tmpObj,alias);
       var cuselection;
       var cmdparam = {};
       var arguments = {};
@@ -2183,10 +2191,10 @@
       });
 
       cmdparam = buildCmdParams(arglist);
-      if (node_multi_selected.length > 0) {
-        cuselection = node_multi_selected;
+      if (tmpObj.node_multi_selected.length > 0) {
+        cuselection = tmpObj.node_multi_selected;
       } else {
-        cuselection = node_selected;
+        cuselection =tmpObj.node_selected;
       }
       jchaos.sendCUCmd(cuselection, alias, cmdparam, function (d) {
         var pp;
@@ -2207,9 +2215,9 @@
       var cmd = $(this).attr("cucmdid");
       var cuselection;
       if (node_multi_selected.length > 0) {
-        cuselection = node_multi_selected;
+        cuselection = tmpObj.node_multi_selected;
       } else {
-        cuselection = node_selected;
+        cuselection = tmpObj.node_selected;
       }
       if (cuselection != null && cmd != null) {
         if (cmd == "init") {
@@ -2332,7 +2340,7 @@
     $("#cu_full_commands_send").click(function (e) {
       //show the command
       var cmdselected = $("#cu_full_commands option:selected").val();
-      generateCmdModal(cmdselected, curr_cu_selected);
+      generateCmdModal(tmpObj,cmdselected, curr_cu_selected);
 
     });
     $.contextMenu({
@@ -2504,11 +2512,8 @@
     } else if (cmd == "open-ctrl") {
       var desc = tmpObj.node_name_to_desc[currsel];
       var tt = getInterfaceFromClass(desc.instance_description.control_unit_implementation);
-      if (tmpObj.node_multi_selected.length > 1) {
-        openControl("Multi Control " + currsel+ "...", tmpObj.node_multi_selected, tt, 1000);
-      } else {
-        openControl("Control " + currsel, tmpObj.node_multi_selected, tt, 1000);
-      }
+      openControl("Control ", tmpObj, desc.instance_description.control_unit_implementation, 1000);
+
 
     } else if (cmd == "show-dataset") {
       showDataset(currsel, currsel, 1000);
@@ -2606,7 +2611,7 @@
     //htmlc = generateProcessCmd(template);
     updateTableFn = updateProcesstable;
 
-    $("div.specific-table-" + template).html(htmlt);
+    $("#specific-table-" + tmpObj.template).html(htmlt);
     //$("div.specific-control-" + template).html(htmlc);
     $("#main_table-" + template + " tbody tr").click(function (e) {
       mainTableCommonHandling("main_table-" + template, e, template);
@@ -2675,8 +2680,8 @@
     html += generateActionBox();
     html += '</div>';
     html += generateModalActions();
-    html += '<div class="specific-table-' + tempObj.type + '"></div>';
-    html += '<div class="specific-control-' + tempObj.type + '"></div>';
+    html += '<div id="specific-table-' + tempObj.template + '"></div>';
+    html += '<div id="specific-control-' + tempObj.template + '"></div>';
     return html;
   }
   function buildNodeInterface(tempObj) {
@@ -2699,7 +2704,7 @@
     html += '</div>';
     html += '</div>';
     html += generateEditJson();
-    html += '<div class="specific-table-' + tempObj.type + '"></div>';
+    html += '<div id="specific-table-' + tempObj.template + '"></div>';
   
     return html;
   }
@@ -2780,7 +2785,7 @@
     //    html += generateActionBox();
     html += '</div>';
     html += generateEditJson();
-    html += '<div class="specific-table-' + tempObj.type + '"></div>';
+    html += '<div id="specific-table-' + tempObj.template + '"></div>';
     
 
     return html;
@@ -2975,8 +2980,8 @@
     htmlt = tmpObj.generateTableFn(tmpObj);
     htmlc = tmpObj.generateCmdFn(tmpObj);
    
-    $("div.specific-table-" + template).html(htmlt);
-    $("div.specific-control-" + template).html(htmlc);
+    $("#specific-table-" + tmpObj.template).html(htmlt);
+    $("#specific-control-" + tmpObj.template).html(htmlc);
     tmpObj.updateInterfaceFn(tmpObj);
     
     if ((tmpObj.node_list_interval != null)) {
@@ -3012,7 +3017,37 @@
   /**********
    * 
    */
-  function buildCUInteface(tmpObj,cuids, cutype, template) {
+  function changeView(tmpObj,cutype){
+    if ((cutype.indexOf("SCPowerSupply") != -1)) {
+      tmpObj.upd_chan=-1;
+      tmpObj.type="SCPowerSupply";
+      tmpObj.generateTableFn = generatePStable;
+      tmpObj.generateCmdFn = generatePSCmd;
+      
+      tmpObj.updateFn = updatePS;
+      
+    } else if ((cutype.indexOf("SCActuator") != -1)) {
+      tmpObj.type="SCActuator";
+
+      tmpObj.generateTableFn = generateScraperTable;
+      tmpObj.generateCmdFn = generateScraperCmd;
+      tmpObj.updateFn = updateScraper;
+    } else if ((cutype.indexOf("RTCamera") != -1)) {
+      tmpObj.type="RTCamera";
+
+      tmpObj.upd_chan=-1;
+      tmpObj.generateTableFn = generateCameraTable;
+      tmpObj.updateFn = updateCameraTable;
+    } else {
+      tmpObj.upd_chan=255;
+      tmpObj.type="cu";
+
+      tmpObj.generateTableFn = generateGenericTable;
+      tmpObj.generateCmdFn = generateGenericControl;
+      tmpObj.updateFn = updateGenericCU;
+    }
+  }
+  function buildCUPage(tmpObj,cuids, cutype) {
     var node_list=[];
     if (cuids != null) {
       if(cuids instanceof Array){
@@ -3037,29 +3072,8 @@
     /**
      * fixed part
      */
-    tmpObj.type=cutype;
-    if ((cutype.indexOf("SCPowerSupply") != -1)) {
-      tmpObj.upd_chan=-1;
-     
-      tmpObj.generateTableFn = generatePStable;
-      tmpObj.generateCmdFn = generatePSCmd;
-      
-      tmpObj.updateFn = updatePS;
-      
-    } else if ((cutype.indexOf("SCActuator") != -1)) {
-      tmpObj.generateTableFn = generateScraperTable;
-      tmpObj.generateCmdFn = generateScraperCmd;
-      tmpObj.updateFn = updateScraper;
-    } else if ((cutype.indexOf("RTCamera") != -1)) {
-      tmpObj.upd_chan=-1;
-      tmpObj.generateTableFn = generateCameraTable;
-      tmpObj.updateFn = updateCameraTable;
-    } else {
-      tmpObj.upd_chan=255;
-      tmpObj.generateTableFn = generateGenericTable;
-      tmpObj.generateCmdFn = generateGenericControl;
-      tmpObj.updateFn = updateGenericCU;
-    }
+    changeView(tmpObj,cutype);
+    
     updateInterface(tmpObj);
     
   }
@@ -3557,7 +3571,7 @@
     updateTableFn = updateNodeTable;
 
 
-    $("div.specific-table-" + template).html(htmlt);
+    $("#specific-table-" + tmpObj.template).html(htmlt);
     // $("div.specific-control").html(htmlc);
     checkRegistration = 0;
     setupNode(template);
@@ -3701,7 +3715,7 @@
     htmlt = generateAlgoTable(node_list, interface, template);
 
 
-    $("div.specific-table-" + template).html(htmlt);
+    $("#specific-table-" + type).html(htmlt);
 
 
     $("#main_table-" + template + " tbody tr").click(function (e) {
@@ -3880,7 +3894,7 @@
 
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
 
-      buildCUInteface(tmpObj,list_cu, implementation_map[interface], "cu");
+      buildCUPage(tmpObj,list_cu, implementation_map[interface]);
     });
 
     $("#elements").change(function () {
@@ -3908,7 +3922,7 @@
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
       var interface = $("#classe option:selected").val();
 
-      buildCUInteface(tmpObj,list_cu, implementation_map[interface], "cu");
+      buildCUPage(tmpObj,list_cu, implementation_map[interface], "cu");
 
     });
     $("#classe").change(function () {
@@ -3917,7 +3931,7 @@
 
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
 
-      buildCUInteface(tmpObj,list_cu, implementation_map[interface], "cu");
+      buildCUPage(tmpObj,list_cu, implementation_map[interface]);
 
     });
     $("#search-chaos").keypress(function (e) {
@@ -3927,7 +3941,7 @@
         var alive = $("input[type=radio][name=search-alive]:checked").val()
 
         list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
-        buildCUInteface(tmpObj,list_cu, implementation_map[interface], "cu");
+        buildCUPage(tmpObj,list_cu, implementation_map[interface]);
 
       }
       //var tt =prompt('type value');
@@ -3938,7 +3952,7 @@
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
       var interface = $("#classe option:selected").val();
 
-      buildCUInteface(tmpObj,list_cu, implementation_map[interface], "cu");
+      buildCUPage(tmpObj,list_cu, implementation_map[interface]);
     });
 
 
@@ -4463,7 +4477,7 @@
 
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html += "<tr class='row_element cuMenu' cuname='" + cu[i] + "' id='" + cuname + "'><td class='name_element'>" + cu[i]
+      html += "<tr class='row_element cuMenu' "+template+"-name='" + cu[i] + "' id='" + cuname + "'>";
         + "</td><td class='position_element' id='" + cuname + "_output_position'></td><td class='position_element' id='" + cuname
         + "_input_position'></td><td id='" + cuname + "_input_saved_position'></td><td id='" + cuname + "_input_saved_status'></td><td id='" + cuname + "_output_status'></td><td id='" + cuname
         + "_in'></td><td id='" + cuname + "_out'></td><td  title='Device alarms' id='" + cuname + "_system_device_alarm'></td><td title='Control Unit alarms' id='" + cuname + "_cu_alarm'></td></tr>";
@@ -4610,7 +4624,7 @@
 
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html += "<tr class='row_element cuMenu' cuname='" + cu[i] + "' id='" + cuname + "'>";
+      html += "<tr class='row_element cuMenu' "+template+"-name='" + cu[i] + "' id='" + cuname + "'>";
       html += "<td class='td_element td_name'>" + cu[i] + "</td>";
       html += "<td id='" + cuname + "_health_status'></td>";
       html += "<td title='Readout current' class='td_element td_readout' id='" + cuname + "_output_current'>NA</td>";
@@ -4633,9 +4647,9 @@
 
     return html;
   }
-  function updateCameraTable(tmpObj, selected) {
+  function updateCameraTable(tmpObj) {
     var cu=tmpObj.elems;
-
+    var selected=tmpObj.data[tmpObj.index];
     if (selected != null && selected.hasOwnProperty("output")) {
       $("#cameraName").html("<b>" + selected.output.ndk_uid + "</b>");
       if (selected.output.hasOwnProperty("FRAMEBUFFER")) {
@@ -4661,6 +4675,7 @@
         $("#cameraImage").attr("src", "data:image/" + fmt + ";base64," + bin);
       }
     }
+    updateGenericCU(tmpObj)
   }
   function updatePS(tmpObj) {
     var cu=tmpObj.data;
@@ -6090,8 +6105,8 @@
     html += '</div>';
     return html;
   }
-  function generateCmdModal(cmdselected, cu) {
-    var arguments = retriveCurrentCmdArguments(cmdselected);
+  function generateCmdModal(tmpObj,cmdselected, cu) {
+    var arguments = retriveCurrentCmdArguments(tmpObj,cmdselected);
     var input_type = "number";
     var html = "";
     if (arguments.length == 0) {
@@ -6146,7 +6161,7 @@
           click: function (e) {
             var cuselection;
             var cmdselected = $("#cu_full_commands option:selected").val();
-            var arguments = retriveCurrentCmdArguments(cmdselected);
+            var arguments = retriveCurrentCmdArguments(tmpObj,cmdselected);
             var force = $("#cmd-force option:selected").val();
 
             arguments.forEach(function (item, index) {
@@ -6158,10 +6173,10 @@
               item['value'] = value;
             });
             var parm = buildCmdParams(arguments);
-            if (node_multi_selected.length > 0) {
-              cuselection = node_multi_selected;
+            if (tmpObj.node_multi_selected.length > 0) {
+              cuselection = tmpObj.node_multi_selected;
             } else {
-              cuselection = node_selected;
+              cuselection = tmpObj.node_selected;
             }
             jchaos.sendCUFullCmd(cuselection, cmdselected, parm, ((force == "normal") ? 0 : 1), 0, function () {
               instantMessage("Command", "Command:\"" + cmdselected + "\"  params:" + JSON.stringify(parm) + " sent", 1000, true);
@@ -6245,7 +6260,6 @@
     html += generateDescription();
     html += generateSnapshotTable();
     html += generateAlarms();
-    // html += generateCmdModal();
     html += generateLog();
     html += generateGraphTable();
     html += generateGraphList();
@@ -7005,6 +7019,8 @@
 
       }
     }
+    if(tmpObj.node_selected!=tmpObj['oldselected']){
+      tmpObj['oldselected']=tmpObj.node_selected;
     $("#cu_full_commands").empty();
 
       if (tmpObj.node_name_to_desc[name] == null) {
@@ -7022,7 +7038,7 @@
           $("#cu_full_commands").append("<option value='" + item.bc_alias + "'>" + item.bc_alias + " (\"" + item.bc_description + "\")</option>");
         });
       }
-    
+    }
   }
 
   function populateSnapList(tmpObj,snaplist) {
@@ -7334,7 +7350,7 @@
         html += '<div class="specific-table-ctrl"></div>';
         html += '<div class="specific-control-ctrl"></div>';
         $(this).html(html);
-        buildCUInteface(options.cu, implementation_map[options.interface], options.template);
+        buildCUPage(options.cu, implementation_map[options.interface], options.template);
 
       } else if (options.template == "algo") {
         var html = "";
