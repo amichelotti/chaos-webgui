@@ -217,11 +217,15 @@
 
       ],
       close: function (event, ui) {
-        var last_interval = setInterval(function () { }, 100000);
-        console.log(name + " CLOSING intervals from:" + nintervals + " to :" + last_interval);
+        //var last_interval = setInterval(function () { }, 100000);
         /*for (var i = nintervals; i <= last_interval; i++) {
           clearInterval(i);
         }*/
+        if ((newObj.node_list_interval != null)) {
+          console.log(name + " CLOSING interval:" + newObj.node_list_interval);
+
+          clearInterval(newObj.node_list_interval);
+        }
         $(this).remove();
 /*        var interface = $("#classe option:selected").val();
         console.log("restoring view :" + interface);
@@ -1076,7 +1080,9 @@
     return html;
 
   }
-  function generateProcessTable(cu, template) {
+  function generateProcessTable(tmpObj) {
+    var cu=tmpObj.elems;
+    var template=tmpObj.type;
     var html = '<div class="row-fluid" id="table-space">';
 
     html += '<div class="box span12" id="container-main-table">';
@@ -1134,7 +1140,10 @@
   function updateProcesstable(cu) {
 
   }
-  function generateNodeTable(cu, template) {
+   
+  function generateNodeTable(tmpObj) {
+    var cu=tmpObj.elems;
+    var template=tmpObj.type;
     var html = '<div class="row-fluid" id="table-space">';
 
     html += '<div class="box span12" id="container-main-table">';
@@ -1191,10 +1200,77 @@
     return html;
 
   }
-  function updateNodeTable(cu) {
+
+  function updateNode(tmpObj) {
+    var node_list=tmpObj['elems'];
+    var cutype=tmpObj.type;
+    jchaos.node(node_list, "desc", cutype, null, null, function (data) {
+      var cnt = 0;
+      var us_list = [];
+      var cu_list = [];
+      node_list.forEach(function (elem, index) {
+        var type = data[index].ndk_type;
+        tmpObj.node_name_to_desc[elem] = { desc: data[index], parent: null, detail: null };
+        if ((type == "nt_control_unit")) {
+          cu_list.push(elem);
+        } else if ((type == "nt_unit_server")) {
+          us_list.push(elem);
+        }
+      });
+      if (cu_list.length > 0) {
+        jchaos.getDesc(cu_list, function (data) {
+          var cnt = 0;
+          data.forEach(function (cu) {
+            if (cu.hasOwnProperty("instance_description")) {
+              tmpObj.node_name_to_desc[cu_list[cnt]].detail = cu.instance_description;
+              tmpObj.node_name_to_desc[cu_list[cnt]].parent = cu.instance_description.ndk_parent;
+            }
+            cnt++;
+          });
+        });
+      }
+      if (us_list.length > 0) {
+        jchaos.node(us_list, "parent", "us", null, null, function (data) {
+          var cnt = 0;
+          data.forEach(function (us) {
+            if (us.hasOwnProperty("ndk_uid") && us.ndk_uid != "") {
+              tmpObj.node_name_to_desc[us_list[cnt]].parent = us.ndk_uid;
+            }
+            cnt++;
+          });
+        });
+      }
+    });
+    jchaos.node(node_list, "health", cutype, null, null, function (data) {
+        tmpObj.data = data;
+        updateGenericTableDataset(tmpObj);
+
+      });
+
+
+      /*
+      cu_list.forEach(function (item) {
+        cu_live_selected.push(jchaos.node(item, "desc", cutype));
+      })
+      */
+
+      // update all generic
+
+     
+
+
+
+    updateNodeTable(tmpObj);
+
+  }
+ function checkLiveNode(){
+
+ }
+  function updateNodeTable(tmpObj) {
+    var cu=tmpObj['elems'];
     cu.forEach(function (v) {
-      if (node_name_to_desc != null && node_name_to_desc[v] != null) {
-        var elem = node_name_to_desc[v];
+      if (tmpObj.node_name_to_desc != null && tmpObj.node_name_to_desc[v] != null) {
+        var elem = tmpObj.node_name_to_desc[v];
 
         if (elem.desc.hasOwnProperty("ndk_uid")) {
           var id = elem['desc'].ndk_uid;
@@ -2146,7 +2222,7 @@
       tmpObj.node_name_to_desc[name] = elem;
     });
     $("#main_table-" + template + " tbody tr").click(function (e) {
-      mainTableCommonHandling(tmpObj, e, "cu");
+      mainTableCommonHandling(tmpObj, e);
     });
     n = $('#main_table-' + template + ' tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
@@ -2614,7 +2690,7 @@
     $("#specific-table-" + tmpObj.template).html(htmlt);
     //$("div.specific-control-" + template).html(htmlc);
     $("#main_table-" + template + " tbody tr").click(function (e) {
-      mainTableCommonHandling("main_table-" + template, e, template);
+      mainTableCommonHandling("main_table-" + template, e);
     });
     n = $('#main_table-eu tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
@@ -2736,7 +2812,9 @@
         var alive = $("input[type=radio][name=search-alive]:checked").val();
         list_cu = interface2NodeList(interface, alive);
         tempObj['elems'] = list_cu;
-        tempObj.updateInterface(tempObj);
+        tempObj.type = interface;
+
+        updateInterface(tempObj);
       }
       //var tt =prompt('type value');
     });
@@ -2747,10 +2825,9 @@
 
       list_cu = interface2NodeList(interface, alive);
       tempObj['elems'] = list_cu;
-
-      tempObj.updateInterface(tempObj);
+      tempObj.type = interface;
+      updateInterface(tempObj);
     });
-    actionJsonEditor();
   }
 
   function buildProcessInterface(tempObj) {
@@ -2987,7 +3064,7 @@
     if ((tmpObj.node_list_interval != null)) {
       clearInterval(tmpObj.node_list_interval);
     }
-
+    tmpObj.last_check=0;
     tmpObj.node_list_interval = setInterval(function () {
       if(tmpObj.upd_chan>-2){
         jchaos.getChannel(tmpObj['elems'], tmpObj.upd_chan, function (dat) {
@@ -3028,6 +3105,7 @@
       
     } else if ((cutype.indexOf("SCActuator") != -1)) {
       tmpObj.type="SCActuator";
+      tmpObj.upd_chan=-1;
 
       tmpObj.generateTableFn = generateScraperTable;
       tmpObj.generateCmdFn = generateScraperCmd;
@@ -3490,9 +3568,10 @@
 
 
 
-  function setupNode(template) {
+  function updateNodeInterface(tmpObj) {
+    var template=tmpObj.type;
     $("#main_table-" + template + " tbody tr").click(function (e) {
-      mainTableCommonHandling("main_table-" + template, e, "node");
+      mainTableCommonHandling(tmpObj, e);
     });
     n = $('#main_table-' + template + ' tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
@@ -3513,8 +3592,9 @@
     $.contextMenu({
       selector: '.nodeMenu',
       build: function ($trigger, e) {
-        var cuname = $(e.currentTarget).attr("cuname");
-        var cuitem = updateNodeMenu(node_name_to_desc[cuname]);
+        var cuname = $(e.currentTarget).attr(template+"-name");
+        var cuitem = updateNodeMenu(tmpObj, cuname);
+        
         cuitem['sep1'] = "---------";
 
         cuitem['quit'] = {
@@ -3526,7 +3606,7 @@
         return {
 
           callback: function (cmd, options) {
-            executeNodeMenuCmd(cmd, options);
+            executeNodeMenuCmd(tmpObj,cmd, options);
             return;
           },
           items: cuitem
@@ -3535,10 +3615,11 @@
 
 
     });
+    actionJsonEditor();
 
   }
 
-
+/*
   function buildNodeInterface(nodes, cutype, template) {
     if (nodes == null) {
       alert("NO Nodes given!");
@@ -3560,13 +3641,7 @@
     node_selected = null;
     var htmlt, htmlc, htmlg;
     var updateTableFn = new Function;
-    /*****
-     * 
-     * clear all interval interrupts
-     */
-    /**
-     * fixed part
-     */
+   
     htmlt = generateNodeTable(node_list, template);
     updateTableFn = updateNodeTable;
 
@@ -3589,22 +3664,6 @@
           us_list.push(elem);
         }
 
-        /*
-        if ((type == "nt_control_unit")) {
-          jchaos.getDesc(elem, function (data) {
-            if (data[0].hasOwnProperty("instance_description")) {
-              node_name_to_desc[elem].detail = data[0].instance_description;
-              node_name_to_desc[elem].parent = data[0].instance_description.ndk_parent;
-            }
-          });
-        } else if ((type == "nt_unit_server")) {
-          var par = jchaos.node(elem, "parent", "us", null, null);
-          if (par.hasOwnProperty("ndk_uid") && par.ndk_uid != "") {
-            node_name_to_desc[elem].parent = par.ndk_uid;
-          }
-
-        }
-        */
       });
       if (cu_list.length > 0) {
         jchaos.getDesc(cu_list, function (data) {
@@ -3656,12 +3715,7 @@
       });
 
 
-      /*
-      cu_list.forEach(function (item) {
-        cu_live_selected.push(jchaos.node(item, "desc", cutype));
-      })
-      */
-
+     
       // update all generic
 
       if (node_live_selected.length == 0 || node_selected == null || node_name_to_index[node_selected] == null) {
@@ -3676,7 +3730,7 @@
     installCheckLive();
 
 
-  }
+  } */
 
   function buildAlgoInterface(nodes, interface, template) {
     if (nodes == null) {
@@ -3719,7 +3773,7 @@
 
 
     $("#main_table-" + template + " tbody tr").click(function (e) {
-      mainTableCommonHandling("main_table-" + template, e, "node");
+      mainTableCommonHandling(tmpObj, e);
     });
     n = $('#main_table-' + template + ' tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
@@ -4090,7 +4144,7 @@
    * MAIN TABLE HANDLING
    * 
    */
-  function mainTableCommonHandling(tmpObj, e, type) {
+  function mainTableCommonHandling(tmpObj, e) {
     var node_list=tmpObj['elems'];
     var id="main_table-" + tmpObj.type;
     $("#mdl-commands").modal("hide");
@@ -4478,9 +4532,9 @@
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
       html += "<tr class='row_element cuMenu' "+template+"-name='" + cu[i] + "' id='" + cuname + "'>";
-        + "</td><td class='position_element' id='" + cuname + "_output_position'></td><td class='position_element' id='" + cuname
-        + "_input_position'></td><td id='" + cuname + "_input_saved_position'></td><td id='" + cuname + "_input_saved_status'></td><td id='" + cuname + "_output_status'></td><td id='" + cuname
-        + "_in'></td><td id='" + cuname + "_out'></td><td  title='Device alarms' id='" + cuname + "_system_device_alarm'></td><td title='Control Unit alarms' id='" + cuname + "_cu_alarm'></td></tr>";
+      html += "<td class='td_element td_name'>" + cu[i] + "</td>";
+
+      html += "<td class='position_element' id='" + cuname + "_output_position'></td><td class='position_element' id='" + cuname + "_input_position'></td><td id='" + cuname + "_input_saved_position'></td><td id='" + cuname + "_input_saved_status'></td><td id='" + cuname + "_output_status'></td><td id='" + cuname + "_in'></td><td id='" + cuname + "_out'></td><td  title='Device alarms' id='" + cuname + "_system_device_alarm'></td><td title='Control Unit alarms' id='" + cuname + "_cu_alarm'></td></tr>";
     });
 
     html += '</table>';
@@ -6786,8 +6840,12 @@
     items["new-nt_control_unit-custom"] = { name: "Custom CU" };
     return items;
   }
-  function updateNodeMenu(node) {
+  function updateNodeMenu(tmpObj,node_name) {
     var items = {};
+    var interface=tmpObj.type;
+    var node_selected=tmpObj.node_selected;
+   // var cindex = tmpObj.node_name_to_index[node_name];
+    var node=tmpObj.node_name_to_desc[node_name];
     if (interface == "us") {
       items['new-nt_unit_server'] = { name: "New  Unit Server..." };
       if ((us_copied != null) && us_copied.hasOwnProperty("ndk_uid")) {
@@ -6839,8 +6897,8 @@
       items['copy-' + node_type] = { name: "Copy " + node_selected };
       items['save-' + node_type] = { name: "Save To Disk " + node_selected };
 
-      var stat = jchaos.getChannel(node_selected, -1, null);
-      var cmditem = updateCUMenu(stat[0], node_selected);
+      //var stat = jchaos.getChannel(node_selected, -1, null);
+      var cmditem = updateCUMenu(tmpObj, node_selected);
       items['sep2'] = "---------";
       for (var k in cmditem) {
         items[k] = cmditem[k];
@@ -7328,22 +7386,20 @@
         /* Insert HTML in target DOM element */
       
       } else if (options.template == "node") {
-        templateObj = {
-          buildInterface: buildNodeInterface, /* build the skeleton*/
-          setupInterface: setupNode, /*create and setup table*/
-          updateInterface: updateNode /* update table */
-       
+        templateObj.buildInterfaceFn= buildNodeInterface;
+        templateObj.setupInterfaceFn =setupNode;
+        templateObj.updateInterfaceFn=updateNodeInterface;
+        templateObj.generateTableFn=generateNodeTable; /* update table */
+        templateObj.upd_chan=-2; // custom channel update
 
-        }
+        templateObj.updateFn= updateNode;
+        templateObj.checkLiveFn=checkLiveCU;
 
       } else if (options.template == "process") {
-        templateObj = {
-          buildInterface: buildProcessInterface, /* build the skeleton*/
-          setupInterface: setupProcess, /*create and setup table*/
-          updateInterface: updateProcess /* update table */
-    
-
-        }
+        templateObj.buildInterfaceFn= buildProcessInterface;
+        templateObj.setupInterfaceFn= setupProcess;
+        templateObj.updateInterfaceFn= updateProcess;
+        
 
       } /*else if (options.template == "ctrl") {
         var html = "";
