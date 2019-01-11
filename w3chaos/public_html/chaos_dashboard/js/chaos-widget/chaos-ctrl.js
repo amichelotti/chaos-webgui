@@ -1412,7 +1412,7 @@
     }
   }
 
-  function agentSave(json) {
+  function agentSave(node_selected,json) {
     if (json.hasOwnProperty("andk_node_associated") && (json.andk_node_associated instanceof Array)) {
       json.andk_node_associated.forEach(function (item) {
         jchaos.node(node_selected, "set", "agent", null, item, function (data) {
@@ -3156,12 +3156,14 @@
     
   }
 
-  function executeNodeMenuCmd(cmd, opt) {
+  function executeNodeMenuCmd(tmpObj,cmd, opt) {
+    var node_selected=tmpObj.node_selected;
     if (cmd == "edit-nt_agent") {
       var templ = {
         $ref: "agent.json",
         format: "tabs"
       }
+
       jchaos.node(node_selected, "info", "agent", "", null, function (data) {
         if (data != null) {
           editorFn = agentSave;
@@ -3428,7 +3430,7 @@
       });
       return;
     } else {
-      executeCUMenuCmd(cmd, options);
+      executeCUMenuCmd(tmpObj,cmd, options);
     }
     return;
   }
@@ -3615,7 +3617,7 @@
 
 
     });
-    actionJsonEditor();
+    actionJsonEditor(tmpObj);
 
   }
 
@@ -5893,7 +5895,7 @@
       }
       if ((sel == "agents") && config.hasOwnProperty('agents') && (config.agents instanceof Array)) {
         config.agents.forEach(function (json) {
-          agentSave(json.info);
+          agentSave(node_selected,json.info);
         });
       }
       if ((sel == "snapshots") && config.hasOwnProperty('snapshots') && (config.snapshots instanceof Array)) {
@@ -6040,7 +6042,7 @@
     return html;
   }
 
-  function actionJsonEditor() {
+  function actionJsonEditor(tmpObj) {
     $("#save_jsonedit").on('click', function () {
       // editor validation
       var errors = json_editor.validate();
@@ -6052,7 +6054,7 @@
       else {
         // It's valid!
         var json_editor_value = json_editor.getValue();
-        editorFn(json_editor_value);
+        editorFn(tmpObj,json_editor_value);
         $("#mdl-jsonedit").modal("hide");
 
       }
