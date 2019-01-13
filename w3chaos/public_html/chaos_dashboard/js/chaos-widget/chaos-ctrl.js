@@ -1137,9 +1137,6 @@
     return html;
 
   }
-  function updateProcesstable(cu) {
-
-  }
    
   function generateNodeTable(tmpObj) {
     var cu=tmpObj.elems;
@@ -1263,9 +1260,7 @@
     updateNodeTable(tmpObj);
 
   }
- function checkLiveNode(){
 
- }
   function updateNodeTable(tmpObj) {
     var cu=tmpObj['elems'];
     cu.forEach(function (v) {
@@ -1412,7 +1407,7 @@
     }
   }
 
-  function agentSave(node_selected,json) {
+  function agentSave(json) {
     if (json.hasOwnProperty("andk_node_associated") && (json.andk_node_associated instanceof Array)) {
       json.andk_node_associated.forEach(function (item) {
         jchaos.node(node_selected, "set", "agent", null, item, function (data) {
@@ -2661,63 +2656,6 @@
     }
   }
 
-  function buildProcessInterface(cuids) {
-    var template = "process";
-    if (cuids == null) {
-      node_list = [];
-    } else {
-      if (!(cuids instanceof Array)) {
-        node_list = [cuids];
-      } else {
-        node_list = cuids;
-      }
-    }
-    // cu_selected = cu_list[0];
-    node_selected = null;
-    var htmlt, htmlc, htmlg;
-    var updateTableFn = new Function;
-    /*****
-     * 
-     * clear all interval interrupts
-     */
-    /**
-     * fixed part
-     */
-    htmlt = generateProcessTable(node_list, template);
-    //htmlc = generateProcessCmd(template);
-    updateTableFn = updateProcesstable;
-
-    $("#specific-table-" + tmpObj.template).html(htmlt);
-    //$("div.specific-control-" + template).html(htmlc);
-    $("#main_table-" + template + " tbody tr").click(function (e) {
-      mainTableCommonHandling("main_table-" + template, e);
-    });
-    n = $('#main_table-eu tr').size();
-    if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
-      $("#table-scroll").css('height', '280px');
-    } else {
-      $("#table-scroll").css('height', '');
-    }
-
-   
-    if ((node_list_interval != null)) {
-      clearInterval(node_list_interval);
-
-    }
-    node_list_interval = setInterval(function () {
-
-      updateTableFn(node_live_selected, curr_cu_selected);
-
-
-
-
-      // update all generic
-
-
-    }, options.Interval, updateTableFn);
-
-
-  }
 
   /**** 
    * 
@@ -2873,9 +2811,10 @@
 
     var list_class = [];
     var list_zone = [];
+    var proclist=updateProcessList();
 
-    eu_process = jchaos.variable("eu", "get", null, null);
-    for (var g in eu_process) {
+    //eu_process = jchaos.variable("eu", "get", null, null);
+    for (var g in proclist) {
       getZoneClassElement(g, list_zone, list_class, list_eu);
       list_eu_full.push(g);
     }
@@ -2908,7 +2847,7 @@
 
       }
       list_eu = searchEu(search_string, alive, list_zone, list_class, list_eu);
-      tempObj['elems'] = list_cu;
+      tempObj['elems'] = list_eu;
       updateInterface(tempObj);
     });
 
@@ -3157,7 +3096,7 @@
   }
 
   function executeNodeMenuCmd(tmpObj,cmd, opt) {
-    var node_selected=tmpObj.node_selected;
+    node_selected=tmpObj.node_selected;
     if (cmd == "edit-nt_agent") {
       var templ = {
         $ref: "agent.json",
@@ -3847,7 +3786,50 @@
       list_eu_name.push(match[3]);
     }
   }
-  function updateProcessState() {
+  
+  function updateProcessTable(tmpObj) {
+    var cu=tmpObj['elems'];
+    cu.forEach(function (v) {
+      if (tmpObj.node_name_to_desc != null && tmpObj.node_name_to_desc[v] != null) {
+        var elem = tmpObj.node_name_to_desc[v];
+
+        if (elem.desc.hasOwnProperty("ndk_uid")) {
+          var id = elem['desc'].ndk_uid;
+          var cuname = encodeName(id);
+          if (elem.desc.hasOwnProperty("ndk_heartbeat")) {
+            $("#" + cuname + "_timestamp").html(elem.desc.ndk_heartbeat.$date);
+          } else {
+            $("#" + cuname + "_timestamp").html("NA");
+          }
+          if (elem.desc.hasOwnProperty("ndk_group_set")) {
+            $("#" + cuname + "_type").html(elem.desc.ndk_group_set);
+          } else if (elem.desc.hasOwnProperty("ndk_sub_type")) {
+            $("#" + cuname + "_type").html(elem.desc.ndk_sub_type);
+
+          } else {
+            $("#" + cuname + "_type").html(elem.desc.ndk_type);
+          }
+          if (elem.desc.hasOwnProperty("ndk_host_name")) {
+            $("#" + cuname + "_hostname").html(elem.desc.ndk_host_name);
+          } else {
+            $("#" + cuname + "_hostname").html("NA");
+
+          }
+          $("#" + cuname + "_rpcaddress").html(elem.desc.ndk_rpc_addr);
+          if (elem.hasOwnProperty("parent")) {
+            $("#" + cuname + "_parent").html(elem.parent);
+
+          }
+        }
+      }
+    });
+  }
+  function updateProcess(tmpObj) {
+    tmpObj.data=updateProcessList();
+
+    updateProcessTable(tmpObj);
+  }
+  function updateProcessList() {
     var proc;
     jchaos.search("", "agent", true, function (ag) {
       ag.forEach(function (elem) {
@@ -6054,7 +6036,7 @@
       else {
         // It's valid!
         var json_editor_value = json_editor.getValue();
-        editorFn(tmpObj,json_editor_value);
+        editorFn(json_editor_value);
         $("#mdl-jsonedit").modal("hide");
 
       }
@@ -7398,8 +7380,12 @@
         templateObj.checkLiveFn=checkLiveCU;
 
       } else if (options.template == "process") {
+        templateObj.upd_chan=-2; // custom channel update
+
         templateObj.buildInterfaceFn= buildProcessInterface;
         templateObj.setupInterfaceFn= setupProcess;
+        templateObj.generateTableFn=generateProcessTable; /* update table */
+
         templateObj.updateInterfaceFn= updateProcess;
         
 
