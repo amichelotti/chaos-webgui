@@ -1091,13 +1091,17 @@
     html += '<table class="table table-bordered" id="main_table-' + template + '">';
     html += '<thead class="box-header">';
     html += '<tr class="ProcessMenu">';
-    html += '<th>Process Instance</th>';
-    html += '<th>Language</th>';
-    html += '<th>Registration Timestamp</th>';
+    html += '<th>Instance</th>';
+    html += '<th>Name</th>';
+    html += '<th>Type</th>';
+    html += '<th>Start(Epoch)</th>';
+    html += '<th>End(Epoch)</th>';
+    html += '<th>LastLog(ms ago)</th>';
     html += '<th>Hostname</th>';
+    html += '<th>PID</th>';
     html += '<th>Status</th>';
     html += '<th>TimeStamp</th>';
-    html += '<th>Uptime</th>';
+    html += '<th>Uptime(s)</th>';
     html += '<th>System Time</th>';
     html += '<th>User Time</th>';
     html += '<th>Parent</th>';
@@ -1106,23 +1110,7 @@
 
 
     html += '</thead> ';
-    $(cu).each(function (i) {
-      var cuname = encodeName(cu[i]);
-      html += "<tr class='row_element " + template + "-Menu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
-      html += "<td class='name_element'>" + cu[i] + "</td>";
-      html += "<td id='" + cuname + "_language'></td>";
-
-      html += "<td id='" + cuname + "_timestamp'></td>";
-      html += "<td id='" + cuname + "_hostname'></td>";
-      html += "<td id='" + cuname + "_status'></td>";
-      html += "<td id='" + cuname + "_timestamp'></td>";
-      html += "<td id='" + cuname + "_uptime'></td>";
-      html += "<td id='" + cuname + "_systemtime'></td>";
-      html += "<td id='" + cuname + "_usertime'></td>";
-      html += "<td id='" + cuname + "_parent'></td></tr>";
-
-    });
-
+   
     html += '</table>';
     html += '</div>';
     html += '</div>';
@@ -2417,6 +2405,7 @@
     $.contextMenu({
       selector: '.cuMenu',
       build: function ($trigger, e) {
+        var template=tmpObj.type;
         var cuname = $(e.currentTarget).attr(template+"-name");
         var cuitem = updateCUMenu(tmpObj, cuname);
         cuitem['sep1'] = "---------";
@@ -2748,9 +2737,8 @@
         interface = $("#classe").val();
         search_string = $(this).val();
         var alive = $("input[type=radio][name=search-alive]:checked").val();
-        list_cu = interface2NodeList(interface, alive);
+        list_cu = interface2NodeList(tempObj,interface, alive);
         tempObj['elems'] = list_cu;
-        tempObj.type = interface;
 
         updateInterface(tempObj);
       }
@@ -2761,9 +2749,8 @@
       var alive = $("input[type=radio][name=search-alive]:checked").val();
       interface = $("#classe option:selected").val();
 
-      list_cu = interface2NodeList(interface, alive);
+      list_cu = interface2NodeList(tempObj,interface, alive);
       tempObj['elems'] = list_cu;
-      tempObj.type = interface;
       updateInterface(tempObj);
     });
   }
@@ -3533,6 +3520,8 @@
     $.contextMenu({
       selector: '.nodeMenu',
       build: function ($trigger, e) {
+        var template=tmpObj.type;
+
         var cuname = $(e.currentTarget).attr(template+"-name");
         var cuitem = updateNodeMenu(tmpObj, cuname);
         
@@ -3787,50 +3776,183 @@
     }
   }
   
+  function newScript(json) {
+   
+    console.log("newScript save: \"" + node_selected + "\" value:" + JSON.stringify(json));
+    
+  }
+
+  function executeProcessMenuCmd(tmpObj,cmd, opt) {
+    node_selected=tmpObj.node_selected;
+    
+    if (cmd == "open-process-console") {
+      var agentn = tmpObj[node_selected].parent;
+      var server=tmpObj[node_selected].server +":8071";
+      getConsole("Console:" + node_selected, node_selected, server, 2, 1000);
+      
+    } else if (cmd == "kill-process") {
+      confirm("Do you want to KILL?", "Pay attention ANY CU will be killed as well", "Kill",
+        function () {
+          var consoleParam = {
+            "uid": node_selected
+          
+          };
+          jchaos.basicPost("api/v1/restconsole/kill", JSON.stringify(consoleParam), function (r) {
+            instantMessage("US KILL", "Killing " + node_selected + " ", 1000, true);
+
+          }, function (bad) {
+            instantMessage("ERROR US KILL", "Killing " + node_selected + " via agent", 1000, false);
+          }, server);
+          
+        }, "Joke", function () { });
+      return;
+    } else if (cmd == "new-script") {
+      var templ = {
+        $ref: "script.json",
+        format: "tabs"
+      }
+      editorFn = newScript;
+      jsonEdit(templ, null);
+      return;
+    } 
+    return;
+  }
+  function updateProcessMenu(tmpObj,node_name) {
+    var items = {};
+    var interface=tmpObj.type;
+    node_selected=tmpObj.node_selected;
+   // var cindex = tmpObj.node_name_to_index[node_name];
+   items['new-script'] = { name: "New Script..." };
+
+   if (node_selected != null) {
+      items['open-process-console'] = { name: "Open Console "+node_selected };
+      items['open-process-errconsole'] = { name: "Open Error console "+node_selected };
+
+      items['kill-process'] = { name: "Kill "+node_selected };
+      
+    }
+    
+    return items;
+  }
+
   function updateProcessTable(tmpObj) {
-    var cu=tmpObj['elems'];
-    cu.forEach(function (v) {
-      if (tmpObj.node_name_to_desc != null && tmpObj.node_name_to_desc[v] != null) {
-        var elem = tmpObj.node_name_to_desc[v];
+    var tablename="main_table-"+tmpObj.template;
+    var template=tmpObj.type;
+    for(var p in tmpObj.data){
+      var ptype=tmpObj.data[p].ptype;
+      var pname=tmpObj.data[p].pname;
 
-        if (elem.desc.hasOwnProperty("ndk_uid")) {
-          var id = elem['desc'].ndk_uid;
-          var cuname = encodeName(id);
-          if (elem.desc.hasOwnProperty("ndk_heartbeat")) {
-            $("#" + cuname + "_timestamp").html(elem.desc.ndk_heartbeat.$date);
-          } else {
-            $("#" + cuname + "_timestamp").html("NA");
-          }
-          if (elem.desc.hasOwnProperty("ndk_group_set")) {
-            $("#" + cuname + "_type").html(elem.desc.ndk_group_set);
-          } else if (elem.desc.hasOwnProperty("ndk_sub_type")) {
-            $("#" + cuname + "_type").html(elem.desc.ndk_sub_type);
+      var started_timestamp=tmpObj.data[p].start_time;
+      var end_timestamp=tmpObj.data[p].end_time;
+      var last_log=(tmpObj.data[p].ts - tmpObj.data[p].last_log_time);
+      var pid=tmpObj.data[p].pid;
+      var timestamp=tmpObj.data[p].ts;
+      var uptime=tmpObj.data[p].uptime;
+      var systime=tmpObj.data[p].systime;
+      var cputime=tmpObj.data[p].cputime;
+      var hostname=tmpObj.data[p].hostname;
+      var status=tmpObj.data[p].msg;
+      var parent=tmpObj.data[p].parent;
+      var encoden=encodeName(p);
+      $("#"+encoden+"_end_ts").html(end_timestamp);
+      $("#"+encoden+"_last_log_ts").html(last_log);
+      $("#"+encoden+"_status").html(status);
+      $("#"+encoden+"_ts").html(timestamp);
+      $("#"+encoden+"_uptime").html(uptime);
+      $("#"+encoden+"_systime").html(systime);
+      $("#"+encoden+"_cputime").html(cputime);
+    }
+  }
 
-          } else {
-            $("#" + cuname + "_type").html(elem.desc.ndk_type);
-          }
-          if (elem.desc.hasOwnProperty("ndk_host_name")) {
-            $("#" + cuname + "_hostname").html(elem.desc.ndk_host_name);
-          } else {
-            $("#" + cuname + "_hostname").html("NA");
+  function updateProcessInterface(tmpObj) {
+    updateProcessList(tmpObj);
+    var tablename="main_table-"+tmpObj.template;
+    var template=tmpObj.type;
 
-          }
-          $("#" + cuname + "_rpcaddress").html(elem.desc.ndk_rpc_addr);
-          if (elem.hasOwnProperty("parent")) {
-            $("#" + cuname + "_parent").html(elem.parent);
+    $("#"+tablename).find("tr:gt(0)").remove();
+    for(var p in tmpObj.data){
+      var ptype=tmpObj.data[p].ptype;
+      var pname=tmpObj.data[p].pname;
 
+      var started_timestamp=tmpObj.data[p].start_time;
+      var end_timestamp=tmpObj.data[p].end_time;
+      var last_log=(tmpObj.data[p].ts - tmpObj.data[p].last_log_time);
+      var pid=tmpObj.data[p].pid;
+      var timestamp=tmpObj.data[p].ts;
+      var uptime=tmpObj.data[p].uptime;
+      var systime=tmpObj.data[p].systime;
+      var cputime=tmpObj.data[p].cputime;
+      var hostname=tmpObj.data[p].hostname;
+      var status=tmpObj.data[p].msg;
+      var parent=tmpObj.data[p].parent;
+      var encoden=encodeName(p);
+      $("#"+tablename).append('<tr class="row_element processMenu" id="' + encoden +'"' +template+'-name='+p+'>'+
+      '<td class="td_element" id="' + encoden + '">' + p + '</td>'+
+      '<td class="td_element">' + pname + '</td>'+
+      '<td class="td_element">' + ptype + '</td>' +
+      '<td class="td_element" id="' + encoden + '_start_ts"' + started_timestamp + '</td>'+
+      '<td class="td_element" id="' + encoden + '_end_ts">' + end_timestamp + '</td>'+
+      '<td class="td_element" id="' + encoden + '_last_log_ts">' + last_log + '</td>'+
+      '<td class="td_element">' + hostname + '</td>'+
+      '<td class="td_element">' + pid + '</td>' +
+      '<td class="td_element" id="' + encoden + '_status">' + status+ '</td>'+
+      '<td class="td_element" id="' + encoden + '_ts">' + timestamp + '</td>' +
+      '<td class="td_element" id="' + encoden + '_uptime">' + uptime + '</td>'+
+      '<td class="td_element" id="' + encoden + '_systime">' + systime + '</td>' +
+      '<td class="td_element" id="' + encoden + '_cputime">' + cputime + '</td>'+
+      '<td class="td_element">' + parent + '</td></tr>'
+      );
+
+    }
+    $("#main_table-" + template + " tbody tr").click(function (e) {
+      mainTableCommonHandling(tmpObj, e);
+    });
+    n = $('#main_table-' + template + ' tr').size();
+    if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
+      $("#table-scroll").css('height', '280px');
+    } else {
+      $("#table-scroll").css('height', '');
+    }
+
+    $.contextMenu({
+      selector: '.processMenu',
+      build: function ($trigger, e) {
+        var template=tmpObj.type;
+
+        var cuname = $(e.currentTarget).attr(template+"-name");
+        var cuitem = updateProcessMenu(tmpObj, cuname);
+        
+        cuitem['sep1'] = "---------";
+
+        cuitem['quit'] = {
+          name: "Quit", icon: function () {
+            return 'context-menu-icon context-menu-icon-quit';
           }
+        };
+
+        return {
+
+          callback: function (cmd, options) {
+            executeProcessMenuCmd(tmpObj,cmd, options);
+            return;
+          },
+          items: cuitem
         }
       }
+
+
     });
+    actionJsonEditor(tmpObj);
+
   }
   function updateProcess(tmpObj) {
-    tmpObj.data=updateProcessList();
+    updateProcessList(tmpObj);
 
     updateProcessTable(tmpObj);
   }
-  function updateProcessList() {
-    var proc;
+
+  function updateProcessList(tmpObj) {
+    var proc={};
     jchaos.search("", "agent", true, function (ag) {
       ag.forEach(function (elem) {
         var regx = /ChaosAgent_(.+)\:(.+)/;
@@ -3839,12 +3961,16 @@
           console.log("agent " + match[1]);
           var server = match[1];
           jchaos.basicPost("api/v1/restconsole/list", "{}", function (r) {
-            if (data.hasOwnProperty("processes")) {
+            if (r.data.hasOwnProperty("processes")) {
               var processes = r.data.processes;
+              tmpObj['elems']=[];
               processes.forEach(function (p) {
-                p['parent'] = server;
+                p['hostname'] = server;
+                p['parent'] = elem;
                 proc[p.uid] = p;
+                tmpObj['elems'].push(p.uid);
               });
+              tmpObj.data=proc;
             }
           }, function (bad) {
             console.log("Some error getting console occur:" + bad);
@@ -3853,14 +3979,14 @@
         }
       });
     });
-    if (proc != null) {
+  /*  if (proc != null) {
       jchaos.variable("process", "set", proc, null);
-    }
+    }*/
     return proc;
   }
   function searchEu(str, alive, list_zone, list_class, list_eu_name) {
     var list_eu = [];
-    eu_process = updateProcessState();
+    eu_process = updateProcessList();
     for (var g in eu_process) {
       if (str != "") {
         if (g.indexOf(str) > 0) {
@@ -3997,14 +4123,18 @@
   }
 
 
-  function interface2NodeList(inter, alive) {
+  function interface2NodeList(tempObj,inter, alive) {
     var tmp = [];
     if ((inter != "agent") && (inter != "us") && (inter != "cu")) {
       var node = jchaos.search(search_string, "us", (alive == "true"), false);
+      tempObj.type = "ALL";
+
       node.forEach(function (item) {
         tmp.push(item);
       });
       node = jchaos.search(search_string, "agent", (alive == "true"), false);
+      tempObj.type = "agent";
+
       node.forEach(function (item) {
         tmp.push(item);
       });
@@ -4013,6 +4143,7 @@
         tmp.push(item);
       });
     } else {
+      tempObj.type = inter;
       tmp = jchaos.search(search_string, inter, (alive == "true"), false);
 
     }
@@ -7386,8 +7517,9 @@
         templateObj.setupInterfaceFn= setupProcess;
         templateObj.generateTableFn=generateProcessTable; /* update table */
 
-        templateObj.updateInterfaceFn= updateProcess;
-        
+        templateObj.updateInterfaceFn= updateProcessInterface;
+        templateObj.updateFn= updateProcess;
+
 
       } /*else if (options.template == "ctrl") {
         var html = "";

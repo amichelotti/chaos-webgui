@@ -602,7 +602,9 @@
 			var dev_array = jchaos.convertArray2CSV(devs);
 
 			if (dev_array == "") {
-				handleFunc([{}]);
+				if ((typeof handleFunc === "function")) {
+					handleFunc([{}]);
+				}
 				return;
 			}
 			var str_url_cu = "dev=" + dev_array + "&cmd=desc";
