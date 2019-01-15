@@ -1089,8 +1089,8 @@
     html += '<div class="box-content span12">';
 
     html += '<table class="table table-bordered" id="main_table-' + template + '">';
-    html += '<thead class="box-header">';
-    html += '<tr class="ProcessMenu">';
+    html += '<thead class="box-header processMenu">';
+    html += '<tr class="processMenu">';
     html += '<th>Instance</th>';
     html += '<th>Name</th>';
     html += '<th>Type</th>';
@@ -1121,7 +1121,7 @@
     html += '</div>';
 
     html += '</div>';
-
+    html += generateScriptAdminModal();
     return html;
 
   }
@@ -1288,6 +1288,25 @@
   }
 
   function algoSave(json) {
+    console.log("newScript :" + JSON.stringify(json));
+    var proc={};
+    if(json.script_name==null ||json.script_name==""){
+      alert("Script name cannot be empty");
+      return;
+    }
+    if(json.eudk_script_content==null ||json.eudk_script_content==""){
+      alert("Script content cannot be empty");
+      return;
+    }
+    if(json.eudk_script_language==null ||json.eudk_script_language==""){
+      alert("Script type cannot be empty");
+      return;
+    }
+    //json['seq']=(new Date()).getTime();
+    json['eudk_script_language']=json.eudk_script_language[0];
+    proc[json.script_name]=json;
+    jchaos.variable("script", "set", proc, null);
+
     jchaos.saveScript(json, function (data) {
       console.log("saving script:" + JSON.stringify(json));
     });
@@ -1473,17 +1492,15 @@
       open: function () {
         console.log("Open Editor");
         var element = $("#edit-" + name);
-
-        var jopt = {
-          // Enable fetching schemas via ajax
-          // The schema for the editor
-          //theme: 'bootstrap2',
-          ajax: true,
-          schema: jsontemp,
-
-          // Seed the form with a starting value
-          startval: jsonin
-        };
+        var jopt={};
+        jopt['ajax']=true;
+        jopt['schema']=jsontemp;
+        
+        
+        if(jsonin!=null){
+          jopt['starval']=jsonin;
+        }
+        
         if (json_editor != null) {
           delete json_editor;
         }
@@ -1500,16 +1517,14 @@
    */
   function jsonEdit(jsontemp, jsonin) {
     var element = $("#json-edit");
-    var jopt = {
-      // Enable fetching schemas via ajax
-      // The schema for the editor
-      //theme: 'bootstrap2',
-      ajax: true,
-      schema: jsontemp,
-
-      // Seed the form with a starting value
-      startval: jsonin
-    };
+    var jopt={};
+    jopt['ajax']=true;
+    jopt['schema']=jsontemp;
+    
+    
+    if(jsonin!=null){
+      jopt['starval']=jsonin;
+    }
     $("#json-edit").empty();
     if (json_editor != null) {
       delete json_editor;
@@ -2205,7 +2220,7 @@
       tmpObj.node_name_to_desc[name] = elem;
     });
     $("#main_table-" + template + " tbody tr").click(function (e) {
-      mainTableCommonHandling(tmpObj, e);
+      mainTableCommonHandling("main_table-" + template,tmpObj, e);
     });
     n = $('#main_table-' + template + ' tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
@@ -2798,7 +2813,9 @@
 
     var list_class = [];
     var list_zone = [];
-    var proclist=updateProcessList();
+    updateProcessList(tempObj);
+    updateProcessTable(tempObj);
+    var proclist=tempObj.data;
 
     //eu_process = jchaos.variable("eu", "get", null, null);
     for (var g in proclist) {
@@ -3380,15 +3397,7 @@
       return;
     }
 
-    if (cmd == "new-algo") {
-      var templ = {
-        $ref: "algo.json",
-        format: "tabs"
-      }
-      editorFn = algoSave;
-      jsonEditWindow("newInstanceName", templ, null);
-      return;
-    }
+   
     if (cmd == "delete-algo") {
 
       confirm("Delete Algorithm", "Your are deleting Algorithm: " + node_selected, "Ok", function () {
@@ -3499,7 +3508,7 @@
   function updateNodeInterface(tmpObj) {
     var template=tmpObj.type;
     $("#main_table-" + template + " tbody tr").click(function (e) {
-      mainTableCommonHandling(tmpObj, e);
+      mainTableCommonHandling("main_table-" + template,tmpObj, e);
     });
     n = $('#main_table-' + template + ' tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
@@ -3703,7 +3712,7 @@
 
 
     $("#main_table-" + template + " tbody tr").click(function (e) {
-      mainTableCommonHandling(tmpObj, e);
+      mainTableCommonHandling("main_table-" + template,tmpObj, e);
     });
     n = $('#main_table-' + template + ' tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
@@ -3776,12 +3785,7 @@
     }
   }
   
-  function newScript(json) {
-   
-    console.log("newScript save: \"" + node_selected + "\" value:" + JSON.stringify(json));
-    
-  }
-
+ 
   function executeProcessMenuCmd(tmpObj,cmd, opt) {
     node_selected=tmpObj.node_selected;
     
@@ -3808,12 +3812,14 @@
       return;
     } else if (cmd == "new-script") {
       var templ = {
-        $ref: "script.json",
+        $ref: "algo.json",
         format: "tabs"
       }
-      editorFn = newScript;
-      jsonEdit(templ, null);
+      editorFn = algoSave;
+      jsonEditWindow("NewScript", templ, null);
       return;
+    } else if(cmd=="run-script"){
+      updateScriptModal(tmpObj);
     } 
     return;
   }
@@ -3823,6 +3829,9 @@
     node_selected=tmpObj.node_selected;
    // var cindex = tmpObj.node_name_to_index[node_name];
    items['new-script'] = { name: "New Script..." };
+   items['load-script'] = { name: "Load Script from file..." };
+   
+   items['run-script'] = { name: "Run Script..." };
 
    if (node_selected != null) {
       items['open-process-console'] = { name: "Open Console "+node_selected };
@@ -3864,6 +3873,59 @@
     }
   }
 
+  function updateScriptModal(tmpObj){
+    $("#table_script").find("tr:gt(0)").remove();
+    var template=tmpObj.type;
+    tmpObj['node_name_to_desc']={};
+    jchaos.search(search_string, "script", false, function (l) {
+      var list_algo=l['found_script_list'];
+      list_algo.forEach(function(p){
+      var encoden=encodeName(p.script_name);
+      var date = new Date(p.seq);
+      tmpObj.node_name_to_desc[p.script_name]=p;
+      $("#table_script").append('<tr class="row_element" id="' + encoden +'"'+template+'-name="'+p.script_name+'">'+
+      '<td>' + p.script_name + '</td>'+
+      '<td>' + p.eudk_script_language + '</td>'+
+      '<td>' + p.script_description + '</td>' +
+      '<td>' + date + '</td></tr>');
+      });
+      $("#table_script tbody tr").click(function (e) {
+        mainTableCommonHandling("table_script",tmpObj, e);
+      });
+      });
+      $("#script-delete").on('click', function () {
+        console.log("delete "+tmpObj.node_selected);
+        jchaos.rmScript(tmpObj.node_name_to_desc[tmpObj.node_selected], function (data) {
+          instantMessage("Remove Script", "removed " + tmpObj.node_selected, 1000);
+
+        });
+      });
+      $("#script-show").on('click', function () {
+        console.log("show "+tmpObj.node_selected);
+        jchaos.loadScript(tmpObj.node_selected,tmpObj.node_name_to_desc[tmpObj.node_selected].seq,function(data){
+          var templ = {
+            $ref: "algo.json",
+            format: "tabs"
+          }
+          editorFn = algoSave;
+          jsonEditWindow(tmpObj.node_selected, templ, data);
+
+        });
+
+      });
+      $("#script-run").on('click', function () {
+      });
+      $("#script-save").on('click', function () {
+      });
+      $("#script-load").on('click', function () {
+      });
+      $("#script-close").on('click', function () {
+        $("#mdl-script").modal("hide");
+
+      });
+      $("#mdl-script").modal("show");
+
+  }
   function updateProcessInterface(tmpObj) {
     updateProcessList(tmpObj);
     var tablename="main_table-"+tmpObj.template;
@@ -3904,8 +3966,9 @@
       );
 
     }
+    
     $("#main_table-" + template + " tbody tr").click(function (e) {
-      mainTableCommonHandling(tmpObj, e);
+      mainTableCommonHandling("main_table-" + template,tmpObj, e);
     });
     n = $('#main_table-' + template + ' tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
@@ -4259,9 +4322,8 @@
    * MAIN TABLE HANDLING
    * 
    */
-  function mainTableCommonHandling(tmpObj, e) {
+  function mainTableCommonHandling(id,tmpObj, e) {
     var node_list=tmpObj['elems'];
-    var id="main_table-" + tmpObj.type;
     $("#mdl-commands").modal("hide");
     if (tmpObj.node_selected == $(e.currentTarget).attr(tmpObj.type+"-name")) {
       $(".row_element").removeClass("row_snap_selected");
@@ -6080,6 +6142,50 @@
     obj['cu_templates'] = jchaos.variable("cu_templates", "get", null, null);
     var blob = new Blob([JSON.stringify(obj)], { type: "json;charset=utf-8" });
     saveAs(blob, "configuration.json");
+  }
+
+
+  function generateScriptAdminModal() {
+    var html = '<div class="modal hide fade" id="mdl-script">';
+
+    html += '<div class="modal-header">';
+    html += '<button type="button" class="close" data-dismiss="modal">×</button>';
+    html += '<h3 id="list_snapshot">Script Admin</h3>';
+    html += '</div>';
+
+    html += '<div class="modal-body">';
+    html += '<div class="row-fluid">';
+    html += '<div class="box span12">';
+    html += '<div class="box-content">';
+
+    html += '<table class="table table-bordered" id="table_script">';
+    html += '<thead class="box-header">';
+    html += '<tr>';
+    html += '<th>Name</th>';
+    html += '<th>Type</th>';
+    html += '<th>Desc</th>';
+    html += '<th>Last Modified</th>';
+
+    html += '</tr>';
+    html += '</thead>';
+    html += '</table>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div>';
+    html += '</div>';
+
+    html += '<div class="modal-footer">';
+    html += '<a href="#" class="btn" id="script-show">Show</a>';
+    html += '<a href="#" class="btn" id="script-run">Run</a>';
+    html += '<a href="#" class="btn" id="script-delete">Delete</a>';
+    html += '<a href="#" class="btn" id="script-load">Upload</a>';
+
+    html += '<a href="#" class="btn" id="script-save">Save</a>';
+    html += '<a href="#" class="btn" id="script-close">Close</a>';
+    html += '</div>';
+    html += '</div>';
+    return html;
   }
 
   function generateSnapshotTable(cuid) {
