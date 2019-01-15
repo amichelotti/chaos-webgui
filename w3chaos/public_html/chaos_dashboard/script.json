@@ -1,0 +1,32 @@
+{
+    "title":"New Script",
+    "type":"object",
+    "id":"editor-algo",
+    "format":"tab",
+    "properties": {
+	"script_name": {
+	    "type": "string",
+	    "required": true,
+	    "format":"text",
+	    "description":"Unique Identifier of the Script"
+	},
+	"eudk_script_language" :
+	{
+		"type": "array",
+  		"format": "select",
+  		"uniqueItems": true,
+  		"items": {
+    	"type": "string",
+		"enum": ["bash","root","nodejs","python"]
+		  }
+  },
+	"eudk_script_content": {
+		"type": "string",
+		"required": true,
+	    "format":"textarea",
+		"description":"Script code"
+		
+	}
+    }
+}
+    
