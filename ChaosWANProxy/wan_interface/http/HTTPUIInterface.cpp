@@ -188,12 +188,12 @@ void HTTPUIInterface::init(void *init_data) throw(CException)
         }
 
         //configure server
-        HTTWAN_INTERFACE_APP_ << " Thread " << idx << " allocated";
+       // HTTWAN_INTERFACE_APP_ << " Thread " << idx << " allocated";
         std::string str_port = boost::lexical_cast<std::string>(service_port);
         mg_set_option(http_server, "listening_port", str_port.c_str());
         mg_set_option(http_server, "enable_keep_alive", "yes");
         mg_set_option(http_server, "enable_directory_listing", "false");
-        HTTWAN_INTERFACE_APP_ << " Thread " << idx << " configured";
+        //HTTWAN_INTERFACE_APP_ << " Thread " << idx << " configured";
         //configure handler
         //		mg_add_uri_handler(http_server, "/CU", event_handler);
         //	mg_add_uri_handler(http_server, "/MDS", event_handler);
@@ -223,6 +223,9 @@ void HTTPUIInterface::start() throw(CException)
 
     run = true;
     thread_index = 0;
+    HTTWAN_INTERFACE_APP_ << " Starting...";
+    AsyncCentralManager::getInstance()->addTimer(this, CHECK_ACTIVITY_CU, CHECK_ACTIVITY_CU);
+
     for (ServerListIterator it = http_server_list.begin();
          it != http_server_list.end();
          it++)
@@ -233,7 +236,6 @@ void HTTPUIInterface::start() throw(CException)
     {
         (*i)->start();
     }
-    AsyncCentralManager::getInstance()->addTimer(this, CHECK_ACTIVITY_CU, CHECK_ACTIVITY_CU);
 }
 
 //inherited method
@@ -250,6 +252,8 @@ void HTTPUIInterface::stop() throw(CException)
 //inherited method
 void HTTPUIInterface::deinit() throw(CException)
 {
+    AsyncCentralManager::getInstance()->removeTimer(this);
+
     for (ServerListIterator it = http_server_list.begin();
          it != http_server_list.end();
          it++)
@@ -267,7 +271,6 @@ void HTTPUIInterface::deinit() throw(CException)
         }
         sched_cu_v[cnt] = NULL;
     }
-    AsyncCentralManager::getInstance()->removeTimer(this);
 }
 
 void HTTPUIInterface::pollHttpServer(struct mg_server *http_server)
