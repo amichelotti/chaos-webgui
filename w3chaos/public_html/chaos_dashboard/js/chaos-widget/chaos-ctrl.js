@@ -172,7 +172,16 @@
         $('#upload-file').on('change', function () {
           var reader = new FileReader();
           reader.onload = function (e) {
-            handler(JSON.parse(e.target.result));
+            try{
+              var json=JSON.parse(e.target.result);
+              handler(json);
+            } catch(err){
+              var obj={};
+              obj['name']=$('#upload-file').val();
+              obj['data']=e.target.result;
+              handler(obj);
+            }
+            
             $(main).dialog("close").remove();
           };
           reader.readAsText(this.files[0]);
@@ -1286,7 +1295,44 @@
       }
     });
   }
-
+  function algoLoadFromFile(){
+    getFile("Script Loading", "select the Script to load", function (script) {
+      var scriptTmp={};
+      var name=script['name'];
+      var language="bash";
+      var regex = /.*[/\\](.*)$/;
+      var match = regex.exec(name);
+      if (match != null) {
+        name = match[1];
+      }
+      if(name.includes(".sh")||name.includes(".bash")){
+        language="bash";
+      }
+      if(name.includes(".c")||name.includes(".C")||name.includes(".cpp")||name.includes(".CPP")||name.includes(".h")){
+        language="CPP";
+      }
+      if(name.includes(".js")){
+        language="nodejs";
+      }
+      if(name.includes(".py")){
+        language="python";
+      }
+      if(name.includes(".lua")){
+        language="LUA";
+      }
+      scriptTmp['script_name']=name;
+      scriptTmp['eudk_script_content']=script['data'];
+      scriptTmp['eudk_script_language']=language;
+      scriptTmp['script_description']="Imported from "+script['name'];
+      var templ = {
+        $ref: "algo.json",
+        format: "tabs"
+      }
+      
+      editorFn = algoSave;
+      jsonEditWindow("Loaded", templ, scriptTmp);
+    });
+  }
   function algoSave(json) {
     console.log("newScript :" + JSON.stringify(json));
     var proc={};
@@ -1303,12 +1349,15 @@
       return;
     }
     //json['seq']=(new Date()).getTime();
+    json.eudk_script_content=btoa(json.eudk_script_content);
     json['eudk_script_language']=json.eudk_script_language[0];
     proc[json.script_name]=json;
-    jchaos.variable("script", "set", proc, null);
+//    jchaos.variable("script", "set", proc, null);
 
     jchaos.saveScript(json, function (data) {
       console.log("saving script:" + JSON.stringify(json));
+      instantMessage("Script "+json.script_name, "Saved", 1000, null, null, true)
+
     });
 
   }
@@ -1480,6 +1529,7 @@
         {
           text: "close", click: function (e) {
             $("#edit-" + name).dialog('close');
+            $(this).remove();
           }
         }
 
@@ -1498,7 +1548,7 @@
         
         
         if(jsonin!=null){
-          jopt['starval']=jsonin;
+          jopt['startval']=jsonin;
         }
         
         if (json_editor != null) {
@@ -2813,19 +2863,20 @@
 
     var list_class = [];
     var list_zone = [];
-    updateProcessList(tempObj);
-    updateProcessTable(tempObj);
-    var proclist=tempObj.data;
+    updateProcessList(tempObj,function(tmpObj){
+      updateProcessTable(tmpObj);
+      var proclist=tmpObj.data;
 
     //eu_process = jchaos.variable("eu", "get", null, null);
-    for (var g in proclist) {
-      getZoneClassElement(g, list_zone, list_class, list_eu);
-      list_eu_full.push(g);
-    }
-    element_sel('#zones', list_zone, 1);
-    element_sel('#classe', list_class, 1);
-    element_sel('#elements', list_eu, 1);
-
+      for (var g in proclist) {
+        getZoneClassElement(g, list_zone, list_class, list_eu);
+        list_eu_full.push(g);
+      }
+      element_sel('#zones', list_zone, 1);
+      element_sel('#classe', list_class, 1);
+      element_sel('#elements', list_eu, 1);
+    });
+    updateInterface(tempObj);
     var $radio = $("input:radio[name=search-alive]");
     if ($radio.is(":checked") === false) {
       $radio.filter("[value=true]").prop('checked', true);
@@ -3815,12 +3866,20 @@
         $ref: "algo.json",
         format: "tabs"
       }
+      var scriptTmp={};
+      scriptTmp['script_name']="NONAME";
+      scriptTmp['eudk_script_content']="";
+      scriptTmp['eudk_script_language']="bash";
+      scriptTmp['script_description']="PUT YOUR DESCRIPTION";
+      
       editorFn = algoSave;
-      jsonEditWindow("NewScript", templ, null);
+      jsonEditWindow("NewScript", templ, scriptTmp);
       return;
-    } else if(cmd=="run-script"){
+    } else if(cmd=="manage-script"){
       updateScriptModal(tmpObj);
-    } 
+    } else if(cmd=="load-script"){
+      algoLoadFromFile();
+    }
     return;
   }
   function updateProcessMenu(tmpObj,node_name) {
@@ -3829,9 +3888,8 @@
     node_selected=tmpObj.node_selected;
    // var cindex = tmpObj.node_name_to_index[node_name];
    items['new-script'] = { name: "New Script..." };
-   items['load-script'] = { name: "Load Script from file..." };
-   
-   items['run-script'] = { name: "Run Script..." };
+   items['load-script'] = { name: "Load Script from file..." };   
+   items['manage-script'] = { name: "Manage Script..." };
 
    if (node_selected != null) {
       items['open-process-console'] = { name: "Open Console "+node_selected };
@@ -3872,11 +3930,12 @@
       $("#"+encoden+"_cputime").html(cputime);
     }
   }
-
+  
   function updateScriptModal(tmpObj){
     $("#table_script").find("tr:gt(0)").remove();
     var template=tmpObj.type;
     tmpObj['node_name_to_desc']={};
+    
     jchaos.search(search_string, "script", false, function (l) {
       var list_algo=l['found_script_list'];
       list_algo.forEach(function(p){
@@ -3889,42 +3948,14 @@
       '<td>' + p.script_description + '</td>' +
       '<td>' + date + '</td></tr>');
       });
+      $("#mdl-script").modal("show");
+
       $("#table_script tbody tr").click(function (e) {
         mainTableCommonHandling("table_script",tmpObj, e);
       });
-      });
-      $("#script-delete").on('click', function () {
-        console.log("delete "+tmpObj.node_selected);
-        jchaos.rmScript(tmpObj.node_name_to_desc[tmpObj.node_selected], function (data) {
-          instantMessage("Remove Script", "removed " + tmpObj.node_selected, 1000);
-
-        });
-      });
-      $("#script-show").on('click', function () {
-        console.log("show "+tmpObj.node_selected);
-        jchaos.loadScript(tmpObj.node_selected,tmpObj.node_name_to_desc[tmpObj.node_selected].seq,function(data){
-          var templ = {
-            $ref: "algo.json",
-            format: "tabs"
-          }
-          editorFn = algoSave;
-          jsonEditWindow(tmpObj.node_selected, templ, data);
-
-        });
-
-      });
-      $("#script-run").on('click', function () {
-      });
-      $("#script-save").on('click', function () {
-      });
-      $("#script-load").on('click', function () {
-      });
-      $("#script-close").on('click', function () {
-        $("#mdl-script").modal("hide");
-
-      });
-      $("#mdl-script").modal("show");
-
+      
+      
+    });
   }
   function updateProcessInterface(tmpObj) {
     updateProcessList(tmpObj);
@@ -4006,6 +4037,51 @@
 
     });
     actionJsonEditor(tmpObj);
+    $("#script-delete").on('click', function () {
+      console.log("delete "+tmpObj.node_selected);
+      jchaos.rmScript(tmpObj.node_name_to_desc[tmpObj.node_selected], function (data) {
+        instantMessage("Remove Script", "removed " + tmpObj.node_selected, 1000);
+
+      });
+    });
+    $("#script-edit").on('click', function () {
+      console.log("show "+tmpObj.node_selected);
+
+      jchaos.loadScript(tmpObj.node_selected,tmpObj.node_name_to_desc[tmpObj.node_selected].seq,function(data){
+        var templ = {
+          $ref: "algo.json",
+          format: "tabs"
+        }
+        editorFn = algoSave;
+        $("#mdl-script").modal("hide");
+        data['eudk_script_content']=atob(data['eudk_script_content']);
+        jsonEditWindow(tmpObj.node_selected, templ, data);
+
+      });
+
+    });
+    $("#script-run").on('click', function () {
+    });
+    $("#script-save").on('click', function () {
+      jchaos.loadScript(tmpObj.node_selected,tmpObj.node_name_to_desc[tmpObj.node_selected].seq,function(data){
+        
+        var obj=atob(data['eudk_script_content']);
+        var blob = new Blob([obj], { type: "json;charset=utf-8" });
+        saveAs(blob, data['script_name']);
+      });
+     
+    });
+    $("#script-load").on('click', function () {
+      $("#mdl-script").modal("hide");
+      algoLoadFromFile();
+      tmpObj.node_selected=null;
+
+    });
+
+    $("#script-close").on('click', function () {
+      $("#mdl-script").modal("hide");
+      tmpObj.node_selected=null;
+    });
 
   }
   function updateProcess(tmpObj) {
@@ -4014,7 +4090,7 @@
     updateProcessTable(tmpObj);
   }
 
-  function updateProcessList(tmpObj) {
+  function updateProcessList(tmpObj,handler) {
     var proc={};
     jchaos.search("", "agent", true, function (ag) {
       ag.forEach(function (elem) {
@@ -4032,6 +4108,9 @@
                 p['parent'] = elem;
                 proc[p.uid] = p;
                 tmpObj['elems'].push(p.uid);
+                if(typeof handler === "function"){
+                  handler(tmpObj);
+                }
               });
               tmpObj.data=proc;
             }
@@ -6176,7 +6255,7 @@
     html += '</div>';
 
     html += '<div class="modal-footer">';
-    html += '<a href="#" class="btn" id="script-show">Show</a>';
+    html += '<a href="#" class="btn" id="script-edit">Show</a>';
     html += '<a href="#" class="btn" id="script-run">Run</a>';
     html += '<a href="#" class="btn" id="script-delete">Delete</a>';
     html += '<a href="#" class="btn" id="script-load">Upload</a>';
