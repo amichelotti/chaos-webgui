@@ -1488,7 +1488,7 @@
    * 
    */
   function jsonEditWindow(name, jsontemp, jsonin) {
-    var instant = $('<div id=edit-' + name + '></div>').dialog({
+    var instant = $('<div id=edit-temp></div>').dialog({
       minWidth: hostWidth / 4,
       minHeight: hostHeight / 4,
       title: name,
@@ -1528,7 +1528,7 @@
         },
         {
           text: "close", click: function (e) {
-            $("#edit-" + name).dialog('close');
+            $("#edit-temp").dialog('close');
             $(this).remove();
           }
         }
@@ -1541,7 +1541,7 @@
       },
       open: function () {
         console.log("Open Editor");
-        var element = $("#edit-" + name);
+        var element = $("#edit-temp");
         var jopt={};
         jopt['ajax']=true;
         jopt['schema']=jsontemp;
