@@ -1349,7 +1349,10 @@
       return;
     }
     //json['seq']=(new Date()).getTime();
-    json.eudk_script_content=btoa(json.eudk_script_content);
+    /*var str=str.replace(/[\u00A0-\u2666]/g, function(c) {
+    return '&#' + c.charCodeAt(0) + ';';
+    });*/
+    json.eudk_script_content=btoa(unescape(encodeURIComponent(json.eudk_script_content)));
     json['eudk_script_language']=json.eudk_script_language[0];
     proc[json.script_name]=json;
 //    jchaos.variable("script", "set", proc, null);
@@ -4054,7 +4057,8 @@
         }
         editorFn = algoSave;
         $("#mdl-script").modal("hide");
-        data['eudk_script_content']=atob(data['eudk_script_content']);
+       
+        data['eudk_script_content']= decodeURIComponent(escape(atob(data['eudk_script_content'])));
         jsonEditWindow(tmpObj.node_selected, templ, data);
 
       });
@@ -4715,7 +4719,7 @@
           }
           $("#" + name_id + "_system_command").html(el.system.dp_sys_que_cmd);
 
-          if (el.system.hasOwnProperty("cudk_burst_state") && el.system.cudk_burst_state) {
+          if ((status == 'Start')&&el.system.hasOwnProperty("cudk_burst_state") && el.system.cudk_burst_state) {
             $("#" + name_id + "_health_status").html('<i class="material-icons verde">videocam</i>');
             $("#" + name_id + "_health_status").attr('title', "TAG:'" + el.system.cudk_burst_tag + "'");
           }
