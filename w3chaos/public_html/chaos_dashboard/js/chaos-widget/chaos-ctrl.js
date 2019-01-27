@@ -4057,7 +4057,7 @@
         }
         editorFn = algoSave;
         $("#mdl-script").modal("hide");
-       
+        tmpObj.node_selected=null;
         data['eudk_script_content']= decodeURIComponent(escape(atob(data['eudk_script_content'])));
         jsonEditWindow(tmpObj.node_selected, templ, data);
 
