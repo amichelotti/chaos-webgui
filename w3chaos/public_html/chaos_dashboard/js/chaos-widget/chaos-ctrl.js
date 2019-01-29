@@ -3960,6 +3960,55 @@
       
     });
   }
+  function loadScriptOnServer(tmpObj,jsonscript,serveList,handler){
+    if((serveList==null) || (!(serverList instanceof Array))){
+      // load on all servers
+      var agentlist=[];
+
+      jchaos.search("", "agent", true, function (ag) {
+        ag.forEach(function (elem) {
+          var regx = /ChaosAgent_(.+)\:(.+)/;
+          var match = regx.exec(ag);
+          if (match) {
+            console.log("loading on agent " + match[1]);
+            var server = match[1];
+            agentlist.push(server);
+
+            jchaos.basicPost("api/v1/restconsole/load", JSON.stringify(jsonscript), function (r) {
+              if(r.err!=0){
+                instantMessage("Load Script","cannot load:"+r.errmsg,2000,false);
+              } else{
+                console.log("Script loaded onto:" + server+ " :"+JSON.stringify(r));
+                handler(r);
+              }
+              
+              
+            }, function (bad) {
+              console.log("Some error getting loading script:" + bad);
+              instantMessage("Load Script","Exception  loading:"+bad,2000,false);
+
+            }, server + ":8071");
+        
+          }
+          }
+    );
+    tmpObj['agents']=agentlist;
+
+  });
+} else {
+  serveList.forEach(function(elem){
+    jchaos.basicPost("api/v1/restconsole/load", JSON.stringify(jsonscript), function (r) {
+              
+      console.log("Script loaded onto:" + elem+ " :"+JSON.stringify(r));
+
+    }, function (bad) {
+      console.log("Some error getting loading script:" + bad);
+    }, elem + ":8071");
+  });
+
+}
+
+  }
   function updateProcessInterface(tmpObj) {
     updateProcessList(tmpObj);
     var tablename="main_table-"+tmpObj.template;
@@ -4065,6 +4114,45 @@
 
     });
     $("#script-run").on('click', function () {
+      jchaos.loadScript(tmpObj.node_selected,tmpObj.node_name_to_desc[tmpObj.node_selected].seq,function(data){
+        loadScriptOnServer(tmpObj,data,null,function(p){  
+        if(tmpObj.hasOwnProperty("agents") && p.hasOwnProperty['path']){
+          var launch_arg;
+          var name=data['script_name'];
+          var language=data['eudk_script_language'];
+          var server=tmpObj['agents'][0];
+          if(language=="CPP"){
+            launch_arg="chaosRoot --conf root.cfg --rootopt \"-q "+p['path']+"\"";
+          } else if(language=="bash"){
+            launch_arg="bash "+p['path'];
+          } else if(language=="nodejs"){
+            launch_arg="node "+p['path'];
+
+          } else if(language == "python"){
+            launch_arg="python "+p['path'];
+
+          } else {
+            launch_arg=language+" "+p['path'];
+          }
+          
+          getEntryWindow(data['script_name'], "Additional args", launch_arg, "Run", function (inst_name) {
+            var param ={};
+            param['cmdline']=launch_arg;     
+            param['ptype']=language;
+            param['pname']=name;
+            jchaos.basicPost("api/v1/restconsole/create", JSON.stringify(param), function (r) {
+              console.log("Script running onto:" + server+ " :"+JSON.stringify(r));
+              instantMessage("Script "+name, "Started " + JSON.stringify(r), 2000, true);
+              
+            }, function (bad) {
+              console.log("Some error getting loading script:" + bad);
+              instantMessage("Script "+name, "Failed to start " + bad, 2000, false);
+
+            }, server + ":8071");
+          }, "Cancel");
+        }
+      });
+    });
     });
     $("#script-save").on('click', function () {
       jchaos.loadScript(tmpObj.node_selected,tmpObj.node_name_to_desc[tmpObj.node_selected].seq,function(data){
@@ -4096,6 +4184,7 @@
 
   function updateProcessList(tmpObj,handler) {
     var proc={};
+    var agentlist=[];
     jchaos.search("", "agent", true, function (ag) {
       ag.forEach(function (elem) {
         var regx = /ChaosAgent_(.+)\:(.+)/;
@@ -4103,6 +4192,7 @@
         if (match) {
           console.log("agent " + match[1]);
           var server = match[1];
+          agentlist.push(server);
           jchaos.basicPost("api/v1/restconsole/list", "{}", function (r) {
             if (r.data.hasOwnProperty("processes")) {
               var processes = r.data.processes;
@@ -4124,6 +4214,7 @@
 
         }
       });
+      tmpObj['agents']=agentlist;
     });
   /*  if (proc != null) {
       jchaos.variable("process", "set", proc, null);
