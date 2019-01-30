@@ -307,6 +307,7 @@
     var instant = $('<div id=dataset-' + name + '></div>').dialog({
       minWidth: hostWidth / 4,
       minHeight: hostHeight / 4,
+      closeOnEscape: true,
       title: msghead,
       resizable: true,
       buttons: [
@@ -379,7 +380,7 @@
   }
 
 
-  function getConsole(msghead, pid, server, lines, refresh) {
+  function getConsole(msghead, pid, server, lines, consolen,refresh) {
     var update;
     var data;
     var stop_update = false;
@@ -387,7 +388,6 @@
       minWidth: hostWidth / 4,
       minHeight: hostHeight / 4,
       title: msghead,
-      position: "center",
       resizable: true,
       dialogClass: 'no-close',
       buttons: [
@@ -416,11 +416,13 @@
         // $(instant).dialog("close");
         $(this).remove();
       },
-      open: function () {
+      open: function (e) {
         console.log(msghead + "opening terminal refresh:" + refresh);
+        $(e.target).parent().css('background-color','black');
+
         var consoleParam = {
           "uid": pid,
-          "type": 1,
+          "type": consolen,
           "lines": lines
         };
         $('#console-' + pid).terminal(function (command) {
@@ -434,6 +436,7 @@
             height: 600
 
           });
+          var last_log_time=0;
         update = setInterval(function () {
           if (stop_update) {
             $('#console-update-' + pid).text("Update");
@@ -443,7 +446,10 @@
           if (!stop_update) {
 
             jchaos.basicPost("api/v1/restconsole/getconsole", JSON.stringify(consoleParam), function (r) {
-              $('#console-' + pid).terminal().echo(r.data.console);
+              if(r.data.process.last_log_time!=last_log_time){
+                $('#console-' + pid).terminal().echo(r.data.console);
+              }
+              last_log_time=r.data.process.last_log_time;
 
             }, function (bad) {
               console.log("Some error getting console occur:" + bad);
@@ -3365,7 +3371,7 @@
 
       jchaos.node(agentn, "get", "agent", node_selected, null, function (data) {
         console.log("->" + JSON.stringify(data));
-        getConsole("Console:" + node_selected, data.association_uid, "localhost:8071", 2, 1000);
+        getConsole("Console:" + node_selected, data.association_uid, "localhost:8071", 2,1, 1000);
       });
 
 
@@ -3843,10 +3849,15 @@
   function executeProcessMenuCmd(tmpObj,cmd, opt) {
     node_selected=tmpObj.node_selected;
     
-    if (cmd == "open-process-console") {
-      var agentn = tmpObj[node_selected].parent;
-      var server=tmpObj[node_selected].server +":8071";
-      getConsole("Console:" + node_selected, node_selected, server, 2, 1000);
+    if (cmd == "open-process-console" || cmd=="open-process-errconsole") {
+      var console=1;
+      if(cmd=="open-process-errconsole"){
+        console=2;
+      }
+   //   var agentn = tmpObj[node_selected].parent;
+      var server=tmpObj.data[node_selected].hostname +":8071";
+      var friendname=tmpObj.data[node_selected].pname;
+      getConsole(tmpObj.data[node_selected].hostname+":"+ friendname +"(" +node_selected+")", node_selected, server, 2,console, 1000);
       
     } else if (cmd == "kill-process") {
       confirm("Do you want to KILL?", "Pay attention ANY CU will be killed as well", "Kill",
@@ -3855,6 +3866,7 @@
             "uid": node_selected
           
           };
+          var server=tmpObj.data[node_selected].hostname +":8071";
           jchaos.basicPost("api/v1/restconsole/kill", JSON.stringify(consoleParam), function (r) {
             instantMessage("US KILL", "Killing " + node_selected + " ", 1000, true);
 
@@ -4114,30 +4126,33 @@
 
     });
     $("#script-run").on('click', function () {
+      $("#mdl-script").modal("hide");
+
       jchaos.loadScript(tmpObj.node_selected,tmpObj.node_name_to_desc[tmpObj.node_selected].seq,function(data){
         loadScriptOnServer(tmpObj,data,null,function(p){  
-        if(tmpObj.hasOwnProperty("agents") && p.hasOwnProperty['path']){
+        if(tmpObj.hasOwnProperty("agents") && p.data.hasOwnProperty('path')){
+          var path=p.data.path;
           var launch_arg;
           var name=data['script_name'];
           var language=data['eudk_script_language'];
           var server=tmpObj['agents'][0];
           if(language=="CPP"){
-            launch_arg="chaosRoot --conf root.cfg --rootopt \"-q "+p['path']+"\"";
+            launch_arg="chaosRoot --conf root.cfg --rootopt \"-q "+path+"\"";
           } else if(language=="bash"){
-            launch_arg="bash "+p['path'];
+            launch_arg="bash "+path;
           } else if(language=="nodejs"){
-            launch_arg="node "+p['path'];
+            launch_arg="node "+path;
 
           } else if(language == "python"){
-            launch_arg="python "+p['path'];
+            launch_arg="python "+path;
 
           } else {
-            launch_arg=language+" "+p['path'];
+            launch_arg=language+" "+path;
           }
           
-          getEntryWindow(data['script_name'], "Additional args", launch_arg, "Run", function (inst_name) {
+          getEntryWindow(data['script_name'], "Additional args", "", "Run", function (parm) {
             var param ={};
-            param['cmdline']=launch_arg;     
+            param['cmdline']=launch_arg + " "+parm;     
             param['ptype']=language;
             param['pname']=name;
             jchaos.basicPost("api/v1/restconsole/create", JSON.stringify(param), function (r) {
@@ -4150,6 +4165,9 @@
 
             }, server + ":8071");
           }, "Cancel");
+        } else {
+          instantMessage("Script "+name, "Failed to Load ", 2000, false);
+
         }
       });
     });
@@ -4198,7 +4216,7 @@
               var processes = r.data.processes;
               tmpObj['elems']=[];
               processes.forEach(function (p) {
-                p['hostname'] = server;
+               p ['hostname'] = server;
                 p['parent'] = elem;
                 proc[p.uid] = p;
                 tmpObj['elems'].push(p.uid);
