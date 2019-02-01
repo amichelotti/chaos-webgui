@@ -1119,6 +1119,8 @@
     html += '<th>Uptime(s)</th>';
     html += '<th>System Time</th>';
     html += '<th>User Time</th>';
+    html += '<th>VMem</th>';
+    html += '<th>RMem</th>';
     html += '<th>Parent</th>';
 
     html += '</tr>';
@@ -3930,8 +3932,11 @@
       var pid=tmpObj.data[p].pid;
       var timestamp=tmpObj.data[p].ts;
       var uptime=tmpObj.data[p].uptime;
-      var systime=tmpObj.data[p].systime;
-      var cputime=tmpObj.data[p].cputime;
+      var systime=tmpObj.data[p].systime.substr(0,5);
+      var cputime=tmpObj.data[p].cputime.substr(0,5);
+      var vmem=tmpObj.data[p].vmem;
+      var rmem=tmpObj.data[p].rmem;
+      
       var hostname=tmpObj.data[p].hostname;
       var status=tmpObj.data[p].msg;
       var parent=tmpObj.data[p].parent;
@@ -3943,6 +3948,10 @@
       $("#"+encoden+"_uptime").html(uptime);
       $("#"+encoden+"_systime").html(systime);
       $("#"+encoden+"_cputime").html(cputime);
+      $("#"+encoden+"_vmem").html(vmem);
+      $("#"+encoden+"_rmem").html(rmem);
+
+
     }
   }
   
@@ -4037,8 +4046,10 @@
       var pid=tmpObj.data[p].pid;
       var timestamp=tmpObj.data[p].ts;
       var uptime=tmpObj.data[p].uptime;
-      var systime=tmpObj.data[p].systime;
-      var cputime=tmpObj.data[p].cputime;
+      var systime=tmpObj.data[p].systime.substr(0,5);
+      var cputime=tmpObj.data[p].cputime.substr(0,5);
+      var vmem=tmpObj.data[p].vmem;
+      var rmem=tmpObj.data[p].rmem;
       var hostname=tmpObj.data[p].hostname;
       var status=tmpObj.data[p].msg;
       var parent=tmpObj.data[p].parent;
@@ -4057,6 +4068,9 @@
       '<td class="td_element" id="' + encoden + '_uptime">' + uptime + '</td>'+
       '<td class="td_element" id="' + encoden + '_systime">' + systime + '</td>' +
       '<td class="td_element" id="' + encoden + '_cputime">' + cputime + '</td>'+
+      '<td class="td_element" id="' + encoden + '_vmem">' + vmem + '</td>' +
+      '<td class="td_element" id="' + encoden + '_rmem">' + rmem + '</td>'+
+      
       '<td class="td_element">' + parent + '</td></tr>'
       );
 
@@ -4212,7 +4226,7 @@
           var server = match[1];
           agentlist.push(server);
           jchaos.basicPost("api/v1/restconsole/list", "{}", function (r) {
-            if (r.data.hasOwnProperty("processes")) {
+            if (r.data.hasOwnProperty("processes") && (r.data.processes instanceof Array)) {
               var processes = r.data.processes;
               tmpObj['elems']=[];
               processes.forEach(function (p) {
@@ -4225,6 +4239,11 @@
                 }
               });
               tmpObj.data=proc;
+            } else {
+              if(typeof handler === "function"){
+                tmpObj['elems']=[];
+                handler(tmpObj);
+              }
             }
           }, function (bad) {
             console.log("Some error getting console occur:" + bad);
