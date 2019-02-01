@@ -2939,8 +2939,8 @@
       $("#search-chaos").val(search_string);
       var alive = $("input[type=radio][name=search-alive]:checked").val()
 
-      list_eu = searchEu(search_string, alive, list_zone, list_class, list_eu);
-      tempObj['elems'] = list_eu;
+    //  list_eu = searchEu(search_string, alive, list_zone, list_class, list_eu);
+    //  tempObj['elems'] = list_eu;
       updateInterface(tempObj);
 
     });
@@ -2966,8 +2966,8 @@
         search_string = $(this).val();
         var alive = $("input[type=radio][name=search-alive]:checked").val()
 
-        list_eu = searchEu(search_string, alive, list_zone, list_class, list_eu);
-        tempObj['elems'] = list_eu;
+      //  list_eu = searchEu(search_string, alive, list_zone, list_class, list_eu);
+    //    tempObj['elems'] = list_eu;
         updateInterface(tempObj);
       }
       //var tt =prompt('type value');
@@ -2975,10 +2975,10 @@
 
     $("input[type=radio][name=search-alive]").change(function (e) {
       var alive = $("input[type=radio][name=search-alive]:checked").val()
-      list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
-      var interface = $("#classe option:selected").val();
-      tempObj['elems'] = list_cu;
+      list_eu = searchEu(search_string, alive, list_zone, list_class, list_eu);
+      tempObj['elems'] = list_eu;
       updateInterface(tempObj);
+      
     });
 
 
@@ -3926,21 +3926,24 @@
       var ptype=tmpObj.data[p].ptype;
       var pname=tmpObj.data[p].pname;
 
-      var started_timestamp=tmpObj.data[p].start_time;
+      var started_timestamp=new Date(Number(tmpObj.data[p].start_time));
       var end_timestamp=tmpObj.data[p].end_time;
       var last_log=(tmpObj.data[p].ts - tmpObj.data[p].last_log_time);
       var pid=tmpObj.data[p].pid;
       var timestamp=tmpObj.data[p].ts;
       var uptime=tmpObj.data[p].uptime;
-      var systime=tmpObj.data[p].systime.substr(0,5);
-      var cputime=tmpObj.data[p].cputime.substr(0,5);
+      var systime=parseFloat(tmpObj.data[p].systime).toFixed(3);
+      var cputime=parseFloat(tmpObj.data[p].cputime).toFixed(3);
       var vmem=tmpObj.data[p].vmem;
       var rmem=tmpObj.data[p].rmem;
       
       var hostname=tmpObj.data[p].hostname;
       var status=tmpObj.data[p].msg;
       var parent=tmpObj.data[p].parent;
+      var infoServer=tmpObj.agents[hostname];
+      var parent_str=parent+" (i:"+infoServer.idletime+",u:"+infoServer.usertime+",s:"+infoServer.systime+"io:"+infoServer.iowait+")";
       var encoden=encodeName(p);
+      $("#"+encoden+"_start_ts").html(started_timestamp);
       $("#"+encoden+"_end_ts").html(end_timestamp);
       $("#"+encoden+"_last_log_ts").html(last_log);
       $("#"+encoden+"_status").html(status);
@@ -3950,6 +3953,8 @@
       $("#"+encoden+"_cputime").html(cputime);
       $("#"+encoden+"_vmem").html(vmem);
       $("#"+encoden+"_rmem").html(rmem);
+      $("#"+encoden+"_parent").html(parent_str);
+
 
 
     }
@@ -3997,23 +4002,22 @@
 
             jchaos.basicPost("api/v1/restconsole/load", JSON.stringify(jsonscript), function (r) {
               if(r.err!=0){
-                instantMessage("Load Script","cannot load:"+r.errmsg,2000,false);
+                instantMessage("Load Script","cannot load:"+r.errmsg,5000,false);
               } else{
-                console.log("Script loaded onto:" + server+ " :"+JSON.stringify(r));
+                instantMessage("Script loaded onto:" + server,2000,false);
                 handler(r);
               }
               
               
             }, function (bad) {
               console.log("Some error getting loading script:" + bad);
-              instantMessage("Load Script","Exception  loading:"+bad,2000,false);
+              instantMessage("Load Script","Exception  loading:"+bad,5000,false);
 
             }, server + ":8071");
         
           }
           }
     );
-    tmpObj['agents']=agentlist;
 
   });
 } else {
@@ -4046,8 +4050,8 @@
       var pid=tmpObj.data[p].pid;
       var timestamp=tmpObj.data[p].ts;
       var uptime=tmpObj.data[p].uptime;
-      var systime=tmpObj.data[p].systime.substr(0,5);
-      var cputime=tmpObj.data[p].cputime.substr(0,5);
+      var systime=parseFloat(tmpObj.data[p].systime).toFixed(3);
+      var cputime=parseFloat(tmpObj.data[p].cputime).toFixed(3);
       var vmem=tmpObj.data[p].vmem;
       var rmem=tmpObj.data[p].rmem;
       var hostname=tmpObj.data[p].hostname;
@@ -4070,8 +4074,7 @@
       '<td class="td_element" id="' + encoden + '_cputime">' + cputime + '</td>'+
       '<td class="td_element" id="' + encoden + '_vmem">' + vmem + '</td>' +
       '<td class="td_element" id="' + encoden + '_rmem">' + rmem + '</td>'+
-      
-      '<td class="td_element">' + parent + '</td></tr>'
+      '<td class="td_element" id="' + encoden +'_parent">' + parent + '</td></tr>'
       );
 
     }
@@ -4115,6 +4118,8 @@
 
     });
     actionJsonEditor(tmpObj);
+    $("#script-delete").off('click');
+
     $("#script-delete").on('click', function () {
       console.log("delete "+tmpObj.node_selected);
       jchaos.rmScript(tmpObj.node_name_to_desc[tmpObj.node_selected], function (data) {
@@ -4122,6 +4127,7 @@
 
       });
     });
+    $("#script-edit").off('click');
     $("#script-edit").on('click', function () {
       console.log("show "+tmpObj.node_selected);
 
@@ -4139,6 +4145,7 @@
       });
 
     });
+    $("#script-run").off('click');
     $("#script-run").on('click', function () {
       $("#mdl-script").modal("hide");
 
@@ -4146,10 +4153,23 @@
         loadScriptOnServer(tmpObj,data,null,function(p){  
         if(tmpObj.hasOwnProperty("agents") && p.data.hasOwnProperty('path')){
           var path=p.data.path;
-          var launch_arg;
+          var launch_arg="";
           var name=data['script_name'];
           var language=data['eudk_script_language'];
-          var server=tmpObj['agents'][0];
+          var serverlist=tmpObj['agents'];
+          var maxIdle=0;
+          var server=null;
+          for(var key in serverlist){
+            if(serverlist[key].idletime>maxIdle){
+              maxIdle=serverlist[key].idletime;
+              server=key;
+            }
+          };
+          if(server==null){
+            alert("NO Server Available");
+            return;
+          }
+
           if(language=="CPP"){
             launch_arg="chaosRoot --conf root.cfg --rootopt \"-q "+path+"\"";
           } else if(language=="bash"){
@@ -4164,14 +4184,14 @@
             launch_arg=language+" "+path;
           }
           
-          getEntryWindow(data['script_name'], "Additional args", "", "Run", function (parm) {
+          getEntryWindow(data['script_name'], "Additional args", '', "Run", function (parm) {
             var param ={};
             param['cmdline']=launch_arg + " "+parm;     
             param['ptype']=language;
             param['pname']=name;
             jchaos.basicPost("api/v1/restconsole/create", JSON.stringify(param), function (r) {
               console.log("Script running onto:" + server+ " :"+JSON.stringify(r));
-              instantMessage("Script "+name, "Started " + JSON.stringify(r), 2000, true);
+              instantMessage("Script "+name + "launched on:"+server, "Started " + JSON.stringify(r), 2000, true);
               
             }, function (bad) {
               console.log("Some error getting loading script:" + bad);
@@ -4209,39 +4229,60 @@
 
   }
   function updateProcess(tmpObj) {
-    updateProcessList(tmpObj);
+    updateProcessList(tmpObj,function(t){
+      if(JSON.stringify(t['elems'])!==JSON.stringify(t['old_elems'])){
+        updateProcessInterface(t);
+        tmpObj['old_elems']=tmpObj['elems'];
+      
+      }
+      updateProcessTable(t);
+    });
 
-    updateProcessTable(tmpObj);
+    
   }
 
   function updateProcessList(tmpObj,handler) {
     var proc={};
-    var agentlist=[];
+   
     jchaos.search("", "agent", true, function (ag) {
+      var agent_obj={};
       ag.forEach(function (elem) {
         var regx = /ChaosAgent_(.+)\:(.+)/;
         var match = regx.exec(ag);
         if (match) {
           console.log("agent " + match[1]);
           var server = match[1];
-          agentlist.push(server);
+          agent_obj[server]={};
+
           jchaos.basicPost("api/v1/restconsole/list", "{}", function (r) {
+
+            if(r.hasOwnProperty("info")){
+              agent_obj[server]['idletime']=parseFloat(r.info.idletime);
+              agent_obj[server]['usertime']=parseFloat(r.info.usertime);
+              agent_obj[server]['systime']=parseFloat(r.info.systime);
+              agent_obj[server]['iowait']=parseFloat(r.info.iowait);
+              agent_obj[server]['ts']=r.info.ts;
+            }
+
             if (r.data.hasOwnProperty("processes") && (r.data.processes instanceof Array)) {
               var processes = r.data.processes;
               tmpObj['elems']=[];
               processes.forEach(function (p) {
                p ['hostname'] = server;
                 p['parent'] = elem;
+                
                 proc[p.uid] = p;
                 tmpObj['elems'].push(p.uid);
-                if(typeof handler === "function"){
-                  handler(tmpObj);
-                }
+               
               });
               tmpObj.data=proc;
+              if(typeof handler === "function"){
+                handler(tmpObj);
+              }
             } else {
               if(typeof handler === "function"){
                 tmpObj['elems']=[];
+                tmpObj.data={};
                 handler(tmpObj);
               }
             }
@@ -4251,7 +4292,7 @@
 
         }
       });
-      tmpObj['agents']=agentlist;
+      tmpObj['agents']=agent_obj;
     });
   /*  if (proc != null) {
       jchaos.variable("process", "set", proc, null);
@@ -6387,7 +6428,7 @@
     html += '</div>';
 
     html += '<div class="modal-footer">';
-    html += '<a href="#" class="btn" id="script-edit">Show</a>';
+    html += '<a href="#" class="btn" id="script-edit">Show/Edit</a>';
     html += '<a href="#" class="btn" id="script-run">Run</a>';
     html += '<a href="#" class="btn" id="script-delete">Delete</a>';
     html += '<a href="#" class="btn" id="script-load">Upload</a>';
@@ -7129,7 +7170,7 @@
   function getEntryWindow(hmsg, msg, def_text, butyes, yeshandle, cancelText) {
     var ret = true;
     $('<div></div>').appendTo('body')
-      .html('<div><h6>' + msg + '</h6><input type="text" id="getEntryWindow_name" value=' + def_text + ' class="text ui-widget-content ui-corner-all"></div>')
+      .html('<div><h6>' + msg + '</h6><input type="text" id="getEntryWindow_name" value="' + def_text + '" class="text ui-widget-content ui-corner-all"></div>')
       .dialog({
         modal: true, title: hmsg, zIndex: 10000, autoOpen: true,
         width: 'auto', resizable: false,
