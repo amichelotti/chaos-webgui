@@ -422,11 +422,18 @@
 
         var consoleParam = {
           "uid": pid,
-          "type": consolen,
-          "lines": lines
+          "fromline": 0,
+          "toline": -1
         };
         $('#console-' + pid).terminal(function (command) {
           if (command !== '') {
+            consoleParam.data=btoa(unescape(encodeURIComponent(command +"\n")));;
+            jchaos.basicPost("api/v1/restconsole/setconsole", JSON.stringify(consoleParam), function (r) {
+             console.log("sent command:"+command)
+
+            }, function (bad) {
+              console.log("Some error getting console occur:" + bad);
+            }, server);
           } else {
             this.echo('');
           }
@@ -447,7 +454,9 @@
 
             jchaos.basicPost("api/v1/restconsole/getconsole", JSON.stringify(consoleParam), function (r) {
               if(r.data.process.last_log_time!=last_log_time){
-                $('#console-' + pid).terminal().echo(r.data.console);
+                var str=decodeURIComponent(escape(atob(r.data.console)));
+                $('#console-' + pid).terminal().echo(str);
+                consoleParam.fromline=Number(r.data.process.output_line) -1;
               }
               last_log_time=r.data.process.last_log_time;
 
@@ -3896,8 +3905,89 @@
       updateScriptModal(tmpObj);
     } else if(cmd=="load-script"){
       algoLoadFromFile();
+    } else if(cmd=="root-script"){
+      runRemoteScript(tmpObj,"Chaos Root","CPP");
+    } else if(cmd=="purge-script"){
+      purgeScripts(tmpObj,1);
     }
+    
     return;
+  }
+  function purgeScripts(tmpObj,level){
+    var serverlist=tmpObj['agents'];
+    var param ={};
+    param['level']=level; 
+
+    for(var key in serverlist){
+      var server=key;
+      jchaos.basicPost("api/v1/restconsole/purge", JSON.stringify(param), function (r) {
+      }, function (bad) {
+        instantMessage("Purge Error", "Failed to purge ", 2000, false);
+
+      },server + ":8071")
+    };
+  }
+  function runRemoteScript(tmpObj,name,language){
+          var launch_arg="";
+          var serverlist=tmpObj['agents'];
+          var maxIdle=0;
+          var server=null;
+          var chaos_prefix="";
+          for(var key in serverlist){
+            if(serverlist[key].idletime>maxIdle){
+              maxIdle=serverlist[key].idletime;
+              server=key;
+            }
+          };
+          if(server==null){
+            alert("NO Server Available");
+            return;
+          }
+          var param ={};
+          param['variable']="CHAOS_PREFIX";     
+          
+          jchaos.basicPost("api/v1/restconsole/getenv", JSON.stringify(param), function (r) {
+            if(r.err!=0){
+              instantMessage("Cannot retrive environment","cannot read CHAOS_PREFIX:"+r.errmsg,5000,false);
+              return;
+            } else{
+              chaos_prefix=r.data.value;
+              if(language=="CPP"){
+                launch_arg=chaos_prefix+"/bin/chaosRoot --conf-file "+chaos_prefix+"/etc/chaos_root.cfg";
+              } else if(language=="bash"){
+                launch_arg="bash ";
+              } else if(language=="nodejs"){
+                launch_arg="node ";
+    
+              } else if(language == "python"){
+                launch_arg="python ";
+    
+              } else {
+                launch_arg=language+" "+path;
+              }
+              
+              getEntryWindow(name, "Additional args", '', "Run", function (parm) {
+                var param ={};
+                param['cmdline']=launch_arg + " "+parm;     
+                param['ptype']=language;
+                param['pname']=name;
+                jchaos.basicPost("api/v1/restconsole/create", JSON.stringify(param), function (r) {
+                  console.log("Script running onto:" + server+ " :"+JSON.stringify(r));
+                  var node_selected=tmpObj.node_selected;
+                  instantMessage("Script "+name + "launched on:"+server, "Started " + JSON.stringify(r), 2000, true);
+                  getConsole("Console:"+ name +"(" +r.data.uid+")", r.data.uid, server + ":8071", 2,1, 1000);
+                }, function (bad) {
+                  console.log("Some error getting loading script:" + bad);
+                  instantMessage("Script "+name, "Failed to start " + bad, 2000, false);
+    
+                }, server + ":8071");
+              }, "Cancel");
+            }
+          },  function (bad) {
+            console.log("Some error getting environment:" + bad);
+            instantMessage("Script "+name, "Failed to start " + bad, 2000, false);
+
+          },server + ":8071");
   }
   function updateProcessMenu(tmpObj,node_name) {
     var items = {};
@@ -3907,12 +3997,14 @@
    items['new-script'] = { name: "New Script..." };
    items['load-script'] = { name: "Load Script from file..." };   
    items['manage-script'] = { name: "Manage Script..." };
+   items['root-script'] = { name: "Run a remote chaosroot shell" };
+   items['purge-script'] = { name: "Purge END scripts" };
 
    if (node_selected != null) {
-      items['open-process-console'] = { name: "Open Console "+node_selected };
-      items['open-process-errconsole'] = { name: "Open Error console "+node_selected };
+      items['open-process-console'] = { name: "Open Console " };
+      items['open-process-errconsole'] = { name: "Open Error console" };
 
-      items['kill-process'] = { name: "Kill "+node_selected };
+      items['kill-process'] = { name: "Kill " };
       
     }
     
@@ -4123,7 +4215,8 @@
     $("#script-delete").on('click', function () {
       console.log("delete "+tmpObj.node_selected);
       jchaos.rmScript(tmpObj.node_name_to_desc[tmpObj.node_selected], function (data) {
-        instantMessage("Remove Script", "removed " + tmpObj.node_selected, 1000);
+        instantMessage("Remove Script", "removed " + tmpObj.node_selected, 2000,true);
+        updateScriptModal(tmpObj);
 
       });
     });
@@ -4159,6 +4252,7 @@
           var serverlist=tmpObj['agents'];
           var maxIdle=0;
           var server=null;
+          var chaos_prefix="";
           for(var key in serverlist){
             if(serverlist[key].idletime>maxIdle){
               maxIdle=serverlist[key].idletime;
@@ -4169,36 +4263,52 @@
             alert("NO Server Available");
             return;
           }
-
-          if(language=="CPP"){
-            launch_arg="chaosRoot --conf root.cfg --rootopt \"-q "+path+"\"";
-          } else if(language=="bash"){
-            launch_arg="bash "+path;
-          } else if(language=="nodejs"){
-            launch_arg="node "+path;
-
-          } else if(language == "python"){
-            launch_arg="python "+path;
-
-          } else {
-            launch_arg=language+" "+path;
-          }
+          var param ={};
+          param['variable']="CHAOS_PREFIX";     
           
-          getEntryWindow(data['script_name'], "Additional args", '', "Run", function (parm) {
-            var param ={};
-            param['cmdline']=launch_arg + " "+parm;     
-            param['ptype']=language;
-            param['pname']=name;
-            jchaos.basicPost("api/v1/restconsole/create", JSON.stringify(param), function (r) {
-              console.log("Script running onto:" + server+ " :"+JSON.stringify(r));
-              instantMessage("Script "+name + "launched on:"+server, "Started " + JSON.stringify(r), 2000, true);
+          jchaos.basicPost("api/v1/restconsole/getenv", JSON.stringify(param), function (r) {
+            if(r.err!=0){
+              instantMessage("Cannot retrive environment","cannot read CHAOS_PREFIX:"+r.errmsg,5000,false);
+              return;
+            } else{
+              chaos_prefix=r.data.value;
+              if(language=="CPP"){
+                launch_arg=chaos_prefix+"/bin/chaosRoot --conf-file "+chaos_prefix+"/etc/chaos_root.cfg --rootopt \"-q "+path+"\"";
+              } else if(language=="bash"){
+                launch_arg="bash "+path;
+              } else if(language=="nodejs"){
+                launch_arg="node "+path;
+    
+              } else if(language == "python"){
+                launch_arg="python "+path;
+    
+              } else {
+                launch_arg=language+" "+path;
+              }
               
-            }, function (bad) {
-              console.log("Some error getting loading script:" + bad);
-              instantMessage("Script "+name, "Failed to start " + bad, 2000, false);
+              getEntryWindow(data['script_name'], "Additional args", '', "Run", function (parm) {
+                var param ={};
+                param['cmdline']=launch_arg + " "+parm;     
+                param['ptype']=language;
+                param['pname']=name;
+                jchaos.basicPost("api/v1/restconsole/create", JSON.stringify(param), function (r) {
+                  console.log("Script running onto:" + server+ " :"+JSON.stringify(r));
+                  var node_selected=tmpObj.node_selected;
+                  instantMessage("Script "+name + "launched on:"+server, "Started " + JSON.stringify(r), 2000, true);
+                  getConsole("Console:"+ name +"(" +r.data.uid+")", r.data.uid, server + ":8071", 2,1, 1000);
+                }, function (bad) {
+                  console.log("Some error getting loading script:" + bad);
+                  instantMessage("Script "+name, "Failed to start " + bad, 2000, false);
+    
+                }, server + ":8071");
+              }, "Cancel");
+            }
+          },  function (bad) {
+            console.log("Some error getting environment:" + bad);
+            instantMessage("Script "+name, "Failed to start " + bad, 2000, false);
 
-            }, server + ":8071");
-          }, "Cancel");
+          },server + ":8071");
+          
         } else {
           instantMessage("Script "+name, "Failed to Load ", 2000, false);
 
