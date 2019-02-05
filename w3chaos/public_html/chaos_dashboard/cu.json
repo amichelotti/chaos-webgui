@@ -42,22 +42,28 @@
 	
 	"cudk_thr_sch_delay" : {
 		"type":"integer",
-		"default":1000000
+		"default":1000000,
+		"description":"Default schedule of a CU"
+
 
 	},
 	"dsndk_storage_type" : {
 		"type":"integer",
-		"default":2
+		"default":2,
+		"description":"2=Just Live,1=Just Storage,3=Both"
+
 
 	},
 	"dsndk_storage_history_ageing" : {
 		"type":"integer",
-		"default":36000
+		"default":36000,
+		"description":"Time in Seconds before the data will be wiped out (0=disabled)"
 
 	},
 	"dsndk_storage_live_time" : {
 		"type":"integer",
-		"default":0
+		"default":0,
+		"description":"Interval of time before the ageing algorithm starts"
 
 	},
 	"cudk_driver_description":{

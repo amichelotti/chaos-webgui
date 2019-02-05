@@ -34,6 +34,101 @@
 		jchaos.perror = function (str) {
 			jchaos.options['console_err'](str);
 		}
+		/******* REMOTE PROCESS MANAGEMENT ****/
+		jchaos.basicRmt=function (server,func,param,handler,badhandler){
+			jchaos.basicPost("api/v1/restconsole/"+func, JSON.stringify(param), function (r) {
+				if(handler instanceof Function){
+					handler(r);
+				} else {
+					return r;
+				} 
+			},  badhandler,server);
+		}
+		/**
+		 * Retrive a given environemnt variable
+		 */
+		jchaos.rmtGetEnvironment=function (server,varname,handler,badhandler){
+			var param ={};
+			param['variable']=varname;
+			return jchaos.basicRmt(server,"getenv",param,handler,badhandler);
+		}
+		/**
+		 * Retrive a given environemnt variable
+		 * return a process structure
+		 */
+		jchaos.rmtCreateProcess=function (server,name,cmdline,ptype,handler,badhandler){
+			var param ={};
+			param['cmdline']=cmdline;     
+            param['ptype']=ptype;
+            param['pname']=name;                
+			return jchaos.basicRmt(server,"create",param,handler,badhandler);
+		}
+
+		/**
+		 * Upload a new Script 
+		 * return the path 
+		 */
+		jchaos.rmtUploadScript=function (server,name,ptype,content,handler,badhandler){
+			
+			if((name instanceof Object) && (ptype instanceof Function) && (content instanceof Function)){
+				return jchaos.basicRmt(server,"load",JSON.stringify(name),ptype,content);
+			}
+			var param ={};
+			param['script_name']=name;     
+            param['eudk_script_language']=ptype;
+			param['eudk_script_content']=btoa(unescape(encodeURIComponent(content)));   
+			return jchaos.basicRmt(server,"load",param,handler,badhandler);
+             
+		}
+		/***
+		 * Return a list of process on the given server
+		 */
+		jchaos.rmtListProcess=function (server,handler,badhandler){
+			var param={};
+			return jchaos.basicRmt(server,"list",param,handler,badhandler);
+             
+		}
+		/***
+		 * Set the console of a specified process uid
+		 */
+		jchaos.rmtSetConsole=function (server,uid,str,handler,badhandler){
+			var param={};
+			param['uid']=uid;
+			param['data']=btoa(unescape(encodeURIComponent(str +"\n")));
+			return jchaos.basicRmt(server,"setconsole",param,handler,badhandler);     
+		}
+		/***
+		 * Get the console of a specified process uid
+		 */
+		jchaos.rmtGetConsole=function (server,uid,fromline,toline,handler,badhandler){
+			var param={};
+			param['uid']=uid;
+			param['fromline']=fromline;
+			param['toline']=toline;
+
+			return jchaos.basicRmt(server,"getconsole",param,handler,badhandler);     
+		}
+
+		/***
+		 * Get the console of a specified process uid
+		 */
+		jchaos.rmtKill=function (server,uid,handler,badhandler){
+			var param={};
+			param['uid']=uid;
+
+			return jchaos.basicRmt(server,"kill",param,handler,badhandler);     
+		}
+
+		/***
+		 * Purget list of process to a given level (0 soft (EXCEPTION), 1 medium (ENDED and EXCEPTION), 2 hard (ALL))
+		 */
+		jchaos.rmtPurge=function (server,level,handler,badhandler){
+			var param={};
+			param['level']=level;
+
+			return jchaos.basicRmt(server,"purge",param,handler,badhandler);     
+		}
+		/******************************/
 		/****** WIDGET */
 		jchaos.progressBar=function (msg,id,lab){
 			var progressbar;
