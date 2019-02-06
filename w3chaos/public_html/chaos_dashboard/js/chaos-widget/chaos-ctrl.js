@@ -171,16 +171,16 @@
         $('#upload-file').on('change', function () {
           var reader = new FileReader();
           reader.onload = function (e) {
-            try{
-              var json=JSON.parse(e.target.result);
+            try {
+              var json = JSON.parse(e.target.result);
               handler(json);
-            } catch(err){
-              var obj={};
-              obj['name']=$('#upload-file').val();
-              obj['data']=e.target.result;
+            } catch (err) {
+              var obj = {};
+              obj['name'] = $('#upload-file').val();
+              obj['data'] = e.target.result;
               handler(obj);
             }
-            
+
             $(main).dialog("close").remove();
           };
           reader.readAsText(this.files[0]);
@@ -200,11 +200,11 @@
   }
 
   function openControl(msg, tmpObj, cutype, refresh) {
-    var newObj=Object.assign({}, tmpObj);
+    var newObj = Object.assign({}, tmpObj);
     var html = '<div><div id="specific-table-ctrl"></div>';
     html += '<div id="specific-control-ctrl"></div></div>';
-    newObj.template="ctrl";
-    changeView(newObj,cutype);
+    newObj.template = "ctrl";
+    changeView(newObj, cutype);
     var nintervals = 0;
     var orginal_list = [];
     var instant = $(html).dialog({
@@ -235,19 +235,19 @@
           clearInterval(newObj.node_list_interval);
         }
         $(this).remove();
-/*        var interface = $("#classe option:selected").val();
-        console.log("restoring view :" + interface);
-
-        buildCUPage(tmpObj, implementation_map[interface], "cu");
-        */
+        /*        var interface = $("#classe option:selected").val();
+                console.log("restoring view :" + interface);
+        
+                buildCUPage(tmpObj, implementation_map[interface], "cu");
+                */
       },
       open: function () {
         nintervals = setInterval(function () { }, 100000);  // Get a reference to the last
         // interval +1
         orginal_list = node_list;
         console.log(name + " OPEN control interval:" + nintervals);
-        newObj.elems=newObj.node_multi_selected;
-        newObj.node_list_interval=null;
+        newObj.elems = newObj.node_multi_selected;
+        newObj.node_list_interval = null;
         updateInterface(newObj);
 
       }
@@ -379,7 +379,7 @@
   }
 
 
-  function getConsole(msghead, pid, server, lines, consolen,refresh) {
+  function getConsole(msghead, pid, server, lines, consolen, refresh) {
     var update;
     var data;
     var stop_update = false;
@@ -417,7 +417,7 @@
       },
       open: function (e) {
         console.log(msghead + "opening terminal refresh:" + refresh);
-        $(e.target).parent().css('background-color','black');
+        $(e.target).parent().css('background-color', 'black');
 
         var consoleParam = {
           "uid": pid,
@@ -426,8 +426,8 @@
         };
         $('#console-' + pid).terminal(function (command) {
           if (command !== '') {
-            jchaos.rmtSetConsole(server,pid,command, function (r) {
-             console.log("sent command:"+command)
+            jchaos.rmtSetConsole(server, pid, command, function (r) {
+              console.log("sent command:" + command)
 
             }, function (bad) {
               console.log("Some error getting console occur:" + bad);
@@ -441,7 +441,7 @@
             height: 600
 
           });
-          var last_log_time=0;
+        var last_log_time = 0;
         update = setInterval(function () {
           if (stop_update) {
             $('#console-update-' + pid).text("Update");
@@ -450,13 +450,13 @@
           }
           if (!stop_update) {
 
-            jchaos.rmtGetConsole(server,pid,consoleParam.fromline,-1, function (r) {
-              if(r.data.process.last_log_time!=last_log_time){
-                var str=decodeURIComponent(escape(atob(r.data.console)));
+            jchaos.rmtGetConsole(server, pid, consoleParam.fromline, -1, function (r) {
+              if (r.data.process.last_log_time != last_log_time) {
+                var str = decodeURIComponent(escape(atob(r.data.console)));
                 $('#console-' + pid).terminal().echo(str);
-                consoleParam.fromline=Number(r.data.process.output_line) -1;
+                consoleParam.fromline = Number(r.data.process.output_line) - 1;
               }
-              last_log_time=r.data.process.last_log_time;
+              last_log_time = r.data.process.last_log_time;
 
             }, function (bad) {
               console.log("Some error getting console occur:" + bad);
@@ -569,7 +569,7 @@
       width: sizex,
       height: sizey,
       title: msghead,
-     // position: "center",
+      // position: "center",
       dialogClass: 'instantOk',
       open: function () {
         if (ok != null) {
@@ -730,14 +730,14 @@
       });
     }, 10000);
   }
-  function retriveCurrentCmdArguments(tmpObj,alias) {
+  function retriveCurrentCmdArguments(tmpObj, alias) {
     var arglist = [];
     if (node_selected == null) {
       return arglist;
     }
     //var name = encodeName(tmpObj.node_selected);
     var name = tmpObj.node_selected;
-    var node_name_to_desc=tmpObj.node_name_to_desc;
+    var node_name_to_desc = tmpObj.node_name_to_desc;
     if (tmpObj.node_selected != null && node_name_to_desc[name].hasOwnProperty("cudk_ds_desc") && node_name_to_desc[name].cudk_ds_desc.hasOwnProperty("cudk_ds_command_description")) {
       var desc = node_name_to_desc[name].cudk_ds_desc.cudk_ds_command_description;
       desc.forEach(function (item) {
@@ -838,14 +838,14 @@
     });
     return cmdparam;
   }
-  function cusWithInterface(tmpObj,culist, interface) {
+  function cusWithInterface(tmpObj, culist, interface) {
     var retlist = [];
     culist.forEach(function (name) {
       if (tmpObj.node_name_to_desc[name] == null) {
         var desc = jchaos.getDesc(name, null);
         tmpObj.node_name_to_desc[name] = desc[0];
       }
-      var node_name_to_desc=tmpObj.node_name_to_desc;
+      var node_name_to_desc = tmpObj.node_name_to_desc;
       if (node_name_to_desc[name].hasOwnProperty('instance_description') && node_name_to_desc[name].instance_description.hasOwnProperty("control_unit_implementation") && (node_name_to_desc[name].instance_description.control_unit_implementation.indexOf(interface) != -1)) {
         retlist.push(name);
       }
@@ -974,7 +974,7 @@
   }
 
 
-  
+
   function buildAlgoBody() {
     var html = '<div class="row-fluid">';
     /*html += '<div class="statbox purple" onTablet="span4" onDesktop="span3">'
@@ -1097,12 +1097,14 @@
 
   }
   function generateProcessTable(tmpObj) {
-    var cu=tmpObj.elems;
-    var template=tmpObj.type;
+    var cu = tmpObj.elems;
+    var template = tmpObj.type;
     var html = '<div class="row-fluid" id="table-space">';
 
     html += '<div class="box span12" id="container-main-table">';
     html += '<div class="box-content span12">';
+    html += '<table class="table table-bordered" id="graph_table-' + template + '">';
+    html += '</table>';
 
     html += '<table class="table table-bordered" id="main_table-' + template + '">';
     html += '<thead class="box-header processMenu">';
@@ -1128,7 +1130,7 @@
 
 
     html += '</thead> ';
-   
+
     html += '</table>';
     html += '</div>';
     html += '</div>';
@@ -1143,10 +1145,10 @@
     return html;
 
   }
-   
+
   function generateNodeTable(tmpObj) {
-    var cu=tmpObj.elems;
-    var template=tmpObj.type;
+    var cu = tmpObj.elems;
+    var template = tmpObj.type;
     var html = '<div class="row-fluid" id="table-space">';
 
     html += '<div class="box span12" id="container-main-table">';
@@ -1173,7 +1175,7 @@
     html += '</thead> ';
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html += "<tr class='row_element nodeMenu' "+template+"-name='" + cu[i] + "' id='" + cuname + "'>";
+      html += "<tr class='row_element nodeMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
       html += "<td class='name_element'>" + cu[i] + "</td>";
       html += "<td id='" + cuname + "_type'></td>";
 
@@ -1205,8 +1207,8 @@
   }
 
   function updateNode(tmpObj) {
-    var node_list=tmpObj['elems'];
-    var cutype=tmpObj.type;
+    var node_list = tmpObj['elems'];
+    var cutype = tmpObj.type;
     jchaos.node(node_list, "desc", cutype, null, null, function (data) {
       var cnt = 0;
       var us_list = [];
@@ -1245,21 +1247,21 @@
       }
     });
     jchaos.node(node_list, "health", cutype, null, null, function (data) {
-        tmpObj.data = data;
-        updateGenericTableDataset(tmpObj);
+      tmpObj.data = data;
+      updateGenericTableDataset(tmpObj);
 
-      });
+    });
 
 
-      /*
-      cu_list.forEach(function (item) {
-        cu_live_selected.push(jchaos.node(item, "desc", cutype));
-      })
-      */
+    /*
+    cu_list.forEach(function (item) {
+      cu_live_selected.push(jchaos.node(item, "desc", cutype));
+    })
+    */
 
-      // update all generic
+    // update all generic
 
-     
+
 
 
 
@@ -1268,7 +1270,7 @@
   }
 
   function updateNodeTable(tmpObj) {
-    var cu=tmpObj['elems'];
+    var cu = tmpObj['elems'];
     cu.forEach(function (v) {
       if (tmpObj.node_name_to_desc != null && tmpObj.node_name_to_desc[v] != null) {
         var elem = tmpObj.node_name_to_desc[v];
@@ -1304,55 +1306,55 @@
       }
     });
   }
-  function algoLoadFromFile(){
+  function algoLoadFromFile() {
     getFile("Script Loading", "select the Script to load", function (script) {
-      var scriptTmp={};
-      var name=script['name'];
-      var language="bash";
+      var scriptTmp = {};
+      var name = script['name'];
+      var language = "bash";
       var regex = /.*[/\\](.*)$/;
       var match = regex.exec(name);
       if (match != null) {
         name = match[1];
       }
-      if(name.includes(".sh")||name.includes(".bash")){
-        language="bash";
+      if (name.includes(".sh") || name.includes(".bash")) {
+        language = "bash";
       }
-      if(name.includes(".c")||name.includes(".C")||name.includes(".cpp")||name.includes(".CPP")||name.includes(".h")){
-        language="CPP";
+      if (name.includes(".c") || name.includes(".C") || name.includes(".cpp") || name.includes(".CPP") || name.includes(".h")) {
+        language = "CPP";
       }
-      if(name.includes(".js")){
-        language="nodejs";
+      if (name.includes(".js")) {
+        language = "nodejs";
       }
-      if(name.includes(".py")){
-        language="python";
+      if (name.includes(".py")) {
+        language = "python";
       }
-      if(name.includes(".lua")){
-        language="LUA";
+      if (name.includes(".lua")) {
+        language = "LUA";
       }
-      scriptTmp['script_name']=name;
-      scriptTmp['eudk_script_content']=script['data'];
-      scriptTmp['eudk_script_language']=language;
-      scriptTmp['script_description']="Imported from "+script['name'];
+      scriptTmp['script_name'] = name;
+      scriptTmp['eudk_script_content'] = script['data'];
+      scriptTmp['eudk_script_language'] = language;
+      scriptTmp['script_description'] = "Imported from " + script['name'];
       var templ = {
         $ref: "algo.json",
         format: "tabs"
       }
-      
-      jsonEditWindow("Loaded", templ, scriptTmp,algoSave);
+
+      jsonEditWindow("Loaded", templ, scriptTmp, algoSave);
     });
   }
   function algoSave(json) {
     console.log("newScript :" + JSON.stringify(json));
-    var proc={};
-    if(json.script_name==null ||json.script_name==""){
+    var proc = {};
+    if (json.script_name == null || json.script_name == "") {
       alert("Script name cannot be empty");
       return;
     }
-    if(json.eudk_script_content==null ||json.eudk_script_content==""){
+    if (json.eudk_script_content == null || json.eudk_script_content == "") {
       alert("Script content cannot be empty");
       return;
     }
-    if(json.eudk_script_language==null ||json.eudk_script_language==""){
+    if (json.eudk_script_language == null || json.eudk_script_language == "") {
       alert("Script type cannot be empty");
       return;
     }
@@ -1360,14 +1362,14 @@
     /*var str=str.replace(/[\u00A0-\u2666]/g, function(c) {
     return '&#' + c.charCodeAt(0) + ';';
     });*/
-    json.eudk_script_content=btoa(unescape(encodeURIComponent(json.eudk_script_content)));
-    json['eudk_script_language']=json.eudk_script_language[0];
-    proc[json.script_name]=json;
-//    jchaos.variable("script", "set", proc, null);
+    json.eudk_script_content = btoa(unescape(encodeURIComponent(json.eudk_script_content)));
+    json['eudk_script_language'] = json.eudk_script_language[0];
+    proc[json.script_name] = json;
+    //    jchaos.variable("script", "set", proc, null);
 
     jchaos.saveScript(json, function (data) {
       console.log("saving script:" + JSON.stringify(json));
-      instantMessage("Script "+json.script_name, "Saved", 1000, null, null, true)
+      instantMessage("Script " + json.script_name, "Saved", 1000, null, null, true)
 
     });
 
@@ -1498,7 +1500,7 @@
   /***
    * 
    */
-  function jsonEditWindow(name, jsontemp, jsonin,editorFn) {
+  function jsonEditWindow(name, jsontemp, jsonin, editorFn) {
     var instant = $('<div id=edit-temp></div>').dialog({
       minWidth: hostWidth / 4,
       minHeight: hostHeight / 4,
@@ -1553,15 +1555,15 @@
       open: function () {
         console.log("Open Editor");
         var element = $("#edit-temp");
-        var jopt={};
-        jopt['ajax']=true;
-        jopt['schema']=jsontemp;
-        
-        
-        if(jsonin!=null){
-          jopt['startval']=jsonin;
+        var jopt = {};
+        jopt['ajax'] = true;
+        jopt['schema'] = jsontemp;
+
+
+        if (jsonin != null) {
+          jopt['startval'] = jsonin;
         }
-        
+
         if (json_editor != null) {
           delete json_editor;
         }
@@ -1578,13 +1580,13 @@
    */
   function jsonEdit(jsontemp, jsonin) {
     var element = $("#json-edit");
-    var jopt={};
-    jopt['ajax']=true;
-    jopt['schema']=jsontemp;
-    
-    
-    if(jsonin!=null){
-      jopt['starval']=jsonin;
+    var jopt = {};
+    jopt['ajax'] = true;
+    jopt['schema'] = jsontemp;
+
+
+    if (jsonin != null) {
+      jopt['starval'] = jsonin;
     }
     $("#json-edit").empty();
     if (json_editor != null) {
@@ -1631,8 +1633,8 @@
     });
   }
   function snapSetup(tmpObj) {
-    var node_multi_selected=tmpObj.node_multi_selected;
-    var node_selected=tmpObj.node_selected;
+    var node_multi_selected = tmpObj.node_multi_selected;
+    var node_selected = tmpObj.node_selected;
     $("#snap-load").on('click', function () {
       $("#mdl-snap").modal("hide");
       getFile("LOAD JSON SNAPSHOT/SETPOINT", "select the JSON to load", function (config) {
@@ -1654,11 +1656,11 @@
     $("#snap-save").on('click', function () {
       var value = $("#snap_save_name").val();
       if (node_multi_selected.length > 1) {
-        jchaos.snapshot(value, "create", node_multi_selected,null, function () {
+        jchaos.snapshot(value, "create", node_multi_selected, null, function () {
         });
 
       } else {
-        jchaos.snapshot(value, "create", node_selected,null, function () {
+        jchaos.snapshot(value, "create", node_selected, null, function () {
           updateSnapshotTable(tmpObj);
 
         });
@@ -1674,13 +1676,13 @@
 
     $("a.show_snapshot").click(function () {
 
-      updateSnapshotTable(tmpObj,true);
+      updateSnapshotTable(tmpObj, true);
     });
 
     $("#snap-delete").on('click', function (e) {
       if (snap_selected != "") {
         jchaos.snapshot(snap_selected, "delete", "", "", function () {
-          updateSnapshotTable(tmpObj,true);
+          updateSnapshotTable(tmpObj, true);
 
         });
 
@@ -1700,7 +1702,7 @@
         if (isCollapsable(dataset)) {
           jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
         }
-        updateSnapshotTable(tmpObj,true);
+        updateSnapshotTable(tmpObj, true);
 
         $("#cu-description").html(jsonhtml);
         $("#desc_text").html("Snapshot " + snap_selected);
@@ -2274,14 +2276,14 @@
   */
   // the interface has all the main elements
   function updateInterfaceCU(tmpObj) {
-    var template=tmpObj.type;
-    var descs= jchaos.getDesc(tmpObj['elems'], null);
-    descs.forEach(function(elem,id){
-      var name=tmpObj['elems'][id];
+    var template = tmpObj.type;
+    var descs = jchaos.getDesc(tmpObj['elems'], null);
+    descs.forEach(function (elem, id) {
+      var name = tmpObj['elems'][id];
       tmpObj.node_name_to_desc[name] = elem;
     });
     $("#main_table-" + template + " tbody tr").click(function (e) {
-      mainTableCommonHandling("main_table-" + template,tmpObj, e);
+      mainTableCommonHandling("main_table-" + template, tmpObj, e);
     });
     n = $('#main_table-' + template + ' tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
@@ -2306,7 +2308,7 @@
       var parvalue = $(this).attr("cucmdvalue");
       var mult = $(this).attr("cucmdvalueMult");
 
-      var arglist = retriveCurrentCmdArguments(tmpObj,alias);
+      var arglist = retriveCurrentCmdArguments(tmpObj, alias);
       var cuselection;
       var cmdparam = {};
       var arguments = {};
@@ -2329,7 +2331,7 @@
       if (tmpObj.node_multi_selected.length > 0) {
         cuselection = tmpObj.node_multi_selected;
       } else {
-        cuselection =tmpObj.node_selected;
+        cuselection = tmpObj.node_selected;
       }
       jchaos.sendCUCmd(cuselection, alias, cmdparam, function (d) {
         var pp;
@@ -2475,14 +2477,14 @@
     $("#cu_full_commands_send").click(function (e) {
       //show the command
       var cmdselected = $("#cu_full_commands option:selected").val();
-      generateCmdModal(tmpObj,cmdselected, curr_cu_selected);
+      generateCmdModal(tmpObj, cmdselected, curr_cu_selected);
 
     });
     $.contextMenu({
       selector: '.cuMenu',
       build: function ($trigger, e) {
-        var template=tmpObj.type;
-        var cuname = $(e.currentTarget).attr(template+"-name");
+        var template = tmpObj.type;
+        var cuname = $(e.currentTarget).attr(template + "-name");
         var cuitem = updateCUMenu(tmpObj, cuname);
         cuitem['sep1'] = "---------";
 
@@ -2498,7 +2500,7 @@
           callback: function (cmd, options) {
             // $('.context-menu-list').trigger('contextmenu:hide');
 
-            executeCUMenuCmd(tmpObj,cmd, options);
+            executeCUMenuCmd(tmpObj, cmd, options);
             return;
 
           },
@@ -2536,14 +2538,14 @@
     });
 
   }
-  function findTagsOf(tmpObj,currsel){
-    var names=[];
-    var tags=jchaos.variable("tags","get",null,null);
-    tmpObj['tags']=tags;
-    for(var key in tags){
-      var elems=tags[key].tag_elements;
-      elems.forEach(function(elem){
-        if(elem==currsel){
+  function findTagsOf(tmpObj, currsel) {
+    var names = [];
+    var tags = jchaos.variable("tags", "get", null, null);
+    tmpObj['tags'] = tags;
+    for (var key in tags) {
+      var elems = tags[key].tag_elements;
+      elems.forEach(function (elem) {
+        if (elem == currsel) {
           names.push(key);
         }
       });
@@ -2551,16 +2553,16 @@
     return names;
   }
 
-  function executeCUMenuCmd(tmpObj,cmd, opt) {
+  function executeCUMenuCmd(tmpObj, cmd, opt) {
     if (cmd == "quit") {
       return;
     }
-    var currsel=tmpObj.node_multi_selected[0];
+    var currsel = tmpObj.node_multi_selected[0];
     if (cmd == "snapshot-cu") {
       var instUnique = (new Date()).getTime();
 
       getEntryWindow("Snapshotting", "Snap Name", "NONAME_" + instUnique, "Create", function (inst_name) {
-        jchaos.snapshot(inst_name, "create", tmpObj.node_multi_selected,null, function () {
+        jchaos.snapshot(inst_name, "create", tmpObj.node_multi_selected, null, function () {
           instantMessage("Snapshot \"" + inst_name + "\"", " created ", 1000, true);
 
         }, function () {
@@ -2576,28 +2578,28 @@
         $ref: "tag_entry.json",
         format: "tabs"
       }
-      var def={};
-      def['tag_elements']=tmpObj.node_multi_selected;
-      def['tag_type']="CYCLE";
-      def['tag_name']="NONAME_"+(new Date()).getTime();
-      def['tag_duration']=1;
-      def['tag_desc']=JSON.stringify(tmpObj.node_multi_selected)+ " at:"+(new Date());
-      jsonEditWindow("TAG Editor",templ,def,function(data){
-        var ttype=2;
-        if(data.tag_type=="CYCLE"){
-          ttype=1;
+      var def = {};
+      def['tag_elements'] = tmpObj.node_multi_selected;
+      def['tag_type'] = "CYCLE";
+      def['tag_name'] = "NONAME_" + (new Date()).getTime();
+      def['tag_duration'] = 1;
+      def['tag_desc'] = JSON.stringify(tmpObj.node_multi_selected) + " at:" + (new Date());
+      jsonEditWindow("TAG Editor", templ, def, function (data) {
+        var ttype = 2;
+        if (data.tag_type == "CYCLE") {
+          ttype = 1;
         }
         jchaos.tag(data.tag_name, tmpObj.node_multi_selected, ttype, data.tag_duration, function () {
-          var tag_obj=jchaos.variable("tags","get",null,null);
-          data.tag_ts=(new Date()).getTime();
-          data.tag_elements=tmpObj.node_multi_selected;
-          tag_obj[data.tag_name]=data;
-          jchaos.variable("tags","set",tag_obj,null);
-          instantMessage("Creating "+data.tag_type+" Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 3000, true);
+          var tag_obj = jchaos.variable("tags", "get", null, null);
+          data.tag_ts = (new Date()).getTime();
+          data.tag_elements = tmpObj.node_multi_selected;
+          tag_obj[data.tag_name] = data;
+          jchaos.variable("tags", "set", tag_obj, null);
+          instantMessage("Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 3000, true);
 
         }, function () {
 
-          instantMessage("ERROR Creating "+data.tag_type+" Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 5000, false);
+          instantMessage("ERROR Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 5000, false);
 
         });
       });
@@ -2676,7 +2678,7 @@
       jchaos.getDesc(currsel, function (data) {
         tmpObj.node_name_to_desc[currsel] = data[0];
 
-        showJson("Description " +currsel,currsel, data[0]);
+        showJson("Description " + currsel, currsel, data[0]);
       });
 
     } else if (cmd == "show-picture") {
@@ -2700,18 +2702,18 @@
 
     } else if (cmd == "history-cu") {
       $("#mdl-query").modal("show");
-      var names=findTagsOf(tmpObj,currsel);
+      var names = findTagsOf(tmpObj, currsel);
       element_sel("#select-tag", names, 1);
-      $("#select-tag").off().on("click",function(){
-        var tagname=$("#select-tag option:selected").val();
-          $("#query-tag").val(tagname);
-          var tag=tmpObj['tags'][tagname];
-          var desc=tag['tag_desc'];
-          $("#query-start").val(tag['tag_ts']);
-          $("#query-tag").attr('title', desc);
+      $("#select-tag").off().on("click", function () {
+        var tagname = $("#select-tag option:selected").val();
+        $("#query-tag").val(tagname);
+        var tag = tmpObj['tags'][tagname];
+        var desc = tag['tag_desc'];
+        $("#query-start").val(tag['tag_ts']);
+        $("#query-tag").attr('title', desc);
 
-        });
-      
+      });
+
       $("#query-run").off().on("click", function () {
         var vcameras = [];
         var qstart = $("#query-start").val();
@@ -2814,7 +2816,7 @@
     html += '</div>';
     html += generateEditJson();
     html += '<div id="specific-table-' + tempObj.template + '"></div>';
-  
+
     return html;
   }
 
@@ -2843,7 +2845,7 @@
         interface = $("#classe").val();
         search_string = $(this).val();
         var alive = $("input[type=radio][name=search-alive]:checked").val();
-        list_cu = interface2NodeList(tempObj,interface, alive);
+        list_cu = interface2NodeList(tempObj, interface, alive);
         tempObj['elems'] = list_cu;
 
         updateInterface(tempObj);
@@ -2855,46 +2857,48 @@
       var alive = $("input[type=radio][name=search-alive]:checked").val();
       interface = $("#classe option:selected").val();
 
-      list_cu = interface2NodeList(tempObj,interface, alive);
+      list_cu = interface2NodeList(tempObj, interface, alive);
       tempObj['elems'] = list_cu;
       updateInterface(tempObj);
     });
   }
 
   function buildProcessInterface(tempObj) {
-    var html = '<div class="row-fluid">';
-
-    html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
-    html += '<h3>Zones</h3>';
-    html += '<select id="zones" size="auto"></select>';
-    html += '</div>';
-
-    html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
-    html += '<h3>Instances</h3>';
-    html += '<select id="elements" size="auto"></select>';
-    html += '</div>';
-
-    html += '<div class="statbox purple" onTablet="span4" onDesktop="span2">'
-    html += '<h3>Class Algorithm</h3>';
-    html += '<select id="classe" size="auto"></select>';
-    html += '</div>';
-
-    html += '<div class="statbox purple row-fluid" onTablet="span4" onDesktop="span3">'
-    html += '<div class="span3">'
-    html += '<label for="search-alive">Search All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
-    html += '</div>'
-    html += '<div class="span3">'
-    html += '<label for="search-alive">Search Running</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
-    html += '</div>'
-    // html += '<h3 class="span3">Search</h3>';
-
-    html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
-    html += '</div>';
-    //    html += generateActionBox();
-    html += '</div>';
-    html += generateEditJson();
+    var html = "";
+    /*var html = '<div class="row-fluid">';
+ 
+     html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
+     html += '<h3>Zones</h3>';
+     html += '<select id="zones" size="auto"></select>';
+     html += '</div>';
+ 
+     html += '<div class="statbox purple" onTablet="span6" onDesktop="span2">';
+     html += '<h3>Instances</h3>';
+     html += '<select id="elements" size="auto"></select>';
+     html += '</div>';
+ 
+     html += '<div class="statbox purple" onTablet="span4" onDesktop="span2">'
+     html += '<h3>Class Algorithm</h3>';
+     html += '<select id="classe" size="auto"></select>';
+     html += '</div>';
+ 
+     html += '<div class="statbox purple row-fluid" onTablet="span4" onDesktop="span3">'
+     html += '<div class="span3">'
+     html += '<label for="search-alive">Search All</label><input class="input-xlarge" id="search-alive-false" title="Search Alive and not Alive nodes" name="search-alive" type="radio" value=false>';
+     html += '</div>'
+     html += '<div class="span3">'
+     html += '<label for="search-alive">Search Running</label><input class="input-xlarge" id="search-alive-true" title="Search just alive nodes" name="search-alive" type="radio" value=true>';
+     html += '</div>'
+     // html += '<h3 class="span3">Search</h3>';
+ 
+     html += '<input class="input-xlarge focused span6" id="search-chaos" title="Free form Search" type="text" value="">';
+     html += '</div>';
+     //    html += generateActionBox();
+     html += '</div>';
+     html += generateEditJson();
+     */
     html += '<div id="specific-table-' + tempObj.template + '"></div>';
-    
+
 
     return html;
   }
@@ -2904,11 +2908,11 @@
 
     var list_class = [];
     var list_zone = [];
-    updateProcessList(tempObj,function(tmpObj){
+    updateProcessList(tempObj, function (tmpObj) {
       updateProcessTable(tmpObj);
-      var proclist=tmpObj.data;
+      var proclist = tmpObj.data;
 
-    //eu_process = jchaos.variable("eu", "get", null, null);
+      //eu_process = jchaos.variable("eu", "get", null, null);
       for (var g in proclist) {
         getZoneClassElement(g, list_zone, list_class, list_eu);
         list_eu_full.push(g);
@@ -2969,8 +2973,8 @@
       $("#search-chaos").val(search_string);
       var alive = $("input[type=radio][name=search-alive]:checked").val()
 
-    //  list_eu = searchEu(search_string, alive, list_zone, list_class, list_eu);
-    //  tempObj['elems'] = list_eu;
+      //  list_eu = searchEu(search_string, alive, list_zone, list_class, list_eu);
+      //  tempObj['elems'] = list_eu;
       updateInterface(tempObj);
 
     });
@@ -2996,8 +3000,8 @@
         search_string = $(this).val();
         var alive = $("input[type=radio][name=search-alive]:checked").val()
 
-      //  list_eu = searchEu(search_string, alive, list_zone, list_class, list_eu);
-    //    tempObj['elems'] = list_eu;
+        //  list_eu = searchEu(search_string, alive, list_zone, list_class, list_eu);
+        //    tempObj['elems'] = list_eu;
         updateInterface(tempObj);
       }
       //var tt =prompt('type value');
@@ -3008,70 +3012,70 @@
       list_eu = searchEu(search_string, alive, list_zone, list_class, list_eu);
       tempObj['elems'] = list_eu;
       updateInterface(tempObj);
-      
+
     });
 
 
 
   }
-  
-  
-  
+
+
+
 
   function updateGenericCU(tmpObj) {
-    var node_live_selected=tmpObj.data;
+    var node_live_selected = tmpObj.data;
     if (tmpObj.node_selected != null) {
       curr_cu_selected = node_live_selected[tmpObj.index];
-      updateGenericControl(tmpObj,curr_cu_selected);
+      updateGenericControl(tmpObj, curr_cu_selected);
 
     }
-      updateGenericTableDataset(tmpObj);
+    updateGenericTableDataset(tmpObj);
   }
 
   function checkLiveCU(tmpObj) {
-    var node_live_selected=tmpObj.data;
+    var node_live_selected = tmpObj.data;
 
     node_live_selected.forEach(function (elem, index) {
-        var curr_time;
-        var name;
-        if(elem.hasOwnProperty("dpck_ats")){
-          curr_time=elem.dpck_ats;
-        } else if (elem.hasOwnProperty("health") && elem.health.hasOwnProperty("dpck_ats")) {
-          curr_time = elem.health.dpck_ats;
-        } else if (elem.hasOwnProperty("output") && elem.output.hasOwnProperty("dpck_ats")) {
-          curr_time = elem.output.dpck_ats;
-        }
-        if(elem.hasOwnProperty("ndk_uid")){
-          name=elem.ndk_uid;
-        } else if (elem.hasOwnProperty("health") && elem.health.hasOwnProperty("ndk_uid")) {
-          name = elem.health.ndk_uid;
-        } else if (elem.hasOwnProperty("output") && elem.output.hasOwnProperty("ndk_uid")) {
-          name = elem.output.ndk_uid;
-        }
-        if((curr_time !=null) && (name!=null)){
-          var diff = (curr_time - tmpObj.health_time_stamp_old[name]);
-          var ename = encodeName(name);
-          if (diff != 0) {
-            $("#" + ename).css('color', 'green');
-            $("#" + ename).find('td').css('color', 'green');
+      var curr_time;
+      var name;
+      if (elem.hasOwnProperty("dpck_ats")) {
+        curr_time = elem.dpck_ats;
+      } else if (elem.hasOwnProperty("health") && elem.health.hasOwnProperty("dpck_ats")) {
+        curr_time = elem.health.dpck_ats;
+      } else if (elem.hasOwnProperty("output") && elem.output.hasOwnProperty("dpck_ats")) {
+        curr_time = elem.output.dpck_ats;
+      }
+      if (elem.hasOwnProperty("ndk_uid")) {
+        name = elem.ndk_uid;
+      } else if (elem.hasOwnProperty("health") && elem.health.hasOwnProperty("ndk_uid")) {
+        name = elem.health.ndk_uid;
+      } else if (elem.hasOwnProperty("output") && elem.output.hasOwnProperty("ndk_uid")) {
+        name = elem.output.ndk_uid;
+      }
+      if ((curr_time != null) && (name != null)) {
+        var diff = (curr_time - tmpObj.health_time_stamp_old[name]);
+        var ename = encodeName(name);
+        if (diff != 0) {
+          $("#" + ename).css('color', 'green');
+          $("#" + ename).find('td').css('color', 'green');
 
-            tmpObj.off_line[name] = 0;
+          tmpObj.off_line[name] = 0;
 
-          } else {
-            $("#" + ename).css('color', 'black');
-            $("#" + ename).find('td').css('color', 'black');
-            tmpObj.off_line[name] = 1;
-          }
-          tmpObj.health_time_stamp_old[name] = curr_time;
+        } else {
+          $("#" + ename).css('color', 'black');
+          $("#" + ename).find('td').css('color', 'black');
+          tmpObj.off_line[name] = 1;
         }
-        
-      });
-   
+        tmpObj.health_time_stamp_old[name] = curr_time;
+      }
+
+    });
+
   }
 
   function updateInterface(tmpObj) {
     var cuids = tmpObj['elems'];
-    var template=tmpObj.type;
+    var template = tmpObj.type;
     if (cuids == null) {
       node_list = [];
     } else {
@@ -3085,40 +3089,40 @@
       tmpObj.index = -1;
       tmpObj.health_time_stamp_old[elem] = 0;
       tmpObj.off_line[elem] = 2;
-      tmpObj.node_name_to_index[elem]=id;
+      tmpObj.node_name_to_index[elem] = id;
     });
     tmpObj.node_selected = null;
     var htmlt, htmlc;
     htmlt = tmpObj.generateTableFn(tmpObj);
     htmlc = tmpObj.generateCmdFn(tmpObj);
-   
+
     $("#specific-table-" + tmpObj.template).html(htmlt);
     $("#specific-control-" + tmpObj.template).html(htmlc);
     tmpObj.updateInterfaceFn(tmpObj);
-    
+
     if ((tmpObj.node_list_interval != null)) {
       clearInterval(tmpObj.node_list_interval);
     }
-    tmpObj.last_check=0;
+    tmpObj.last_check = 0;
     tmpObj.node_list_interval = setInterval(function () {
-      if(tmpObj.upd_chan>-2){
+      if (tmpObj.upd_chan > -2) {
         jchaos.getChannel(tmpObj['elems'], tmpObj.upd_chan, function (dat) {
           var node_live_selected = dat;
           if (node_live_selected.length == 0) {
             return;
           }
-         
-          tmpObj.data=node_live_selected;
-          tmpObj.updateFn(tmpObj);    
+
+          tmpObj.data = node_live_selected;
+          tmpObj.updateFn(tmpObj);
         });
       } else {
         tmpObj.updateFn(tmpObj);
       }
-      var now=(new Date()).getTime();
-      if((now - tmpObj.last_check) > tmpObj.check_interval){
-        if(tmpObj.data!=null){
+      var now = (new Date()).getTime();
+      if ((now - tmpObj.last_check) > tmpObj.check_interval) {
+        if (tmpObj.data != null) {
           tmpObj.checkLiveFn(tmpObj);
-          tmpObj.last_check=now;
+          tmpObj.last_check = now;
 
         }
       }
@@ -3129,44 +3133,44 @@
   /**********
    * 
    */
-  function changeView(tmpObj,cutype){
+  function changeView(tmpObj, cutype) {
     if ((cutype.indexOf("SCPowerSupply") != -1)) {
-      tmpObj.upd_chan=-1;
-      tmpObj.type="SCPowerSupply";
+      tmpObj.upd_chan = -1;
+      tmpObj.type = "SCPowerSupply";
       tmpObj.generateTableFn = generatePStable;
       tmpObj.generateCmdFn = generatePSCmd;
-      
+
       tmpObj.updateFn = updatePS;
-      
+
     } else if ((cutype.indexOf("SCActuator") != -1)) {
-      tmpObj.type="SCActuator";
-      tmpObj.upd_chan=-1;
+      tmpObj.type = "SCActuator";
+      tmpObj.upd_chan = -1;
 
       tmpObj.generateTableFn = generateScraperTable;
       tmpObj.generateCmdFn = generateScraperCmd;
       tmpObj.updateFn = updateScraper;
     } else if ((cutype.indexOf("RTCamera") != -1)) {
-      tmpObj.type="RTCamera";
+      tmpObj.type = "RTCamera";
 
-      tmpObj.upd_chan=-1;
+      tmpObj.upd_chan = -1;
       tmpObj.generateTableFn = generateCameraTable;
       tmpObj.updateFn = updateCameraTable;
     } else {
-      tmpObj.upd_chan=255;
-      tmpObj.type="cu";
+      tmpObj.upd_chan = 255;
+      tmpObj.type = "cu";
 
       tmpObj.generateTableFn = generateGenericTable;
       tmpObj.generateCmdFn = generateGenericControl;
       tmpObj.updateFn = updateGenericCU;
     }
   }
-  function buildCUPage(tmpObj,cuids, cutype) {
-    var node_list=[];
+  function buildCUPage(tmpObj, cuids, cutype) {
+    var node_list = [];
     if (cuids != null) {
-      if(cuids instanceof Array){
+      if (cuids instanceof Array) {
         node_list = cuids;
       } else {
-        node_list =[cuids];
+        node_list = [cuids];
       }
     }
 
@@ -3175,9 +3179,9 @@
     }
 
     if ((cutype != "cu") && (cutype != "all") && (cutype != "ALL")) {
-      node_list = cusWithInterface(tmpObj,node_list, cutype);
+      node_list = cusWithInterface(tmpObj, node_list, cutype);
     }
-    tmpObj['elems']=node_list;
+    tmpObj['elems'] = node_list;
     /*****
      * 
      * clear all interval interrupts
@@ -3185,14 +3189,14 @@
     /**
      * fixed part
      */
-    changeView(tmpObj,cutype);
-    
+    changeView(tmpObj, cutype);
+
     updateInterface(tmpObj);
-    
+
   }
 
-  function executeNodeMenuCmd(tmpObj,cmd, opt) {
-    node_selected=tmpObj.node_selected;
+  function executeNodeMenuCmd(tmpObj, cmd, opt) {
+    node_selected = tmpObj.node_selected;
     if (cmd == "edit-nt_agent") {
       var templ = {
         $ref: "agent.json",
@@ -3201,9 +3205,9 @@
 
       jchaos.node(node_selected, "info", "agent", "", null, function (data) {
         if (data != null) {
-         // editorFn = agentSave;
+          // editorFn = agentSave;
           //jsonEdit(templ, data);
-          jsonEditWindow("Agent Editor",templ,data,agentSave);
+          jsonEditWindow("Agent Editor", templ, data, agentSave);
           if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
             //rimuovi tutte le associazioni precedenti.
             data.andk_node_associated.forEach(function (item) {
@@ -3224,7 +3228,7 @@
         if (data != null) {
           //editorFn = cuSave;
           //jsonEdit(templ, data);
-          jsonEditWindow("CU Editor",templ,data,cuSave);
+          jsonEditWindow("CU Editor", templ, data, cuSave);
 
         }
       });
@@ -3240,9 +3244,9 @@
       }
       jchaos.node(node_selected, "get", "us", "", null, function (data) {
         if (data.hasOwnProperty("us_desc")) {
-      //    editorFn = unitServerSave;
-      //    jsonEdit(templ, data.us_desc);
-          jsonEditWindow("US Editor",templ,data.us_desc,unitServerSave);
+          //    editorFn = unitServerSave;
+          //    jsonEdit(templ, data.us_desc);
+          jsonEditWindow("US Editor", templ, data.us_desc, unitServerSave);
 
         }
       });
@@ -3254,7 +3258,7 @@
       }
       //editorFn = unitServerSave;
       //jsonEdit(templ, null);
-      jsonEditWindow("US Editor",templ,null,unitServerSave);
+      jsonEditWindow("US Editor", templ, null, unitServerSave);
 
       return;
     } else if (cmd == "del-nt_unit_server") {
@@ -3346,11 +3350,11 @@
               $ref: "cu.json",
               format: "tabs"
             }
-           // editorFn = newCuSave;
+            // editorFn = newCuSave;
             var tmp = config.cu_desc;
             tmp.ndk_parent = node_selected;
             //jsonEdit(templ, tmp);
-            jsonEditWindow("New CU",templ,tmp,newCuSave);
+            jsonEditWindow("New CU", templ, tmp, newCuSave);
 
           }
         }, "Cancel", function () {
@@ -3370,9 +3374,9 @@
             $ref: "cu.json",
             format: "tabs"
           }
-         // editorFn = newCuSave;
-         // jsonEdit(templ, template);
-         jsonEditWindow("New CU from Template",templ,template,newCuSave);
+          // editorFn = newCuSave;
+          // jsonEdit(templ, template);
+          jsonEditWindow("New CU from Template", templ, template, newCuSave);
 
         } else {
           // custom
@@ -3383,7 +3387,7 @@
 
           //editorFn = newCuSave;
           //jsonEdit(templ, template);
-          jsonEditWindow("New CU from Template",templ,template,newCuSave);
+          jsonEditWindow("New CU from Template", templ, template, newCuSave);
 
         }
       }
@@ -3412,7 +3416,7 @@
 
       jchaos.node(agentn, "get", "agent", node_selected, null, function (data) {
         console.log("->" + JSON.stringify(data));
-        getConsole("Console:" + node_selected, data.association_uid, "localhost:8071", 2,1, 1000);
+        getConsole("Console:" + node_selected, data.association_uid, "localhost:8071", 2, 1, 1000);
       });
 
 
@@ -3470,13 +3474,13 @@
           }
           //editorFn = agentSave;
           //jsonEdit(templ, data);
-          jsonEditWindow("Agent Editor",templ,data,agentSave);
+          jsonEditWindow("Agent Editor", templ, data, agentSave);
 
         };
       });
       return;
     } else {
-      executeCUMenuCmd(tmpObj,cmd, options);
+      executeCUMenuCmd(tmpObj, cmd, options);
     }
     return;
   }
@@ -3491,8 +3495,8 @@
       if (node_selected != null && node_name_to_desc[node_selected] != null) {
         jchaos.loadScript(node_selected, node_name_to_desc[node_selected].seq, function (data) {
           console.log("script:" + node_selected + " =" + JSON.stringify(data));
-          
-          jsonEditWindow(node_selected, templ, data,algoSave);
+
+          jsonEditWindow(node_selected, templ, data, algoSave);
 
         });
       }
@@ -3500,7 +3504,7 @@
       return;
     }
 
-   
+
     if (cmd == "delete-algo") {
 
       confirm("Delete Algorithm", "Your are deleting Algorithm: " + node_selected, "Ok", function () {
@@ -3547,7 +3551,7 @@
           //editorFn = algoSave;
           algo_copied.script_name = inst_name;
           //jsonEdit(algo_copied, null);
-          jsonEditWindow("Algo Editor",algo_copied,null,algoSave);
+          jsonEditWindow("Algo Editor", algo_copied, null, algoSave);
 
 
         }, "Cancel");
@@ -3581,7 +3585,7 @@
           if (item.instance_name == node_selected) {
             console.log("editing instance: " + node_selected + " of:" + pather_selected + ":" + JSON.stringify(item));
             var fname = encodeName(node_selected);
-            jsonEditWindow(fname, templ, item,algoSaveInstance);
+            jsonEditWindow(fname, templ, item, algoSaveInstance);
           }
         })
       }
@@ -3609,9 +3613,9 @@
 
 
   function updateNodeInterface(tmpObj) {
-    var template=tmpObj.type;
+    var template = tmpObj.type;
     $("#main_table-" + template + " tbody tr").click(function (e) {
-      mainTableCommonHandling("main_table-" + template,tmpObj, e);
+      mainTableCommonHandling("main_table-" + template, tmpObj, e);
     });
     n = $('#main_table-' + template + ' tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
@@ -3632,11 +3636,11 @@
     $.contextMenu({
       selector: '.nodeMenu',
       build: function ($trigger, e) {
-        var template=tmpObj.type;
+        var template = tmpObj.type;
 
-        var cuname = $(e.currentTarget).attr(template+"-name");
+        var cuname = $(e.currentTarget).attr(template + "-name");
         var cuitem = updateNodeMenu(tmpObj, cuname);
-        
+
         cuitem['sep1'] = "---------";
 
         cuitem['quit'] = {
@@ -3648,7 +3652,7 @@
         return {
 
           callback: function (cmd, options) {
-            executeNodeMenuCmd(tmpObj,cmd, options);
+            executeNodeMenuCmd(tmpObj, cmd, options);
             return;
           },
           items: cuitem
@@ -3661,118 +3665,118 @@
 
   }
 
-/*
-  function buildNodeInterface(nodes, cutype, template) {
-    if (nodes == null) {
-      alert("NO Nodes given!");
-      return;
-    }
-    if (!(nodes instanceof Array)) {
-      node_list = [nodes];
-    } else {
-      node_list = nodes;
-    }
-
-    node_list.forEach(function (elem, id) {
-      var name = encodeName(elem);
-      node_name_to_index[name] = id;
-      health_time_stamp_old[name] = 0;
-      off_line[name] = false;
-    });
-    // cu_selected = cu_list[0];
-    node_selected = null;
-    var htmlt, htmlc, htmlg;
-    var updateTableFn = new Function;
-   
-    htmlt = generateNodeTable(node_list, template);
-    updateTableFn = updateNodeTable;
-
-
-    $("#specific-table-" + tmpObj.template).html(htmlt);
-    // $("div.specific-control").html(htmlc);
-    checkRegistration = 0;
-    setupNode(template);
-
-    jchaos.node(node_list, "desc", cutype, null, null, function (data) {
-      var cnt = 0;
-      var us_list = [];
-      var cu_list = [];
-      node_list.forEach(function (elem, index) {
-        var type = data[index].ndk_type;
-        node_name_to_desc[elem] = { desc: data[index], parent: null, detail: null };
-        if ((type == "nt_control_unit")) {
-          cu_list.push(elem);
-        } else if ((type == "nt_unit_server")) {
-          us_list.push(elem);
-        }
-
-      });
-      if (cu_list.length > 0) {
-        jchaos.getDesc(cu_list, function (data) {
-          var cnt = 0;
-          data.forEach(function (cu) {
-            if (cu.hasOwnProperty("instance_description")) {
-              node_name_to_desc[cu_list[cnt]].detail = cu.instance_description;
-              node_name_to_desc[cu_list[cnt]].parent = cu.instance_description.ndk_parent;
-            }
-            cnt++;
-          });
-        });
-      }
-      if (us_list.length > 0) {
-        jchaos.node(us_list, "parent", "us", null, null, function (data) {
-          var cnt = 0;
-          data.forEach(function (us) {
-            if (us.hasOwnProperty("ndk_uid") && us.ndk_uid != "") {
-              node_name_to_desc[us_list[cnt]].parent = us.ndk_uid;
-            }
-            cnt++;
-          });
-        });
-      }
-    });
-
-
-    if (node_list_interval != null) {
-      clearInterval(node_list_interval);
-    }
-    updateTableFn(node_list);
-    node_list_interval = setInterval(function (e) {
-      var start_time = (new Date()).getTime();
-      if ((start_time - checkRegistration) > 60000) {
-        checkRegistration = start_time;
-        jchaos.node(node_list, "desc", cutype, null, null, function (data) {
-          var cnt = 0;
-          node_list.forEach(function (elem, index) {
-            node_name_to_desc[elem].desc = data[index];
-          });
-        });
-        updateTableFn(node_list);
-
-      }
-      jchaos.node(node_list, "health", cutype, null, null, function (data) {
-        node_live_selected = data;
-        updateGenericTableDataset(node_live_selected);
-
-      });
-
-
-     
-      // update all generic
-
-      if (node_live_selected.length == 0 || node_selected == null || node_name_to_index[node_selected] == null) {
+  /*
+    function buildNodeInterface(nodes, cutype, template) {
+      if (nodes == null) {
+        alert("NO Nodes given!");
         return;
       }
-
-
-
-
-    }, options.Interval, updateTableFn);
-
-    installCheckLive();
-
-
-  } */
+      if (!(nodes instanceof Array)) {
+        node_list = [nodes];
+      } else {
+        node_list = nodes;
+      }
+  
+      node_list.forEach(function (elem, id) {
+        var name = encodeName(elem);
+        node_name_to_index[name] = id;
+        health_time_stamp_old[name] = 0;
+        off_line[name] = false;
+      });
+      // cu_selected = cu_list[0];
+      node_selected = null;
+      var htmlt, htmlc, htmlg;
+      var updateTableFn = new Function;
+     
+      htmlt = generateNodeTable(node_list, template);
+      updateTableFn = updateNodeTable;
+  
+  
+      $("#specific-table-" + tmpObj.template).html(htmlt);
+      // $("div.specific-control").html(htmlc);
+      checkRegistration = 0;
+      setupNode(template);
+  
+      jchaos.node(node_list, "desc", cutype, null, null, function (data) {
+        var cnt = 0;
+        var us_list = [];
+        var cu_list = [];
+        node_list.forEach(function (elem, index) {
+          var type = data[index].ndk_type;
+          node_name_to_desc[elem] = { desc: data[index], parent: null, detail: null };
+          if ((type == "nt_control_unit")) {
+            cu_list.push(elem);
+          } else if ((type == "nt_unit_server")) {
+            us_list.push(elem);
+          }
+  
+        });
+        if (cu_list.length > 0) {
+          jchaos.getDesc(cu_list, function (data) {
+            var cnt = 0;
+            data.forEach(function (cu) {
+              if (cu.hasOwnProperty("instance_description")) {
+                node_name_to_desc[cu_list[cnt]].detail = cu.instance_description;
+                node_name_to_desc[cu_list[cnt]].parent = cu.instance_description.ndk_parent;
+              }
+              cnt++;
+            });
+          });
+        }
+        if (us_list.length > 0) {
+          jchaos.node(us_list, "parent", "us", null, null, function (data) {
+            var cnt = 0;
+            data.forEach(function (us) {
+              if (us.hasOwnProperty("ndk_uid") && us.ndk_uid != "") {
+                node_name_to_desc[us_list[cnt]].parent = us.ndk_uid;
+              }
+              cnt++;
+            });
+          });
+        }
+      });
+  
+  
+      if (node_list_interval != null) {
+        clearInterval(node_list_interval);
+      }
+      updateTableFn(node_list);
+      node_list_interval = setInterval(function (e) {
+        var start_time = (new Date()).getTime();
+        if ((start_time - checkRegistration) > 60000) {
+          checkRegistration = start_time;
+          jchaos.node(node_list, "desc", cutype, null, null, function (data) {
+            var cnt = 0;
+            node_list.forEach(function (elem, index) {
+              node_name_to_desc[elem].desc = data[index];
+            });
+          });
+          updateTableFn(node_list);
+  
+        }
+        jchaos.node(node_list, "health", cutype, null, null, function (data) {
+          node_live_selected = data;
+          updateGenericTableDataset(node_live_selected);
+  
+        });
+  
+  
+       
+        // update all generic
+  
+        if (node_live_selected.length == 0 || node_selected == null || node_name_to_index[node_selected] == null) {
+          return;
+        }
+  
+  
+  
+  
+      }, options.Interval, updateTableFn);
+  
+      installCheckLive();
+  
+  
+    } */
 
   function buildAlgoInterface(nodes, interface, template) {
     if (nodes == null) {
@@ -3815,7 +3819,7 @@
 
 
     $("#main_table-" + template + " tbody tr").click(function (e) {
-      mainTableCommonHandling("main_table-" + template,tmpObj, e);
+      mainTableCommonHandling("main_table-" + template, tmpObj, e);
     });
     n = $('#main_table-' + template + ' tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
@@ -3887,32 +3891,32 @@
       list_eu_name.push(match[3]);
     }
   }
-  
- 
-  function executeProcessMenuCmd(tmpObj,cmd, opt) {
-    node_selected=tmpObj.node_selected;
-    
-    if (cmd == "open-process-console" || cmd=="open-process-errconsole") {
-      var console=1;
-      if(cmd=="open-process-errconsole"){
-        console=2;
+
+
+  function executeProcessMenuCmd(tmpObj, cmd, opt) {
+    node_selected = tmpObj.node_selected;
+
+    if (cmd == "open-process-console" || cmd == "open-process-errconsole") {
+      var console = 1;
+      if (cmd == "open-process-errconsole") {
+        console = 2;
       }
-   //   var agentn = tmpObj[node_selected].parent;
-      var server=tmpObj.data[node_selected].hostname +":8071";
-      var friendname=tmpObj.data[node_selected].pname;
-      getConsole(tmpObj.data[node_selected].hostname+":"+ friendname +"(" +node_selected+")", node_selected, server, 2,console, 1000);
-      
+      //   var agentn = tmpObj[node_selected].parent;
+      var server = tmpObj.data[node_selected].hostname + ":8071";
+      var friendname = tmpObj.data[node_selected].pname;
+      getConsole(tmpObj.data[node_selected].hostname + ":" + friendname + "(" + node_selected + ")", node_selected, server, 2, console, 1000);
+
     } else if (cmd == "kill-process") {
       confirm("Do you want to KILL?", "Pay attention ANY CU will be killed as well", "Kill",
         function () {
-          var server=tmpObj.data[node_selected].hostname +":8071";
+          var server = tmpObj.data[node_selected].hostname + ":8071";
           jchaos.rmtKill(server, node_selected, function (r) {
             instantMessage("US KILL", "Killing " + node_selected + " ", 1000, true);
 
           }, function (bad) {
             instantMessage("ERROR US KILL", "Killing " + node_selected + " via agent", 1000, false);
           });
-          
+
         }, "Joke", function () { });
       return;
     } else if (cmd == "new-script") {
@@ -3920,270 +3924,283 @@
         $ref: "algo.json",
         format: "tabs"
       }
-      var scriptTmp={};
-      scriptTmp['script_name']="NONAME";
-      scriptTmp['eudk_script_content']="";
-      scriptTmp['eudk_script_language']="bash";
-      scriptTmp['script_description']="PUT YOUR DESCRIPTION";
-      
-      jsonEditWindow("NewScript", templ, scriptTmp,algoSave);
+      var scriptTmp = {};
+      scriptTmp['script_name'] = "NONAME";
+      scriptTmp['eudk_script_content'] = "";
+      scriptTmp['eudk_script_language'] = "bash";
+      scriptTmp['script_description'] = "PUT YOUR DESCRIPTION";
+
+      jsonEditWindow("NewScript", templ, scriptTmp, algoSave);
       return;
-    } else if(cmd=="manage-script"){
+    } else if (cmd == "manage-script") {
       updateScriptModal(tmpObj);
-    } else if(cmd=="load-script"){
+    } else if (cmd == "load-script") {
       algoLoadFromFile();
-    } else if(cmd=="root-script"){
-      runRemoteScript(tmpObj,"Chaos Root","CPP");
-    } else if(cmd=="new-process-template"){
+    } else if (cmd == "root-script") {
+      runRemoteScript(tmpObj, "Chaos Root", "CPP");
+    } else if (cmd == "new-process-template") {
       var templ = {
         $ref: "app_template.json",
         format: "tabs"
       }
-    
-      jsonEditWindow("New Process Template", templ, null,function(data){
-        var processTemplates=jchaos.variable("app_templates", "get", processTemplates, null);
-        var name=data['app_name'];
-        processTemplates[name]=data;
+
+      jsonEditWindow("New Process Template", templ, null, function (data) {
+        var processTemplates = jchaos.variable("app_templates", "get", processTemplates, null);
+        var name = data['app_name'];
+        processTemplates[name] = data;
         jchaos.variable("app_templates", "set", processTemplates, null);
-        tmpObj['app-templates']=processTemplates;
+        tmpObj['app-templates'] = processTemplates;
 
       });
-    
-    } else if(cmd=="purge-script"){
-      purgeScripts(tmpObj,1);
+
+    } else if (cmd == "purge-script") {
+      purgeScripts(tmpObj, 1);
     } else {
-      var processTemplates=tmpObj['app-templates'];
-      for(var k in processTemplates){
-        var cmdrm="app-template-delete-"+k;
-        if(cmd ==cmdrm){
+      var processTemplates = tmpObj['app-templates'];
+      for (var k in processTemplates) {
+        var cmdrm = "app-template-delete-" + k;
+        if (cmd == cmdrm) {
           delete processTemplates[k];
           jchaos.variable("app_templates", "set", processTemplates, null);
           return;
-        } 
-        var cmdname="app-template-"+k;
-        if(cmd== cmdname){
+        }
+        var cmdname = "app-template-" + k;
+        if (cmd == cmdname) {
           var templ = {
             $ref: "app_template.json",
             format: "tabs"
           }
-        
-          jsonEditWindow("Application Run", templ, processTemplates[k],function(data){
+
+          jsonEditWindow("Application Run", templ, processTemplates[k], function (data) {
             // save template and run template
             jchaos.variable("app_templates", "set", processTemplates, null);
-            var server=findBestServer(tmpObj);
-            jchaos.rmtGetEnvironment(server + ":8071","CHAOS_PREFIX", function (r) {
-              if(r.err!=0){
-                instantMessage("Cannot retrive environment","cannot read CHAOS_PREFIX:"+r.errmsg,5000,false);
+            var server = findBestServer(tmpObj);
+            jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function (r) {
+              if (r.err != 0) {
+                instantMessage("Cannot retrive environment", "cannot read CHAOS_PREFIX:" + r.errmsg, 5000, false);
                 return;
-              } else{
-                var chaos_prefix=r.data.value;
-                var cmd_line=chaos_prefix +"/bin/"+data['app_exec'] +" "+data['app_cmdline'];
-                var name=data['app_name'];
-                if(data['app_broadcast']){
-                  var serverlist=tmpObj['agents'];
-                  for(var server in serverlist){
-                    jchaos.rmtCreateProcess(server + ":8071",name,cmd_line,"exec", function (r) {
-                      console.log("Script running onto:" + server+ " :"+JSON.stringify(r));
-                      var node_selected=tmpObj.node_selected;
-                      instantMessage("Script "+name + "launched on:"+server, "Started " + JSON.stringify(r), 2000, true);
+              } else {
+                var chaos_prefix = r.data.value;
+                var cmd_line = chaos_prefix + "/bin/" + data['app_exec'] + " " + data['app_cmdline'];
+                var name = data['app_name'];
+                if (data['app_broadcast']) {
+                  var serverlist = tmpObj['agents'];
+                  for (var server in serverlist) {
+                    jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", function (r) {
+                      console.log("Script running onto:" + server + " :" + JSON.stringify(r));
+                      var node_selected = tmpObj.node_selected;
+                      instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
                     }, function (bad) {
                       console.log("Some error getting loading script:" + bad);
-                      instantMessage("Script "+name, "Failed to start " + bad, 2000, false);
-        
+                      instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
+
                     });
                   }
                 } else {
-                  var server=findBestServer(tmpObj);
+                  var server = findBestServer(tmpObj);
 
-                  jchaos.rmtCreateProcess(server + ":8071",name,cmd_line,"exec", function (r) {
-                    console.log("Script running onto:" + server+ " :"+JSON.stringify(r));
-                    instantMessage("Script "+name + "launched on:"+server, "Started " + JSON.stringify(r), 2000, true);
+                  jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", function (r) {
+                    console.log("Script running onto:" + server + " :" + JSON.stringify(r));
+                    instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
                   }, function (bad) {
                     console.log("Some error getting loading script:" + bad);
-                    instantMessage("Script "+name, "Failed to start " + bad, 2000, false);
-      
+                    instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
+
                   });
                 }
               }
-              });
+            });
           });
         }
       }
     }
-    
+
     return;
   }
-  function purgeScripts(tmpObj,level){
-    var serverlist=tmpObj['agents'];
-    for(var key in serverlist){
-      var server=key;
-      jchaos.rmtPurge(server + ":8071",level, function (r) {
+  function purgeScripts(tmpObj, level) {
+    var serverlist = tmpObj['agents'];
+    for (var key in serverlist) {
+      var server = key;
+      jchaos.rmtPurge(server + ":8071", level, function (r) {
       }, function (bad) {
         instantMessage("Purge Error", "Failed to purge ", 2000, false);
 
       })
     };
   }
-  function findBestServer(tmpObj){
-    var maxIdle=0;
-    var server=null;
-    var serverlist=tmpObj['agents'];
-    for(var key in serverlist){
-      if(serverlist[key].idletime>maxIdle){
-        maxIdle=serverlist[key].idletime;
-        server=key;
+  function findBestServer(tmpObj) {
+    var maxIdle = 0;
+    var server = null;
+    var serverlist = tmpObj['agents'];
+    for (var key in serverlist) {
+      if (serverlist[key].idletime > maxIdle) {
+        maxIdle = serverlist[key].idletime;
+        server = key;
       }
     };
     return server;
   }
-  function runRemoteApp(tmpObj,app){
+  function runRemoteApp(tmpObj, app) {
     var best_server;
 
   }
-  function runRemoteScript(tmpObj,name,language){
-          var launch_arg="";
-          var chaos_prefix="";
-          var server=findBestServer(tmpObj);
-          if(server==null){
-            alert("NO Server Available");
-            return;
-          }
-          jchaos.rmtGetEnvironment(server + ":8071","CHAOS_PREFIX", function (r) {
-            if(r.err!=0){
-              instantMessage("Cannot retrive environment","cannot read CHAOS_PREFIX:"+r.errmsg,5000,false);
-              return;
-            } else{
-              chaos_prefix=r.data.value;
-              if(language=="CPP"){
-                launch_arg=chaos_prefix+"/bin/chaosRoot --conf-file "+chaos_prefix+"/etc/chaos_root.cfg";
-              } else if(language=="bash"){
-                launch_arg="bash ";
-              } else if(language=="nodejs"){
-                launch_arg="node ";
-    
-              } else if(language == "python"){
-                launch_arg="python ";
-    
-              } else {
-                launch_arg=language;
-              }
-              
-              getEntryWindow(name, "Additional args", '', "Run", function (parm) {
-                
-                jchaos.rmtCreateProcess(server + ":8071",name,launch_arg + " "+parm,language, function (r) {
-                  console.log("Script running onto:" + server+ " :"+JSON.stringify(r));
-                  var node_selected=tmpObj.node_selected;
-                  instantMessage("Script "+name + "launched on:"+server, "Started " + JSON.stringify(r), 2000, true);
-                  getConsole("Console:"+ name +"(" +r.data.uid+")", r.data.uid, server + ":8071", 2,1, 1000);
-                }, function (bad) {
-                  console.log("Some error getting loading script:" + bad);
-                  instantMessage("Script "+name, "Failed to start " + bad, 2000, false);
-    
-                });
-              }, "Cancel");
-            }
-          },  function (bad) {
-            console.log("Some error getting environment:" + bad);
-            instantMessage("Script "+name, "Failed to start " + bad, 2000, false);
+  function runRemoteScript(tmpObj, name, language) {
+    var launch_arg = "";
+    var chaos_prefix = "";
+    var server = findBestServer(tmpObj);
+    if (server == null) {
+      alert("NO Server Available");
+      return;
+    }
+    jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function (r) {
+      if (r.err != 0) {
+        instantMessage("Cannot retrive environment", "cannot read CHAOS_PREFIX:" + r.errmsg, 5000, false);
+        return;
+      } else {
+        chaos_prefix = r.data.value;
+        if (language == "CPP") {
+          launch_arg = chaos_prefix + "/bin/chaosRoot --conf-file " + chaos_prefix + "/etc/chaos_root.cfg";
+        } else if (language == "bash") {
+          launch_arg = "bash ";
+        } else if (language == "nodejs") {
+          launch_arg = "node ";
+
+        } else if (language == "python") {
+          launch_arg = "python ";
+
+        } else {
+          launch_arg = language;
+        }
+
+        getEntryWindow(name, "Additional args", '', "Run", function (parm) {
+
+          jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + parm, language, function (r) {
+            console.log("Script running onto:" + server + " :" + JSON.stringify(r));
+            var node_selected = tmpObj.node_selected;
+            instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
+            getConsole("Console:" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
+          }, function (bad) {
+            console.log("Some error getting loading script:" + bad);
+            instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
 
           });
-  }
-  function updateProcessMenu(tmpObj,node_name) {
-    var items = {};
-    var interface=tmpObj.type;
-    node_selected=tmpObj.node_selected;
-   // var cindex = tmpObj.node_name_to_index[node_name];
-   items['new-script'] = { name: "New Script..." };
-   items['load-script'] = { name: "Load Script from file..." };   
-   items['manage-script'] = { name: "Manage Script..." };
-   items['purge-script'] = { name: "Purge END scripts" };
-   var prorunsub=processRunSubMenu(tmpObj);
-   var protemsub=processAppTemplateSubMenu(tmpObj);
-   items['fold1'] = { name: "Run Chaos Application...","items": prorunsub};
-   items['fold2'] = { name: "Manage Application Template...","items": protemsub};
+        }, "Cancel");
+      }
+    }, function (bad) {
+      console.log("Some error getting environment:" + bad);
+      instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
 
-   if (node_selected != null) {
+    });
+  }
+  function updateProcessMenu(tmpObj, node_name) {
+    var items = {};
+    var interface = tmpObj.type;
+    node_selected = tmpObj.node_selected;
+    // var cindex = tmpObj.node_name_to_index[node_name];
+    items['new-script'] = { name: "New Script..." };
+    items['load-script'] = { name: "Load Script from file..." };
+    items['manage-script'] = { name: "Manage Script..." };
+    items['purge-script'] = { name: "Purge END scripts" };
+    var prorunsub = processRunSubMenu(tmpObj);
+    var protemsub = processAppTemplateSubMenu(tmpObj);
+    items['fold1'] = { name: "Run Chaos Application...", "items": prorunsub };
+    items['fold2'] = { name: "Manage Application Template...", "items": protemsub };
+
+    if (node_selected != null) {
       items['open-process-console'] = { name: "Open Console " };
       items['open-process-errconsole'] = { name: "Open Error console" };
 
       items['kill-process'] = { name: "Kill " };
-      
+
     }
-    
+
     return items;
   }
 
   function updateProcessTable(tmpObj) {
-    var tablename="main_table-"+tmpObj.template;
-    var template=tmpObj.type;
-    for(var p in tmpObj.data){
-      var ptype=tmpObj.data[p].ptype;
-      var pname=tmpObj.data[p].pname;
+    var tablename = "main_table-" + tmpObj.template;
+    var template = tmpObj.type;
+    for (var p in tmpObj.data) {
+      var ptype = tmpObj.data[p].ptype;
+      var pname = tmpObj.data[p].pname;
 
-      var started_timestamp=new Date(Number(tmpObj.data[p].start_time));
-      var end_timestamp=tmpObj.data[p].end_time;
-      var last_log=(tmpObj.data[p].ts - tmpObj.data[p].last_log_time);
-      var pid=tmpObj.data[p].pid;
-      var timestamp=tmpObj.data[p].ts;
-      var uptime=tmpObj.data[p].uptime;
-      var systime=parseFloat(tmpObj.data[p].systime).toFixed(3);
-      var cputime=parseFloat(tmpObj.data[p].cputime).toFixed(3);
-      var vmem=tmpObj.data[p].vmem;
-      var rmem=tmpObj.data[p].rmem;
-      
-      var hostname=tmpObj.data[p].hostname;
-      var status=tmpObj.data[p].msg;
-      var parent=tmpObj.data[p].parent;
-      var infoServer=tmpObj.agents[hostname];
-      var parent_str=parent+" (i:"+infoServer.idletime+",u:"+infoServer.usertime+",s:"+infoServer.systime+"io:"+infoServer.iowait+")";
-      var encoden=encodeName(p);
-      $("#"+encoden+"_start_ts").html(started_timestamp);
-      $("#"+encoden+"_end_ts").html(end_timestamp);
-      $("#"+encoden+"_last_log_ts").html(last_log);
-      $("#"+encoden+"_status").html(status);
-      $("#"+encoden+"_ts").html(timestamp);
-      $("#"+encoden+"_uptime").html(uptime);
-      $("#"+encoden+"_systime").html(systime);
-      $("#"+encoden+"_cputime").html(cputime);
-      $("#"+encoden+"_vmem").html(vmem);
-      $("#"+encoden+"_rmem").html(rmem);
-      $("#"+encoden+"_parent").html(parent_str);
+      var started_timestamp = new Date(Number(tmpObj.data[p].start_time));
+      var end_timestamp = tmpObj.data[p].end_time;
+      var last_log = (tmpObj.data[p].ts - tmpObj.data[p].last_log_time);
+      var pid = tmpObj.data[p].pid;
+      var timestamp = tmpObj.data[p].ts;
+      var uptime = tmpObj.data[p].uptime;
+      var systime = parseFloat(tmpObj.data[p].systime).toFixed(3);
+      var cputime = parseFloat(tmpObj.data[p].cputime).toFixed(3);
+      var vmem = tmpObj.data[p].vmem;
+      var rmem = tmpObj.data[p].rmem;
 
-
-
+      var hostname = tmpObj.data[p].hostname;
+      var status = tmpObj.data[p].msg;
+      var parent = tmpObj.data[p].parent;
+      var infoServer = tmpObj.agents[hostname];
+      var parent_str = parent + " (i:" + infoServer.idletime + ",u:" + infoServer.usertime + ",s:" + infoServer.systime + "io:" + infoServer.iowait + ")";
+      var encoden = encodeName(p);
+      $("#" + encoden + "_start_ts").html(started_timestamp);
+      $("#" + encoden + "_end_ts").html(end_timestamp);
+      $("#" + encoden + "_last_log_ts").html(last_log);
+      $("#" + encoden + "_status").html(status);
+      $("#" + encoden + "_ts").html(timestamp);
+      $("#" + encoden + "_uptime").html(uptime);
+      $("#" + encoden + "_systime").html(systime);
+      $("#" + encoden + "_cputime").html(cputime);
+      $("#" + encoden + "_vmem").html(vmem);
+      $("#" + encoden + "_rmem").html(rmem);
+      $("#" + encoden + "_parent").html(parent_str);
     }
+    if (tmpObj.hasOwnProperty("server_charts")) {
+      var now = (new Date()).getTime();
+      for(var server in tmpObj['agents']){
+        var infoServer = tmpObj.agents[server];
+        var enc = encodeName(server);
+        var chart = tmpObj['server_charts'][enc];
+        chart.series[0].addPoint([now, infoServer.idletime], false, false);
+        chart.series[1].addPoint([now, infoServer.usertime], false, false);
+        chart.series[2].addPoint([now, infoServer.systime], false, false);
+        chart.series[3].addPoint([now, infoServer.iowait], false, false);
+        chart.redraw();
+      }
+      
+     
+    }
+
   }
-  
-  function updateScriptModal(tmpObj){
+
+  function updateScriptModal(tmpObj) {
     $("#table_script").find("tr:gt(0)").remove();
-    var template=tmpObj.type;
-    tmpObj['node_name_to_desc']={};
-    
+    var template = tmpObj.type;
+    tmpObj['node_name_to_desc'] = {};
+
     jchaos.search(search_string, "script", false, function (l) {
-      var list_algo=l['found_script_list'];
-      list_algo.forEach(function(p){
-      var encoden=encodeName(p.script_name);
-      var date = new Date(p.seq);
-      tmpObj.node_name_to_desc[p.script_name]=p;
-      $("#table_script").append('<tr class="row_element" id="' + encoden +'"'+template+'-name="'+p.script_name+'">'+
-      '<td>' + p.script_name + '</td>'+
-      '<td>' + p.eudk_script_language + '</td>'+
-      '<td>' + p.script_description + '</td>' +
-      '<td>' + date + '</td></tr>');
+      var list_algo = l['found_script_list'];
+      list_algo.forEach(function (p) {
+        var encoden = encodeName(p.script_name);
+        var date = new Date(p.seq);
+        tmpObj.node_name_to_desc[p.script_name] = p;
+        $("#table_script").append('<tr class="row_element" id="' + encoden + '"' + template + '-name="' + p.script_name + '">' +
+          '<td>' + p.script_name + '</td>' +
+          '<td>' + p.eudk_script_language + '</td>' +
+          '<td>' + p.script_description + '</td>' +
+          '<td>' + date + '</td></tr>');
       });
       $("#mdl-script").modal("show");
 
       $("#table_script tbody tr").click(function (e) {
-        mainTableCommonHandling("table_script",tmpObj, e);
+        mainTableCommonHandling("table_script", tmpObj, e);
       });
-      
-      
+
+
     });
   }
-  function loadScriptOnServer(tmpObj,jsonscript,serveList,handler){
-    if((serveList==null) || (!(serverList instanceof Array))){
+  function loadScriptOnServer(tmpObj, jsonscript, serveList, handler) {
+    if ((serveList == null) || (!(serverList instanceof Array))) {
       // load on all servers
-      var agentlist=[];
+      var agentlist = [];
 
       jchaos.search("", "agent", true, function (ag) {
         ag.forEach(function (elem) {
@@ -4193,87 +4210,164 @@
             console.log("loading on agent " + match[1]);
             var server = match[1];
             agentlist.push(server);
-            jchaos.rmtUploadScript(server + ":8071",jsonscript, function (r) {
-              if(r.err!=0){
-                instantMessage("Load Script","cannot load:"+r.errmsg,5000,false);
-              } else{
-                instantMessage("Script loaded onto:" + server,2000,false);
+            jchaos.rmtUploadScript(server + ":8071", jsonscript, function (r) {
+              if (r.err != 0) {
+                instantMessage("Load Script", "cannot load:" + r.errmsg, 5000, false);
+              } else {
+                instantMessage("Script loaded onto:" + server, 2000, false);
                 handler(r);
               }
-              
-              
+
+
             }, function (bad) {
               console.log("Some error getting loading script:" + bad);
-              instantMessage("Load Script","Exception  loading:"+bad,5000,false);
+              instantMessage("Load Script", "Exception  loading:" + bad, 5000, false);
 
             });
-        
+
           }
-          }
-    );
+        }
+        );
 
-  });
-} else {
-  serveList.forEach(function(elem){
-    jchaos.rmtUploadScript(elem + ":8071",jsonscript, function (r) {
-              
-      console.log("Script loaded onto:" + elem+ " :"+JSON.stringify(r));
+      });
+    } else {
+      serveList.forEach(function (elem) {
+        jchaos.rmtUploadScript(elem + ":8071", jsonscript, function (r) {
 
-    }, function (bad) {
-      console.log("Some error getting loading script:" + bad);
-    });
-  });
+          console.log("Script loaded onto:" + elem + " :" + JSON.stringify(r));
 
-}
+        }, function (bad) {
+          console.log("Some error getting loading script:" + bad);
+        });
+      });
+
+    }
 
   }
   function updateProcessInterface(tmpObj) {
     updateProcessList(tmpObj);
-    var tablename="main_table-"+tmpObj.template;
-    var template=tmpObj.type;
+    var tablename = "main_table-" + tmpObj.template;
+    var graph_table = "graph_table-" + tmpObj.template;
+    var template = tmpObj.type;
+    var cnt = 0;
+    var chart_options = {
+      title: {
+        text: ''
+      },
 
-    $("#"+tablename).find("tr:gt(0)").remove();
-    for(var p in tmpObj.data){
-      var ptype=tmpObj.data[p].ptype;
-      var pname=tmpObj.data[p].pname;
+      xAxis: {
+        type: "datetime",
+        title: {
+          text: 'Time'
+        }
+      },
+      yAxis: {
+        title: {
+          text: '%'
+        },
+        max:100
+      },
+      legend: {
+        layout: 'vertical',
+        align: 'right',
+        verticalAlign: 'middle'
+      },
 
-      var started_timestamp=tmpObj.data[p].start_time;
-      var end_timestamp=tmpObj.data[p].end_time;
-      var last_log=(tmpObj.data[p].ts - tmpObj.data[p].last_log_time);
-      var pid=tmpObj.data[p].pid;
-      var timestamp=tmpObj.data[p].ts;
-      var uptime=tmpObj.data[p].uptime;
-      var systime=parseFloat(tmpObj.data[p].systime).toFixed(3);
-      var cputime=parseFloat(tmpObj.data[p].cputime).toFixed(3);
-      var vmem=tmpObj.data[p].vmem;
-      var rmem=tmpObj.data[p].rmem;
-      var hostname=tmpObj.data[p].hostname;
-      var status=tmpObj.data[p].msg;
-      var parent=tmpObj.data[p].parent;
-      var encoden=encodeName(p);
-      $("#"+tablename).append('<tr class="row_element processMenu" id="' + encoden +'"' +template+'-name='+p+'>'+
-      '<td class="td_element" id="' + encoden + '">' + p + '</td>'+
-      '<td class="td_element">' + pname + '</td>'+
-      '<td class="td_element">' + ptype + '</td>' +
-      '<td class="td_element" id="' + encoden + '_start_ts"' + started_timestamp + '</td>'+
-      '<td class="td_element" id="' + encoden + '_end_ts">' + end_timestamp + '</td>'+
-      '<td class="td_element" id="' + encoden + '_last_log_ts">' + last_log + '</td>'+
-      '<td class="td_element">' + hostname + '</td>'+
-      '<td class="td_element">' + pid + '</td>' +
-      '<td class="td_element" id="' + encoden + '_status">' + status+ '</td>'+
-      '<td class="td_element" id="' + encoden + '_ts">' + timestamp + '</td>' +
-      '<td class="td_element" id="' + encoden + '_uptime">' + uptime + '</td>'+
-      '<td class="td_element" id="' + encoden + '_systime">' + systime + '</td>' +
-      '<td class="td_element" id="' + encoden + '_cputime">' + cputime + '</td>'+
-      '<td class="td_element" id="' + encoden + '_vmem">' + vmem + '</td>' +
-      '<td class="td_element" id="' + encoden + '_rmem">' + rmem + '</td>'+
-      '<td class="td_element" id="' + encoden +'_parent">' + parent + '</td></tr>'
+      plotOptions: {
+        series: {
+          label: {
+            connectorAllowed: false
+          },
+        }
+      },
+      series: [{
+        name: 'idle',
+        data: []
+      }, {
+        name: 'cpu',
+        data: []
+      }, {
+        name: 'sys',
+        data: []
+      }, {
+        name: 'iow',
+        data: []
+      }]
+    };
+    $("#" + tablename).find("tr:gt(0)").remove();
+    $("#" + graph_table).find("tr:gt(0)").remove();
+
+    var serverlist = tmpObj['agents'];
+    var html = "";
+    var server_charts = {};
+
+    for (var key in serverlist) {
+      var encoden = encodeName(key);
+      if ((cnt % 4) == 0) {
+        if (cnt > 0) {
+          html += "</tr>"
+        }
+        html += '<tr class="row_element processMenu" id=graph-row"' + cnt + '">';
+      }
+      html += '<td class="td_element" id="graph-' + encoden + '"</td>';
+
+      cnt++;
+    };
+    if (cnt > 0) {
+      html += "</tr>";
+      $("#" + graph_table).append(html);
+      for (var key in serverlist) {
+        var encoden = encodeName(key);
+        chart_options.title.text = "Server " + key;
+
+        server_charts[encoden] = new Highcharts.chart("graph-" + encoden, chart_options);
+
+      }
+      tmpObj['server_charts'] = server_charts;
+
+    }
+
+    for (var p in tmpObj.data) {
+      var ptype = tmpObj.data[p].ptype;
+      var pname = tmpObj.data[p].pname;
+
+      var started_timestamp = tmpObj.data[p].start_time;
+      var end_timestamp = tmpObj.data[p].end_time;
+      var last_log = (tmpObj.data[p].ts - tmpObj.data[p].last_log_time);
+      var pid = tmpObj.data[p].pid;
+      var timestamp = tmpObj.data[p].ts;
+      var uptime = tmpObj.data[p].uptime;
+      var systime = parseFloat(tmpObj.data[p].systime).toFixed(3);
+      var cputime = parseFloat(tmpObj.data[p].cputime).toFixed(3);
+      var vmem = tmpObj.data[p].vmem;
+      var rmem = tmpObj.data[p].rmem;
+      var hostname = tmpObj.data[p].hostname;
+      var status = tmpObj.data[p].msg;
+      var parent = tmpObj.data[p].parent;
+      var encoden = encodeName(p);
+      $("#" + tablename).append('<tr class="row_element processMenu" id="' + encoden + '"' + template + '-name=' + p + '>' +
+        '<td class="td_element" id="' + encoden + '">' + p + '</td>' +
+        '<td class="td_element">' + pname + '</td>' +
+        '<td class="td_element">' + ptype + '</td>' +
+        '<td class="td_element" id="' + encoden + '_start_ts"' + started_timestamp + '</td>' +
+        '<td class="td_element" id="' + encoden + '_end_ts">' + end_timestamp + '</td>' +
+        '<td class="td_element" id="' + encoden + '_last_log_ts">' + last_log + '</td>' +
+        '<td class="td_element">' + hostname + '</td>' +
+        '<td class="td_element">' + pid + '</td>' +
+        '<td class="td_element" id="' + encoden + '_status">' + status + '</td>' +
+        '<td class="td_element" id="' + encoden + '_ts">' + timestamp + '</td>' +
+        '<td class="td_element" id="' + encoden + '_uptime">' + uptime + '</td>' +
+        '<td class="td_element" id="' + encoden + '_systime">' + systime + '</td>' +
+        '<td class="td_element" id="' + encoden + '_cputime">' + cputime + '</td>' +
+        '<td class="td_element" id="' + encoden + '_vmem">' + vmem + '</td>' +
+        '<td class="td_element" id="' + encoden + '_rmem">' + rmem + '</td>' +
+        '<td class="td_element" id="' + encoden + '_parent">' + parent + '</td></tr>'
       );
 
     }
-    
+
     $("#main_table-" + template + " tbody tr").click(function (e) {
-      mainTableCommonHandling("main_table-" + template,tmpObj, e);
+      mainTableCommonHandling("main_table-" + template, tmpObj, e);
     });
     n = $('#main_table-' + template + ' tr').size();
     if (n > 22) {     /***Attivo lo scroll della tabella se ci sono più di 22 elementi ***/
@@ -4285,11 +4379,11 @@
     $.contextMenu({
       selector: '.processMenu',
       build: function ($trigger, e) {
-        var template=tmpObj.type;
+        var template = tmpObj.type;
 
-        var cuname = $(e.currentTarget).attr(template+"-name");
+        var cuname = $(e.currentTarget).attr(template + "-name");
         var cuitem = updateProcessMenu(tmpObj, cuname);
-        
+
         cuitem['sep1'] = "---------";
 
         cuitem['quit'] = {
@@ -4301,7 +4395,7 @@
         return {
 
           callback: function (cmd, options) {
-            executeProcessMenuCmd(tmpObj,cmd, options);
+            executeProcessMenuCmd(tmpObj, cmd, options);
             return;
           },
           items: cuitem
@@ -4314,26 +4408,26 @@
     $("#script-delete").off('click');
 
     $("#script-delete").on('click', function () {
-      console.log("delete "+tmpObj.node_selected);
+      console.log("delete " + tmpObj.node_selected);
       jchaos.rmScript(tmpObj.node_name_to_desc[tmpObj.node_selected], function (data) {
-        instantMessage("Remove Script", "removed " + tmpObj.node_selected, 2000,true);
+        instantMessage("Remove Script", "removed " + tmpObj.node_selected, 2000, true);
         updateScriptModal(tmpObj);
 
       });
     });
     $("#script-edit").off('click');
     $("#script-edit").on('click', function () {
-      console.log("show "+tmpObj.node_selected);
+      console.log("show " + tmpObj.node_selected);
 
-      jchaos.loadScript(tmpObj.node_selected,tmpObj.node_name_to_desc[tmpObj.node_selected].seq,function(data){
+      jchaos.loadScript(tmpObj.node_selected, tmpObj.node_name_to_desc[tmpObj.node_selected].seq, function (data) {
         var templ = {
           $ref: "algo.json",
           format: "tabs"
         }
         $("#mdl-script").modal("hide");
-        tmpObj.node_selected=null;
-        data['eudk_script_content']= decodeURIComponent(escape(atob(data['eudk_script_content'])));
-        jsonEditWindow(tmpObj.node_selected, templ, data,algoSave);
+        tmpObj.node_selected = null;
+        data['eudk_script_content'] = decodeURIComponent(escape(atob(data['eudk_script_content'])));
+        jsonEditWindow(tmpObj.node_selected, templ, data, algoSave);
 
       });
 
@@ -4342,152 +4436,152 @@
     $("#script-run").on('click', function () {
       $("#mdl-script").modal("hide");
 
-      jchaos.loadScript(tmpObj.node_selected,tmpObj.node_name_to_desc[tmpObj.node_selected].seq,function(data){
-        loadScriptOnServer(tmpObj,data,null,function(p){  
-        if(tmpObj.hasOwnProperty("agents") && p.data.hasOwnProperty('path')){
-          var path=p.data.path;
-          var launch_arg="";
-          var name=data['script_name'];
-          var language=data['eudk_script_language'];
-          var serverlist=tmpObj['agents'];
-          var maxIdle=0;
-          var server=null;
-          var chaos_prefix="";
-          for(var key in serverlist){
-            if(serverlist[key].idletime>maxIdle){
-              maxIdle=serverlist[key].idletime;
-              server=key;
-            }
-          };
-          if(server==null){
-            alert("NO Server Available");
-            return;
-          }
-             
-          jchaos.rmtGetEnvironment(server + ":8071","CHAOS_PREFIX", function (r) {
-            if(r.err!=0){
-              instantMessage("Cannot retrive environment","cannot read CHAOS_PREFIX:"+r.errmsg,5000,false);
-              return;
-            } else{
-              chaos_prefix=r.data.value;
-              if(language=="CPP"){
-                launch_arg=chaos_prefix+"/bin/chaosRoot --conf-file "+chaos_prefix+"/etc/chaos_root.cfg --rootopt \"-q "+path+"\"";
-              } else if(language=="bash"){
-                launch_arg="bash "+path;
-              } else if(language=="nodejs"){
-                launch_arg="node "+path;
-    
-              } else if(language == "python"){
-                launch_arg="python "+path;
-    
-              } else {
-                launch_arg=language+" "+path;
+      jchaos.loadScript(tmpObj.node_selected, tmpObj.node_name_to_desc[tmpObj.node_selected].seq, function (data) {
+        loadScriptOnServer(tmpObj, data, null, function (p) {
+          if (tmpObj.hasOwnProperty("agents") && p.data.hasOwnProperty('path')) {
+            var path = p.data.path;
+            var launch_arg = "";
+            var name = data['script_name'];
+            var language = data['eudk_script_language'];
+            var serverlist = tmpObj['agents'];
+            var maxIdle = 0;
+            var server = null;
+            var chaos_prefix = "";
+            for (var key in serverlist) {
+              if (serverlist[key].idletime > maxIdle) {
+                maxIdle = serverlist[key].idletime;
+                server = key;
               }
-              
-              getEntryWindow(data['script_name'], "Additional args", '', "Run", function (parm) {
-                
-                jchaos.rmtCreateProcess(server + ":8071",name,launch_arg + " "+parm,language, function (r) {
-                  console.log("Script running onto:" + server+ " :"+JSON.stringify(r));
-                  var node_selected=tmpObj.node_selected;
-                  instantMessage("Script "+name + "launched on:"+server, "Started " + JSON.stringify(r), 2000, true);
-                  getConsole("Console:"+ name +"(" +r.data.uid+")", r.data.uid, server + ":8071", 2,1, 1000);
-                }, function (bad) {
-                  console.log("Some error getting loading script:" + bad);
-                  instantMessage("Script "+name, "Failed to start " + bad, 2000, false);
-    
-                });
-              }, "Cancel");
+            };
+            if (server == null) {
+              alert("NO Server Available");
+              return;
             }
-          },  function (bad) {
-            console.log("Some error getting environment:" + bad);
-            instantMessage("Script "+name, "Failed to start " + bad, 2000, false);
 
-          });
-          
-        } else {
-          instantMessage("Script "+name, "Failed to Load ", 2000, false);
+            jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function (r) {
+              if (r.err != 0) {
+                instantMessage("Cannot retrive environment", "cannot read CHAOS_PREFIX:" + r.errmsg, 5000, false);
+                return;
+              } else {
+                chaos_prefix = r.data.value;
+                if (language == "CPP") {
+                  launch_arg = chaos_prefix + "/bin/chaosRoot --conf-file " + chaos_prefix + "/etc/chaos_root.cfg --rootopt \"-q " + path + "\"";
+                } else if (language == "bash") {
+                  launch_arg = "bash " + path;
+                } else if (language == "nodejs") {
+                  launch_arg = "node " + path;
 
-        }
+                } else if (language == "python") {
+                  launch_arg = "python " + path;
+
+                } else {
+                  launch_arg = language + " " + path;
+                }
+
+                getEntryWindow(data['script_name'], "Additional args", '', "Run", function (parm) {
+
+                  jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + parm, language, function (r) {
+                    console.log("Script running onto:" + server + " :" + JSON.stringify(r));
+                    var node_selected = tmpObj.node_selected;
+                    instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
+                    getConsole("Console:" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
+                  }, function (bad) {
+                    console.log("Some error getting loading script:" + bad);
+                    instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
+
+                  });
+                }, "Cancel");
+              }
+            }, function (bad) {
+              console.log("Some error getting environment:" + bad);
+              instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
+
+            });
+
+          } else {
+            instantMessage("Script " + name, "Failed to Load ", 2000, false);
+
+          }
+        });
       });
     });
-    });
     $("#script-save").on('click', function () {
-      jchaos.loadScript(tmpObj.node_selected,tmpObj.node_name_to_desc[tmpObj.node_selected].seq,function(data){
-        
-        var obj=atob(data['eudk_script_content']);
+      jchaos.loadScript(tmpObj.node_selected, tmpObj.node_name_to_desc[tmpObj.node_selected].seq, function (data) {
+
+        var obj = atob(data['eudk_script_content']);
         var blob = new Blob([obj], { type: "json;charset=utf-8" });
         saveAs(blob, data['script_name']);
       });
-     
+
     });
     $("#script-load").on('click', function () {
       $("#mdl-script").modal("hide");
       algoLoadFromFile();
-      tmpObj.node_selected=null;
+      tmpObj.node_selected = null;
 
     });
 
     $("#script-close").on('click', function () {
       $("#mdl-script").modal("hide");
-      tmpObj.node_selected=null;
+      tmpObj.node_selected = null;
     });
 
   }
   function updateProcess(tmpObj) {
-    updateProcessList(tmpObj,function(t){
-      if(JSON.stringify(t['elems'])!==JSON.stringify(t['old_elems'])){
+    updateProcessList(tmpObj, function (t) {
+      if (JSON.stringify(t['elems']) !== JSON.stringify(t['old_elems'])) {
         updateProcessInterface(t);
-        tmpObj['old_elems']=tmpObj['elems'];
-      
+        tmpObj['old_elems'] = tmpObj['elems'];
+
       }
       updateProcessTable(t);
     });
 
-    
+
   }
 
-  function updateProcessList(tmpObj,handler) {
-    var proc={};
-   
+  function updateProcessList(tmpObj, handler) {
+    var proc = {};
+
     jchaos.search("", "agent", true, function (ag) {
-      var agent_obj={};
+      var agent_obj = {};
       ag.forEach(function (elem) {
         var regx = /ChaosAgent_(.+)\:(.+)/;
-        var match = regx.exec(ag);
+        var match = regx.exec(elem);
         if (match) {
           console.log("agent " + match[1]);
           var server = match[1];
-          agent_obj[server]={};
+          agent_obj[server] = {};
 
           jchaos.rmtListProcess(server + ":8071", function (r) {
 
-            if(r.hasOwnProperty("info")){
-              agent_obj[server]['idletime']=parseFloat(r.info.idletime);
-              agent_obj[server]['usertime']=parseFloat(r.info.usertime);
-              agent_obj[server]['systime']=parseFloat(r.info.systime);
-              agent_obj[server]['iowait']=parseFloat(r.info.iowait);
-              agent_obj[server]['ts']=r.info.ts;
+            if (r.hasOwnProperty("info")) {
+              agent_obj[server]['idletime'] = parseFloat(r.info.idletime);
+              agent_obj[server]['usertime'] = parseFloat(r.info.usertime);
+              agent_obj[server]['systime'] = parseFloat(r.info.systime);
+              agent_obj[server]['iowait'] = parseFloat(r.info.iowait);
+              agent_obj[server]['ts'] = r.info.ts;
             }
 
             if (r.data.hasOwnProperty("processes") && (r.data.processes instanceof Array)) {
               var processes = r.data.processes;
-              tmpObj['elems']=[];
+              tmpObj['elems'] = [];
               processes.forEach(function (p) {
-               p ['hostname'] = server;
+                p['hostname'] = server;
                 p['parent'] = elem;
-                
+
                 proc[p.uid] = p;
                 tmpObj['elems'].push(p.uid);
-               
+
               });
-              tmpObj.data=proc;
-              if(typeof handler === "function"){
+              tmpObj.data = proc;
+              if (typeof handler === "function") {
                 handler(tmpObj);
               }
             } else {
-              if(typeof handler === "function"){
-                tmpObj['elems']=[];
-                tmpObj.data={};
+              if (typeof handler === "function") {
+                tmpObj['elems'] = [];
+                tmpObj.data = {};
                 handler(tmpObj);
               }
             }
@@ -4497,11 +4591,11 @@
 
         }
       });
-      tmpObj['agents']=agent_obj;
+      tmpObj['agents'] = agent_obj;
     });
-  /*  if (proc != null) {
-      jchaos.variable("process", "set", proc, null);
-    }*/
+    /*  if (proc != null) {
+        jchaos.variable("process", "set", proc, null);
+      }*/
     return proc;
   }
   function searchEu(str, alive, list_zone, list_class, list_eu_name) {
@@ -4578,7 +4672,7 @@
 
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
 
-      buildCUPage(tmpObj,list_cu, implementation_map[interface]);
+      buildCUPage(tmpObj, list_cu, implementation_map[interface]);
     });
 
     $("#elements").change(function () {
@@ -4606,7 +4700,7 @@
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
       var interface = $("#classe option:selected").val();
 
-      buildCUPage(tmpObj,list_cu, implementation_map[interface], "cu");
+      buildCUPage(tmpObj, list_cu, implementation_map[interface], "cu");
 
     });
     $("#classe").change(function () {
@@ -4615,7 +4709,7 @@
 
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
 
-      buildCUPage(tmpObj,list_cu, implementation_map[interface]);
+      buildCUPage(tmpObj, list_cu, implementation_map[interface]);
 
     });
     $("#search-chaos").keypress(function (e) {
@@ -4625,7 +4719,7 @@
         var alive = $("input[type=radio][name=search-alive]:checked").val()
 
         list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
-        buildCUPage(tmpObj,list_cu, implementation_map[interface]);
+        buildCUPage(tmpObj, list_cu, implementation_map[interface]);
 
       }
       //var tt =prompt('type value');
@@ -4636,14 +4730,14 @@
       list_cu = jchaos.search(search_string, "cu", (alive == "true"), false);
       var interface = $("#classe option:selected").val();
 
-      buildCUPage(tmpObj,list_cu, implementation_map[interface]);
+      buildCUPage(tmpObj, list_cu, implementation_map[interface]);
     });
 
 
   }
 
 
-  function interface2NodeList(tempObj,inter, alive) {
+  function interface2NodeList(tempObj, inter, alive) {
     var tmp = [];
     if ((inter != "agent") && (inter != "us") && (inter != "cu")) {
       var node = jchaos.search(search_string, "us", (alive == "true"), false);
@@ -4779,18 +4873,18 @@
    * MAIN TABLE HANDLING
    * 
    */
-  function mainTableCommonHandling(id,tmpObj, e) {
-    var node_list=tmpObj['elems'];
+  function mainTableCommonHandling(id, tmpObj, e) {
+    var node_list = tmpObj['elems'];
     $("#mdl-commands").modal("hide");
-    if (tmpObj.node_selected == $(e.currentTarget).attr(tmpObj.type+"-name")) {
+    if (tmpObj.node_selected == $(e.currentTarget).attr(tmpObj.type + "-name")) {
       $(".row_element").removeClass("row_snap_selected");
       tmpObj.node_multi_selected = [];
       tmpObj.node_selected = null;
       tmpObj.last_index_selected = -1;
       return;
     }
-    tmpObj.node_selected = $(e.currentTarget).attr(tmpObj.type+"-name");
-    tmpObj.index =$(e.currentTarget).index();
+    tmpObj.node_selected = $(e.currentTarget).attr(tmpObj.type + "-name");
+    tmpObj.index = $(e.currentTarget).index();
     var name = encodeName(tmpObj.node_selected);
 
     if (!e.ctrlKey) {
@@ -4799,7 +4893,7 @@
       tmpObj.node_multi_selected.push(tmpObj.node_selected);
     }
     $(e.currentTarget).addClass("row_snap_selected");
-   
+
     if (e.shiftKey) {
       var nrows = $(e.currentTarget).index();
       if (tmpObj.last_index_selected != -1) {
@@ -4907,8 +5001,8 @@
 
   /********************* */
   function generateGenericTable(tmpObj) {
-    var cu=tmpObj.elems;
-    var template=tmpObj.type;
+    var cu = tmpObj.elems;
+    var template = tmpObj.type;
     var html = '<div class="row-fluid" id="table-space">';
     html += '<div class="box span12">';
     html += '<div class="box-content span12">';
@@ -4937,7 +5031,7 @@
     html += '</thead> ';
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html += "<tr class='row_element cuMenu' "+template+"-name='" + cu[i] + "' id='" + cuname + "'>";
+      html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
       html += "<td class='name_element'>" + cu[i] + "</td>";
       html += "<td id='" + cuname + "_health_status'></td>";
       html += "<td id='" + cuname + "_system_busy'></td>";
@@ -4964,7 +5058,7 @@
 
 
   function updateGenericTableDataset(tmpObj) {
-    var cu=tmpObj.data;
+    var cu = tmpObj.data;
     if (updateGenericTableDataset.count == undefined) {
       updateGenericTableDataset.count = 1;
     }
@@ -5093,7 +5187,7 @@
           }
           $("#" + name_id + "_system_command").html(el.system.dp_sys_que_cmd);
 
-          if ((status == 'Start')&&el.system.hasOwnProperty("cudk_burst_state") && el.system.cudk_burst_state) {
+          if ((status == 'Start') && el.system.hasOwnProperty("cudk_burst_state") && el.system.cudk_burst_state) {
             $("#" + name_id + "_health_status").html('<i class="material-icons verde">videocam</i>');
             $("#" + name_id + "_health_status").attr('title', "TAG:'" + el.system.cudk_burst_tag + "'");
           }
@@ -5146,8 +5240,8 @@
   }
 
   function generateScraperTable(tmpObj) {
-    var cu=tmpObj.elems;
-    var template=tmpObj.type;
+    var cu = tmpObj.elems;
+    var template = tmpObj.type;
     var html = '<div class="row-fluid">';
     html += '<div class="box span12">';
     html += '<div class="box-content">';
@@ -5165,7 +5259,7 @@
 
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html += "<tr class='row_element cuMenu' "+template+"-name='" + cu[i] + "' id='" + cuname + "'>";
+      html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
       html += "<td class='td_element td_name'>" + cu[i] + "</td>";
 
       html += "<td class='position_element' id='" + cuname + "_output_position'></td><td class='position_element' id='" + cuname + "_input_position'></td><td id='" + cuname + "_input_saved_position'></td><td id='" + cuname + "_input_saved_status'></td><td id='" + cuname + "_output_status'></td><td id='" + cuname + "_in'></td><td id='" + cuname + "_out'></td><td  title='Device alarms' id='" + cuname + "_system_device_alarm'></td><td title='Control Unit alarms' id='" + cuname + "_cu_alarm'></td></tr>";
@@ -5181,7 +5275,7 @@
   }
 
   function updateScraper(tmpObj) {
-    var cu=tmpObj.data;
+    var cu = tmpObj.data;
 
     cu.forEach(function (elem) {
       if (elem.hasOwnProperty('health') && elem.health.hasOwnProperty("ndk_uid")) {   //if el health
@@ -5293,8 +5387,8 @@
     return html;
   }
   function generatePStable(tmpObj) {
-    var cu=tmpObj.elems;
-    var template=tmpObj.type;
+    var cu = tmpObj.elems;
+    var template = tmpObj.type;
     var html = '<div class="row-fluid">';
     html += '<div class="box span12">';
     html += '<div class="box-content">';
@@ -5312,7 +5406,7 @@
 
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html += "<tr class='row_element cuMenu' "+template+"-name='" + cu[i] + "' id='" + cuname + "'>";
+      html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
       html += "<td class='td_element td_name'>" + cu[i] + "</td>";
       html += "<td id='" + cuname + "_health_status'></td>";
       html += "<td title='Readout current' class='td_element td_readout' id='" + cuname + "_output_current'>NA</td>";
@@ -5336,8 +5430,8 @@
     return html;
   }
   function updateCameraTable(tmpObj) {
-    var cu=tmpObj.elems;
-    var selected=tmpObj.data[tmpObj.index];
+    var cu = tmpObj.elems;
+    var selected = tmpObj.data[tmpObj.index];
     if (selected != null && selected.hasOwnProperty("output")) {
       $("#cameraName").html("<b>" + selected.output.ndk_uid + "</b>");
       if (selected.output.hasOwnProperty("FRAMEBUFFER")) {
@@ -5366,7 +5460,7 @@
     updateGenericCU(tmpObj)
   }
   function updatePS(tmpObj) {
-    var cu=tmpObj.data;
+    var cu = tmpObj.data;
     cu.forEach(function (elem, index) {
       if (elem.hasOwnProperty("health") && elem.health.hasOwnProperty("ndk_uid")) {
 
@@ -6498,15 +6592,15 @@
                 jchaos.node(item.ndk_uid, "del", "cu", item.ndk_parent, null);
               });
               node_selected = config.us_desc.ndk_uid;
-             // editorFn = unitServerSave;
+              // editorFn = unitServerSave;
               //jsonEdit(templ, config.us_desc);
-              jsonEditWindow("US Editor",templ,config.us_desc,unitServerSave);
+              jsonEditWindow("US Editor", templ, config.us_desc, unitServerSave);
 
             }
           }, "Join", function () {
-           // editorFn = unitServerSave;
+            // editorFn = unitServerSave;
             //jsonEdit(templ, config.us_desc);
-            jsonEditWindow("US Editor Join",templ,config.us_desc,unitServerSave);
+            jsonEditWindow("US Editor Join", templ, config.us_desc, unitServerSave);
 
           });
         } else if (config.hasOwnProperty("cu_desc")) {
@@ -6523,7 +6617,7 @@
               //editorFn = newCuSave;
               var tmp = config.cu_desc;
               //jsonEdit(templ, tmp);
-              jsonEditWindow("New CU Editor",templ,tmp,newCuSave);
+              jsonEditWindow("New CU Editor", templ, tmp, newCuSave);
 
             }
           }, "Cancel", function () {
@@ -6532,7 +6626,7 @@
       }
       if ((sel == "agents") && config.hasOwnProperty('agents') && (config.agents instanceof Array)) {
         config.agents.forEach(function (json) {
-          agentSave(node_selected,json.info);
+          agentSave(node_selected, json.info);
         });
       }
       if ((sel == "snapshots") && config.hasOwnProperty('snapshots') && (config.snapshots instanceof Array)) {
@@ -6842,8 +6936,8 @@
     html += '</div>';
     return html;
   }
-  function generateCmdModal(tmpObj,cmdselected, cu) {
-    var arguments = retriveCurrentCmdArguments(tmpObj,cmdselected);
+  function generateCmdModal(tmpObj, cmdselected, cu) {
+    var arguments = retriveCurrentCmdArguments(tmpObj, cmdselected);
     var input_type = "number";
     var html = "";
     if (arguments.length == 0) {
@@ -6898,7 +6992,7 @@
           click: function (e) {
             var cuselection;
             var cmdselected = $("#cu_full_commands option:selected").val();
-            var arguments = retriveCurrentCmdArguments(tmpObj,cmdselected);
+            var arguments = retriveCurrentCmdArguments(tmpObj, cmdselected);
             var force = $("#cmd-force option:selected").val();
 
             arguments.forEach(function (item, index) {
@@ -7255,7 +7349,7 @@
 
 
   function generateGenericControl(tmpObj) {
-    var template=tmpObj.type;
+    var template = tmpObj.type;
     var html = "";
     html += '<div class="row-fluid">';
     html += '<div class="box span12 box-cmd">';
@@ -7513,30 +7607,30 @@
   }
   function processRunSubMenu(tmpObj) {
     var items = {};
-    var app_templates={};
+    var app_templates = {};
     items["root-script"] = { name: "Root" };
     items['sep1'] = "---------";
 
-    tmpObj['app-templates']={};
+    tmpObj['app-templates'] = {};
     app_templates = jchaos.variable("app_templates", "get", null, null);
     for (var item in app_templates) {
       items["app-template-" + item] = { name: "" + item };
     }
-    tmpObj['app-templates']=app_templates;
+    tmpObj['app-templates'] = app_templates;
     return items;
   }
   function processAppTemplateSubMenu(tmpObj) {
     var items = {};
-    var app_templates={};
+    var app_templates = {};
     items["new-process-template"] = { name: "New Template.." };
     items['sep2'] = "---------";
 
-    tmpObj['app-templates']={};
+    tmpObj['app-templates'] = {};
     app_templates = jchaos.variable("app_templates", "get", null, null);
     for (var item in app_templates) {
       items["app-template-delete-" + item] = { name: "Delete " + item };
     }
-    tmpObj['app-templates']=app_templates;
+    tmpObj['app-templates'] = app_templates;
     return items;
   }
   function cuCreateSubMenu() {
@@ -7551,12 +7645,12 @@
     items["new-nt_control_unit-custom"] = { name: "Custom CU" };
     return items;
   }
-  function updateNodeMenu(tmpObj,node_name) {
+  function updateNodeMenu(tmpObj, node_name) {
     var items = {};
-    var interface=tmpObj.type;
-    var node_selected=tmpObj.node_selected;
-   // var cindex = tmpObj.node_name_to_index[node_name];
-    var node=tmpObj.node_name_to_desc[node_name];
+    var interface = tmpObj.type;
+    var node_selected = tmpObj.node_selected;
+    // var cindex = tmpObj.node_name_to_index[node_name];
+    var node = tmpObj.node_name_to_desc[node_name];
     if (interface == "us") {
       items['new-nt_unit_server'] = { name: "New  Unit Server..." };
       if ((us_copied != null) && us_copied.hasOwnProperty("ndk_uid")) {
@@ -7630,7 +7724,7 @@
   function updateCUMenu(tmpObj, name) {
     var items = {};
     var cindex = tmpObj.node_name_to_index[name];
-    var cu=tmpObj.data[cindex];
+    var cu = tmpObj.data[cindex];
     if (cu != null && cu.hasOwnProperty('health') && cu.health.hasOwnProperty("nh_status")) {   //if el health
       var status = cu.health.nh_status;
       if ((tmpObj.off_line[cu.health.ndk_uid] == false)) {
@@ -7684,7 +7778,7 @@
 
     items['sep1'] = "---------";
     //node_name_to_desc[node_multi_selected[0]]
-    var desc=tmpObj.node_name_to_desc[name];
+    var desc = tmpObj.node_name_to_desc[name];
     if (desc != null && desc.hasOwnProperty("instance_description") && desc.instance_description.hasOwnProperty("control_unit_implementation")) {
       var tt = getInterfaceFromClass(desc.instance_description.control_unit_implementation);
 
@@ -7703,7 +7797,7 @@
 
     return items;
   }
-  function updateGenericControl(tmpObj,cu) {
+  function updateGenericControl(tmpObj, cu) {
     if (cu.hasOwnProperty('health') && cu.health.hasOwnProperty("ndk_uid")) {   //if el health
       var name = cu.health.ndk_uid;
       var status = cu.health.nh_status;
@@ -7719,7 +7813,7 @@
       $("#cmd-recover-error").children().remove();
       $("#cmd-bypass-on-off").children().remove();
       */
-      if ((tmpObj.off_line[name] >0 ) && (status != "Unload")) {
+      if ((tmpObj.off_line[name] > 0) && (status != "Unload")) {
         status = "Dead";
       }
       $("#h3-generic-cmd").html("Generic Controls:\"" + name + "\" status:" + status);
@@ -7788,9 +7882,9 @@
 
       }
     }
-    if(tmpObj.node_selected!=tmpObj['oldselected']){
-      tmpObj['oldselected']=tmpObj.node_selected;
-    $("#cu_full_commands").empty();
+    if (tmpObj.node_selected != tmpObj['oldselected']) {
+      tmpObj['oldselected'] = tmpObj.node_selected;
+      $("#cu_full_commands").empty();
 
       if (tmpObj.node_name_to_desc[name] == null) {
         jchaos.getDesc(tmpObj.node_selected, function (desc) {
@@ -7810,7 +7904,7 @@
     }
   }
 
-  function populateSnapList(tmpObj,snaplist) {
+  function populateSnapList(tmpObj, snaplist) {
     if (snaplist.length > 0) {
       var dataset;
       snap_selected = "";
@@ -7836,7 +7930,7 @@
           }
           if (name !== 'undefined') {
             cu_name_to_saved[name] = elem;
-            var node_name_to_desc=tmpObj.node_name_to_desc;
+            var node_name_to_desc = tmpObj.node_name_to_desc;
             if (node_name_to_desc[name] == null) {
               var desc = jchaos.getDesc(name, null);
               tmpObj.node_name_to_desc[name] = desc[0];
@@ -7935,10 +8029,10 @@
 
   }
 
-  function updateSnapshotTable(tmpObj,refresh) {
-    var cu=tmpObj.node_selected;
-    var node_multi_selected=tmpObj.node_multi_selected;
-    var node_selected=tmpObj.node_selected;
+  function updateSnapshotTable(tmpObj, refresh) {
+    var cu = tmpObj.node_selected;
+    var node_multi_selected = tmpObj.node_multi_selected;
+    var node_selected = tmpObj.node_selected;
 
     $("#table_snap").find("tr:gt(0)").remove();
     $("#table_snap_nodes").find("tr:gt(0)").remove();
@@ -7946,23 +8040,23 @@
 
     $("#snap-show").hide();
     $('#table_snap').hide();
-    if(refresh){
+    if (refresh) {
       $("#snap-delete").show();
       $("#snap-apply").show();
       $('#table_snap').show();
-      if ((node_multi_selected!=null) && (node_multi_selected.length == 1)){
+      if ((node_multi_selected != null) && (node_multi_selected.length == 1)) {
         // list of snapshot of selected cu
-        var cu=node_multi_selected[0];
+        var cu = node_multi_selected[0];
         $("#list_snapshot").html("List snapshot of " + cu);
 
         jchaos.search(cu, "snapshotsof", false, function (snaplist) {
-        populateSnapList(tmpObj,snaplist);
+          populateSnapList(tmpObj, snaplist);
 
         });
       } else {
         // list all snapshots
         jchaos.search("", "snapshots", false, function (snaplist) {
-          populateSnapList(tmpObj,snaplist);
+          populateSnapList(tmpObj, snaplist);
         });
       }
       return;
@@ -7990,7 +8084,7 @@
           tmpObj.node_name_to_desc[elem] = desc[0];
 
         }
-        var node_name_to_desc=tmpObj.node_name_to_desc;
+        var node_name_to_desc = tmpObj.node_name_to_desc;
         if (node_name_to_desc[elem] == null) {
           type = "NA";
         } else {
@@ -7999,8 +8093,8 @@
         $('#table_snap_nodes').append('<tr class="row_element" id="' + name + '"><td>' + name + '</td><td>' + type + '</td></tr>');
 
       });
-    } 
-    
+    }
+
   }
 
   /**
@@ -8055,66 +8149,66 @@
     return this.each(function () {
       var notupdate_dataset = 1;
       var templateObj = {
-        template:options.template,
+        template: options.template,
         type: options.template,
         filter: "",
         interval: options.Interval,
-        check_interval:8000,
-        last_check:0,
+        check_interval: 8000,
+        last_check: 0,
         node_list_interval: null,
         node_selected: null,
-        health_time_stamp_old:{},
-        node_name_to_desc:[],
-        node_name_to_index:[],
-        off_line:[],
+        health_time_stamp_old: {},
+        node_name_to_desc: [],
+        node_name_to_index: [],
+        off_line: [],
         index: 0,
         data: null,
-        upd_chan:-1,
-        buildInterfaceFn: function(){}, /* build the skeleton*/
-        setupInterfaceFn:function(){}, /*create and setup table*/
-        generateTableFn: function(){}, /* update table */
-        generateCmdFn: function(){},
-        updateFn: function(){},
-        checkLiveFn:function(){},
-        menuItemFn: function(){}, /* menu on the table */
-        menuActionsFn: function(){} /*actions on the table */
+        upd_chan: -1,
+        buildInterfaceFn: function () { }, /* build the skeleton*/
+        setupInterfaceFn: function () { }, /*create and setup table*/
+        generateTableFn: function () { }, /* update table */
+        generateCmdFn: function () { },
+        updateFn: function () { },
+        checkLiveFn: function () { },
+        menuItemFn: function () { }, /* menu on the table */
+        menuActionsFn: function () { } /*actions on the table */
 
       };
 
       /* Transform to HTML */
       // var html = chaosCtrl2html(cu, options, '');
       if (options.template == "cu") {
-        templateObj.buildInterfaceFn= buildCUInterface; /* build the skeleton*/
-        templateObj.setupInterfaceFn= setupCU; /*create and setup table*/
-        templateObj.updateInterfaceFn=updateInterfaceCU;
-        templateObj.generateTableFn=generateGenericTable; /* update table */
-        templateObj.generateCmdFn=generateGenericControl;
-        templateObj.updateFn=updateGenericCU;
-        templateObj.checkLiveFn=checkLiveCU;
+        templateObj.buildInterfaceFn = buildCUInterface; /* build the skeleton*/
+        templateObj.setupInterfaceFn = setupCU; /*create and setup table*/
+        templateObj.updateInterfaceFn = updateInterfaceCU;
+        templateObj.generateTableFn = generateGenericTable; /* update table */
+        templateObj.generateCmdFn = generateGenericControl;
+        templateObj.updateFn = updateGenericCU;
+        templateObj.checkLiveFn = checkLiveCU;
 
-        
+
         /*** */
         /* Insert HTML in target DOM element */
-      
-      } else if (options.template == "node") {
-        templateObj.buildInterfaceFn= buildNodeInterface;
-        templateObj.setupInterfaceFn =setupNode;
-        templateObj.updateInterfaceFn=updateNodeInterface;
-        templateObj.generateTableFn=generateNodeTable; /* update table */
-        templateObj.upd_chan=-2; // custom channel update
 
-        templateObj.updateFn= updateNode;
-        templateObj.checkLiveFn=checkLiveCU;
+      } else if (options.template == "node") {
+        templateObj.buildInterfaceFn = buildNodeInterface;
+        templateObj.setupInterfaceFn = setupNode;
+        templateObj.updateInterfaceFn = updateNodeInterface;
+        templateObj.generateTableFn = generateNodeTable; /* update table */
+        templateObj.upd_chan = -2; // custom channel update
+
+        templateObj.updateFn = updateNode;
+        templateObj.checkLiveFn = checkLiveCU;
 
       } else if (options.template == "process") {
-        templateObj.upd_chan=-2; // custom channel update
+        templateObj.upd_chan = -2; // custom channel update
 
-        templateObj.buildInterfaceFn= buildProcessInterface;
-        templateObj.setupInterfaceFn= setupProcess;
-        templateObj.generateTableFn=generateProcessTable; /* update table */
+        templateObj.buildInterfaceFn = buildProcessInterface;
+        templateObj.setupInterfaceFn = setupProcess;
+        templateObj.generateTableFn = generateProcessTable; /* update table */
 
-        templateObj.updateInterfaceFn= updateProcessInterface;
-        templateObj.updateFn= updateProcess;
+        templateObj.updateInterfaceFn = updateProcessInterface;
+        templateObj.updateFn = updateProcess;
 
 
       } /*else if (options.template == "ctrl") {
