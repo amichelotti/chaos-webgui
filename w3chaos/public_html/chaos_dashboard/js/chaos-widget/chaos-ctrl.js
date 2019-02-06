@@ -1099,12 +1099,14 @@
   function generateProcessTable(tmpObj) {
     var cu = tmpObj.elems;
     var template = tmpObj.type;
-    var html = '<div class="row-fluid" id="table-space">';
+    var html = "";
+    html += '<table class="table table-bordered" id="graph_table-' + template + '">';
+    html += '</table>';
+    html += '<div class="row-fluid" id="table-space">';
+
 
     html += '<div class="box span12" id="container-main-table">';
     html += '<div class="box-content span12">';
-    html += '<table class="table table-bordered" id="graph_table-' + template + '">';
-    html += '</table>';
 
     html += '<table class="table table-bordered" id="main_table-' + template + '">';
     html += '<thead class="box-header processMenu">';
@@ -2902,12 +2904,37 @@
 
     return html;
   }
+  function updateProcessServer(tmpObj){
+    jchaos.search("", "agent", true, function (ag) {
+      var agent_obj = {};
+      var agent_list=[];
+      ag.forEach(function (elem) {
+        var regx = /ChaosAgent_(.+)\:(.+)/;
+        var match = regx.exec(elem);
+        if (match) {
+          var server = match[1];
+          agent_list.push(server)
+          
+        }
+      });
+      tmpObj['agent_list']=agent_list;
+    });
+  }
   function setupProcess(tempObj) {
     var list_eu = [];
     var list_eu_full = [];
 
     var list_class = [];
     var list_zone = [];
+    if(tempObj.hasOwnProperty('update-server-interval')){
+      clearInterval('update-server-interval');
+      delete tempObj['update-server-interval'];
+    }
+    updateProcessServer(tempObj);
+    tempObj['update-server-interval']=setInterval(function(){
+      updateProcessServer(tempObj);
+    },10000);
+
     updateProcessList(tempObj, function (tmpObj) {
       updateProcessTable(tmpObj);
       var proclist = tmpObj.data;
@@ -3099,7 +3126,10 @@
     $("#specific-table-" + tmpObj.template).html(htmlt);
     $("#specific-control-" + tmpObj.template).html(htmlc);
     tmpObj.updateInterfaceFn(tmpObj);
-
+    if(tmpObj.hasOwnProperty('update-server-interval')){
+      clearInterval('update-server-interval');
+      delete tmpObj['update-server-interval'];
+    }
     if ((tmpObj.node_list_interval != null)) {
       clearInterval(tmpObj.node_list_interval);
     }
@@ -3197,6 +3227,7 @@
 
   function executeNodeMenuCmd(tmpObj, cmd, opt) {
     node_selected = tmpObj.node_selected;
+    var node_name_to_desc=tmpObj.node_name_to_desc;
     if (cmd == "edit-nt_agent") {
       var templ = {
         $ref: "agent.json",
@@ -3413,10 +3444,10 @@
       return;
     } else if (cmd == "console-node") {
       var agentn = node_name_to_desc[node_selected].parent;
-
+      var server=node_name_to_desc[node_selected].desc.ndk_host_name;
       jchaos.node(agentn, "get", "agent", node_selected, null, function (data) {
         console.log("->" + JSON.stringify(data));
-        getConsole("Console:" + node_selected, data.association_uid, "localhost:8071", 2, 1, 1000);
+        getConsole(server+":" + node_selected, data.association_uid, server+":8071", 2, 1, 1000);
       });
 
 
@@ -3988,8 +4019,9 @@
                   for (var server in serverlist) {
                     jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", function (r) {
                       console.log("Script running onto:" + server + " :" + JSON.stringify(r));
-                      var node_selected = tmpObj.node_selected;
                       instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
+                      getConsole(server+":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
+
                     }, function (bad) {
                       console.log("Some error getting loading script:" + bad);
                       instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
@@ -4002,6 +4034,8 @@
                   jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", function (r) {
                     console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                     instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
+                    getConsole(server+":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
+
                   }, function (bad) {
                     console.log("Some error getting loading script:" + bad);
                     instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
@@ -4078,7 +4112,7 @@
             console.log("Script running onto:" + server + " :" + JSON.stringify(r));
             var node_selected = tmpObj.node_selected;
             instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-            getConsole("Console:" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
+            getConsole(server+":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
           }, function (bad) {
             console.log("Some error getting loading script:" + bad);
             instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
@@ -4139,7 +4173,7 @@
       var status = tmpObj.data[p].msg;
       var parent = tmpObj.data[p].parent;
       var infoServer = tmpObj.agents[hostname];
-      var parent_str = parent + " (i:" + infoServer.idletime + ",u:" + infoServer.usertime + ",s:" + infoServer.systime + "io:" + infoServer.iowait + ")";
+      var parent_str = parent + " (" + infoServer.idletime +")";
       var encoden = encodeName(p);
       $("#" + encoden + "_start_ts").html(started_timestamp);
       $("#" + encoden + "_end_ts").html(end_timestamp);
@@ -4155,7 +4189,7 @@
     }
     if (tmpObj.hasOwnProperty("server_charts")) {
       var now = (new Date()).getTime();
-      for(var server in tmpObj['agents']){
+      for (var server in tmpObj['agents']) {
         var infoServer = tmpObj.agents[server];
         var enc = encodeName(server);
         var chart = tmpObj['server_charts'][enc];
@@ -4165,8 +4199,8 @@
         chart.series[3].addPoint([now, infoServer.iowait], false, false);
         chart.redraw();
       }
-      
-     
+
+
     }
 
   }
@@ -4245,88 +4279,101 @@
 
   }
   function updateProcessInterface(tmpObj) {
-    updateProcessList(tmpObj);
+  //  updateProcessList(tmpObj);
     var tablename = "main_table-" + tmpObj.template;
     var graph_table = "graph_table-" + tmpObj.template;
     var template = tmpObj.type;
     var cnt = 0;
-    var chart_options = {
-      title: {
-        text: ''
-      },
-
-      xAxis: {
-        type: "datetime",
-        title: {
-          text: 'Time'
-        }
-      },
-      yAxis: {
-        title: {
-          text: '%'
-        },
-        max:100
-      },
-      legend: {
-        layout: 'vertical',
-        align: 'right',
-        verticalAlign: 'middle'
-      },
-
-      plotOptions: {
-        series: {
-          label: {
-            connectorAllowed: false
-          },
-        }
-      },
-      series: [{
-        name: 'idle',
-        data: []
-      }, {
-        name: 'cpu',
-        data: []
-      }, {
-        name: 'sys',
-        data: []
-      }, {
-        name: 'iow',
-        data: []
-      }]
-    };
+    var num_chart = 3;
+    var hostWidth = $(window).width();
+    var hostHeight = $(window).height();
     $("#" + tablename).find("tr:gt(0)").remove();
-    $("#" + graph_table).find("tr:gt(0)").remove();
 
-    var serverlist = tmpObj['agents'];
-    var html = "";
-    var server_charts = {};
 
-    for (var key in serverlist) {
-      var encoden = encodeName(key);
-      if ((cnt % 4) == 0) {
-        if (cnt > 0) {
-          html += "</tr>"
-        }
-        html += '<tr class="row_element processMenu" id=graph-row"' + cnt + '">';
-      }
-      html += '<td class="td_element" id="graph-' + encoden + '"</td>';
+    if (JSON.stringify(tmpObj['agent_list']) !== JSON.stringify(tmpObj['old_agent_list'])) {
+      tmpObj['old_agent_list'] = tmpObj['agent_list'];
 
-      cnt++;
-    };
-    if (cnt > 0) {
-      html += "</tr>";
-      $("#" + graph_table).append(html);
+      var chart_options = {
+        chart: {
+          height: (1 / (num_chart) * 100) + '%',
+          width: (hostWidth / (num_chart + 1))
+
+        },
+        title: {
+          text: ''
+        },
+
+        xAxis: {
+          type: "datetime",
+          title: {
+            text: 'Time'
+          }
+        },
+        yAxis: {
+          title: {
+            text: '%'
+          },
+          max: 100
+        },
+        legend: {
+          layout: 'vertical',
+          align: 'right',
+          verticalAlign: 'middle'
+        },
+
+        plotOptions: {
+          series: {
+            label: {
+              connectorAllowed: false
+            },
+          }
+        },
+        series: [{
+          name: 'idle',
+          data: []
+        }, {
+          name: 'cpu',
+          data: []
+        }, {
+          name: 'sys',
+          data: []
+        }, {
+          name: 'iow',
+          data: []
+        }]
+      };
+      $("#" + graph_table).find("tr:gt(0)").remove();
+
+      var serverlist = tmpObj['agents'];
+      var html = "";
+      var server_charts = {};
+
       for (var key in serverlist) {
         var encoden = encodeName(key);
-        chart_options.title.text = "Server " + key;
+        if ((cnt % num_chart) == 0) {
+          if (cnt > 0) {
+            html += "</tr>"
+          }
+          html += '<tr class="row_element processMenu" id=graph-row"' + cnt + '">';
+        }
+        html += '<td class="td_element" id="graph-' + encoden + '"></td>';
 
-        server_charts[encoden] = new Highcharts.chart("graph-" + encoden, chart_options);
+        cnt++;
+      };
+      if (cnt > 0) {
+        html += "</tr>";
+        $("#" + graph_table).append(html);
+        for (var key in serverlist) {
+          var encoden = encodeName(key);
+          chart_options.title.text = "Server " + key;
+
+          server_charts[encoden] = new Highcharts.chart("graph-" + encoden, chart_options);
+
+        }
+        tmpObj['server_charts'] = server_charts;
 
       }
-      tmpObj['server_charts'] = server_charts;
-
     }
-
     for (var p in tmpObj.data) {
       var ptype = tmpObj.data[p].ptype;
       var pname = tmpObj.data[p].pname;
@@ -4484,7 +4531,7 @@
                     console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                     var node_selected = tmpObj.node_selected;
                     instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                    getConsole("Console:" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
+                    getConsole(server+":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
                   }, function (bad) {
                     console.log("Some error getting loading script:" + bad);
                     instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
@@ -4531,7 +4578,7 @@
     updateProcessList(tmpObj, function (t) {
       if (JSON.stringify(t['elems']) !== JSON.stringify(t['old_elems'])) {
         updateProcessInterface(t);
-        tmpObj['old_elems'] = tmpObj['elems'];
+        t['old_elems'] = t['elems'];
 
       }
       updateProcessTable(t);
@@ -4542,19 +4589,37 @@
 
   function updateProcessList(tmpObj, handler) {
     var proc = {};
+    if(!tmpObj.hasOwnProperty('agent_list')){
+      return;
+    }
+    var ag=tmpObj['agent_list'];
+    var agent_obj={};
+    var proc_list=[];
 
-    jchaos.search("", "agent", true, function (ag) {
-      var agent_obj = {};
-      ag.forEach(function (elem) {
-        var regx = /ChaosAgent_(.+)\:(.+)/;
-        var match = regx.exec(elem);
-        if (match) {
-          console.log("agent " + match[1]);
-          var server = match[1];
-          agent_obj[server] = {};
+    ag.forEach(function (server) {
+      agent_obj[server] = {};
+      var r=jchaos.rmtListProcess(server + ":8071",null,null);
+      if (r.hasOwnProperty("info")) {
+        agent_obj[server]['idletime'] = parseFloat(r.info.idletime);
+        agent_obj[server]['usertime'] = parseFloat(r.info.usertime);
+        agent_obj[server]['systime'] = parseFloat(r.info.systime);
+        agent_obj[server]['iowait'] = parseFloat(r.info.iowait);
+        agent_obj[server]['ts'] = r.info.ts;
+      }
 
-          jchaos.rmtListProcess(server + ":8071", function (r) {
+      if (r.data.hasOwnProperty("processes") && (r.data.processes instanceof Array)) {
+        var processes = r.data.processes;
+        processes.forEach(function (p) {
+          p['hostname'] = server;
+          p['parent'] = server;
 
+          proc[p.uid] = p;
+          proc_list.push(p.uid);
+        });
+      }
+    });
+      
+     /* jchaos.rmtListProcess(server + ":8071", function (r) {
             if (r.hasOwnProperty("info")) {
               agent_obj[server]['idletime'] = parseFloat(r.info.idletime);
               agent_obj[server]['usertime'] = parseFloat(r.info.usertime);
@@ -4565,37 +4630,27 @@
 
             if (r.data.hasOwnProperty("processes") && (r.data.processes instanceof Array)) {
               var processes = r.data.processes;
-              tmpObj['elems'] = [];
               processes.forEach(function (p) {
                 p['hostname'] = server;
-                p['parent'] = elem;
+                p['parent'] = server;
 
                 proc[p.uid] = p;
-                tmpObj['elems'].push(p.uid);
-
+                proc_list.push(p.uid);
               });
-              tmpObj.data = proc;
-              if (typeof handler === "function") {
-                handler(tmpObj);
-              }
-            } else {
-              if (typeof handler === "function") {
-                tmpObj['elems'] = [];
-                tmpObj.data = {};
-                handler(tmpObj);
-              }
-            }
+             
+          
+            } 
           }, function (bad) {
-            console.log("Some error getting console occur:" + bad);
+            console.log("Some error state of server:"+server+" occur:" + bad);
           });
-
-        }
-      });
+      });*/
+      tmpObj['data'] = proc;
+      tmpObj['elems']=proc_list;
       tmpObj['agents'] = agent_obj;
-    });
-    /*  if (proc != null) {
-        jchaos.variable("process", "set", proc, null);
-      }*/
+      if (typeof handler === "function") {
+        handler(tmpObj);
+      }
+    
     return proc;
   }
   function searchEu(str, alive, list_zone, list_class, list_eu_name) {

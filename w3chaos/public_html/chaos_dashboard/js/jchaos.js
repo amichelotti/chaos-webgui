@@ -36,6 +36,7 @@
 		}
 		/******* REMOTE PROCESS MANAGEMENT ****/
 		jchaos.basicRmt=function (server,func,param,handler,badhandler){
+			if(handler instanceof Function){
 			jchaos.basicPost("api/v1/restconsole/"+func, JSON.stringify(param), function (r) {
 				if(handler instanceof Function){
 					handler(r);
@@ -43,6 +44,10 @@
 					return r;
 				} 
 			},  badhandler,server);
+		} else {
+			return 	jchaos.basicPost("api/v1/restconsole/"+func, JSON.stringify(param), null,null,server);
+
+		}
 		}
 		/**
 		 * Retrive a given environemnt variable

@@ -65,7 +65,7 @@ $('#main-dashboard').chaosDashboard({
                 collapsed: true,
 				withQuotes: true,
 				template:"process",
-                Interval: 1000
+                Interval: 2000
 
             });
 </script>
