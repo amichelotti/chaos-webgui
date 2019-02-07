@@ -79,7 +79,7 @@
 		jchaos.rmtUploadScript=function (server,name,ptype,content,handler,badhandler){
 			
 			if((name instanceof Object) && (ptype instanceof Function) && (content instanceof Function)){
-				return jchaos.basicRmt(server,"load",JSON.stringify(name),ptype,content);
+				return jchaos.basicRmt(server,"load",name,ptype,content);
 			}
 			var param ={};
 			param['script_name']=name;     

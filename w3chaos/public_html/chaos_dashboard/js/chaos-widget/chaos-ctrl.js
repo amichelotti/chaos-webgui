@@ -4234,22 +4234,17 @@
   function loadScriptOnServer(tmpObj, jsonscript, serveList, handler) {
     if ((serveList == null) || (!(serverList instanceof Array))) {
       // load on all servers
-      var agentlist = [];
-
-      jchaos.search("", "agent", true, function (ag) {
-        ag.forEach(function (elem) {
-          var regx = /ChaosAgent_(.+)\:(.+)/;
-          var match = regx.exec(ag);
-          if (match) {
-            console.log("loading on agent " + match[1]);
-            var server = match[1];
-            agentlist.push(server);
+      var ag = tmpObj['agent_list'];
+        var cnt=ag.length;
+        ag.forEach(function (server) {
             jchaos.rmtUploadScript(server + ":8071", jsonscript, function (r) {
               if (r.err != 0) {
-                instantMessage("Load Script", "cannot load:" + r.errmsg, 5000, false);
+                instantMessage(server+": Load Script", "cannot load:" + r.errmsg, 5000, false);
               } else {
                 instantMessage("Script loaded onto:" + server, 2000, false);
-                handler(r);
+                if(--cnt == 0){
+                  handler(r);
+                }
               }
 
 
@@ -4258,12 +4253,7 @@
               instantMessage("Load Script", "Exception  loading:" + bad, 5000, false);
 
             });
-
-          }
-        }
-        );
-
-      });
+          });
     } else {
       serveList.forEach(function (elem) {
         jchaos.rmtUploadScript(elem + ":8071", jsonscript, function (r) {
@@ -4494,12 +4484,7 @@
             var maxIdle = 0;
             var server = null;
             var chaos_prefix = "";
-            for (var key in serverlist) {
-              if (serverlist[key].idletime > maxIdle) {
-                maxIdle = serverlist[key].idletime;
-                server = key;
-              }
-            };
+            server=findBestServer(tmpObj);
             if (server == null) {
               alert("NO Server Available");
               return;
