@@ -15,16 +15,19 @@
 			async: true,
 			limit_on_going: 10000,
 			history_page_len: 1000,
+			timeout:3000,
 			console_log: function (str) { console.log(str); },
 			console_err: function (str) { console.error(str); }
 
 		};
 		jchaos.setOptions = function (opt) {
+			
 			for (var attrname in opt) { jchaos.options[attrname] = opt[attrname]; }
 			var str = jchaos.options['uri'];
 		//	var regex = /\:\d+/;
 			//strip eventual port
 			jchaos.options['uri'] = str;
+			
 
 
 		}
@@ -174,6 +177,7 @@
 			var could_make_async = (typeof handleFunc === "function");
 			if (could_make_async == false) {
 				request.open("POST", url, false);
+
 				request.send(params);
 				if (request.status == 200) {
 					try {
@@ -190,6 +194,8 @@
 
 			}
 			request.open("POST", url, (jchaos.ops_on_going > jchaos.options.limit_on_going) ? false : (jchaos.options.async));
+			request.timeout = jchaos.options.timeout;
+
 			// console.log("on going:"+jchaos.ops_on_going);
 			// request.setRequestHeader("Content-Type", 'application/json');
 			jchaos.ops_on_going++;
@@ -243,6 +249,13 @@
 			}
 			request.onerror = function (e) {
 				console.error("request error:" + request.statusText);
+				//throw "error:" + request.statusText;
+				if (handleFuncErr != null && (typeof handleFuncErr === "function")) {
+					handleFuncErr(request.responseText);
+				}
+			};
+			request.ontimeout = function (e) {
+				console.error("request TIMEOUT:" + request.statusText);
 				//throw "error:" + request.statusText;
 				if (handleFuncErr != null && (typeof handleFuncErr === "function")) {
 					handleFuncErr(request.responseText);

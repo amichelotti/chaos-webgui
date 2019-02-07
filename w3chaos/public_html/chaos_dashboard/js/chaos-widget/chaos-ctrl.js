@@ -4595,10 +4595,10 @@
     var ag=tmpObj['agent_list'];
     var agent_obj={};
     var proc_list=[];
-
+    var cnt=0;
     ag.forEach(function (server) {
       agent_obj[server] = {};
-      var r=jchaos.rmtListProcess(server + ":8071",null,null);
+    /*  var r=jchaos.rmtListProcess(server + ":8071",null,null);
       if (r.hasOwnProperty("info")) {
         agent_obj[server]['idletime'] = parseFloat(r.info.idletime);
         agent_obj[server]['usertime'] = parseFloat(r.info.usertime);
@@ -4618,8 +4618,8 @@
         });
       }
     });
-      
-     /* jchaos.rmtListProcess(server + ":8071", function (r) {
+      */
+      jchaos.rmtListProcess(server + ":8071", function (r) {
             if (r.hasOwnProperty("info")) {
               agent_obj[server]['idletime'] = parseFloat(r.info.idletime);
               agent_obj[server]['usertime'] = parseFloat(r.info.usertime);
@@ -4637,19 +4637,28 @@
                 proc[p.uid] = p;
                 proc_list.push(p.uid);
               });
-             
-          
-            } 
+            }
+            if(++cnt >= ag.length) {
+              tmpObj['data'] = proc;
+              tmpObj['elems']=proc_list;
+              tmpObj['agents'] = agent_obj;
+              if (typeof handler === "function") {
+                handler(tmpObj);
+              }
+            }
           }, function (bad) {
             console.log("Some error state of server:"+server+" occur:" + bad);
+            if(++cnt >= ag.length) {
+              tmpObj['data'] = proc;
+              tmpObj['elems']=proc_list;
+              tmpObj['agents'] = agent_obj;
+              if (typeof handler === "function") {
+                handler(tmpObj);
+              }
+            }
           });
-      });*/
-      tmpObj['data'] = proc;
-      tmpObj['elems']=proc_list;
-      tmpObj['agents'] = agent_obj;
-      if (typeof handler === "function") {
-        handler(tmpObj);
-      }
+      });
+      
     
     return proc;
   }
