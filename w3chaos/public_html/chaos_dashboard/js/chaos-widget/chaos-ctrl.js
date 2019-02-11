@@ -4193,11 +4193,13 @@
         var infoServer = tmpObj.agents[server];
         var enc = encodeName(server);
         var chart = tmpObj['server_charts'][enc];
-        chart.series[0].addPoint([now, infoServer.idletime], false, false);
-        chart.series[1].addPoint([now, infoServer.usertime], false, false);
-        chart.series[2].addPoint([now, infoServer.systime], false, false);
-        chart.series[3].addPoint([now, infoServer.iowait], false, false);
-        chart.redraw();
+        if(chart.hasOwnProperty("series") && ( chart.series instanceof Array)){
+          chart.series[0].addPoint([now, infoServer.idletime], false, false);
+          chart.series[1].addPoint([now, infoServer.usertime], false, false);
+          chart.series[2].addPoint([now, infoServer.systime], false, false);
+          chart.series[3].addPoint([now, infoServer.iowait], false, false); 
+          chart.redraw();
+        }
       }
 
 
@@ -4222,6 +4224,7 @@
           '<td>' + p.script_description + '</td>' +
           '<td>' + date + '</td></tr>');
       });
+      $("#mdl-script").resizable().draggable();
       $("#mdl-script").modal("show");
 
       $("#table_script tbody tr").click(function (e) {
@@ -7526,7 +7529,7 @@
       .html('<div><h6>' + msg + '</h6><input type="text" id="getEntryWindow_name" value="' + def_text + '" class="text ui-widget-content ui-corner-all"></div>')
       .dialog({
         modal: true, title: hmsg, zIndex: 10000, autoOpen: true,
-        width: 'auto', resizable: false,
+        width: 'auto', resizable: true,
         buttons: [
           {
             id: "confirm-yes",
@@ -7573,7 +7576,7 @@
       .html(htmp)
       .dialog({
         modal: true, title: hmsg, zIndex: 10000, autoOpen: true,
-        width: 'auto', resizable: false,
+        width: 'auto', resizable: true,
         buttons: [
           {
             id: "confirm-yes",
