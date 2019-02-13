@@ -254,7 +254,7 @@
     });
   }
 
-  function showJson(msg, cuname, json) {
+  function showJson(tmpObj,msg, cuname, json) {
     var name = encodeName(cuname);
 
     var instant = $('<div id=desc-' + name + '></div>').dialog({
@@ -290,7 +290,7 @@
           jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
         }
         $("#desc-" + name).html(jsonhtml);
-        jsonSetup($(this));
+        jsonSetup($(this),cuname);
         $(".json-toggle").trigger("click");
 
       }
@@ -372,7 +372,7 @@
 
         }, refresh);
 
-        jsonSetup($(this));
+        jsonSetup($(this),cuname);
 
       }
     });
@@ -1895,9 +1895,9 @@
    * JSON SETUP
    */
 
-  function jsonSetup(dom) {
+  function jsonSetup(dom,node_selected) {
     var collapsed = options.collapsed;
-    $(dom).on("click", "a.json-toggle", function () {
+    $(dom).off().on("click", "a.json-toggle", function () {
       var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
       target.toggle();
       if (target.is(':visible')) {
@@ -1911,6 +1911,8 @@
       return false;
     });
 
+    $(dom).off('click');
+    $(dom).off('keypress');
 
     $(dom).on("click", "span.json-key", function () {
       var id = this.id;
@@ -1926,11 +1928,12 @@
       if (e.keyCode == 13) {
         var id = this.id;
         var attr = id.split("-")[1];
-        jchaos.setAttribute(node_selected, attr, this.value, function () {
-          instantMessage("Attribute ", "\"" + attr + "\"=\"" + this.value + "\" sent", 1000, null, null, true)
+        var value=$("#" + id).val();
+        jchaos.setAttribute(node_selected, attr, value, function () {
+          instantMessage(node_selected+" Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 1000, null, null, true)
 
         }, function () {
-          instantMessage("Attribute Error", "\"" + attr + "\"=\"" + this.value + "\" sent", 1000, null, null, false)
+          instantMessage(node_selected+" Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 1000, null, null, false)
 
         });
         $("#" + this.id).toggle();
@@ -2293,12 +2296,11 @@
     } else {
       $("#table-scroll").css('height', '');
     }
-
-    $(this).off('keypress');
-    $(this).on('keypress', function (event) {
+    $(".setSchedule").off('keypress');
+    $(".setSchedule").on('keypress', function (event) {
       var t = $(event.target);
 
-      if ((event.which == 13) && (t.attr('class') == "setSchedule")) {
+      if ((event.which == 13) ) {
         //  var name = $(t).attr("cuname");
         var value = $(t).attr("value");
         jchaos.setSched(tmpObj.node_selected, value);
@@ -2445,21 +2447,26 @@
       var dslive = ($("input[type=radio][name=live-enable]:checked").val() == "true");
       var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
       var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0);
+      var node_multi_selected=tmpObj.node_multi_selected;
       jchaos.setProperty(node_multi_selected[0], [{ "dsndk_storage_type": storage_type }],
-        function () { instantMessage("Property Set", "dsndk_storage_type:" + storage_type, 1000, true); },
-        function () { instantMessage("ERROR Property Set", "dsndk_storage_type:" + storage_type, 3000, false); });
+        function () { instantMessage("Property Set", node_multi_selected[0]+" dsndk_storage_type:" + storage_type, 1000, true); },
+        function () { instantMessage("ERROR Property Set", node_multi_selected[0]+" dsndk_storage_type:" + storage_type, 3000, false); });
 
     });
     $("input[type=radio][name=histo-enable]").change(function (e) {
       var dslive = ($("input[type=radio][name=live-enable]:checked").val() == "true");
       var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
       var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0);
+      var node_multi_selected=tmpObj.node_multi_selected;
+
       jchaos.setProperty(node_multi_selected[0], [{ "dsndk_storage_type": storage_type }],
-        function () { instantMessage("Property Set", "dsndk_storage_type:" + storage_type, 1000, true); }
-        , function () { instantMessage("ERROR Property Set", "dsndk_storage_type:" + storage_type, 3000, false); });
+        function () { instantMessage("Property Set", node_multi_selected[0]+" dsndk_storage_type:" + storage_type, 1000, true); }
+        , function () { instantMessage("ERROR Property Set", node_multi_selected[0]+" dsndk_storage_type:" + storage_type, 3000, false); });
 
     });
     $("#cu_clear_current_cmd").click(function (e) {
+      var node_multi_selected=tmpObj.node_multi_selected;
+
       jchaos.node(node_multi_selected[0], "killcmd", "cu", null, null, function () {
         instantMessage("Clear Current Command", node_multi_selected[0] + ":Clearing last command OK", 1000, true);
       }, function () {
@@ -2468,6 +2475,8 @@
     });
 
     $("#cu_clear_queue").click(function (e) {
+      var node_multi_selected=tmpObj.node_multi_selected;
+
       jchaos.node(node_multi_selected[0], "clrcmdq", "cu", null, null, function () {
         instantMessage("Clear  Command Queue", node_multi_selected[0] + ":Clearing Command Queue OK", 1000, true);
       }, function () {
@@ -2516,20 +2525,22 @@
     $("#mdl-description").draggable();
     $("#mdl-snap").draggable();
     $("#mdl-log").resizable().draggable();
-    configureSliderCommands("slider-GAIN", "image_gain");
-    configureSliderCommands("slider-BRIGHTNESS", "image_brightness");
-    configureSliderCommands("slider-SHUTTER", "image_shutter");
-    configureSliderCommands("slider-CONTRAST", "image_contrast");
-    configureSliderCommands("slider-SHARPNESS", "image_sharpness");
+    configureSliderCommands(tmpObj,"slider-GAIN", "image_gain");
+    configureSliderCommands(tmpObj,"slider-BRIGHTNESS", "image_brightness");
+    configureSliderCommands(tmpObj,"slider-SHUTTER", "image_shutter");
+    configureSliderCommands(tmpObj,"slider-CONTRAST", "image_contrast");
+    configureSliderCommands(tmpObj,"slider-SHARPNESS", "image_sharpness");
     $(main_dom).on("keypress", "input.cucmdattr", function (e) {
       if (e.keyCode == 13) {
         var id = this.id;
         var attr = id.split("-")[1];
-        jchaos.setAttribute(node_selected, attr, this.value, function () {
-          instantMessage("Attribute ", "\"" + attr + "\"=\"" + this.value + "\" sent", 1000, true);
+        var value =$("#" + id).val();
+        var node_selected=tmpObj.node_selected;
+        jchaos.setAttribute(node_selected, attr, value, function () {
+          instantMessage(node_selected +" Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 1000, true);
 
         }, function () {
-          instantMessage("Attribute Error", "\"" + attr + "\"=\"" + this.value + "\" sent", 1000, false);
+          instantMessage(node_selected +" Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 1000, false);
 
         });
         $("#" + this.id).toggle();
@@ -2680,7 +2691,7 @@
       jchaos.getDesc(currsel, function (data) {
         tmpObj.node_name_to_desc[currsel] = data[0];
 
-        showJson("Description " + currsel, currsel, data[0]);
+        showJson(tmpObj,"Description " + currsel, currsel, data[0]);
       });
 
     } else if (cmd == "show-picture") {
@@ -2696,7 +2707,7 @@
           cu.output.FRAMEBUFFER.$binary.hasOwnProperty("base64")) {
           // $("#mdl-dataset").modal("hide");
 
-          showPicture(currsel, "png", node_selected, refresh);
+          showPicture(currsel, "png", currsel, refresh);
         } else {
           alert(currsel + " cannot be viewed as a Picture, missing 'FRAMEBUFFER'");
         }
@@ -2706,7 +2717,8 @@
       $("#mdl-query").modal("show");
       var names = findTagsOf(tmpObj, currsel);
       element_sel("#select-tag", names, 1);
-      $("#select-tag").off().on("click", function () {
+      $("#select-tag").off('click');
+      $("#select-tag").on("click", function () {
         var tagname = $("#select-tag option:selected").val();
         $("#query-tag").val(tagname);
         var tag = tmpObj['tags'][tagname];
@@ -2715,8 +2727,8 @@
         $("#query-tag").attr('title', desc);
 
       });
-
-      $("#query-run").off().on("click", function () {
+      $("#query-run").off('click');
+      $("#query-run").on("click", function () {
         var vcameras = [];
         var qstart = $("#query-start").val();
         var qstop = $("#query-stop").val();
@@ -5032,7 +5044,7 @@
     html += generateGenericTable(node_list, template);
     return html;
   }
-  function configureSliderCommands(slname, slinput) {
+  function configureSliderCommands(tmpObj,slname, slinput) {
     $("#" + slname).slider({
       range: "max",
       min: 0,
@@ -5041,6 +5053,7 @@
       slide: function (event, ui) {
         $("#" + slinput).val(ui.value);
         var id = this.id;
+        var node_selected=tmpObj.node_selected;
         var attr = id.split("-")[1];
         jchaos.setAttribute(node_selected, attr, String(ui.value), function () {
           //   instantMessage("Attribute ", "\"" + attr + "\"=\"" + ui.value + "\" sent", 1000)
@@ -5155,8 +5168,8 @@
           } else if (status == 'Fatal Error' || status == 'Recoverable Error') {
             //$("#status_" + name_id).html('<a id="fatalError_' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" onclick="return show_fatal_error(this.id);"><i style="cursor:pointer;" class="material-icons rosso">error</i></a>');
             $("#" + name_id + "_health_status").html('<a id="Error-' + name_id + '" href="#mdl-fatal-error" role="button" data-toggle="modal" ><i style="cursor:pointer;" class="material-icons rosso">cancel</i></a>');
-
-            $("#Error-" + name_id).off().on("click", function () {
+            $("#Error-" + name_id).off('click');
+            $("#Error-" + name_id).on("click", function () {
               $("#name-FE-device").html(el.health.ndk_uid);
               $("#status_message").html(status);
 
@@ -6173,7 +6186,8 @@
               }
               $("#mdl-query").modal("show");
               $("#query-run").attr("graphname", graphname);
-              $("#query-run").off().on("click", function () {
+              $("#query-run").off('click');
+              $("#query-run").on("click", function () {
                 $("#mdl-query").modal("hide");
 
                 var graphname = $(this).attr("graphname");
