@@ -1540,6 +1540,17 @@
             }
 
           }
+        }, {
+          text: "Upload", click: function (e) {
+            getFile("Upload","upload the json",function(obj){
+              $("#edit-temp").dialog('close');
+              console.log("uploaded:"+JSON.stringify(obj));
+              jsonEditWindow(name,jsontemp,obj,editorFn);
+              $(this).remove();
+            }
+            );
+            
+          }
         },
         {
           text: "close", click: function (e) {
@@ -3377,7 +3388,7 @@
       jchaos.node(node_selected, "get", "us", "", null, function (data) {
         if (data.hasOwnProperty("us_desc")) {
           if (data.us_desc instanceof Object) {
-            var blob = new Blob([JSON.stringify(data)], { type: "json;charset=utf-8" });
+            var blob = new Blob([JSON.stringify(data.us_desc)], { type: "json;charset=utf-8" });
             saveAs(blob, node_selected + ".json");
           }
 
