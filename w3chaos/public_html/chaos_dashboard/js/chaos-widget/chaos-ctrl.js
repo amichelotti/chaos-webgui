@@ -290,14 +290,14 @@
           jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
         }
         $("#desc-" + name).html(jsonhtml);
-        jsonSetup($(this),cuname);
+        jsonSetup($(this),tmpObj);
         $(".json-toggle").trigger("click");
 
       }
     });
   }
 
-  function showDataset(msghead, cuname, refresh) {
+  function showDataset(msghead, cuname, refresh,tmpObj) {
     var update;
     var started = 0;
     var stop_update = false;
@@ -349,7 +349,11 @@
           } else {
             $('#dataset-update-' + name).text("Not Update");
           }
-          if (!stop_update) {
+          var isediting=false;
+          if(tmpObj.hasOwnProperty('json_editing')){
+            isediting=tmpObj.json_editing;
+          }
+          if ((!stop_update)&&(isediting==false)) {
             jchaos.getChannel(cuname, -1, function (imdata) {
               last_dataset = imdata[0];
               var converted = convertBinaryToArrays(imdata[0]);
@@ -372,7 +376,7 @@
 
         }, refresh);
 
-        jsonSetup($(this),cuname);
+        jsonSetup($(this),tmpObj);
 
       }
     });
@@ -1865,9 +1869,14 @@
    * JSON SETUP
    */
 
-  function jsonSetup(dom,node_selected) {
+  function jsonSetup(dom,tmpObj) {
     var collapsed = options.collapsed;
-    $(dom).off().on("click", "a.json-toggle", function () {
+    var node_selected=tmpObj.node_selected;
+    tmpObj['json_editing']=false;
+    $(dom).off('click');
+    $(dom).off('keypress');
+
+    $(dom).on("click", "a.json-toggle", function () {
       var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
       target.toggle();
       if (target.is(':visible')) {
@@ -1881,14 +1890,13 @@
       return false;
     });
 
-    $(dom).off('click');
-    $(dom).off('keypress');
-
     $(dom).on("click", "span.json-key", function () {
       var id = this.id;
       var attr = id.split("-")[1];
 
       $("#attr-" + attr).toggle();
+      tmpObj['json_editing']=true;
+      
       //var tt =prompt('type value');
       return false;
     });
@@ -1906,6 +1914,8 @@
           instantMessage(node_selected+" Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 1000, null, null, false)
 
         });
+        tmpObj['json_editing']=false;
+
         $("#" + this.id).toggle();
         return false;
       }
@@ -2656,7 +2666,7 @@
 
 
     } else if (cmd == "show-dataset") {
-      showDataset(currsel, currsel, 1000);
+      showDataset(currsel, currsel, 1000,tmpObj);
     } else if (cmd == "show-desc") {
       jchaos.getDesc(currsel, function (data) {
         tmpObj.node_name_to_desc[currsel] = data[0];
@@ -4967,11 +4977,11 @@
     html += '</select>';
 
     html += '<label class="label span3">Width </label>';
-    html += '<input class="input-xlarge focused span4" id="image-WIDTH" readonly title="Readout Resize image width" type="text" value="640">';
+    html += '<input class="input-xlarge focused span4" id="image-WIDTH_READOUT" readonly title="Readout Resize image width" type="text" value="640">';
     html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-WIDTH" title="SET Resize image width" type="number" value=640>';
 
     html += '<label class="label span3">Height </label>';
-    html += '<input class="input-xlarge focused span4" id="image-HEIGHT" readonly title="Readout Resize image height" type="text" value="480">';
+    html += '<input class="input-xlarge focused span4" id="image-HEIGHT_READOUT" readonly title="Readout Resize image height" type="text" value="480">';
     html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-HEIGHT" title="Resize image height" type="text" value=480>';
 
     html += '<label class="label span3">Offset X</label>';
@@ -4983,29 +4993,29 @@
     html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-OFFSETY" title="SET Image Offset Y (ROI)" type="text" value=0>';
 
     html += '<label class="label span3">Gain:</label>';
-    html += '<input class="input-xlarge focused span3" id="image-GAIN" readonly title="Image Readout Gain" type="text" value="0">';
-    html += '<input class="input-xlarge focused span3" id="image_gain" readonly title="Set Gain" type="number" value=0>';
+    html += '<input class="input-xlarge focused span3" id="image-GAIN_READOUT" readonly title="Image Readout Gain" type="text" value="0">';
+    html += '<input class="input-xlarge focused span3" id="image-GAIN_SET" readonly title="Set Gain" type="number" value=0>';
     html += '<div class="span3" id="slider-GAIN" title="Camera Gain"> </div>';
 
     html += '<label class="label span3">Brightness</label>';
-    html += '<input class="input-xlarge focused span3" id="image-BRIGHTNESS" readonly title="Image Readout Brightnessn" type="text">';
-    html += '<input class="input-xlarge focused span3" id="image_brightness" readonly title="SET Brightness" type="number" value=0>';
+    html += '<input class="input-xlarge focused span3" id="image-BRIGHTNESS_READOUT" readonly title="Image Readout Brightnessn" type="text">';
+    html += '<input class="input-xlarge focused span3" id="image_BRIGHTNESS_SET" readonly title="SET Brightness" type="number" value=0>';
     html += '<div class="span3" id="slider-BRIGHTNESS" title="Camera Brightness"></div>';
 
     html += '<label class="label span3">Shutter</label>';
-    html += '<input class="input-xlarge focused span3" id="image-SHUTTER" readonly title="Camera Readout Shutter" type="text">';
-    html += '<input class="input-xlarge focused span3" id="image_shutter" readonly title="SET Shutter" type="number" value=0>';
+    html += '<input class="input-xlarge focused span3" id="image-SHUTTER_READOUT" readonly title="Camera Readout Shutter" type="text">';
+    html += '<input class="input-xlarge focused span3" id="image-SHUTTER_SET" readonly title="SET Shutter" type="number" value=0>';
     html += '<div class="span3" id="slider-SHUTTER" title="Camera Shutter"> </div>';
 
 
     html += '<label class="label span3">Contrast</label>';
-    html += '<input class="input-xlarge focused span3" id="image-CONTRAST" readonly title="Camera Readout Contrast" type="text">';
-    html += '<input class="input-xlarge focused span3" id="image_contrast" readonly title="SET Contrast" type="number" value=0>';
+    html += '<input class="input-xlarge focused span3" id="image-CONTRAST_READOUT" readonly title="Camera Readout Contrast" type="text">';
+    html += '<input class="input-xlarge focused span3" id="image-CONTRAST_SET" readonly title="SET Contrast" type="number" value=0>';
     html += '<div class="span3" id="slider-CONTRAST" title="Camera Contrast"> </div>';
 
     html += '<label class="label span3">Sharpness</label>';
-    html += '<input class="input-xlarge focused span3" id="image-SHARPNESS" readonly title="Camera Readout Sharpness" type="text">';
-    html += '<input class="input-xlarge focused span3" id="image_sharpness" readonly title="SET Sharpness" type="number" value=0>';
+    html += '<input class="input-xlarge focused span3" id="image-SHARPNESS_READOUT" readonly title="Camera Readout Sharpness" type="text">';
+    html += '<input class="input-xlarge focused span3" id="image-SHARPNESS_SET" readonly title="SET Sharpness" type="number" value=0>';
     html += '<div class="span3" id="slider-SHARPNESS" title="Camera Sharpness"> </div>';
 
     html += '</div>';
@@ -5464,6 +5474,16 @@
 
     return html;
   }
+  function updateCameraProperties(propname,json){
+    if(json.input.hasOwnProperty(propname)){
+      $("#image-"+propname+"_SET").val(json.input[propname]);
+   //   $("#slider-"+propname).val(json.input[propname]);
+    }
+    if(json.output.hasOwnProperty(propname)){
+      $("#image-"+propname+"_READOUT").val(json.output[propname]);
+
+    }
+  }
   function updateCameraTable(tmpObj) {
     var cu = tmpObj.elems;
     var selected = tmpObj.data[tmpObj.index];
@@ -5476,8 +5496,25 @@
           if (selected.input.FMT != null) {
             fmt = selected.input.FMT;
           }
-          $("#image-GAIN").val(selected.input.GAIN);
-          $("#slider-GAIN").val(selected.input.GAIN);
+          updateCameraProperties("GAIN",selected);
+          updateCameraProperties("WIDTH",selected);
+          updateCameraProperties("HEIGHT",selected);
+          updateCameraProperties("OFFSETX",selected);
+          updateCameraProperties("OFFSETY",selected);
+          updateCameraProperties("BRIGHTNESS",selected);
+          updateCameraProperties("SHUTTER",selected);
+          updateCameraProperties("CONTRAST",selected);
+          updateCameraProperties("SHARPNESS",selected);
+/*
+          if(selected.input.hasOwnProperty('GAIN')){
+            $("#image-GAIN").val(selected.input.GAIN);
+            $("#slider-GAIN").val(selected.input.GAIN);
+          }
+          
+          if(selected.input.hasOwnProperty('GAIN')){
+            $("#image-GAIN").val(selected.input.GAIN);
+            $("#slider-GAIN").val(selected.input.GAIN);
+          }
           $("#image-WIDTH").val(selected.input.WIDTH);
           $("#image-HEIGHT").val(selected.input.HEIGHT);
           $("#image-OFFSETX").val(selected.input.OFFSETX);
@@ -5486,8 +5523,9 @@
           $("#image-SHUTTER").val(selected.input.SHUTTER);
           $("#image-CONTRAST").val(selected.input.CONTRAST);
           $("#image-SHARPNESS").val(selected.input.SHARPNESS);
-
+          */
         }
+        
         $("#cameraName").html(selected.health.ndk_uid);
         $("#cameraImage").attr("src", "data:image/" + fmt + ";base64," + bin);
       }
@@ -8269,7 +8307,7 @@
 
       $("#menu-dashboard").html(generateMenuBox());
 
-      jsonSetup($(this));
+      //jsonSetup($(this));
       $(".savetofile").on("click", function (e) {
         var t = $(e.target);
         if (save_obj instanceof Object) {
