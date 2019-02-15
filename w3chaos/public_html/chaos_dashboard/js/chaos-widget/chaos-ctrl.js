@@ -689,47 +689,7 @@
     return ret;
 
   }
-  function installCheckLive() {
-    if (node_list_check != null) {
-      clearInterval(node_list_check)
-    }
-    node_list_check = setInterval(function () {
-      node_live_selected.forEach(function (elem, index) {
-        var curr_time = 0;
-        if (elem.hasOwnProperty("health") && elem.health.hasOwnProperty("dpck_ats")) {
-          curr_time = elem.health.dpck_ats;
-        }
-        if (elem.hasOwnProperty("output") && elem.output.hasOwnProperty("dpck_ats") && (elem.output.dpck_ats > curr_time)) {
-          curr_time = elem.output.dpck_ats;
-        }
-        if (elem.hasOwnProperty("health") && elem.health.hasOwnProperty("ndk_uid")) {
-          var name = encodeName(elem.health.ndk_uid);
-          var diff = (curr_time - health_time_stamp_old[name]);
-          if (diff != 0) {
-            $("#" + name).css('color', 'green');
-            $("#" + name).find('td').css('color', 'green');
-
-            off_line[elem.health.ndk_uid] = false;
-
-          } else {
-            $("#" + name).css('color', 'black');
-            $("#" + name).find('td').css('color', 'black');
-            off_line[elem.health.ndk_uid] = true;
-            node_live_selected[index].health.nh_status = "Dead";
-
-          }
-          health_time_stamp_old[name] = curr_time;
-        } else if (node_list.length > 0) {
-          var id = node_list[index];
-          var name = encodeName(id);
-          $("#" + name).css('color', 'red');
-          off_line[id] = true;
-
-        }
-
-      });
-    }, 10000);
-  }
+  
   function retriveCurrentCmdArguments(tmpObj, alias) {
     var arglist = [];
     if (node_selected == null) {
@@ -1445,10 +1405,9 @@
             }
           });
           if (found == false) {
-            if (off_line[item] !== false) {
               console.log("deleting cu:\"" + item.ndk_uid + "\"");
               jchaos.node(item.ndk_uid, "del", "cu", node_selected, null);
-            }
+            
           }
         });
 
@@ -7220,7 +7179,7 @@
 
     html += '<li class="black">';
     html += '<a href="./chaos_node.php" role="button" class="show_unitserver" data-toggle="modal">';
-    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Node</span>';
+    html += '<i class="icon-print green"></i><span class="opt-menu hidden-tablet">Management</span>';
     html += '</a>';
     html += '</li>';
 
@@ -8237,7 +8196,7 @@
         health_time_stamp_old: {},
         node_name_to_desc: [],
         node_name_to_index: [],
-        off_line: [],
+        off_line:{},
         index: 0,
         data: null,
         upd_chan: -1,
