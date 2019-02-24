@@ -3149,13 +3149,16 @@
         }
       }
 
-    }, options.Interval, tmpObj.updateTableFn);
+    }, tmpObj.refresh_rate, tmpObj.updateTableFn);
 
   }
   /**********
    * 
    */
   function changeView(tmpObj, cutype) {
+    jchaos.setOptions({"timeout":3000});
+    tmpObj.refresh_rate=options.Interval;
+
     if ((cutype.indexOf("SCPowerSupply") != -1)) {
       tmpObj.upd_chan = -1;
       tmpObj.type = "SCPowerSupply";
@@ -3174,9 +3177,11 @@
     } else if ((cutype.indexOf("RTCamera") != -1)) {
       tmpObj.type = "RTCamera";
 
-      tmpObj.upd_chan = -1;
+      tmpObj.upd_chan = -2;
       tmpObj.generateTableFn = generateCameraTable;
       tmpObj.updateFn = updateCameraTable;
+      tmpObj.refresh_rate=2*options.Interval;
+      jchaos.setOptions({"timeout":6000});
     } else {
       tmpObj.upd_chan = 255;
       tmpObj.type = "cu";
@@ -4822,11 +4827,7 @@
     return tmp;
   }
 
-  function mainNode(template) {
-
-
-  }
-
+  
   function rebuildAlgoInterface(template) {
 
     var search_string = $("#search-chaos").val();
@@ -5486,7 +5487,12 @@
   }
   function updateCameraTable(tmpObj) {
     var cu = tmpObj.elems;
-    var selected = tmpObj.data[tmpObj.index];
+    if(tmpObj.skip_fetch>0){
+      tmpObj.skip_fetch--;
+    } else {
+    jchaos.getChannel(tmpObj.node_selected, -1, function (d) {
+      var selected=d[0];
+//    var selected = tmpObj.data[tmpObj.index];
     if (selected != null && selected.hasOwnProperty("output")) {
       $("#cameraName").html("<b>" + selected.output.ndk_uid + "</b>");
       if (selected.output.hasOwnProperty("FRAMEBUFFER")) {
@@ -5526,11 +5532,19 @@
           */
         }
         
-        $("#cameraName").html(selected.health.ndk_uid);
+        $("#cameraName").html('<font color="green"><b>'+selected.health.ndk_uid+'</b></font> '+selected.output.dpck_seq_id);
         $("#cameraImage").attr("src", "data:image/" + fmt + ";base64," + bin);
       }
-    }
-    updateGenericCU(tmpObj)
+    }},function(d){
+      tmpObj.skip_fetch=3;
+      $("#cameraName").html('<font color="red"><b>'+tmpObj.node_selected+'</b> (cannot fetch correctly)</font> skipping next:'+tmpObj.skip_fetch+' updates');
+    });
+  } 
+    jchaos.getChannel(cu, 255, function (selected) {
+      tmpObj.data = selected;
+
+      updateGenericCU(tmpObj);
+    });
   }
   function updatePS(tmpObj) {
     var cu = tmpObj.data;
@@ -8226,7 +8240,8 @@
         template: options.template,
         type: options.template,
         filter: "",
-        interval: options.Interval,
+        refresh_rate: options.Interval,
+        skip_fetch:0,
         check_interval: 8000,
         last_check: 0,
         node_list_interval: null,
