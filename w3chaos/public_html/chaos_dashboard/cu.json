@@ -63,7 +63,7 @@
 	"dsndk_storage_live_time" : {
 		"type":"integer",
 		"default":0,
-		"description":"Interval of time before the ageing algorithm starts"
+		"description":"the time in ms that need to pass before store another datapack into the live system"
 
 	},
 	"cudk_driver_description":{
