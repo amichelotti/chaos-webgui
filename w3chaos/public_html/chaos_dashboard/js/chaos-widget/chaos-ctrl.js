@@ -5070,7 +5070,7 @@
     html += '<th colspan="2">Time sys/usr [%]</th>';
     html += '<th colspan="2">Command Current/Queue</th>';
     html += '<th colspan="2">Alarms dev/cu</th>';
-    html += '<th>Push rate</th>';
+    html += '<th colspan="2">Rate Hz-KB/s</th>';
     html += '</tr>';
 
 
@@ -5090,7 +5090,9 @@
       html += "<td id='" + cuname + "_system_command'></td>";
       html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
       html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";
-      html += "<td id='" + cuname + "_health_prate'></td></tr>";
+      html += "<td id='" + cuname + "_health_prate'></td><td id='" + cuname + "_health_pband'></td></tr>";
+      
+
     });
 
     html += '</table>';
@@ -5129,6 +5131,10 @@
           $("#" + name_id + "_health_usertime").html(el.usrTime);
           $("#" + name_id + "_health_systemtime").html(el.systTime);
           $("#" + name_id + "_health_prate").html(Number(el.health.cuh_dso_prate).toFixed(3));
+          if(el.health.hasOwnProperty("cuh_dso_size")){
+            var band=Number(el.health.cuh_dso_prate)*Number(el.health.cuh_dso_size)/1024;
+            $("#" + name_id + "_health_pband").html(band.toFixed(3));
+          }
           if ((tmpObj.off_line[name_device_db] > 0) && (status != "Unload")) {
             status = "Dead";
           }
