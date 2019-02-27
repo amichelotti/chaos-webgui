@@ -5273,7 +5273,7 @@
 
               $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons yellow">cached</i>');
             }
-          } else {
+          } else if(!el.system.hasOwnProperty("dp_sys_unit_type") || (el.system.dp_sys_unit_type!="nt_rt_cu")){
             $("#" + name_id + "_system_bypass").attr('title', "Rest CU")
             $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">http</i>');
           }
