@@ -359,6 +359,8 @@ void DefaultPersistenceDriver::timeout(){
         double time_offset = (double(ts - i_cuid->second.last_ts))/1000.0; //time in seconds
         uint32_t pckts=(pkid -i_cuid->second.last_pckid);
         double output_ds_rate = ((time_offset>0)&&(pckts>0))?(double)pckts/time_offset:0; //rate in seconds
+        uint32_t size_pcks= (pckts>0)?i_cuid->second.pckts_size/pckts:0;
+
         if(output_ds_rate>0){
             i_cuid->second.freq=output_ds_rate;
         } else if(pkid==i_cuid->second.last_pckid){
@@ -369,8 +371,8 @@ void DefaultPersistenceDriver::timeout(){
                                                         i_cuid->second.freq,false);
         HealtManager::getInstance()->addNodeMetricValue(i_cuid->first,
                                                         chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_SIZE,
-                                                        i_cuid->second.freq,false);                                                
-        DPD_LDBG << "Health :"<<i_cuid->first<<" rate:"<<  i_cuid->second.freq << " pkid:"<<pkid<<" at:"<<ts<<" last pckid:"<<i_cuid->second.last_pckid<<" at:"<<i_cuid->second.last_ts<< " delta packet:"<<(pkid-i_cuid->second.last_pckid)<< " delta time:"<<(ts-i_cuid->second.last_ts);
+                                                       (int32_t)size_pcks,false);                                                
+        DPD_LDBG << "Health :"<<i_cuid->first<<" rate:"<<  i_cuid->second.freq << " size"<<size_pcks<<" pkid:"<<pkid<<" at:"<<ts<<" last pckid:"<<i_cuid->second.last_pckid<<" at:"<<i_cuid->second.last_ts<< " delta packet:"<<(pkid-i_cuid->second.last_pckid)<< " delta time:"<<(ts-i_cuid->second.last_ts);
       
         i_cuid->second.last_ts=ts;
         i_cuid->second.pckts_size=0;
