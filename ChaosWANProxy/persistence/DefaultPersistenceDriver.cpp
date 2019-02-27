@@ -260,11 +260,15 @@ int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
 
         //free the packet
         serialization->disposeOnDelete = false;
+        uint32_t size=serialization->getBufferLen();
         if((err =(int)next_client->device_client_channel->storeAndCacheDataOutputChannel(producer_key+ chaos::DataPackPrefixID::OUTPUT_DATASET_POSTFIX,
                                                                                          (void*)serialization->getBufferPtr(),
-                                                                                         (uint32_t)serialization->getBufferLen(),
+                                                                                         (uint32_t)size,
                                                                                          (chaos::DataServiceNodeDefinitionType::DSStorageType)store_hint))) {
             DPD_LERR << "Error storing dataset with code:" << err;
+        } else {
+            i_cuid->second.pckts_size+=size;
+
         }
     }
 #ifndef HEALTH_ASYNC
@@ -318,6 +322,9 @@ int DefaultPersistenceDriver::registerDataset(const std::string& producer_key,
         HealtManager::getInstance()->addNodeMetric(producer_key,
                                                    chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE,
                                                    chaos::DataType::TYPE_DOUBLE);
+        HealtManager::getInstance()->addNodeMetric(producer_key,
+                                                   chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_SIZE,
+                                                   chaos::DataType::TYPE_INT32);
         HealtManager::getInstance()->addNodeMetricValue(producer_key,
                                                         NodeHealtDefinitionKey::NODE_HEALT_STATUS,
                                                         NodeHealtDefinitionValue::NODE_HEALT_STATUS_START,
@@ -337,6 +344,7 @@ int DefaultPersistenceDriver::registerDataset(const std::string& producer_key,
             tt.ts=0;
             tt.last_ts=0;
             tt.freq=0;
+            tt.pckts_size=0;
             m_cuid[producer_key]=tt;
         }
     }
@@ -349,7 +357,8 @@ void DefaultPersistenceDriver::timeout(){
         int64_t pkid=i_cuid->second.pckid;
         int64_t ts=i_cuid->second.ts;
         double time_offset = (double(ts - i_cuid->second.last_ts))/1000.0; //time in seconds
-        double output_ds_rate = ((time_offset>0)&&((pkid -i_cuid->second.last_pckid)>0))?(pkid -i_cuid->second.last_pckid)/time_offset:0; //rate in seconds
+        uint32_t pckts=(pkid -i_cuid->second.last_pckid);
+        double output_ds_rate = ((time_offset>0)&&(pckts>0))?(double)pckts/time_offset:0; //rate in seconds
         if(output_ds_rate>0){
             i_cuid->second.freq=output_ds_rate;
         } else if(pkid==i_cuid->second.last_pckid){
@@ -358,9 +367,13 @@ void DefaultPersistenceDriver::timeout(){
         HealtManager::getInstance()->addNodeMetricValue(i_cuid->first,
                                                         chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_RATE,
                                                         i_cuid->second.freq,false);
+        HealtManager::getInstance()->addNodeMetricValue(i_cuid->first,
+                                                        chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_SIZE,
+                                                        i_cuid->second.freq,false);                                                
         DPD_LDBG << "Health :"<<i_cuid->first<<" rate:"<<  i_cuid->second.freq << " pkid:"<<pkid<<" at:"<<ts<<" last pckid:"<<i_cuid->second.last_pckid<<" at:"<<i_cuid->second.last_ts<< " delta packet:"<<(pkid-i_cuid->second.last_pckid)<< " delta time:"<<(ts-i_cuid->second.last_ts);
       
         i_cuid->second.last_ts=ts;
+        i_cuid->second.pckts_size=0;
         i_cuid->second.last_pckid=pkid;
 
 
