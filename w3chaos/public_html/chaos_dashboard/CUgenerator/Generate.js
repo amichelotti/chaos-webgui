@@ -350,6 +350,15 @@ function AddDefaultsOnCU() {
         datasetList.push(JSON.stringify(defaultAttribute));
         UpdateJsonCU("DataSet",datasetList);
     }
+    defaultAttribute.Name="driver_timeout";
+    defaultAttribute.Description="custom user timeout in milliseconds for commands";
+    defaultAttribute.Type="TYPE_INT32";
+    defaultAttribute.DataDirection="Input";
+    if (!theCU.HaveInDataSet(defaultAttribute))
+    {
+        datasetList.push(JSON.stringify(defaultAttribute));
+        UpdateJsonCU("DataSet",datasetList);
+    }
 
 
 }
@@ -833,7 +842,7 @@ function CalculateInterfaceParamStruct() {
                 if (Elem.Type == Elem2.Type)
                 {
                     found=true;
-                    alert("already found incrementing needed")
+                    //alert("already found incrementing needed")
                     typeOfParameters[iElem2].needed= Math.max(Elem.needed,Elem2.needed);
                     break;
                 }
@@ -1201,7 +1210,12 @@ function CreateAbstractCommandSource() {
         }
         //default timeout for commands
         writer.WriteLine("//setting default timeout (usec) ");
+        writer.WriteLine("const int32_t *userTimeout=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT,\"driver_timeout\");");
+        writer.WriteLine("if (*userTimeout > 0)"); writer.addIndent();
+        writer.WriteLine("setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT,(uint32_t) (*userTimeout)*1000);")
+        writer.delIndent();writer.WriteLine("else");writer.addIndent();
         writer.WriteLine("setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT,(uint32_t) 10000000);");
+        writer.delIndent();
         writer.WriteLine("chaos::cu::driver_manager::driver::DriverAccessor *"+CU.getAccessor()+" = driverAccessorsErogator->getAccessoInstanceByIndex(0);" );
         writer.WriteLine("if(" +CU.getAccessor()+ " != NULL) {" );writer.addIndent();
         writer.WriteLine("if(" +CU.getAbstractDriver()+ " == NULL) {" );writer.addIndent();
