@@ -1579,10 +1579,11 @@
 
   function element_sel(field, arr, add_all) {
     $(field).empty();
-    $(field).append("<option>--Select--</option>");
     //$(field).append("<option value='ALL'>ALL</option>");
 
     if (add_all == 1) {
+      $(field).append("<option>--Select--</option>");
+
       $(field).append("<option value='ALL'>ALL</option>");
 
     }
@@ -2696,15 +2697,18 @@
     } else if (cmd == "history-cu") {
       $("#mdl-query").modal("show");
       var names = findTagsOf(tmpObj, currsel);
-      element_sel("#select-tag", names, 1);
+      element_sel("#select-tag", names, 0);
       $("#select-tag").off('click');
       $("#select-tag").on("click", function () {
         var tagname = $("#select-tag option:selected").val();
         $("#query-tag").val(tagname);
-        var tag = tmpObj['tags'][tagname];
-        var desc = tag['tag_desc'];
-        $("#query-start").val(tag['tag_ts']);
-        $("#query-tag").attr('title', desc);
+        var tags = jchaos.variable("tags", "get", null, null);
+        if(tags.hasOwnProperty(tagname)){
+          var tag = tags[tagname];
+          var desc = tag['tag_desc'];
+       // $("#query-start").val(tagname);
+          $("#query-tag").attr('title', desc);
+        }
 
       });
       $("#query-run").off('click');
@@ -2715,7 +2719,7 @@
         var qtag = $("#query-tag").val();
         var page = $("#query-page").val();
         $("#mdl-query").modal("hide");
-
+        jchaos.options.history_page_len=Number(page);
         /* node_multi_selected.forEach(function(elem){
            var enc=encodeName(elem);
            if(node_name_to_desc[enc].hasOwnProperty('instance_description') && node_name_to_desc[enc].instance_description.hasOwnProperty("control_unit_implementation") && (node_name_to_desc[enc].instance_description.control_unit_implementation.indexOf("Camera"))){
@@ -5243,20 +5247,7 @@
             $("#" + name_id + "_health_status").html('<i class="material-icons verde">videocam</i>');
             $("#" + name_id + "_health_status").attr('title', "TAG:'" + el.system.cudk_burst_tag + "'");
           }
-          if (el.system.hasOwnProperty("dsndk_storage_type")) {
-            if (el.system.dsndk_storage_type & 0x2) {
-              $("input[name=live-enable][value='true']").prop("checked", true);
-            } else {
-              $("input[name=live-enable][value='false']").prop("checked", true);
-            }
-            if (el.system.dsndk_storage_type & 0x1) {
-              $("input[name=histo-enable][value='true']").prop("checked", true);
-            } else {
-              $("input[name=histo-enable][value='false']").prop("checked", true);
-
-            }
-
-          }
+          
 
           if (busy == 'true') {
             $("#" + name_id + "_system_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd);
@@ -7973,6 +7964,20 @@
       } else {
         $("#cmd-bypass-on-off").html("<i class='material-icons verde'>usb</i><p class='name-cmd'>No Bypass</p>");
         $("#cmd-bypass-on-off").attr("cucmdid", "bypassoff");
+
+      }
+      if (cu.system.hasOwnProperty("dsndk_storage_type")) {
+        if (cu.system.dsndk_storage_type & 0x2) {
+          $("input[name=live-enable][value='true']").prop("checked", true);
+        } else {
+          $("input[name=live-enable][value='false']").prop("checked", true);
+        }
+        if (cu.system.dsndk_storage_type & 0x1) {
+          $("input[name=histo-enable][value='true']").prop("checked", true);
+        } else {
+          $("input[name=histo-enable][value='false']").prop("checked", true);
+
+        }
 
       }
     }

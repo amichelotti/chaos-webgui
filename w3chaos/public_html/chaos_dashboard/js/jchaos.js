@@ -962,25 +962,29 @@
 				});
 			vcams.forEach(function (ci) {
 				jchaos.getHistory(ci, 0, start, stop, "", function (ds) {
-					if (ds.Y[0].hasOwnProperty("FRAMEBUFFER") && ds.Y[0].FRAMEBUFFER.hasOwnProperty("$binary") && ds.Y[0].hasOwnProperty("FMT")) {
-						ds.Y.forEach(function (img) {
+					if((ds.Y[0] instanceof Object)){
+						if ( (ds.Y[0].hasOwnProperty("FRAMEBUFFER")) && (ds.Y[0].FRAMEBUFFER.hasOwnProperty("$binary")) && (ds.Y[0].hasOwnProperty("FMT"))) {
+							ds.Y.forEach(function (img) {
 
-							var name = ci + "/" + img.dpck_seq_id + "_" + img.dpck_ats + "_" + img.FMT;
-							zipf.file(name, img.FRAMEBUFFER.$binary.base64, { base64: true });
-							jchaos.print("zipping image: " + name + " into:" + zipname);
+								var name = ci + "/" + img.dpck_seq_id + "_" + img.dpck_ats + "_" + img.FMT;
+								zipf.file(name, img.FRAMEBUFFER.$binary.base64, { base64: true });
+								jchaos.print("zipping image: " + name + " into:" + zipname);
 
-						});
+							});
+						} else {
+							var name = ci + ".json";
+							zipf.file(name, JSON.stringify(ds.Y));
+							jchaos.print("zipping dataset: " + name + " into:" + zipname);
+						}
+
+
+						if (--cnt == 0) {
+							zipf.generateAsync({ type: "blob" }, updateCall).then(function (content) {
+								saveAs(content, zipname);
+							});
+						}
 					} else {
-						var name = ci + ".json";
-						zipf.file(name, JSON.stringify(ds.Y));
-						jchaos.print("zipping dataset: " + name + " into:" + zipname);
-					}
-
-
-					if (--cnt == 0) {
-						zipf.generateAsync({ type: "blob" }, updateCall).then(function (content) {
-							saveAs(content, zipname);
-						});
+						console.log("Nothing found");
 					}
 				}, tagsv);
 			});
