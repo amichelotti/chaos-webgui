@@ -391,6 +391,7 @@ function  GenerateSCCUSource() {
         PrintHeaderFile(writer, ClassName + ".cpp");
         writer.WriteLine("#include \"" + ClassName + ".h\"");
         writer.WriteLine(DEFINES.SCSOURCEDEFAULTINCLUDES);
+        writer.WriteLine("#include <chaos/cu_toolkit/windowsCompliant.h>");
         for (var i in CU.Commands)
         {
             var ptCmd = CU.Commands[i];
@@ -1627,7 +1628,10 @@ function CreateCMakeLists() {
         writer.WriteLine("TARGET_LINK_LIBRARIES(${PROJECT_NAME} chaos_cutoolkit chaos_common common_debug  chaos_cutoolkit ${FrameworkLib})" );
         writer.WriteLine("FILE(GLOB files \"core/*.h\")" );
         writer.WriteLine("INSTALL(FILES ${files} DESTINATION include/driver/"+relative+CU.Name+"/core)" );
-        writer.WriteLine("INSTALL_TARGETS(/lib ${PROJECT_NAME})" );
+        
+        writer.WriteLine("INSTALL(TARGETS ${PROJECT_NAME}");
+        writer.WriteLine("\tDESTINATION \"lib\"");
+        writer.WriteLine("PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ)");
 	}
     catch(e) {alert("EXC "+e);}
     var toRet=writer.getFileContent();
