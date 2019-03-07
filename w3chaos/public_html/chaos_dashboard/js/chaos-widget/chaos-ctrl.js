@@ -2277,6 +2277,8 @@
     } else {
       $("#table-scroll").css('height', '');
     }
+   
+    
     $(".setSchedule").off('keypress');
     $(".setSchedule").on('keypress', function (event) {
       var t = $(event.target);
@@ -5204,15 +5206,7 @@
           } else {
             $("#" + name_id + "_system_cu_alarm").html('');
           }
-          $("a.device-alarm").click(function (e) {
-            var id = $(this).attr("cuname");
-            show_dev_alarm(id);
-          });
-          $("a.cu-alarm").click(function (e) {
-            var id = $(this).attr("cuname");
-
-            show_cu_alarm(id);
-          });
+          
           if (el.system.hasOwnProperty("running_cmd_alias")) {
             var cmd_state = el.system.running_cmd_alias;
             if (el.system.hasOwnProperty("cudk_set_tag") && el.system.hasOwnProperty("cudk_set_state")) {
@@ -5280,8 +5274,33 @@
         console.log(name_device_db + " warning :", e);
       }
     });
-  }
+    $("a.device-alarm").off();
+    $("a.device-alarm").click(function (e) {
+      //var id = $(this).attr("cuname");
+      //show_dev_alarm(id);
+      //var node=tmpObj.node_selected;
+      var node = $(this).attr("cuname");
+      var cindex = tmpObj.node_name_to_index[node];
 
+      var alarm=tmpObj.data[cindex];
+     
+      if(alarm !=null && alarm.hasOwnProperty("device_alarms")){
+        decodeDeviceAlarm(alarm.device_alarms);
+    }
+    });
+    $("a.cu-alarm").off();
+    $("a.cu-alarm").click(function (e) {
+      
+//      var node=tmpObj.node_selected;
+      var node = $(this).attr("cuname");
+      var cindex = tmpObj.node_name_to_index[node];
+
+      var alarm=tmpObj.data[cindex];
+      if(alarm !=null && alarm.hasOwnProperty("cu_alarms")){
+        decodeDeviceAlarm(alarm.cu_alarms);
+    }
+  });
+  }
   function generateScraperTable(tmpObj) {
     var cu = tmpObj.elems;
     var template = tmpObj.type;
