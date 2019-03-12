@@ -292,6 +292,7 @@
         $("#desc-" + name).html(jsonhtml);
         jsonSetup($(this),tmpObj);
         $(".json-toggle").trigger("click");
+        $(this).before($(this).parent().find('.ui-dialog-buttonpane'));
 
       }
     });
@@ -334,13 +335,12 @@
 
       ],
       close: function (event, ui) {
-        //  var interval=$(this).attr("refresh_time");
 
         clearInterval(update);
-        // $(instant).dialog("close");
         $(this).remove();
       },
       open: function () {
+
         console.log(cuname + "dataset update refresh:" + refresh);
         //$(".ui-dialog-titlebar-close", ui.dialog | ui).show();
         update = setInterval(function () {
@@ -377,6 +377,7 @@
         }, refresh);
 
         jsonSetup($(this),tmpObj);
+        $(this).before($(this).parent().find('.ui-dialog-buttonpane'));
 
       }
     });
@@ -1548,6 +1549,8 @@
 
         //    JSONEditor.defaults.iconlib = 'fontawesome4';
         json_editor = new JSONEditor(element.get(0), jopt);
+        $(this).before($(this).parent().find('.ui-dialog-buttonpane'));
+
       }
     });
   }
