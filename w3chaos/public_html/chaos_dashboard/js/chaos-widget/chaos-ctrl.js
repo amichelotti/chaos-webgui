@@ -5314,20 +5314,34 @@
     html += '<thead class="box-header">';
     html += '<tr>';
     html += '<th>Element</th>';
+    html += '<th colspan="3">Status</th>';
     html += '<th>Position [mm]</th>';
     html += '<th>Setting [mm]</th>';
     html += '<th colspan="2">Saved [mm]</th>';
-    html += '<th colspan="5">Out In !</th>';
+    html += '<th colspan="4">Flags(On,Plim,Nlim,Home)</th>';
+    html += '<th colspan="2">Alarms dev/cu</th>';
     html += '</tr>';
     html += '</thead>';
 
 
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
-      html += "<td class='td_element td_name'>" + cu[i] + "</td>";
+      html+= "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
+      html+= "<td class='td_element td_name'>" + cu[i] + "</td>";
+      html+= "<td id='" + cuname + "_health_status'></td>";
+      html+= "<td id='" + cuname + "_system_busy'></td>";
+      html+= "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
+      html+= "<td class='position_element' id='" + cuname + "_output_position'></td>";
+      html+="<td class='position_element' id='" + cuname + "_input_position'></td>";
+      html+="<td id='" + cuname + "_input_saved_position'></td>";
+      html+="<td id='" + cuname + "_input_saved_status'></td>";
+      html+="<td id='" + cuname + "_flag_output_status'></td>";
+      html+="<td id='" + cuname + "_flag_in'></td>";
+      html+="<td id='" + cuname + "_flag_out'></td>";
+      html+="<td id='" + cuname + "_flag_home'></td>";
 
-      html += "<td class='position_element' id='" + cuname + "_output_position'></td><td class='position_element' id='" + cuname + "_input_position'></td><td id='" + cuname + "_input_saved_position'></td><td id='" + cuname + "_input_saved_status'></td><td id='" + cuname + "_output_status'></td><td id='" + cuname + "_in'></td><td id='" + cuname + "_out'></td><td  title='Device alarms' id='" + cuname + "_system_device_alarm'></td><td title='Control Unit alarms' id='" + cuname + "_cu_alarm'></td></tr>";
+      html+="<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
+      html+="<td title='Control Unit alarms' id='" + cuname + "_cu_alarm'></td></tr>";
     });
 
     html += '</table>';
@@ -5349,7 +5363,7 @@
 
         $("#" + cuname + "_output_position").html(elem.output.position.toFixed(3));
         $("#" + cuname + "_input_position").html(elem.input.position);
-        switch (elem.output.polarity) {
+       /* switch (elem.output.polarity) {
           case 1:
             $("#" + cuname + "_output_polarity").html('<i class="material-icons rosso">add_circle</i>');
             break;
@@ -5360,39 +5374,37 @@
             $("#" + cuname + "_output_polarity").html('<i class="material-icons">radio_button_unchecked</i>');
             break;
 
+        }*/
+
+        if(elem.output.stopHome){
+          $("#" + cuname + "_flag_home").html('<i class="material-icons verde">home</i>');
+        } else {
+          $("#" + cuname + "_flag_home").html('');
+
+        }
+        if (elem.output.powerOn ) {
+          $("#" + cuname + "_flag_output_status").html('<i class="material-icons verde">trending_down</i>');
+        } else {
+          $("#" + cuname + "_flag_output_status").html('<i class="material-icons rosso">pause_circle_outline</i>');
+
+        }
+        if (elem.output.NegativeLimitSwitchActive) {
+          $("#" + cuname + "_flag_out").html('<i id="out_icon_' + cuname + '" class="icon-caret-left verde"></i>');
+        } else {
+          $("#" + cuname + "_flag_out").html('');
         }
 
 
-        if (elem.output.powerOn == true) {
-          $("#" + cuname + "_output_status").html('<i class="material-icons verde">trending_down</i>');
-        } else if (elem.output.powerOn = false) {
-          $("#" + cuname + "_output_status").html('<i class="material-icons rosso">pause_circle_outline</i>');
-
-        }
-        if (elem.output.NegativeLimitSwitchActive == 'true') {
-          $("#" + cuname + "_out").html('<i id="out_icon_' + cuname + '" class="icon-caret-left verde"></i>');
-        } else if (elem.output.NegativeLimitSwitchActive == 'false') {
-          $("#" + cuname + "_out").remove();
+        if (elem.output.PositiveLimitSwitchActive) {
+          $("#" + cuname + "_flag_in").html('<i id="in_icon_' + cuname + '" class="icon-caret-right verde"></i>');
+        } else {
+          $("#" + cuname + "_flag_in").html('');
         }
 
-
-        if (elem.output.PositiveLimitSwitchActive == 'true') {
-          $("#" + cuname + "_in").html('<i id="in_icon_' + cuname + '" class="icon-caret-right verde"></i>');
-        } else if (elem.output.PositiveLimitSwitchActive == 'false') {
-          $("#" + cuname + "_in").remove();
-        }
-
-
-
-
-        if (elem.output.local == true) {
-          $("#" + cuname + "_output_local").html('<i class="material-icons rosso">vpn_key</i>');
-        } else if (elem.output.local == false) {
-          $("#" + cuname + "_output_local").remove();
-        }
       }
     });
 
+    updateGenericTableDataset(tmpObj);
 
 
   }
@@ -5603,7 +5615,7 @@
           if (elem.output.local == true) {
             $("#" + cuname + "_output_local").html('<i class="material-icons rosso">vpn_key</i>');
           } else if (elem.output.local == false) {
-            $("#" + cuname + "_output_local").remove();
+            $("#" + cuname + "_output_local").html('');
           }
 
           if ((cu_name_to_saved != null) && (cu_name_to_saved[elem.output.ndk_uid] != null)) {
