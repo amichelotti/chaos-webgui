@@ -2267,10 +2267,12 @@
   function updateInterfaceCU(tmpObj) {
     var template = tmpObj.type;
     var descs = jchaos.getDesc(tmpObj['elems'], null);
-    descs.forEach(function (elem, id) {
-      var name = tmpObj['elems'][id];
-      tmpObj.node_name_to_desc[name] = elem;
-    });
+    if(descs instanceof Array){
+      descs.forEach(function (elem, id) {
+        var name = tmpObj['elems'][id];
+        tmpObj.node_name_to_desc[name] = elem;
+      });
+  }
     $("#main_table-" + template + " tbody tr").click(function (e) {
       mainTableCommonHandling("main_table-" + template, tmpObj, e);
     });
@@ -5341,7 +5343,7 @@
       html+="<td id='" + cuname + "_flag_home'></td>";
 
       html+="<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
-      html+="<td title='Control Unit alarms' id='" + cuname + "_cu_alarm'></td></tr>";
+      html+="<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td></tr>";
     });
 
     html += '</table>';
@@ -5376,7 +5378,7 @@
 
         }*/
 
-        if(elem.output.stopHome){
+        if(elem.output.home){
           $("#" + cuname + "_flag_home").html('<i class="material-icons verde">home</i>');
         } else {
           $("#" + cuname + "_flag_home").html('');
@@ -5451,7 +5453,7 @@
     html += '<p class="name-cmd">Out</p>';
     html += '</a>';
 
-    html += '<a href="#mdl-homing" role="button" class="quick-button-small span1 btn-cmd offset3 cucmd" cucmdid="stopMotion" cucmdvalue=1>';
+    html += '<a href="#mdl-homing" role="button" class="quick-button-small span1 btn-cmd offset3 cucmd" cucmdid="homing" cucmdvalue=1>';
     html += '<i class="icon-home"></i>';
     html += '<p class="name-cmd">Homing</p>';
     html += '</a>';
