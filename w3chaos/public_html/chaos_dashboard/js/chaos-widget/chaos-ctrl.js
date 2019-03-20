@@ -1333,12 +1333,36 @@
     json['eudk_script_language'] = json.eudk_script_language[0];
     proc[json.script_name] = json;
     //    jchaos.variable("script", "set", proc, null);
+    jchaos.search(json.script_name, "script", false, function (l) { 
+      var script_inst = l['found_script_list'];     
+      if(script_inst.length==0){
+        jchaos.saveScript(json, function (data) {
+          console.log("saving script:" + JSON.stringify(json));
+          instantMessage("Script " + json.script_name, "Saved", 1000, null, null, true)
+    
+        });
+      } else {
+        confirm("Script Already Exist", "Do you want to replace:" +json.script_name, "Ok", function () {
+          var cnt=0;
+          script_inst.forEach(function(elem){
+            jchaos.rmScript(elem, function (data) {
+              cnt++;
+              console.log(cnt+"] removing script:" + json.script_name);
 
-    jchaos.saveScript(json, function (data) {
-      console.log("saving script:" + JSON.stringify(json));
-      instantMessage("Script " + json.script_name, "Saved", 1000, null, null, true)
-
+              if(cnt==script_inst.length){
+                jchaos.saveScript(json, function (data) {
+                  console.log("Replacing script:" +json.script_name);
+                  instantMessage("Replacing Script " + json.script_name, "Saved", 1000, null, null, true)
+            
+                });
+              }
+            });
+          });
+          
+        }, "Cancel");
+      }
     });
+    
 
   }
 
@@ -1597,9 +1621,9 @@
 
   }
 
-  function logSetup() {
+  function logSetup(tempObj) {
     $("a.show_log").click(function () {
-      updateLog(node_selected);
+      updateLog(tempObj.node_selected);
       //$("#mdl-log").modal("show");
     });
     $("#log-search-go").click(function () {
@@ -5258,7 +5282,10 @@
           } else {
             $("#" + name_id + "_system_busy").html('');
           }
-
+          if(el.system.hasOwnProperty("dp_sys_unit_type") && (el.system.dp_sys_unit_type=="nt_script_eu")){
+            $("#" + name_id + "_system_bypass").attr('title', "Script EU")
+            $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">settings</i>');
+          } else {
           if (el.system.hasOwnProperty("cudk_bypass_state")) {
             if (el.system.cudk_bypass_state == false) {
               $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">usb</i>');
@@ -5274,6 +5301,7 @@
             $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">http</i>');
           }
         }
+      }
 
       } catch (e) {
         console.log(name_device_db + " warning :", e);
@@ -5417,6 +5445,7 @@
     html += '<h3 id="h3-cmd">Commands</h3>';
     html += '</div>';
     html += '<div class="box-content">';
+    html += '<div class="span12 statbox">';
     html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_standby" cucmdid="poweron" cucmdvalue=0>';
     html += '<i class="material-icons rosso">pause_circle_outline</i>';
     html += '<p class="name-cmd">Stanby</p>';
@@ -5429,34 +5458,38 @@
     html += '<i class="material-icons rosso">error</i>';
     html += '<p class="name-cmd">Reset</p>';
     html += '</a>';
-    html += '<div class="span3 offset1" onTablet="span6" onDesktop="span3" id="input-value">';
+    html += '<div class="span3" onTablet="span6" onDesktop="span3" id="input-value">';
     html += '<input class="input focused" id="mov_abs_offset_mm" type="number" value="1">';
     html += '</div>';
     html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPosition" cucmdid="mov_abs">';
-    html += '<p>Apply</p>';
+    html += '<p>Set Absolute</p>';
     html += '</a>';
 
     html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setStop" cucmdid="stopMotion">';
-    html += '<p>Stop</p>';
+    html += '<i class="material-icons rosso">cancel</i>';
+    html += '<p class="name-cmd">STOP</p>';
     html += '</a>';
-    html += '<div class="span12 statbox" onTablet="span12" onDesktop="span12" id="box-cmd-due">';
+    html += '</div>';
+    html += '<div class="span12 statbox" style="margin-left:0">';
     html += '<a class="quick-button-small span1 btn-cmd offset2 cucmd" id="scraper_in" cucmdid="mov_rel" cucmdvalueMult=-1>';
     html += '<i class="icon-angle-left"></i>';
     html += '<p class="name-cmd">In</p>';
     html += '</a>';
     // in case of cucmdvalue = null, a item named 'cucmd'_<commandparam>
-    html += '<div class="span3" onTablet="span6" onDesktop="span3" id="input-value-due">';
+    html += '<div class="span3" id="input-value-due">';
     html += '<input class="input focused" id="mov_rel_offset_mm" type="number" value=1>';
     html += '</div>';
     html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_out" cucmdid="mov_rel">';
     html += '<i class="icon-angle-right"></i>';
     html += '<p class="name-cmd">Out</p>';
     html += '</a>';
-
-    html += '<a href="#mdl-homing" role="button" class="quick-button-small span1 btn-cmd offset3 cucmd" cucmdid="homing" cucmdvalue=1>';
+    
+    html += '<a href="#mdl-homing" role="button" class="quick-button-small span1 btn-cmd cucmd" cucmdid="homing" cucmdvalue=1>';
     html += '<i class="icon-home"></i>';
     html += '<p class="name-cmd">Homing</p>';
     html += '</a>';
+    
+    
     html += '</div>';
     html += '</div>';
     html += '</div>';
