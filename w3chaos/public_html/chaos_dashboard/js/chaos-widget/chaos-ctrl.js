@@ -771,16 +771,20 @@
             break;
           case "int32":
             //integer
-            cmdparam[parname] = parseInt(parvalue);
+            if(parvalue!=""){
+              cmdparam[parname] = parseInt(parvalue);
+            }
             break;
           case "double": {
             var d = {};
+            if(parvalue!=""){
             if (typeof parvalue === 'string') {
               d['$numberDouble'] = parvalue;
             } else {
               d['$numberDouble'] = parvalue.toString();
             }
             cmdparam[parname] = d;
+          }
             break;
           }
           case "string": {
@@ -788,6 +792,7 @@
             break;
           }
           case "int64": {
+            if(parvalue!=""){
             var d = {};
             if (typeof parvalue === 'string') {
               d['$numberLong'] = parvalue;
@@ -795,6 +800,7 @@
               d['$numberLong'] = parvalue.toString();
             }
             cmdparam[parname] = d;
+          }
             break;
           }
 
