@@ -302,6 +302,7 @@
     var update;
     var started = 0;
     var stop_update = false;
+    var showformat=0;
     var last_dataset = {};
     var name = encodeName(cuname);
     var instant = $('<div id=dataset-' + name + '></div>').dialog({
@@ -312,13 +313,44 @@
       resizable: true,
       buttons: [
         {
-          text: "update", id: 'dataset-update-' + name, click: function (e) {
+          text: "Update", id: 'dataset-update-' + name, click: function (e) {
             // var interval=$(this).attr("refresh_time");
             stop_update = !stop_update;
+            if (stop_update) {
+             // $('#dataset-update-' + name).text("Update");
+              $(e.target).text("Update");
+            } else {
+             // $('#dataset-update-' + name).text("Not Update");
+              $(e.target).text("Not Update");
 
+            }
             // $(instant).dialog("close");
           }
-        }, {
+        },  {
+          text: "Format", id: 'dataset-radix-' + name,click: function (e) {
+            // var interval=$(this).attr("refresh_time");
+            showformat++;
+            switch(showformat){
+              case 0:
+                $(e.target).text("Dec(s)");
+                break;
+              case 1:
+                $(e.target).text("Dec(u)");
+              break;
+              case 2:
+                $(e.target).text("Hex");
+                break;
+              case 3:
+                $(e.target).text("Bin");
+                break;
+              default:
+                showformat=0;
+                $(e.target).text("Dec(s)");
+            }
+            
+            // $(instant).dialog("close");
+          }
+        },{
           text: "save", click: function (e) {
             var blob = new Blob([JSON.stringify(last_dataset)], { type: "json;charset=utf-8" });
             saveAs(blob, name + ".json");
@@ -344,11 +376,7 @@
         console.log(cuname + "dataset update refresh:" + refresh);
         //$(".ui-dialog-titlebar-close", ui.dialog | ui).show();
         update = setInterval(function () {
-          if (stop_update) {
-            $('#dataset-update-' + name).text("Update");
-          } else {
-            $('#dataset-update-' + name).text("Not Update");
-          }
+         
           var isediting=false;
           if(tmpObj.hasOwnProperty('json_editing')){
             isediting=tmpObj.json_editing;
@@ -356,6 +384,15 @@
           if ((!stop_update)&&(isediting==false)) {
             jchaos.getChannel(cuname, -1, function (imdata) {
               last_dataset = imdata[0];
+              if(showformat==1){
+               options["format"]=10+0x100;
+              } else if(showformat==2){
+               options["format"]=16;
+              } else if(showformat==3){
+                options["format"]=2;
+              } else {
+                options["format"]=10;
+              }
               var converted = convertBinaryToArrays(imdata[0]);
               var jsonhtml = json2html(converted, options, cuname);
               if (isCollapsable(converted)) {
@@ -7392,6 +7429,7 @@
     html += '</div>';
     return html;
   }
+
   /**
    * Transform a json object into html representation
    * @return string
@@ -7407,7 +7445,17 @@
         html += '<span class="json-string">"' + json + '"</span>';
     }
     else if (typeof json === 'number') {
-      html += '<span class="json-literal" cuport="' + json + '">' + json + '</span>';
+      if(options.hasOwnProperty("format")){
+        if(options.format!=10){
+         //convert to unsigned 
+         json=json>>>0;
+        }
+        var fmtstring = json.toString(options.format&0xFF);
+
+        html += '<span class="json-literal" cuport="' + json + '">' + fmtstring + '</span>';
+      } else {
+        html += '<span class="json-literal" cuport="' + json + '">' + json + '</span>';
+      }
     }
     else if (typeof json === 'boolean') {
       html += '<span class="json-literal" cuport="' + json + '">' + json + '</span> ';
