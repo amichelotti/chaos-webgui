@@ -244,6 +244,9 @@ int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
         i_cuid->second.ts=new_dataset->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
     }*/
     i_cuid->second.pckid++;
+    /*if(store_hint==0){
+        store_hint=i_cuid->second.storage_type;
+    }*/
     if(!new_dataset->hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID)){
         new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID,i_cuid->second.pckid );
     }/* else {
@@ -345,6 +348,12 @@ int DefaultPersistenceDriver::registerDataset(const std::string& producer_key,
             tt.last_ts=0;
             tt.freq=0;
             tt.pckts_size=0;
+            if(last_dataset.hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE)&&last_dataset.isInt32Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE)){
+               tt.storage_type=last_dataset.getInt32Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE);
+            } else {
+               tt.storage_type=3;
+            }
+
             m_cuid[producer_key]=tt;
         }
     }

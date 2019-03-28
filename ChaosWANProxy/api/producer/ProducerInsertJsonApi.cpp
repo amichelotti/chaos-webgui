@@ -95,7 +95,7 @@ int ProducerInsertJsonApi::execute(std::vector<std::string>& api_tokens,
     //call persistence api for insert the data
     if((err = persistence_driver->pushNewDataset(producer_name ,
                                                  output_dataset.get(),
-                                                 2))) {
+                                                 3))) {
         err_msg = "Error during push of the dataset";
         PID_LERR << err_msg;
         PRODUCER_INSERT_ERR(output_data, err, err_msg);
