@@ -7,6 +7,7 @@ $curr_page = "Home";
 
 			
 //link script
+echo '<script type="text/javascript" src="https://root.cern/js/latest/scripts/JSRootCore.js?2d"></script>';
 echo '<script src="'.$main_dir.'/js/jquery.terminal/js/jquery.terminal.min.js"></script>';
 echo '<script src="'.$main_dir.'/js/jquery.terminal/js/jquery.mousewheel-min.js"></script>';
 echo '<link href="' .$main_dir. '/js/jquery.terminal/css/jquery.terminal.min.css" type="text/css" rel="stylesheet" />';;
@@ -76,6 +77,39 @@ require_once('header.php');
 
 
 <script>
+
+function newWindow(id, name,sizex,sizey) {
+	var hostWidth = $(window).width();
+    var hostHeight = $(window).height();
+    if(sizex==null){
+		sizex=hostWidth/4;
+	}
+	if(sizey==null){
+    var hostHeight = $(window).height();
+		sizey=hostWidth/4;
+	}
+	var instant = $('<div></div>').html('<div id="' + id + '"></div>').dialog({
+      minWidth: sizex,
+      minHeight: sizey,
+      title: name,
+      resizable: true,
+      buttons: [
+        {
+          text: "close", click: function (e) {
+            $(this).dialog('close');
+          }
+        }
+
+
+      ],
+      close: function (event, ui) {
+      },
+      open: function () {
+
+      }
+    });
+  }
+
 	  var dump_script="";
 	  var script_name;
 	  $("#menu-dashboard").generateMenuBox();

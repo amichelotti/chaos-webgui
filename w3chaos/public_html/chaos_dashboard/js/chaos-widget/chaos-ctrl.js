@@ -2802,6 +2802,7 @@
  
          });*/
         progressBar("Retrive and Zip", "zipprogress", "zipping");
+        jchaos.setOptions({"timeout":10000});
 
         jchaos.fetchHistoryToZip(qtag, tmpObj.node_multi_selected, qstart, qstop, qtag, function (meta) {
           $("#zipprogress").progressbar("value", parseInt(meta.percent.toFixed(2)));
@@ -2810,6 +2811,8 @@
         });
 
         $("#query-close").on("click", function () {
+          jchaos.setOptions({"timeout":5000});
+
           $("#mdl-query").modal("hide");
         });
       });

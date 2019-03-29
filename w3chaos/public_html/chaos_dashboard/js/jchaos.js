@@ -924,7 +924,9 @@
 				opt['end'] = stop;
 			}
 			if (tagsv instanceof Array) {
-				opt['tags'] = tagsv;
+				if(tagsv.length > 0){
+					opt['tags'] = tagsv;
+				}
 			}
 
 			opt['channel'] = channel;
@@ -935,9 +937,8 @@
 			if (tagsv !== "undefined") {
 				if (tagsv instanceof Array) {
 					opt["tags"] = tagsv;
-				} else {
+				} else if(tagsv!="") {
 					opt["tags"] = [tagsv];
-
 				}
 			}
 
