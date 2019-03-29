@@ -8376,7 +8376,7 @@
         filter: "",
         refresh_rate: options.Interval,
         skip_fetch:0,
-        check_interval: 8000,
+        check_interval: 60000,
         last_check: 0,
         node_list_interval: null,
         node_selected: null,
