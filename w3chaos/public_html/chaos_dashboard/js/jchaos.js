@@ -68,7 +68,8 @@
 			var param ={};
 			param['cmdline']=cmdline;     
             param['ptype']=ptype;
-            param['pname']=name;                
+						param['pname']=name;
+			console.log("create process:"+JSON.stringify(param));
 			return jchaos.basicRmt(server,"create",param,handler,badhandler);
 		}
 

@@ -4577,23 +4577,23 @@
                 return;
               } else {
                 chaos_prefix = r.data.value;
-                if (language == "CPP") {
-                  launch_arg = chaos_prefix + "/bin/chaosRoot --conf-file " + chaos_prefix + "/etc/chaos_root.cfg --rootopt \"-q " + path + "\"";
-                } else if (language == "bash") {
-                  launch_arg = "bash " + path;
-                } else if (language == "nodejs") {
-                  launch_arg = "node " + path;
-
-                } else if (language == "python") {
-                  launch_arg = "python " + path;
-
-                } else {
-                  launch_arg = language + " " + path;
-                }
+                
 
                 getEntryWindow(data['script_name'], "Additional args", '', "Run", function (parm) {
-
-                  jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + parm, language, function (r) {
+                  if (language == "CPP") {
+                    launch_arg = chaos_prefix + "/bin/chaosRoot --conf-file " + chaos_prefix + "/etc/chaos_root.cfg --rootopt \"-q " + path + parm+"\"";
+                  } else if (language == "bash") {
+                    launch_arg = "bash " + path+parm;
+                  } else if (language == "nodejs") {
+                    launch_arg = "node " + path +parm;
+  
+                  } else if (language == "python") {
+                    launch_arg = "python " + path+parm;
+  
+                  } else {
+                    launch_arg = language + " " + path+parm;
+                  }
+                  jchaos.rmtCreateProcess(server + ":8071", name, launch_arg , language, function (r) {
                     console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                     var node_selected = tmpObj.node_selected;
                     instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
