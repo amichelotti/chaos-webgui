@@ -1,0 +1,37 @@
+{
+	"title": "Algo Ports",
+	"type": "object",
+	"id": "editor-attributes",
+	"properties": {
+		"cudk_ds_attr_name": {
+			"type": "string",
+			"format": "text",
+			"description": "Attribute Name"
+		},
+		"cudk_ds_attr_desc": {
+			"type": "string",
+			"format": "text",
+			"description": "Attribute Description"
+		},
+		"cudk_ds_attr_dir": {
+			"type": "integer",
+			"description": " 0= Input, 1=Output"
+		},
+		"cudk_ds_attr_type": {
+			"type": "integer",
+			"description": "Type 1= double, 3=integer32"
+		},
+		"cudk_default_value": {
+			"type": "string",
+			"description": "Default Value"
+		},
+		"cudk_ds_max_range": {
+			"type": "string",
+			"description": "Max Range"
+		},
+		"cudk_ds_min_range": {
+			"type": "string",
+			"description": "Min Range"
+		}
+	}
+}

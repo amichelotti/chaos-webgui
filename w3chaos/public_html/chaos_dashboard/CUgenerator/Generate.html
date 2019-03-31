@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width">
+    <title>Generate Control Unit</title>
+    
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300|Bitter|Ubuntu+Mono' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="style.css">
+   
+
+  </head>
+  <body>
+  <div class="wrapper">
+    <h1>Generate</h1>
+    <div w3-include-html="menubar.html"></div>
+    <div class="tabcontainer">
+      <form>
+              <table class="invisible">
+              <tr>
+                <td>
+                    <label for="checkedListBoxToPush" id="labelChkPush" class="labelCheckListBox" hidden="true">Generated Files:</label>
+                  <fieldset class="checkedListBox" id="checkedListBoxToPush" hidden="true">
+                    <input type="checkbox" id="myID0" >a checkbox<br>
+                    <input type="checkbox" id="myID1" >a checkbox<br>
+                    <input type="checkbox" id="myID2" >a checkbox<br>
+                  </fieldset>
+                </td>
+                <td class="smallField">
+                    <label for="pushSelection" id="labelPushSel" class="labelCheckListBox" hidden="true">Auto Selection:</label>
+                    <fieldset id="pushSelection" hidden="true">
+                      <label for="radioclearAll">Uncheck All</label>
+                      <input type="radio" name="selectionKind" id="radioclearAll" onchange="radioSelectHandler()"><br>
+                      <label for="radioOnlyCU">Control Unit Only</label>
+                      <input type="radio" name="selectionKind" id="radioOnlyCU" onchange="radioSelectHandler()" ><br>
+                      <label for="radioOnlyCommon">Only Low Driver</label>
+                      <input type="radio" name="selectionKind" id="radioOnlyCommon" onchange="radioSelectHandler()"><br>
+                      <label for="radioCheckAll">Check All</label>
+                      <input type="radio" name="selectionKind" id="radioCheckAll" onchange="radioSelectHandler()"><br>
+                      <input type="checkbox" id="ExcludeCMakeLists" onchange="radioSelectHandler()" >Exclude CMakeLists<br>
+                  </fieldset>
+                  <div >
+                      <label class="largeText" for="RemoteRootPath">Remote !Chaos root path</label><br/>
+                      <input type="text" class="largeText" id="RemoteRootPath">
+                  </div>
+                </td>
+                <td>
+                    <input type="checkbox" id="GenerateDriver" checked>Generate Common Driver<br>
+                    <input type="checkbox" id="DebugLog" checked>Add Debug Log<br>
+                    <input type="checkbox" id="GenerateIntermediateMakelists" >Generate Intermediate CMakelists<br>
+                    <input type="button" id = "buttonGenerate" value="Generate">
+                    <a download="something.txt" id=lnkDownload href="">download</a>​​​​​​​​​​​​​​​​​​​​​​​​​​​
+                    <br/>
+                    <input type="button" id = "buttonAddScript" value="Add Install Script" onclick="AddInstallScript()">
+
+                  </td>
+              </tr>
+              </table>
+      </form>
+      </div>
+    </body>
+    <script src="controlUnit.js"></script>
+    <script>includeHTML();</script>
+    <script src="datasetVariable.js"></script>
+    <script src="CmdParameter.js"></script>
+    <script src="Defines.js"></script>
+    <script src="jszip.js"></script>
+    <script src="Generate.js"></script>
+    </html>

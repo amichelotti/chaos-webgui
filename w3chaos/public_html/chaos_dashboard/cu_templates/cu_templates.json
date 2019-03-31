@@ -1,0 +1,59 @@
+{
+    "powersupply":{
+	     "ndk_parent":"",
+	     "auto_load":true,
+	     "auto_init":true,
+	     "auto_start":true,
+	     "cudk_load_param":"",
+	     "cudk_thr_sch_delay":1000000,
+	     "dsndk_storage_type":2,
+	     "dsndk_storage_history_ageing":36000,
+	     "dsndk_storage_history_time":0,
+	     "dsndk_storage_live_time":0,
+	     "control_unit_implementation":"::driver::powersupply::SCPowerSupplyControlUnit",
+	     "cudk_driver_description":[
+		 {"cudk_driver_description_name":"",
+		 "cudk_driver_description_version":"1.0.0",
+		 "cudk_driver_description_init_parameter":""
+		 }],
+	     "attribute_value_descriptions":[
+		 {"cudk_ds_attr_name":"polFromSet","cudk_default_value":"0","cudk_ds_max_range":"1","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"polSwSign","cudk_default_value":"0","cudk_ds_max_range":"1","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"stbyOnPol","cudk_default_value":"1","cudk_ds_max_range":"1","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"zeroOnStby","cudk_default_value":"1","cudk_ds_max_range":"1","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"bypass","cudk_default_value":"1","cudk_ds_max_range":"1","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"unit","cudk_default_value":"A"},{"cudk_ds_attr_name":"scale","cudk_default_value":"1","cudk_ds_max_range":"1000000","cudk_ds_min_range":"1"},{"cudk_ds_attr_name":"minimumWorkingValue","cudk_default_value":"0","cudk_ds_max_range":"700","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"maximumWorkingValue","cudk_default_value":"700","cudk_ds_max_range":"700","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"warningThreshold","cudk_default_value":"0.5","cudk_ds_max_range":"10","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"warningThresholdTimeout","cudk_default_value":"1000","cudk_ds_max_range":"2000000","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"warningThresholdTimeout","cudk_default_value":"1000","cudk_ds_max_range":"2000000","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"setTimeout","cudk_default_value":"5000","cudk_ds_max_range":"1200000000","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"getTimeout","cudk_default_value":"5000","cudk_ds_max_range":"1200000000","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"driverTimeout","cudk_default_value":"10000","cudk_ds_max_range":"1200000000","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"conversionFactor","cudk_default_value":"1.0","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"resolution","cudk_default_value":"0.001","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"current","cudk_default_value":"0","cudk_ds_max_range":"700","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"rampDownRate","cudk_default_value":"35","cudk_ds_max_range":"70","cudk_ds_min_range":"1"},{"cudk_ds_attr_name":"rampUpRate","cudk_default_value":"35","cudk_ds_max_range":"70","cudk_ds_min_range":"1"}]},
+    "camera":{
+	     "ndk_parent":"",
+	     "auto_load":true,
+	     "auto_init":true,
+	     "auto_start":true,
+	     "cudk_load_param":"",
+	     "cudk_thr_sch_delay":1000000,
+	     "dsndk_storage_type":2,
+	     "dsndk_storage_history_ageing":36000,
+	     "dsndk_storage_history_time":0,
+	     "dsndk_storage_live_time":0,
+	"control_unit_implementation":"RTCameraBase",
+	     "cudk_driver_description":[
+		 {"cudk_driver_description_name":"",
+		 "cudk_driver_description_version":"1.0.0",
+		 "cudk_driver_description_init_parameter":""
+		 }],
+	"attribute_value_descriptions":[
+	    {"cudk_ds_attr_name":"WIDTH","cudk_default_value":"640","cudk_ds_max_range":"4096","cudk_ds_min_range":"0"},
+		{"cudk_ds_attr_name":"HEIGHT","cudk_default_value":"480","cudk_ds_max_range":"4096","cudk_ds_min_range":"0"},
+		{"cudk_ds_attr_name":"OFFSETX","cudk_default_value":"0","cudk_ds_max_range":"4096","cudk_ds_min_range":"0"},
+		{"cudk_ds_attr_name":"OFFSETY","cudk_default_value":"0","cudk_ds_max_range":"4096","cudk_ds_min_range":"0"},
+
+	    {"cudk_ds_attr_name":"DEPTH","cudk_default_value":"8","cudk_ds_max_range":"8","cudk_ds_min_range":"1"},
+	    {"cudk_ds_attr_name":"SHUTTER","cudk_default_value":"-1","cudk_ds_max_range":"65536","cudk_ds_min_range":"-1"},
+	    {"cudk_ds_attr_name":"BRIGHTNESS","cudk_default_value":"-1","cudk_ds_max_range":"100.0","cudk_ds_min_range":"-1"},
+		{"cudk_ds_attr_name":"SHARPNESS","cudk_default_value":"-1","cudk_ds_max_range":"100.0","cudk_ds_min_range":"-1"},
+		{"cudk_ds_attr_name":"CONTRAST","cudk_default_value":"-1","cudk_ds_max_range":"100.0","cudk_ds_min_range":"-1"},
+
+	    {"cudk_ds_attr_name":"GAIN","cudk_default_value":"-1","cudk_ds_max_range":"100.0","cudk_ds_min_range":"-1"},
+	    {"cudk_ds_attr_name":"TRIGGER_MODE","cudk_default_value":"0","cudk_ds_max_range":"3","cudk_ds_min_range":"0"}
+	]},
+    "scraper":{"ndk_parent":"","auto_load":true,"auto_init":true,"auto_start":true,"cudk_load_param":"","cudk_thr_sch_delay":1000000,"dsndk_storage_type":2,"dsndk_storage_history_ageing":36000,"dsndk_storage_history_time":0,"dsndk_storage_live_time":0,"control_unit_implementation":"::driver::actuator::SCActuatorControlUnit","cudk_driver_description":[],
+	       "attribute_value_descriptions":[{"cudk_ds_attr_name":"position","cudk_default_value":"0","cudk_ds_max_range":"100","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"bypass","cudk_default_value":"1","cudk_ds_max_range":"1","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"ConfigString","cudk_default_value":"8,TB03DW_0606.t.zip"},{"cudk_ds_attr_name":"axisID","cudk_default_value":"8","cudk_ds_max_range":"255","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"fileTable","cudk_default_value":"TB03DW_0606.t.zip"},{"cudk_ds_attr_name":"fixednumberofrounds","cudk_default_value":"1","cudk_ds_max_range":"10000000","cudk_ds_min_range":"0.000000001"},{"cudk_ds_attr_name":"lineardisplacement[mm]","cudk_default_value":"1","cudk_ds_max_range":"10000000","cudk_ds_min_range":"0.000000001"},{"cudk_ds_attr_name":"numencoderlines","cudk_default_value":"1600","cudk_ds_max_range":"10000000","cudk_ds_min_range":"0.000000001"},{"cudk_ds_attr_name":"range_slit[mm]","cudk_default_value":"27.3","cudk_ds_max_range":"10000000","cudk_ds_min_range":"0.000000001"},{"cudk_ds_attr_name":"speed","cudk_default_value":"100","cudk_ds_max_range":"600","cudk_ds_min_range":"0.000000001"},{"cudk_ds_attr_name":"maxspeed","cudk_default_value":"600","cudk_ds_max_range":"600","cudk_ds_min_range":"0.000000001"},{"cudk_ds_attr_name":"acceleration","cudk_default_value":"1","cudk_ds_max_range":"5","cudk_ds_min_range":"0.000000001"},{"cudk_ds_attr_name":"maxacceleration","cudk_default_value":"5","cudk_ds_max_range":"5","cudk_ds_min_range":"0.000000001"},{"cudk_ds_attr_name":"highspeedhoming","cudk_default_value":"10","cudk_ds_max_range":"25","cudk_ds_min_range":"0.000000001"},{"cudk_ds_attr_name":"maxhighspeedhoming","cudk_default_value":"25","cudk_ds_max_range":"25","cudk_ds_min_range":"0.000000001"},{"cudk_ds_attr_name":"lowspeedhoming","cudk_default_value":"3","cudk_ds_max_range":"7","cudk_ds_min_range":"0.000000001"},{"cudk_ds_attr_name":"maxlowspeedhoming","cudk_default_value":"7","cudk_ds_max_range":"7","cudk_ds_min_range":"0.000000001"},{"cudk_ds_attr_name":"accelerationhoming","cudk_default_value":"0.3","cudk_ds_max_range":"0.6","cudk_ds_min_range":"0.000000001"},{"cudk_ds_attr_name":"maxaccelerationhoming","cudk_default_value":"0.6","cudk_ds_max_range":"0.6","cudk_ds_min_range":"0.000000001"},{"cudk_ds_attr_name":"nummicrostepsperstep","cudk_default_value":"256","cudk_ds_max_range":"10000000","cudk_ds_min_range":"0.000000001"},{"cudk_ds_attr_name":"stepsperround","cudk_default_value":"200","cudk_ds_max_range":"10000000","cudk_ds_min_range":"0.000000001"},{"cudk_ds_attr_name":"isadditive","cudk_default_value":"0","cudk_ds_max_range":"1","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"movement","cudk_default_value":"1","cudk_ds_max_range":"1","cudk_ds_min_range":"-1"},{"cudk_ds_attr_name":"referenceBase","cudk_default_value":"1","cudk_ds_max_range":"1","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"voltage_LNS[V]","cudk_default_value":"30","cudk_ds_max_range":"1000000","cudk_ds_min_range":"0.000000001"},{"cudk_ds_attr_name":"voltage_LPS[V]","cudk_default_value":"10","cudk_ds_max_range":"1000000","cudk_ds_min_range":"0.000000001"},{"cudk_ds_attr_name":"fullscalePot","cudk_default_value":"20","cudk_ds_max_range":"2000000","cudk_ds_min_range":"0.000000001"}]},
+    "TDC-CAEN":{"ndk_parent":"","auto_load":true,"auto_init":true,"auto_start":true,"cudk_load_param":"","cudk_thr_sch_delay":1,"dsndk_storage_type":2,"dsndk_storage_history_ageing":600000,"dsndk_storage_history_time":0,"dsndk_storage_live_time":0,"control_unit_implementation":"::driver::daq::caen::RTCAEN775","attribute_value_descriptions":[{"cudk_ds_attr_name":"VME_DRIVER","cudk_default_value":"0","cudk_ds_max_range":"3","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"VME_BASE","cudk_default_value":"0x66330000","cudk_ds_max_range":"0x66330000","cudk_ds_min_range":"0x66330000"},{"cudk_ds_attr_name":"CHANNELS","cudk_default_value":"16","cudk_ds_max_range":"32","cudk_ds_min_range":"16"},{"cudk_ds_attr_name":"CRATE_NUM","cudk_default_value":"1","cudk_ds_max_range":"16","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"TIMEOUT","cudk_default_value":"100000","cudk_ds_max_range":"3600000","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"BITSET2","cudk_default_value":"0x1C38","cudk_ds_max_range":"0x0000ffff","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"FSR","cudk_default_value":"0x1E","cudk_ds_max_range":"0x0000ffff","cudk_ds_min_range":"0"}]},
+    "QDC-CAEN":{"ndk_parent":"","auto_load":true,"auto_init":true,"auto_start":true,"cudk_load_param":"","cudk_thr_sch_delay":1,"dsndk_storage_type":2,"dsndk_storage_history_ageing":600000,"dsndk_storage_history_time":0,"dsndk_storage_live_time":0,"control_unit_implementation":"::driver::daq::caen::RTCAEN965","attribute_value_descriptions":[{"cudk_ds_attr_name":"VME_DRIVER","cudk_default_value":"0","cudk_ds_max_range":"3","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"VME_BASE","cudk_default_value":"0x44220000","cudk_ds_max_range":"0x44220000","cudk_ds_min_range":"0x44220000"},{"cudk_ds_attr_name":"CHANNELS","cudk_default_value":"16","cudk_ds_max_range":"16","cudk_ds_min_range":"16"},{"cudk_ds_attr_name":"TIMEOUT","cudk_default_value":"100000","cudk_ds_max_range":"3600000","cudk_ds_min_range":"0"},{"cudk_ds_attr_name":"BITSET2","cudk_default_value":"0x1C38","cudk_ds_max_range":"0x0000ffff","cudk_ds_min_range":"0"}]}
+}
+    
+

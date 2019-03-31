@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width">
+    <title>Control Unit Overview</title>
+    
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300|Bitter|Ubuntu+Mono' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="style.css">
+    
+  </head>
+  <body>
+        <div class="wrapper2">
+          <h1>Overview</h1>
+          <div w3-include-html="menubar.html"></div>
+          <div class="tabcontainer">
+
+                <form>
+                <table class="invisible">
+                        <tr>
+                        <th>
+                                <div>
+                                        <label for="rDataset">Current Dataset:</label>
+                                        <textarea rows="10" id="DatasetBox" cols="50" readonly></textarea>
+                                        <div class="tooltip">
+                                        <input type="button" class="largebutton" id = "RemoveAttribute" value="Remove Attribute">
+                                        <span class="tooltiptext">Select Attribute name then press this button  to remove</span>
+                                        </div>
+                                </div>
+                               
+                        </th>
+                        <th>
+                                <div>
+                                        <label for="lrCUName">Name of Control Unit:</label>
+                                        <input class="text" id="rCUName" readonly>
+                                </div>
+                                <div>
+                                        <label for="lrPrefix">Prefix of Control Unit:</label>
+                                        <input class="text" id="rPrefix" readonly>
+                                </div>
+                                <div>
+                                        <label for="lboffDriver">Offset from driver</label>
+                                        <input class="text" id="txtBoxDriverOffset" readonly>
+                                </div>
+                                <div>
+                                        <label for="lbOffCommon">Offset from Common</label>
+                                        <input class="text" id="txtBoxCommonOffset" readonly>
+                                </div>
+                                <div>
+                                        <label for="lbDrivName">Driver Name</label>
+                                        <input class="text" id="txtBoxDriverName" readonly>
+                                </div>
+                        </th>
+                        </tr>
+                        <tr>
+                                <th>
+                                        <div>
+                                                <label for="labCommands">Commands:</label>
+                                                <textarea rows="10" id="CommandsBox" cols="50" readonly></textarea>
+                                                <div class="tooltip">
+                                                <input type="button" class="largebutton" id = "RemoveCommand" value="Remove Command">
+                                                <span class="tooltiptext">Select Command name then press this button  to remove</span>
+                                                </div>
+                                        </div>
+                                </th>
+                                <th>              
+                                <div>
+                                        <label for="labAlarms">Alarms:</label>
+                                        <textarea rows="10" id="AlarmsBox" cols="50" readonly></textarea>
+                                        <div class="tooltip">
+                                        <input type="button" class="largebutton" id = "RemoveAlarm" value="Remove Alarm">
+                                        <span class="tooltiptext">Select Alarm name then press this button  to remove</span>
+                                        </div>
+                                </div>
+                                <div>
+                                                <label for="labEnums">Enumerations:</label>
+                                                <textarea rows="10" id="EnumListBox" cols="50" readonly></textarea>
+                                                <div class="tooltip">
+                                                <input type="button" class="largebutton" id = "RemoveEnum" value="Remove Enum ">
+                                                <span class="tooltiptext">Select Enumeration name then press this button  to remove</span>
+                                                </div>
+                                        </div>
+
+                                </th>
+                        </tr>
+                </table>
+        </form>
+     </div>
+</div>
+   </body>
+   <script src="controlUnit.js"></script>
+  <script>includeHTML();</script>
+  
+   <script src="CmdParameter.js"></script>
+   <script src="datasetVariable.js"></script>
+   <script type="text/javascript" src="showCurrentCU.js"></script>
+</html>

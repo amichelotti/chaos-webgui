@@ -1,0 +1,52 @@
+{
+    "title":"New Tag",
+    "type":"object",
+    "id":"editor-apptemplate",
+    "format":"tab",
+    "properties": {
+	"tag_name": {
+	    "type": "string",
+	    "required": true,
+	    "format":"text",
+	    "description":"Unique Name of the Tag"
+	},
+	"tag_type" :
+	{
+		"type": "array",
+  		"format": "select",
+		  "uniqueItems": true,
+		  "description":"Connection Mode (NONE you must provide in command line)",
+  		"items": {
+    	"type": "string",
+		"enum": ["CYCLE","TIME"]
+		  }
+  },
+	"tag_duration": {
+		"type": "integer",
+		"required": true,
+		"description":"if CYCLE = number of cycles,TIME=number of ms"
+		
+	},
+	"tag_desc": {
+		"type": "string",
+	    "format":"textarea",
+		"description":"Description"
+		
+	},
+	"tag_elements": {
+		"type":"array",
+		"format": "tab",
+		"title": "Elements",
+		"items":[],
+		"description":"Elements tagged"
+		
+	},
+	"tag_ts": {
+		"type": "integer",
+		"description":"Tag time"
+		
+	}
+
+    }
+}
+    

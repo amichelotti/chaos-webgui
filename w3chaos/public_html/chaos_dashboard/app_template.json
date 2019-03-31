@@ -1,0 +1,50 @@
+{
+    "title":"New Script",
+    "type":"object",
+    "id":"editor-apptemplate",
+    "format":"tab",
+    "properties": {
+	"app_name": {
+	    "type": "string",
+	    "required": true,
+	    "format":"text",
+	    "description":"Name of the Application"
+	},
+	"app_exec": {
+	    "type": "string",
+	    "required": true,
+	    "format":"text",
+	    "description":"Executable name of the Application"
+	},
+	"app_conection" :
+	{
+		"type": "array",
+  		"format": "select",
+		  "uniqueItems": true,
+		  "description":"Connection Mode (NONE you must provide in command line)",
+  		"items": {
+    	"type": "string",
+		"enum": ["AUTO","NATIVE","REST","CUSTOM"]
+		  }
+  },
+	"app_cmdline": {
+		"type": "string",
+		"required": true,
+	    "format":"textarea",
+		"description":"Cmd Line parameters"
+		
+	},
+	"app_broadcast": {
+		"type": "boolean",
+		"description":"Execute on all available servers"
+	},
+	"app_desc": {
+		"type": "string",
+	    "format":"textarea",
+		"description":"Description"
+		
+	}
+
+    }
+}
+    

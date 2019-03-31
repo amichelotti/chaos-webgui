@@ -28,7 +28,8 @@
 			}
 			request = new XMLHttpRequest();
 			var url ="http://" + jchaos.options.uri + ":8081/"+func;
-			request.open("POST", url, (jchaos.ops_on_going>jchaos.options.limit_on_going)?false: jchaos.options.async);
+			var could_make_async=(typeof handleFunc === "function" );
+			request.open("POST", url, (jchaos.ops_on_going>jchaos.options.limit_on_going)?false: (jchaos.options.async)&&could_make_async);
 			// console.log("on going:"+jchaos.ops_on_going);
 			// request.setRequestHeader("Content-Type", 'application/json');
 			request.onreadystatechange = function (e) {
@@ -43,8 +44,11 @@
 							var str="jchaos.basicPost Error parsing json '"+err+"' body returned:'"+request.responseText+"'";
 							console.error(str);
 							//throw str;
-
-							handleFunc(request.responseText);
+							if(could_make_async){
+								handleFunc(request.responseText);
+							} else {
+								return request.responseText;
+							}
 
 						}
 					} else {
@@ -119,6 +123,13 @@
 			return jchaos.mdsBase("snapshot",opt,handleFunc);
 		}
 
+		/*get a US descirption
+		 * */
+		jchaos.getUS=function(_name){
+			var ret=jchaos.node(_name,"get","us","","",null);
+			return ret;
+		}
+		
 		jchaos.node=function(_name,_what,_type,_parent,value_,handleFunc){
 			var opt={};
 			if(_name instanceof Array){

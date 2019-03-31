@@ -1,0 +1,49 @@
+{
+    "title":"Agent",
+    "type":"object",
+	"id":"editor-agent-associations",
+	"format":"tab",
+    "properties": {
+	"ndk_uid": {
+		"type": "string",
+		"required": true,
+	    "description":"Unique Identifier of the Node to control"
+	},
+	"association_uid": {
+		"type": "string",
+		"required": true,
+	    "description":"Unique Identifier of the association"
+	},
+	"node_init_cfg": {
+		"type": "string",
+		"format":"textarea",
+		"required": true,
+		"default":"log-on-console=1",
+	    "description":"Initialization file"
+	},
+	"node_launch_cmd_line": {
+		"type": "string",
+		"required": true,
+		"default":"UnitServer",
+	    "description":"Command Line"
+	},
+	"node_auto_start": {
+	    "type": "boolean",
+	    "description":"Node auto Start"
+	},
+	"node_keep_alive": {
+	    "type": "boolean",
+	    "description":"Node Keep Alive"
+	},
+	"node_log_at_launch": {
+	    "type": "boolean",
+		"description":"Node Keep Alive",
+		"default":false
+	}
+}
+	
+    
+}
+    
+    
+    
