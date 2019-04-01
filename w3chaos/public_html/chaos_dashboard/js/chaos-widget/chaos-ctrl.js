@@ -135,6 +135,16 @@
 
     })
   }*/
+  function saveAsBinary(binary_string,name){
+    var len = binary_string.length;
+    var bytes = new Uint8Array(len);
+    for (var i = 0; i < len; i++) {
+      bytes[i] = binary_string.charCodeAt(i);
+    }
+   
+    var blob = new Blob([bytes], { type: "application/octet-stream" });
+    saveAs(blob, name);
+  }
   function progressBar(msg, id, lab) {
     var progressbar;
     var instant = $('<div></div>').html('<div id="' + id + '"><div class="progress-label">' + lab + '</div></div>').dialog({
@@ -527,13 +537,15 @@
         {
           text: "save", click: function (e) {
             var binary_string = atob(data.FRAMEBUFFER.$binary.base64);
-            var len = binary_string.length;
+           /* var len = binary_string.length;
             var bytes = new Uint8Array(len);
             for (var i = 0; i < len; i++) {
               bytes[i] = binary_string.charCodeAt(i);
             }
             var blob = new Blob([bytes], { type: "image/png" });
-            saveAs(blob, name + ".png");
+           */
+            saveAsBinary(binary_string,name + ".png");
+            
           }
         },
         {
@@ -4015,6 +4027,19 @@
       var friendname = tmpObj.data[node_selected].pname;
       getConsole(tmpObj.data[node_selected].hostname + ":" + friendname + "(" + node_selected + ")", node_selected, server, 2, console, 1000);
 
+    } else if (cmd == "download-output") {
+      var server = tmpObj.data[node_selected].hostname + ":8071";
+
+      jchaos.rmtDownload(server, node_selected, "",function (r) {
+        instantMessage("Downloading", "Zipping Output of " + node_selected + " ", 1000, true);
+        var zipname=node_selected+".zip";
+        var binary_string=atob(r.data.base64);
+        saveAsBinary(binary_string,zipname);
+        
+
+      }, function (bad) {
+        instantMessage("Downloading", "Zipping Output of " + node_selected + " via agent", 1000, false);
+      });
     } else if (cmd == "kill-process") {
       confirm("Do you want to KILL?", "Pay attention ANY CU will be killed as well", "Kill",
         function () {
@@ -4095,7 +4120,7 @@
                 if (data['app_broadcast']) {
                   var serverlist = tmpObj['agents'];
                   for (var server in serverlist) {
-                    jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", function (r) {
+                    jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", "",function (r) {
                       console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                       instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
                       getConsole(server+":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
@@ -4109,7 +4134,7 @@
                 } else {
                   var server = findBestServer(tmpObj);
 
-                  jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", function (r) {
+                  jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", "",function (r) {
                     console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                     instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
                     getConsole(server+":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
@@ -4186,7 +4211,7 @@
 
         getEntryWindow(name, "Additional args", '', "Run", function (parm) {
 
-          jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + parm, language, function (r) {
+          jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + parm, language, "",function (r) {
             console.log("Script running onto:" + server + " :" + JSON.stringify(r));
             var node_selected = tmpObj.node_selected;
             instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
@@ -4220,8 +4245,8 @@
 
     if (node_selected != null) {
       items['open-process-console'] = { name: "Open Console " };
-      items['open-process-errconsole'] = { name: "Open Error console" };
-
+     // items['open-process-errconsole'] = { name: "Open Error console" };
+      items['download-output'] = { name: "Download Files" };
       items['kill-process'] = { name: "Kill " };
 
     }
@@ -4558,6 +4583,8 @@
         loadScriptOnServer(tmpObj, data, null, function (p) {
           if (tmpObj.hasOwnProperty("agents") && p.data.hasOwnProperty('path')) {
             var path = p.data.path;
+            var workingdir=p.data.workingdir;
+            tmpObj.node_name_to_desc[tmpObj.node_selected]['workingdir']=workingdir;
             var launch_arg = "";
             var name = data['script_name'];
             var language = data['eudk_script_language'];
@@ -4593,7 +4620,7 @@
                   } else {
                     launch_arg = language + " " + path+parm;
                   }
-                  jchaos.rmtCreateProcess(server + ":8071", name, launch_arg , language, function (r) {
+                  jchaos.rmtCreateProcess(server + ":8071", name, launch_arg , language, workingdir,function (r) {
                     console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                     var node_selected = tmpObj.node_selected;
                     instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
@@ -7685,7 +7712,7 @@
   function getEntryWindow(hmsg, msg, def_text, butyes, yeshandle, cancelText) {
     var ret = true;
     $('<div></div>').appendTo('body')
-      .html('<div><h6>' + msg + '</h6><input type="text" id="getEntryWindow_name" value="' + def_text + '" class="text ui-widget-content ui-corner-all"></div>')
+      .html('<div width="100%"><h6>' + msg + '</h6><input type="text" id="getEntryWindow_name" value="' + def_text + '" width="100%"></div>')
       .dialog({
         modal: true, title: hmsg, zIndex: 10000, autoOpen: true,
         width: 'auto', resizable: true,

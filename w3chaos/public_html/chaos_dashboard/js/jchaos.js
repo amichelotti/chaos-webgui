@@ -64,15 +64,31 @@
 		 * Retrive a given environemnt variable
 		 * return a process structure
 		 */
-		jchaos.rmtCreateProcess=function (server,name,cmdline,ptype,handler,badhandler){
+		jchaos.rmtCreateProcess=function (server,name,cmdline,ptype,workdir,handler,badhandler){
 			var param ={};
 			param['cmdline']=cmdline;     
-            param['ptype']=ptype;
-						param['pname']=name;
+      param['ptype']=ptype;
+			param['pname']=name;
+			if(workdir != null && workdir!=""){
+							param['workdir']=workdir;     
+			}
 			console.log("create process:"+JSON.stringify(param));
 			return jchaos.basicRmt(server,"create",param,handler,badhandler);
 		}
-
+	/**
+		 * Retrive a process working directory 
+		 * return a zip file
+		 */
+		jchaos.rmtDownload=function (server,uid,workdir,handler,badhandler){
+			var param ={};
+			param['uid']=uid;
+			if(workdir != null && workdir!=""){
+				param['workdir']=workdir;     
+			}
+		
+			console.log("Download process outputs:"+JSON.stringify(param));
+			return jchaos.basicRmt(server,"download",param,handler,badhandler);
+		}
 		/**
 		 * Upload a new Script 
 		 * return the path 
