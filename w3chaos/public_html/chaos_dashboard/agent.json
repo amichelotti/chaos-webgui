@@ -1,0 +1,18 @@
+{
+    "title":"Agent",
+    "type":"object",
+	"id":"editor-agent",
+	"format":"tab",
+    "properties": {
+		"andk_node_associated":{
+			"type":"array",
+			"format": "tab",
+			"title": "Association",
+			"items":{
+				"$ref":"agent-association.json",
+				"title":"Associations"
+			}
+			}
+	}
+}
+    

@@ -16,6 +16,9 @@ ul.json-dict, ol.json-array {
 .json-key:hover {
     background-color: yellow;
 }
+.row_snap_selected {
+  background-color: yellow;
+}
 
 .json-literal {
   color: #1A01CC;

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width">
+    <title>Control Unit Definition</title>
+    
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300|Bitter|Ubuntu+Mono' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="style.css">
+    
+
+  </head>
+  <body>
+  <div class="wrapper">
+    <h1>Your Control Unit</h1>
+    <div w3-include-html="menubar.html"></div>
+    <div class="tabcontainer">
+        <form>
+            <table class="invisible">
+            <tr>
+               
+                <th>
+                    <div>
+                    <label for="CUName">Choose Name of Control Unit *</label>
+                    <input class="text" id="CUName" tabindex="1">
+                    </div>
+                    <div>
+                    <label for="CUPrefix">Choose prefix for Control Unit *</label>
+                    <input class="text" id="CUPrefix" tabindex="2">
+                    </div>
+                    <div>
+                        <fieldset id="actionField">
+                       
+                        <input type="button" id = "Create" value="Create">
+                        <input type="button" id = "ClearCU" value="Clear">
+
+                        <input type="file" id = "UploadJSON" class="inputfile",accept=".json, .txt" onselect="myFunc">
+                         <label for="UploadJSON">Upload JSON </label>
+                        
+                        <input type="button" id = "UpdateCU" value="Update">
+                        </fieldset>
+                    </div>
+                </th>
+                <th>
+                        <div>
+                            <label for="LBOffsetFromDriver" >Path from Driver Folder</label>
+                            <input class="text" id="OffsetFromDriver" tabindex="3">
+                        </div>
+                        <div>
+                            <label for="LBOffsetFromCommon">Path from Common Folder</label>
+                            <input class="text" id="OffsetFromCommon" tabindex="4">
+                        </div>
+                        <div>
+                            <label for="LBDriverName">Common Driver Name *</label>
+                            <input class="text" id="DriverName"  tabindex="5">
+                        </div>
+                        <div>
+                            <a download="something.txt" id=lnkDownloadJSON href="" ><button onclick=startDownloadJSON()>download JSON description</button></a>​​​​​​​​​​​​​​​​​​​​​​​​​​​
+                        </div>
+                        
+    
+                    </th>
+            </tr>
+            <tr>
+                <td></td>
+                <td  class="rigthLab">
+                    <label>* Mandatory Fields</label>
+                </td>
+            </tr>
+            </table>
+        </form>
+    </div>
+     
+    <footer></footer>
+    
+  </div>
+  </body>
+  <script src="controlUnit.js"></script>
+  <script src="datasetVariable.js"></script>
+  <script src="CmdParameter.js"></script>
+  <script>includeHTML();</script>
+  <script type="text/javascript" src="main.js"></script>
+</html> 

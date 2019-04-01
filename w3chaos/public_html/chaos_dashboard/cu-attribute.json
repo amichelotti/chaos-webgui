@@ -1,0 +1,27 @@
+{
+    "title":"Attributes",
+    "type":"object",
+    "id":"editor-attributes",
+    "properties": {
+		"cudk_ds_attr_name" : {
+			"type": "string",
+			"format":"text",
+			"description":"Attribute Name"
+		},
+		"cudk_default_value" : {
+			"type": "string",
+			"description":"Default Value"
+		},
+		"cudk_ds_max_range" : {
+			"type": "string",
+			"description":"Max Range"
+		},
+		"cudk_ds_min_range" : {
+			"type": "string",
+			"description":"Min Range"
+		}
+	} 
+}
+    
+    
+    

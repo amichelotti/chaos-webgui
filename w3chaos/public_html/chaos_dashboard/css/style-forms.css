@@ -133,7 +133,10 @@ select[multiple],
 select[size] {
   height: auto;
 }
-
+select[size="auto"] {
+  height: auto;
+  width: 100%;
+}
 select:focus,
 input[type="file"]:focus,
 input[type="radio"]:focus,

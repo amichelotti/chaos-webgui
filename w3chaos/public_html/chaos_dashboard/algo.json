@@ -1,0 +1,56 @@
+{
+  "title": "Script",
+  "type": "object",
+  "id": "editor-algo",
+  "format": "tab",
+  "properties": {
+    "script_name": {
+      "type": "string",
+      "required": true,
+      "format": "text",
+      "description": "Unique Identifier of the Algorithm"
+    },
+    "eudk_script_language": {
+      "type": "array",
+      "format": "select",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": ["bash", "CPP", "nodejs", "LUA", "python"]
+      }
+    },
+    "eudk_script_content": {
+      "type": "string",
+      "format": "textarea",
+      "description": "Script code"
+    },
+    "eudk_script_cmdline": {
+      "type": "string",
+      "format": "text",
+      "description": "Command Line (if any)"
+    },
+    "eudk_script_state": {
+      "type": "string",
+      "format": "text",
+      "description": "Command Line (if any)"
+    },
+    "cudk_ds_desc": {
+      "type": "array",
+      "format": "tab",
+      "title": "Dataset Description",
+      "items": {
+        "$ref": "algo-port.json",
+        "title": "Port description"
+      }
+    },
+    "script_description": {
+      "type": "string",
+      "format": "text",
+      "description": "Full Description"
+    },
+    "seq": {
+      "type": "integer",
+      "description": "identifier id"
+    }
+  }
+}
