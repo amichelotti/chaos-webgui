@@ -31,7 +31,7 @@
   var graph_selected;
   var search_string;
   var notupdate_dataset = 1;
-  var implementation_map = { "powersupply": "SCPowerSupply", "scraper": "SCActuator", "camera": "RTCamera" };
+  var implementation_map = { "powersupply": "SCPowerSupply", "scraper": "SCActuator", "camera": "RTCamera","BPM":"SCLibera" };
   var histdataset = {};
   var hostWidth = 640;
   var hostHeight = 640;
@@ -3275,6 +3275,16 @@
       tmpObj.updateFn = updateCameraTable;
       tmpObj.refresh_rate=2*options.Interval;
       jchaos.setOptions({"timeout":6000});
+    } else if ((cutype.indexOf("SCLibera") != -1)) {
+      tmpObj.type = "SCLibera";
+
+      tmpObj.upd_chan = -2;
+      tmpObj.generateTableFn = generateBPMTable;
+      tmpObj.updateFn = updateBPM;
+      tmpObj.generateCmdFn = generateGenericControl;
+
+      tmpObj.refresh_rate=2*options.Interval;
+      jchaos.setOptions({"timeout":6000});
     } else {
       tmpObj.upd_chan = 255;
       tmpObj.type = "cu";
@@ -4790,7 +4800,7 @@
 
   function mainCU(tmpObj) {
     var list_cu = [];
-    var classe = ["powersupply", "scraper", "camera"];
+    var classe = ["powersupply", "scraper", "camera","BPM"];
     var $radio = $("input:radio[name=search-alive]");
     if ($radio.is(":checked") === false) {
       $radio.filter("[value=true]").prop('checked', true);
@@ -5407,6 +5417,119 @@
     }
   });
   }
+  function generateBPMTable(tmpObj) {
+    var cu = tmpObj.elems;
+    var template = tmpObj.type;
+    var html = '<div class="row-fluid">';
+    html += '<div class="box span12">';
+    html += '<div class="box-content">';
+    html += '<table class="table table-bordered" id="main_table-' + template + '">';
+    html += '<thead class="box-header">';
+    html += '<tr>';
+    html += '<th>Element</th>';
+    html += '<th colspan="3">Status</th>';
+    html += '<th>X</th>';
+    html += '<th>Y</th>'; 
+    html += '<th>VA</th>';
+    html += '<th>VB</th>';
+    html += '<th>VC</th>';
+    html += '<th>VD</th>';
+    html += '<th>SUM</th>';
+    html += '<th colspan="2">Alarms dev/cu</th>';
+    html += '<th>Graph</th>';
+
+    html += '</tr>';
+    html += '</thead>';
+
+
+    $(cu).each(function (i) {
+      var cuname = encodeName(cu[i]);
+      html+= "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
+      html+= "<td class='td_element td_name'>" + cu[i] + "</td>";
+      html+= "<td id='" + cuname + "_health_status'></td>";
+      html+= "<td id='" + cuname + "_system_busy'></td>";
+      html+= "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
+      html+= "<td title='Calculated X position' id='" + cuname + "_output_X'></td>";
+      html+= "<td title='Calculated Y position' id='" + cuname + "_output_Y'></td>";
+      html+= "<td title='VA' id='" + cuname + "_output_VA'></td>";
+      html+= "<td title='VB' id='" + cuname + "_output_VB'></td>";
+      html+= "<td title='VC' id='" + cuname + "_output_VC'></td>";
+      html+= "<td title='VD' id='" + cuname + "_output_VD'></td>";
+      html+= "<td title='SUM' id='" + cuname + "_output_SUM'></td>";
+      html+="<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
+      html+="<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td></tr>";
+      html+="<td><div title='Graph' id='" + cuname + "_bpm_graph'></div></td></tr>";
+
+    });
+
+    html += '</table>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div>';
+
+    return html;
+  }
+  function generateBPMCmd() {
+    var html = '<div class="row-fluid">';
+    html += '<div class="box span12 box-cmd">';
+    html += '<div class="box-header green">';
+    html += '<h3 id="h3-cmd">Commands</h3>';
+    html += '</div>';
+    html += '<div class="box-content">';
+    html += '<div class="span12 statbox">';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_standby" cucmdid="poweron" cucmdvalue=0>';
+    html += '<i class="material-icons rosso">pause_circle_outline</i>';
+    html += '<p class="name-cmd">Stanby</p>';
+    html += '</a>';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_oper"  cucmdid="poweron" cucmdvalue=1>';
+    html += '<i class="material-icons verde">trending_down</i>';
+    html += '<p class="name-cmd">Oper</p>';
+    html += '</a>';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_reset" cucmdid="rset" cucmdvalue=1>';
+    html += '<i class="material-icons rosso">error</i>';
+    html += '<p class="name-cmd">Reset</p>';
+    html += '</a>';
+    html += '<div class="span3" onTablet="span6" onDesktop="span3" id="input-value">';
+    html += '<input class="input focused" id="mov_abs_offset_mm" type="number" value="1">';
+    html += '</div>';
+    html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPosition" cucmdid="mov_abs">';
+    html += '<p>Set Absolute</p>';
+    html += '</a>';
+
+    html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setStop" cucmdid="stopMotion">';
+    html += '<i class="material-icons rosso">cancel</i>';
+    html += '<p class="name-cmd">STOP</p>';
+    html += '</a>';
+    html += '</div>';
+    html += '<div class="span12 statbox" style="margin-left:0">';
+    html += '<a class="quick-button-small span1 btn-cmd offset2 cucmd" id="scraper_in" cucmdid="mov_rel" cucmdvalueMult=-1>';
+    html += '<i class="icon-angle-left"></i>';
+    html += '<p class="name-cmd">In</p>';
+    html += '</a>';
+    // in case of cucmdvalue = null, a item named 'cucmd'_<commandparam>
+    html += '<div class="span3" id="input-value-due">';
+    html += '<input class="input focused" id="mov_rel_offset_mm" type="number" value=1>';
+    html += '</div>';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_out" cucmdid="mov_rel">';
+    html += '<i class="icon-angle-right"></i>';
+    html += '<p class="name-cmd">Out</p>';
+    html += '</a>';
+    
+    html += '<a href="#mdl-homing" role="button" class="quick-button-small span1 btn-cmd cucmd" cucmdid="homing" cucmdvalue=1>';
+    html += '<i class="icon-home"></i>';
+    html += '<p class="name-cmd">Homing</p>';
+    html += '</a>';
+    
+    
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div>';
+
+    return html;
+  }
   function generateScraperTable(tmpObj) {
     var cu = tmpObj.elems;
     var template = tmpObj.type;
@@ -5454,6 +5577,30 @@
     html += '</div>';
 
     return html;
+  }
+
+  function updateBPM(tmpObj) {
+    var cu = tmpObj.data;
+
+    cu.forEach(function (elem) {
+      if (elem.hasOwnProperty('health') && elem.health.hasOwnProperty("ndk_uid")) {   //if el health
+
+        var cuname = encodeName(elem.health.ndk_uid);
+
+        $("#" + cuname + "_output_X").html(elem.output.X.toFixed(3));
+        $("#" + cuname + "_output_Y").html(elem.output.Y.toFixed(3));
+        $("#" + cuname + "_output_VA").html(elem.output.VA);
+        $("#" + cuname + "_output_VB").html(elem.output.VB);
+        $("#" + cuname + "_output_VC").html(elem.output.VC);
+        $("#" + cuname + "_output_VD").html(elem.output.VD);
+        $("#" + cuname + "_output_SUM").html(elem.output.SUM);
+     
+      }
+    });
+
+    updateGenericTableDataset(tmpObj);
+
+
   }
 
   function updateScraper(tmpObj) {
