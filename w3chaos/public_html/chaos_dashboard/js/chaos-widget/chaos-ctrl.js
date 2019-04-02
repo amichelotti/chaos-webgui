@@ -2378,11 +2378,35 @@
       var alias = $(this).attr("cucmdid");
       var parvalue = $(this).attr("cucmdvalue");
       var mult = $(this).attr("cucmdvalueMult");
-
-      var arglist = retriveCurrentCmdArguments(tmpObj, alias);
-      var cuselection;
+      var complete_command=false;
       var cmdparam = {};
+      var cuselection;
+      if (tmpObj.node_multi_selected.length > 0) {
+        cuselection = tmpObj.node_multi_selected;
+      } else {
+        cuselection = tmpObj.node_selected;
+      }
+      if(alias=="cu_clear_current_cmd"){
+      jchaos.node(cuselection, "killcmd", "cu", null, null, function () {
+        instantMessage("Clear Current Command", "Clearing last command OK", 1000, true);
+      }, function () {
+        instantMessage("ERROR Clear Current Command","Clearing last command ", 3000, false);
+      });
+      return;
+    }
+
+      if(parvalue!=null){
+        try{
+          cmdparam=JSON.parse(parvalue);
+          complete_command=true;
+        } catch(e){
+
+        }
+      }
+      if(!complete_command){
+      var arglist;
       var arguments = {};
+      arglist = retriveCurrentCmdArguments(tmpObj, alias);
       arglist.forEach(function (item, index) {
         // search for values
         if (parvalue == null) {
@@ -2399,11 +2423,8 @@
       });
 
       cmdparam = buildCmdParams(arglist);
-      if (tmpObj.node_multi_selected.length > 0) {
-        cuselection = tmpObj.node_multi_selected;
-      } else {
-        cuselection = tmpObj.node_selected;
-      }
+    }
+      
       jchaos.sendCUCmd(cuselection, alias, cmdparam, function (d) {
         var pp;
         if ((cmdparam != null) && (cmdparam instanceof Object)) {
@@ -3278,12 +3299,12 @@
     } else if ((cutype.indexOf("SCLibera") != -1)) {
       tmpObj.type = "SCLibera";
 
-      tmpObj.upd_chan = -2;
+      tmpObj.upd_chan = -1;
       tmpObj.generateTableFn = generateBPMTable;
       tmpObj.updateFn = updateBPM;
-      tmpObj.generateCmdFn = generateGenericControl;
+      tmpObj.generateCmdFn = generateBPMCmd;
 
-      tmpObj.refresh_rate=2*options.Interval;
+      tmpObj.refresh_rate=options.Interval;
       jchaos.setOptions({"timeout":6000});
     } else {
       tmpObj.upd_chan = 255;
@@ -4384,6 +4405,44 @@
     }
 
   }
+  function makeDynamicGraphTable(tmpObj,graph_table_name,highchartOpt,culist){
+    var cnt = 0;
+    var num_chart = 3;
+    var hostWidth = $(window).width();
+    var hostHeight = $(window).height();
+    var server_charts = {};
+    var html="";
+    $("#" + graph_table_name).find("tr:gt(0)").remove();
+    highchartOpt['chart']['height']=(1 / (num_chart) * 100) + '%';
+    highchartOpt['chart']['width']= (hostWidth / (num_chart + 1));
+    culist.forEach(function(key){
+    var encoden = encodeName(key);
+      if ((cnt % num_chart) == 0) {
+        if (cnt > 0) {
+          html += "</tr>"
+        }
+        html += '<tr class="row_element" id=graph-row"' + cnt + '">';
+      }
+      html += '<td class="td_element" id="graph-' + encoden + '"></td>';
+
+      cnt++;
+    });
+    if (cnt > 0) {
+      html += "</tr>";
+      $("#" + graph_table_name).append(html);
+      culist.forEach(function(key){
+        var encoden = encodeName(key);
+        highchartOpt.title.text = key;
+
+        server_charts[encoden] = new Highcharts.chart("graph-" + encoden, highchartOpt);
+
+      });
+      tmpObj[graph_table_name] = server_charts;
+
+    }
+  }
+  
+  
   function updateProcessInterface(tmpObj) {
   //  updateProcessList(tmpObj);
     var tablename = "main_table-" + tmpObj.template;
@@ -5420,7 +5479,11 @@
   function generateBPMTable(tmpObj) {
     var cu = tmpObj.elems;
     var template = tmpObj.type;
-    var html = '<div class="row-fluid">';
+    
+    var html = '<table class="table table-bordered" id="graph_table_BPM">';
+    html += '</table>';
+    
+    html += '<div class="row-fluid">';
     html += '<div class="box span12">';
     html += '<div class="box-content">';
     html += '<table class="table table-bordered" id="main_table-' + template + '">';
@@ -5436,8 +5499,6 @@
     html += '<th>VD</th>';
     html += '<th>SUM</th>';
     html += '<th colspan="2">Alarms dev/cu</th>';
-    html += '<th>Graph</th>';
-
     html += '</tr>';
     html += '</thead>';
 
@@ -5458,7 +5519,6 @@
       html+= "<td title='SUM' id='" + cuname + "_output_SUM'></td>";
       html+="<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
       html+="<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td></tr>";
-      html+="<td><div title='Graph' id='" + cuname + "_bpm_graph'></div></td></tr>";
 
     });
 
@@ -5478,47 +5538,21 @@
     html += '</div>';
     html += '<div class="box-content">';
     html += '<div class="span12 statbox">';
-    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_standby" cucmdid="poweron" cucmdvalue=0>';
-    html += '<i class="material-icons rosso">pause_circle_outline</i>';
-    html += '<p class="name-cmd">Stanby</p>';
-    html += '</a>';
-    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_oper"  cucmdid="poweron" cucmdvalue=1>';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_sa" cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":2,\"loops\":-1,\"samples\":1}>';
     html += '<i class="material-icons verde">trending_down</i>';
-    html += '<p class="name-cmd">Oper</p>';
+    html += '<p class="name-cmd">SlowAcquisition</p>';
     html += '</a>';
-    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_reset" cucmdid="rset" cucmdvalue=1>';
-    html += '<i class="material-icons rosso">error</i>';
-    html += '<p class="name-cmd">Reset</p>';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_da"  cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":1,\"loops\":-1,\"samples\":1024}>';
+    html += '<i class="material-icons verde">trending_up</i>';
+    html += '<p class="name-cmd">DataOnDemand</p>';
     html += '</a>';
-    html += '<div class="span3" onTablet="span6" onDesktop="span3" id="input-value">';
-    html += '<input class="input focused" id="mov_abs_offset_mm" type="number" value="1">';
-    html += '</div>';
-    html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPosition" cucmdid="mov_abs">';
-    html += '<p>Set Absolute</p>';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_tda"  cucmdid="acquire" cucmdvalue={\"enable\":1,\"mode\":257,\"loops\":-1,\"samples\":1024}>';
+    html += '<i class="material-icons verde">timer</i>';
+    html += '<p class="name-cmd">DataOnDemand (Triggered)</p>';
     html += '</a>';
-
-    html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setStop" cucmdid="stopMotion">';
-    html += '<i class="material-icons rosso">cancel</i>';
-    html += '<p class="name-cmd">STOP</p>';
-    html += '</a>';
-    html += '</div>';
-    html += '<div class="span12 statbox" style="margin-left:0">';
-    html += '<a class="quick-button-small span1 btn-cmd offset2 cucmd" id="scraper_in" cucmdid="mov_rel" cucmdvalueMult=-1>';
-    html += '<i class="icon-angle-left"></i>';
-    html += '<p class="name-cmd">In</p>';
-    html += '</a>';
-    // in case of cucmdvalue = null, a item named 'cucmd'_<commandparam>
-    html += '<div class="span3" id="input-value-due">';
-    html += '<input class="input focused" id="mov_rel_offset_mm" type="number" value=1>';
-    html += '</div>';
-    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_out" cucmdid="mov_rel">';
-    html += '<i class="icon-angle-right"></i>';
-    html += '<p class="name-cmd">Out</p>';
-    html += '</a>';
-    
-    html += '<a href="#mdl-homing" role="button" class="quick-button-small span1 btn-cmd cucmd" cucmdid="homing" cucmdvalue=1>';
-    html += '<i class="icon-home"></i>';
-    html += '<p class="name-cmd">Homing</p>';
+    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_stop"  cucmdid="cu_clear_current_cmd" >';
+    html += '<i class="material-icons rosso">pause_circle_outline</i>';
+    html += '<p class="name-cmd">Stop Acquisition</p>';
     html += '</a>';
     
     
@@ -5581,6 +5615,63 @@
 
   function updateBPM(tmpObj) {
     var cu = tmpObj.data;
+    if (JSON.stringify(tmpObj['elems']) !== JSON.stringify(tmpObj['old_elems'])) {
+      var chart_options = {
+        maxpoints:10,
+        npoints:0,  
+        chart: {
+          
+        },
+        title: {
+          text: ''
+        },
+
+        xAxis: {
+          type: "datetime",
+          title: {
+            text: 'Time'
+          }
+        },
+        yAxis: {
+          title: {
+            text: 'V'
+          }
+          
+        },
+        legend: {
+          layout: 'vertical',
+          align: 'right',
+          verticalAlign: 'middle'
+        },
+
+        plotOptions: {
+          series: {
+            label: {
+              connectorAllowed: false
+            },
+          }
+        },
+        series: [{
+          name: 'VA',
+          data: []
+        }, {
+          name: 'VB',
+          data: []
+        }, {
+          name: 'VC',
+          data: []
+        }, {
+          name: 'VD',
+          data: []
+        }, {
+          name: 'SUM',
+          data: []
+        }]
+      };
+      makeDynamicGraphTable(tmpObj,"graph_table_BPM",chart_options,tmpObj['elems']);
+      tmpObj['old_elems'] = tmpObj['elems'];
+    }
+    var now = (new Date()).getTime();
 
     cu.forEach(function (elem) {
       if (elem.hasOwnProperty('health') && elem.health.hasOwnProperty("ndk_uid")) {   //if el health
@@ -5594,7 +5685,40 @@
         $("#" + cuname + "_output_VC").html(elem.output.VC);
         $("#" + cuname + "_output_VD").html(elem.output.VD);
         $("#" + cuname + "_output_SUM").html(elem.output.SUM);
-     
+        if (tmpObj.hasOwnProperty("graph_table_BPM")) {
+          var chart = tmpObj['graph_table_BPM'][cuname];
+            if(chart.hasOwnProperty("series") && ( chart.series instanceof Array)){
+              var shift=false;
+              if(tmpObj['graph_table_BPM'][cuname].options.npoints>tmpObj['graph_table_BPM'][cuname].options.maxpoints){
+                shift=true;
+              }
+              tmpObj['graph_table_BPM'][cuname].options.npoints++;
+              if(elem.output.MODE&0x1){
+                var arrv=[];
+                arrv[0]=convertBinaryToArrays(elem.output.VA_ACQ);
+                arrv[1]=convertBinaryToArrays(elem.output.VB_ACQ);
+                arrv[2]=convertBinaryToArrays(elem.output.VC_ACQ);
+                arrv[3]=convertBinaryToArrays(elem.output.VD_ACQ);
+                arrv[4]=convertBinaryToArrays(elem.output.SUM_ACQ);
+                for(var i=0;i<5;i++){
+                  if(arrv[i] instanceof Array){
+                    arrv[i].forEach(function(elem,n){
+                      chart.series[i].addPoint([now+n, elem], false, false);
+                    });
+                  }
+                }
+              } else {
+                chart.series[0].addPoint([now, elem.output.VA], false, shift);
+                chart.series[1].addPoint([now, elem.output.VB], false, shift);
+                chart.series[2].addPoint([now, elem.output.VC], false, shift);
+                chart.series[3].addPoint([now, elem.output.VD], false, shift); 
+                chart.series[3].addPoint([now, elem.output.SUM], false,shift);
+              }
+              chart.redraw();    
+
+          }
+    
+        }
       }
     });
 
