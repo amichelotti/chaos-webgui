@@ -2555,7 +2555,7 @@
     $("#cu_clear_current_cmd").click(function (e) {
       var node_multi_selected=tmpObj.node_multi_selected;
 
-      jchaos.node(node_multi_selected[0], "killcmd", "cu", null, null, function () {
+      jchaos.node(node_multi_selected, "killcmd", "cu", null, null, function () {
         instantMessage("Clear Current Command", node_multi_selected[0] + ":Clearing last command OK", 1000, true);
       }, function () {
         instantMessage("ERROR Clear Current Command", node_multi_selected[0] + ":Clearing last command ", 3000, false);
@@ -2565,7 +2565,7 @@
     $("#cu_clear_queue").click(function (e) {
       var node_multi_selected=tmpObj.node_multi_selected;
 
-      jchaos.node(node_multi_selected[0], "clrcmdq", "cu", null, null, function () {
+      jchaos.node(node_multi_selected, "clrcmdq", "cu", null, null, function () {
         instantMessage("Clear  Command Queue", node_multi_selected[0] + ":Clearing Command Queue OK", 1000, true);
       }, function () {
         instantMessage("ERROR Command Queue", node_multi_selected[0] + ":Clearing Command Queue ", 3000, false);
