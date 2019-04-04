@@ -73,6 +73,7 @@
     return buf.buffer;
   }
   function convertBinaryToArrays(obj) {
+    
     if (obj.hasOwnProperty("$binary")) {
       var objtmp;
       var type = obj.$binary.subType;
@@ -416,7 +417,7 @@
                 //var target = $(this).toggleClass('collapsed').siblings('ul.json-dict, ol.json-array');
                 //target.toggle();
                 $(".json-toggle").trigger("click");
-                jsonEnableContext();
+                jsonEnableContext(cuname);
               }
             });
           }
@@ -1806,7 +1807,7 @@
     */
   }
 
-  function jsonEnableContext() {
+  function jsonEnableContext(node_selected) {
     $.contextMenu({
       selector: '.json-key',
       build: function ($trigger, e) {
@@ -1886,7 +1887,8 @@
    * Setup CU Dataset
    * **/
 
-  function datasetSetup() {
+  function datasetSetup(tmpObj) {
+    var node_selected=tmpObj.node_selected;
     $("a.show_dataset").on('click', function () {
       var dataset = jchaos.getChannel(node_selected, -1, null);
       var converted = convertBinaryToArrays(dataset[0]);
@@ -1925,7 +1927,7 @@
 
         }
       });
-      jsonEnableContext();
+      jsonEnableContext(node_selected);
     });
 
     $("#dataset-close").on('click', function () {
@@ -6763,8 +6765,12 @@
                                 if (ds.hasOwnProperty(variable)) {
                                   var ts = data.X[ele_count++];
                                   var tmp = ds[variable];
-
+                                  
                                   if (index != null) {
+                                    if(tmp.hasOwnProperty("$binary")){
+                                      tmp=convertBinaryToArrays(tmp);
+                                    }
+
                                     if (index == "-1") {
                                       var incr = 1.0 / tmp.length;
                                       var dataset = [];
