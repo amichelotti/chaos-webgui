@@ -2837,7 +2837,7 @@
  
          });*/
         progressBar("Retrive and Zip", "zipprogress", "zipping");
-        jchaos.setOptions({"timeout":10000});
+        jchaos.setOptions({"timeout":60000});
 
         jchaos.fetchHistoryToZip(qtag, tmpObj.node_multi_selected, qstart, qstop, qtag, function (meta) {
           $("#zipprogress").progressbar("value", parseInt(meta.percent.toFixed(2)));
@@ -4062,16 +4062,20 @@
 
     } else if (cmd == "download-output") {
       var server = tmpObj.data[node_selected].hostname + ":8071";
+      jchaos.setOptions({"timeout":60000});
 
       jchaos.rmtDownload(server, node_selected, "",function (r) {
         instantMessage("Downloading", "Zipping Output of " + node_selected + " ", 1000, true);
         var zipname=node_selected+".zip";
         var binary_string=atob(r.data.base64);
         saveAsBinary(binary_string,zipname);
-        
+        jchaos.setOptions({"timeout":5000});
+
 
       }, function (bad) {
         instantMessage("Downloading", "Zipping Output of " + node_selected + " via agent", 1000, false);
+        jchaos.setOptions({"timeout":5000});
+
       });
     } else if (cmd == "kill-process") {
       confirm("Do you want to KILL?", "Pay attention ANY CU will be killed as well", "Kill",
@@ -4096,7 +4100,7 @@
       scriptTmp['eudk_script_content'] = "";
       scriptTmp['eudk_script_language'] = "bash";
       scriptTmp['script_description'] = "PUT YOUR DESCRIPTION";
-
+      scriptTmp['default_argument'] ="";
       jsonEditWindow("NewScript", templ, scriptTmp, algoSave);
       return;
     } else if (cmd == "manage-script") {
@@ -4354,7 +4358,7 @@
         var encoden = encodeName(p.script_name);
         var date = new Date(p.seq);
         tmpObj.node_name_to_desc[p.script_name] = p;
-        $("#table_script").append('<tr class="row_element" id="' + encoden + '"' + template + '-name="' + p.script_name + '">' +
+        $("#table_script").append('<tr class="row_element" title="'+p.script_description+'" id="' + encoden + '"' + template + '-name="' + p.script_name + '">' +
           '<td>' + p.script_name + '</td>' +
           '<td>' + p.eudk_script_language + '</td>' +
           '<td>' + p.script_description + '</td>' +
@@ -4659,6 +4663,7 @@
             var launch_arg = "";
             var name = data['script_name'];
             var language = data['eudk_script_language'];
+            var defargs =data['default_argument']
             var serverlist = tmpObj['agents'];
             var maxIdle = 0;
             var server = null;
@@ -4677,7 +4682,7 @@
                 chaos_prefix = r.data.value;
                 
 
-                getEntryWindow(data['script_name'], "Additional args", '', "Run", function (parm) {
+                getEntryWindow(data['script_name'], "Additional args", defargs, "Run", function (parm) {
                   if (language == "CPP") {
                     launch_arg = chaos_prefix + "/bin/chaosRoot --conf-file " + chaos_prefix + "/etc/chaos_root.cfg --rootopt \"-q " + path + parm+"\"";
                   } else if (language == "bash") {
@@ -5704,9 +5709,12 @@
                 arrv[4]=convertBinaryToArrays(elem.output.SUM_ACQ);
                 for(var i=0;i<5;i++){
                   if(arrv[i] instanceof Array){
+                    var setp=[]
                     arrv[i].forEach(function(elem,n){
-                      chart.series[i].addPoint([now+n, elem], false, false);
+                      setp.push([now+n, elem]);
+                      
                     });
+                    chart.series[i].setData(setp, true, true,true);
                   }
                 }
               } else {
@@ -8246,36 +8254,42 @@
 
         if (status == 'Start') {
           items['stop'] = { name: "Stop", icon: "stop" };
+          items['sep1'] = "---------";
           items['snapshot-cu'] = { name: "Take Snapshot", icon: "snapshot" };
           items['tag-cu'] = { name: "Tag for...", icon: "tag" };
         } else if (status == 'Stop') {
           items['start'] = { name: "Start", icon: "start" };
           items['deinit'] = { name: "Deinit", icon: "deinit" };
+          items['sep1'] = "---------";
         } else if (status == 'Init') {
           items['start'] = { name: "Start", icon: "start" };
           items['deinit'] = { name: "Deinit", icon: "deinit" };
+          items['sep1'] = "---------";
         } else if (status == 'Deinit') {
           items['unload'] = { name: "Unload", icon: "unload" };
           items['init'] = { name: "Init", icon: "init" };
+          items['sep1'] = "---------";
         } else if (status == 'Recoverable Error') {
           items['recover'] = { name: "Recover", icon: "recover" };
+          items['sep1'] = "---------";
         } else if (status == 'Fatal Error') {
           items['deinit'] = { name: "Deinit", icon: "deinit" };
           items['init'] = { name: "Init", icon: "init" };
           items['unload'] = { name: "Unload", icon: "unload" };
-
+          items['sep1'] = "---------";
         } else if (status == "Unload") {
           items['load'] = { name: "Load", icon: "load" };
+          items['sep1'] = "---------";
         } else if (status == "Load") {
           items['unload'] = { name: "Unload", icon: "unload" };
           items['init'] = { name: "Init", icon: "init" };
-
+          items['sep1'] = "---------";
         } else {
           items['load'] = { name: "Load", icon: "load" };
           items['init'] = { name: "Init", icon: "init" };
           items['unload'] = { name: "Unload", icon: "unload" };
           items['deinit'] = { name: "Deinit", icon: "deinit" };
-
+          items['sep1'] = "---------";
 
         }
 
@@ -8291,7 +8305,7 @@
     }
     items['history-cu'] = { name: "Retrive History for...", icon: "histo" };
 
-    items['sep1'] = "---------";
+    items['sep2'] = "---------";
     //node_name_to_desc[node_multi_selected[0]]
     var desc = tmpObj.node_name_to_desc[name];
     if (desc != null && desc.hasOwnProperty("instance_description") && desc.instance_description.hasOwnProperty("control_unit_implementation")) {
@@ -8303,7 +8317,7 @@
     }
     if (tmpObj.node_multi_selected.length == 1) {
 
-      items['show-dataset'] = { name: "Show Dataset" };
+      items['show-dataset'] = { name: "Show/Plot Dataset" };
       items['show-desc'] = { name: "Show Description" };
 
       items['show-picture'] = { name: "Show as Picture.." };
