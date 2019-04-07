@@ -2400,6 +2400,17 @@
       if(parvalue!=null){
         try{
           cmdparam=JSON.parse(parvalue);
+          for(var key in cmdparam){
+            if($("#"+alias+"_"+key).length){
+              var inputType = $("#"+alias+"_"+key).attr('type');
+              if(inputType=="number"){
+                cmdparam[key]=Number($("#"+alias+"_"+key).val());
+              } else {
+                cmdparam[key]=$("#"+alias+"_"+key).val();
+
+              }
+            }
+          }
           complete_command=true;
         } catch(e){
 
@@ -5557,6 +5568,11 @@
     html += '<i class="material-icons verde">timer</i>';
     html += '<p class="name-cmd">DataOnDemand (Triggered)</p>';
     html += '</a>';
+    html += "<div class='span3 statbox'>";
+    html += "<h3>Samples</h3>";
+    html += "<input type='number' id='acquire_samples'>";
+    html += "</div>";
+
     html += '<a class="quick-button-small span1 btn-cmd cucmd" id="bpm_acquire_stop"  cucmdid="cu_clear_current_cmd" >';
     html += '<i class="material-icons rosso">pause_circle_outline</i>';
     html += '<p class="name-cmd">Stop Acquisition</p>';
@@ -5564,6 +5580,14 @@
     
     
     html += '</div>';
+    html += '<div class="span12 statbox">';
+    html += '<textarea class="form-control" rows="5" id="BPM_STATUS"></textarea>';
+
+    //html += '<p id="BPM_STATUS"/>';    
+    html += '</div>';
+
+    html += '</div>';
+
     html += '</div>';
     html += '</div>';
 
@@ -5679,12 +5703,15 @@
       tmpObj['old_elems'] = tmpObj['elems'];
     }
     var now = (new Date()).getTime();
+    updateGenericTableDataset(tmpObj);
 
     cu.forEach(function (elem) {
       if (elem.hasOwnProperty('health') && elem.health.hasOwnProperty("ndk_uid")) {   //if el health
 
         var cuname = encodeName(elem.health.ndk_uid);
-
+        if((tmpObj.node_selected!=null) && (elem.health.ndk_uid == tmpObj.node_selected)){
+          $("#BPM_STATUS").html(elem.output.STATUS);
+        }
         $("#" + cuname + "_output_X").html(elem.output.X.toFixed(3));
         $("#" + cuname + "_output_Y").html(elem.output.Y.toFixed(3));
         $("#" + cuname + "_output_VA").html(elem.output.VA);
@@ -5700,7 +5727,7 @@
                 shift=true;
               }
               tmpObj['graph_table_BPM'][cuname].options.npoints++;
-              if(elem.output.MODE&0x1){
+              if((elem.output.MODE&0x1)&&(elem.output.hasOwnProperty("SUM_ACQ"))){
                 var arrv=[];
                 arrv[0]=convertBinaryToArrays(elem.output.VA_ACQ);
                 arrv[1]=convertBinaryToArrays(elem.output.VB_ACQ);
@@ -5732,7 +5759,6 @@
       }
     });
 
-    updateGenericTableDataset(tmpObj);
 
 
   }
@@ -5795,18 +5821,7 @@
   function generateScraperCmd() {
     var html = '<div class="row-fluid">';
     html += '<div class="box span12 box-cmd">';
-    html += '<div class="box-header green">';
-    html += '<h3 id="h3-cmd">Commands</h3>';
-    html += '</div>';
-    html += '<div class="box-content">';
-    html += '<div class="span12 statbox">';
-    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_standby" cucmdid="poweron" cucmdvalue=0>';
-    html += '<i class="material-icons rosso">pause_circle_outline</i>';
-    html += '<p class="name-cmd">Stanby</p>';
-    html += '</a>';
-    html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_oper"  cucmdid="poweron" cucmdvalue=1>';
-    html += '<i class="material-icons verde">trending_down</i>';
-    html += '<p class="name-cmd">Oper</p>';
+    html += '<div class="Bmd">Oper</p>';
     html += '</a>';
     html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_reset" cucmdid="rset" cucmdvalue=1>';
     html += '<i class="material-icons rosso">error</i>';
@@ -7522,10 +7537,10 @@
               cuselection = tmpObj.node_selected;
             }
             jchaos.sendCUFullCmd(cuselection, cmdselected, parm, ((force == "normal") ? 0 : 1), 0, function () {
-              instantMessage("Command", "Command:\"" + cmdselected + "\"  params:" + JSON.stringify(parm) + " sent", 1000, true);
+              instantMessage("Command", "Command:\"" + cmdselected + "\"  params:" + JSON.stringify(parm) + " sent", 2000, true);
 
             }, function (d) {
-              instantMessage(cuselection, "ERROR OCCURRED:" + d, 2000, 350, 400, false)
+              instantMessage(cuselection, "ERROR OCCURRED:" + d, 3000, 350, 400, false)
 
             });
             $(this).dialog('destroy');
@@ -8697,7 +8712,7 @@
         filter: "",
         refresh_rate: options.Interval,
         skip_fetch:0,
-        check_interval: 60000,
+        check_interval: 10000,
         last_check: 0,
         node_list_interval: null,
         node_selected: null,
