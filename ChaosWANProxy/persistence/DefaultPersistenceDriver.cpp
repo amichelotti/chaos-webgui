@@ -63,7 +63,7 @@ DefaultPersistenceDriver::~DefaultPersistenceDriver() {
 
 }
 
-void DefaultPersistenceDriver::init(void *init_data) throw (chaos::CException) {
+void DefaultPersistenceDriver::init(void *init_data){
 
     //! get the mds message channel
     mds_message_channel = network_broker->getMetadataserverMessageChannel();
@@ -88,7 +88,7 @@ void DefaultPersistenceDriver::init(void *init_data) throw (chaos::CException) {
     // __PRETTY_FUNCTION__);
 }
 
-void DefaultPersistenceDriver::deinit() throw (chaos::CException) {
+void DefaultPersistenceDriver::deinit()  {
 
     connection_feeder.clear();
 
@@ -521,29 +521,91 @@ void allocateMetrics(uint64_t ts,chaos::common::data::CDWShrdPtr ds,std::map<std
                     }
                 }
             } else {
+                using namespace chaos::DataType;
                 tmp.idx=0;
                 if(ds->isDoubleValue(*j)){
                     tmp.value=ds->getDoubleValue(*j);
                     res[metric_name].push_back(tmp);
 
-                }
-                if(ds->isBoolValue(*j)){
+                } else if(ds->isBoolValue(*j)){
                     tmp.value=ds->getBoolValue(*j);
                     res[metric_name].push_back(tmp);
 
-                }
-                if(ds->isInt32Value(*j)){
+                } else if(ds->isInt32Value(*j)){
                     tmp.value=ds->getInt32Value(*j);
                     res[metric_name].push_back(tmp);
-                }
-                if(ds->isInt64Value(*j)){
+                } else if(ds->isInt64Value(*j)){
                     tmp.value=ds->getInt64Value(*j);
                     res[metric_name].push_back(tmp);
+                } else if(ds->isBinaryValue(*j)){
+                    uint32_t sizeb=0;
+                    chaos::DataType::BinarySubtype ret=ds->getBinarySubtype(*j);
+                    unsigned char *buf=(unsigned char*)ds->getBinaryValue(*j,sizeb);
+                    int wsize=1;
+                    switch(ret){
+                        case SUB_TYPE_BOOLEAN:
+                        case SUB_TYPE_CHAR:
+                        case SUB_TYPE_INT8:
+                        wsize=1;
+                        break;
+                        case SUB_TYPE_INT16:
+                            wsize=sizeof(int16_t);
+                        break;
+                        case SUB_TYPE_INT32:
+                            wsize=sizeof(int32_t);
+
+                        break;
+                        case SUB_TYPE_INT64:
+                            wsize=sizeof(int64_t);
+
+                        break;
+                        case SUB_TYPE_DOUBLE:
+                            wsize=sizeof(double);
+
+                        break;
+                    }
+                     int step=1;
+                    int size=sizeb/wsize;
+                    if(size>limit){
+                        step=(size-limit)/limit;
+                        if(step==0){
+                            step=1;
+                            size=limit;
+                        }
+                    }   
+                for(int cnt=0;cnt<size;cnt+=step){
+                    tmp.idx=cnt;
+                    switch(ret){
+                        case SUB_TYPE_BOOLEAN:
+                        case SUB_TYPE_CHAR:
+                        case SUB_TYPE_INT8:
+                            tmp.value=buf[cnt];
+                            res[metric_name].push_back(tmp);
+
+                        break;
+                        case SUB_TYPE_INT16:
+                            tmp.value=((int16_t*)buf)[cnt];
+                            res[metric_name].push_back(tmp);
+                        break;
+                        case SUB_TYPE_INT32:
+                            tmp.value=((int32_t*)buf)[cnt];
+                            res[metric_name].push_back(tmp);
+                        break;
+                        case SUB_TYPE_INT64:
+                            tmp.value=((int64_t*)buf)[cnt];
+                            res[metric_name].push_back(tmp);
+                        break;
+                        case SUB_TYPE_DOUBLE:
+                            tmp.value=((double*)buf)[cnt];
+                            res[metric_name].push_back(tmp);
+
+                        break;
+                    }
                 }
             }
         }
     }
-
+    }
 }
 int DefaultPersistenceDriver::queryMetrics(const std::string& start,const std::string& end,const std::vector<std::string>& metrics_name,metrics_results_t& res,int limit){
     int ret=0;
