@@ -4376,6 +4376,11 @@
           '<td>' + date + '</td></tr>');
       });
       $("#mdl-script").resizable().draggable();
+      $("#mdl-script").width(hostWidth/2);
+
+    //  $("#mdl-script").css('width', hostWidth/2);
+     // $("#mdl-script").css('height', hostHeight/2);
+
       $("#mdl-script").modal("show");
 
       $("#table_script tbody tr").click(function (e) {
