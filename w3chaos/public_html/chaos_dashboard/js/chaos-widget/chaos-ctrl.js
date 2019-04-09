@@ -5516,6 +5516,7 @@
     html += '<th>VC</th>';
     html += '<th>VD</th>';
     html += '<th>SUM</th>';
+    html += '<th colspan="2">Samples/Trigger</th>';
     html += '<th colspan="2">Alarms dev/cu</th>';
     html += '</tr>';
     html += '</thead>';
@@ -5535,6 +5536,9 @@
       html+= "<td title='VC' id='" + cuname + "_output_VC'></td>";
       html+= "<td title='VD' id='" + cuname + "_output_VD'></td>";
       html+= "<td title='SUM' id='" + cuname + "_output_SUM'></td>";
+      html+= "<td title='Samples' id='" + cuname + "_input_SAMPLES'></td>";
+      html+= "<td title='Trigger' id='" + cuname + "_input_TRIGGER'></td>";
+
       html+="<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
       html+="<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td></tr>";
 
@@ -5719,6 +5723,12 @@
         $("#" + cuname + "_output_VC").html(elem.output.VC);
         $("#" + cuname + "_output_VD").html(elem.output.VD);
         $("#" + cuname + "_output_SUM").html(elem.output.SUM);
+        $("#" + cuname + "_input_SAMPLES").html(elem.input.SAMPLES);
+        if(elem.input.TRIGGER){
+          $("#" + cuname + "_input_TRIGGER").html("Triggered");
+        } else {
+          $("#" + cuname + "_input_TRIGGER").html("No Trigger");
+        }
         if (tmpObj.hasOwnProperty("graph_table_BPM")) {
           var chart = tmpObj['graph_table_BPM'][cuname];
             if(chart.hasOwnProperty("series") && ( chart.series instanceof Array)){
