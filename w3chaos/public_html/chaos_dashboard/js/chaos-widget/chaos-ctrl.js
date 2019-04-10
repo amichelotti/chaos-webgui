@@ -1358,6 +1358,8 @@
       scriptTmp['eudk_script_content'] = script['data'];
       scriptTmp['eudk_script_language'] = language;
       scriptTmp['script_description'] = "Imported from " + script['name'];
+      scriptTmp['default_argument'] ="";
+
       var templ = {
         $ref: "algo.json",
         format: "tabs"
