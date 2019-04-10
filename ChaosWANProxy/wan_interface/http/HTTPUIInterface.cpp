@@ -364,10 +364,6 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
     int err = 0;
     DEBUG_CODE(uint64_t execution_time_start = TimingUtil::getTimeStampInMicroseconds();)
     DEBUG_CODE(uint64_t execution_time_end = 0;)
-    Json::Value json_request;
-    Json::Value json_response;
-    Json::StyledWriter json_writer;
-    Json::Reader json_reader;
     HTTPWANInterfaceStringResponse response("text/html");
     response.addHeaderKeyValue("Access-Control-Allow-Origin", "*");
 
