@@ -34,6 +34,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <json/json.h>
+#include <common/misc/data/core/CacheString.h>
 
 using namespace chaos;
 using namespace chaos::common::data;
@@ -65,6 +66,7 @@ uint64_t HTTPUIInterface::last_check_activity = 0;
  * the C++ API
  */
 ChaosSharedMutex http_mutex;
+static ::common::misc::data::CacheString s_cache;
 static int event_handler(struct mg_connection *connection, enum mg_event ev)
 {
 
@@ -362,6 +364,7 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
 {
     CHAOS_ASSERT(handler)
     int err = 0;
+    std::string query;
     DEBUG_CODE(uint64_t execution_time_start = TimingUtil::getTimeStampInMicroseconds();)
     DEBUG_CODE(uint64_t execution_time_end = 0;)
     HTTPWANInterfaceStringResponse response("text/html");
@@ -396,7 +399,7 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
                 mg_url_decode(connection->query_string, size_query, decoded, size_query, 0);
                 HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION << "GET:\"" << decoded << "\"";
 
-                std::string query = decoded;
+                query = decoded;
                 request = mappify(query);
             }
             else if (method == "POST")
@@ -412,9 +415,9 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
                 connection->content[connection->content_len] = 0;
                 mg_url_decode(connection->content, connection->content_len + 1, decoded, connection->content_len + 1, 0);
 
-                std::string content_data(decoded);
-                HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION << "POST:\"" << content_data << "\"";
-                request = mappify(content_data);
+                query =decoded;
+                HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION << "POST:\"" << query << "\"";
+                request = mappify(query);
             }
             else
             {
@@ -443,6 +446,8 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
         {
             ChaosReadLock l(devio_mutex);
             std::string ret;
+            
+            if(s_cache.fetch(query,ret)!=0){
             if (info->get(cmd, (char *)parm.c_str(), 0, atoi(cmd_prio.c_str()), atoi(cmd_schedule.c_str()), atoi(cmd_mode.c_str()), 0, ret) != ::driver::misc::ChaosController::CHAOS_DEV_OK)
             {
                 HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION << "An error occurred during get without dev:" << info->getJsonState();
@@ -452,7 +457,10 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
             {
                 response.setCode(200);
             }
+            s_cache.write(query,ret,100000);
+         } 
             response << ret;
+
         }
         else
         {
@@ -550,7 +558,7 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
         flush_response(connection, &response);
         DEBUG_CODE(execution_time_end = TimingUtil::getTimeStampInMicroseconds();)
         DEBUG_CODE(uint64_t duration = execution_time_end - execution_time_start;)
-        DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION << "Execution time is:" << duration * 1.0 / 1000.0 << " ms";)
+        DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION << "Execution time is:" << duration * 1.0 / 1000.0 << " ms, cache stats:"<<s_cache.cacheStats();)
     }
     return 1; //
 }

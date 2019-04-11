@@ -194,8 +194,12 @@
 			var could_make_async = (typeof handleFunc === "function");
 			if (could_make_async == false) {
 				request.open("POST", url, false);
-
-				request.send(params);
+				try{
+					request.send(params);
+				} catch(err){
+					alert("Cannot connect:"+err);
+					return null;
+				} 
 				if (request.status == 200) {
 					try {
 						var json = JSON.parse(request.responseText);
@@ -279,8 +283,13 @@
 				}
 			};
 			//console.log("sending:"+params);
-			request.send(params);
-
+			//request.send(params);
+			try{
+				request.send(params);
+			} catch(err){
+				alert("Cannot connect:"+err);
+				return null;
+			}
 			//  request.close();
 
 		}
