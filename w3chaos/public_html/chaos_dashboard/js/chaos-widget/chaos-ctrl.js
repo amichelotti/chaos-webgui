@@ -2341,6 +2341,25 @@
       //$("#mdl-log").modal("show");
     });
   }
+
+
+  function updateCameraInterface(tmpObj){
+    updateInterfaceCU(tmpObj);
+    $("#triggerType").off();
+    $("#triggerType").on("change",function(){
+      var node_selected=tmpObj.node_selected;
+      var value = $("#triggerType option:selected").val();
+      var attr="TRIGGER_MODE";
+      jchaos.setAttribute(node_selected, attr, value, function () {
+        instantMessage(node_selected+" Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 2000, null, null, true)
+
+      }, function () {
+        instantMessage(node_selected+" Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 3000, null, null, false)
+
+      });
+    });
+
+  }
   /****
    * 
    * Setup CU Interface
@@ -3309,6 +3328,8 @@
       tmpObj.upd_chan = -2;
       tmpObj.generateTableFn = generateCameraTable;
       tmpObj.updateFn = updateCameraTable;
+      tmpObj.updateInterfaceFn = updateCameraInterface;
+
       tmpObj.refresh_rate=2*options.Interval;
       jchaos.setOptions({"timeout":6000});
     } else if ((cutype.indexOf("SCLibera") != -1)) {
@@ -5173,10 +5194,11 @@
 
     html += '<label class="label span3" >Trigger</label>';
     html += '<select id="triggerType" class="span9">';
-    html += '<option value="continuos" selected="continuos">Continuos</option>';
-    html += '<option value="single">Single Shot</option>';
-    html += '<option value="hw">HW trigger</option>';
-    html += '<option value="sw">SW trigger</option>';
+    html += '<option value="0" selected="0">Continuos</option>';
+    html += '<option value="1">Single Shot</option>';
+    html += '<option value="2">Software</option>';
+    html += '<option value="3">HW HI trigger</option>';
+    html += '<option value="4">HW LOW trigger</option>';
     html += '</select>';
 
     html += '<label class="label span3">Width </label>';
@@ -5939,6 +5961,7 @@
   }
   function updateCameraTable(tmpObj) {
     var cu = tmpObj.elems;
+   
     if(tmpObj.skip_fetch>0){
       tmpObj.skip_fetch--;
     } else {
@@ -5983,7 +6006,8 @@
           $("#image-SHARPNESS").val(selected.input.SHARPNESS);
           */
         }
-        
+        $('#triggerType').val(selected.output.TRIGGER_MODE)
+
         $("#cameraName").html('<font color="green"><b>'+selected.health.ndk_uid+'</b></font> '+selected.output.dpck_seq_id);
         $("#cameraImage").attr("src", "data:image/" + fmt + ";base64," + bin);
       }
