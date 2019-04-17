@@ -3397,14 +3397,14 @@
           // editorFn = agentSave;
           //jsonEdit(templ, data);
           jsonEditWindow("Agent Editor", templ, data, agentSave);
-          if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
+         /* if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
             //rimuovi tutte le associazioni precedenti.
             data.andk_node_associated.forEach(function (item) {
               if (item.hasOwnProperty("ndk_uid")) {
                 jchaos.node(node_selected, "del", "agent", item.ndk_uid, function (daa) { });
               }
             });
-          }
+          }*/
         };
       });
       return;
