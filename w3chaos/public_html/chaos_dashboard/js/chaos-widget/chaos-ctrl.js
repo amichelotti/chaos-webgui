@@ -3638,7 +3638,6 @@
         if (data != null) {
 
           if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
-            //rimuovi tutte le associazioni precedenti.
             var found = 0;
             data.andk_node_associated.forEach(function (item) {
               if (item.hasOwnProperty("ndk_uid")) {
@@ -3646,7 +3645,7 @@
                   alert("node already associated");
                   found = 1;
                 }
-                jchaos.node(node_selected, "del", "agent", item.ndk_uid, function (daa) { });
+        //        jchaos.node(node_selected, "del", "agent", item.ndk_uid, function (daa) { });
               }
             });
             if (found == 0) {
@@ -3654,7 +3653,7 @@
                 ndk_uid: us_copied.ndk_uid,
                 association_uid: 0,
                 node_launch_cmd_line: "UnitServer",
-                node_auto_start: false,
+                node_auto_start: true,
                 node_keep_alive: true,
                 node_log_at_launch: true
               };
