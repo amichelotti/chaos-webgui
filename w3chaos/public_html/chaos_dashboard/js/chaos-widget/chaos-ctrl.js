@@ -2647,11 +2647,12 @@
     $("#mdl-description").draggable();
     $("#mdl-snap").draggable();
     $("#mdl-log").resizable().draggable();
-    configureSliderCommands(tmpObj,"slider-GAIN", "image_gain");
+   /* configureSliderCommands(tmpObj,"slider-GAIN", "image_gain");
     configureSliderCommands(tmpObj,"slider-BRIGHTNESS", "image_brightness");
     configureSliderCommands(tmpObj,"slider-SHUTTER", "image_shutter");
     configureSliderCommands(tmpObj,"slider-CONTRAST", "image_contrast");
     configureSliderCommands(tmpObj,"slider-SHARPNESS", "image_sharpness");
+    */
     $(main_dom).on("keypress", "input.cucmdattr", function (e) {
       if (e.keyCode == 13) {
         var id = this.id;
@@ -5218,30 +5219,30 @@
     html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-OFFSETY" title="SET Image Offset Y (ROI)" type="text" value=0>';
 
     html += '<label class="label span3">Gain:</label>';
-    html += '<input class="input-xlarge focused span3" id="image-GAIN_READOUT" readonly title="Image Readout Gain" type="text" value="0">';
-    html += '<input class="input-xlarge focused span3" id="image-GAIN_SET" readonly title="Set Gain" type="number" value=0>';
-    html += '<div class="span3" id="slider-GAIN" title="Camera Gain"> </div>';
+    html += '<input class="input-xlarge focused span4" id="image-GAIN_READOUT" readonly title="Image Readout Gain" type="text" value="0">';
+    html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-GAIN" title="Set Gain" type="number" value=0>';
+  //  html += '<div class="span3" id="slider-GAIN" title="Camera Gain"> </div>';
 
     html += '<label class="label span3">Brightness</label>';
-    html += '<input class="input-xlarge focused span3" id="image-BRIGHTNESS_READOUT" readonly title="Image Readout Brightnessn" type="text">';
-    html += '<input class="input-xlarge focused span3" id="image_BRIGHTNESS_SET" readonly title="SET Brightness" type="number" value=0>';
-    html += '<div class="span3" id="slider-BRIGHTNESS" title="Camera Brightness"></div>';
+    html += '<input class="input-xlarge focused span4" id="image-BRIGHTNESS_READOUT" readonly title="Image Readout Brightnessn" type="text">';
+    html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-BRIGHTNESS" title="SET Brightness" type="number" value=0>';
+   // html += '<div class="span3" id="slider-BRIGHTNESS" title="Camera Brightness"></div>';
 
     html += '<label class="label span3">Shutter</label>';
-    html += '<input class="input-xlarge focused span3" id="image-SHUTTER_READOUT" readonly title="Camera Readout Shutter" type="text">';
-    html += '<input class="input-xlarge focused span3" id="image-SHUTTER_SET" readonly title="SET Shutter" type="number" value=0>';
-    html += '<div class="span3" id="slider-SHUTTER" title="Camera Shutter"> </div>';
+    html += '<input class="input-xlarge focused span4" id="image-SHUTTER_READOUT" readonly title="Camera Readout Shutter" type="text">';
+    html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-SHUTTER" title="SET Shutter" type="number" value=0>';
+   // html += '<div class="span3" id="slider-SHUTTER" title="Camera Shutter"> </div>';
 
 
     html += '<label class="label span3">Contrast</label>';
-    html += '<input class="input-xlarge focused span3" id="image-CONTRAST_READOUT" readonly title="Camera Readout Contrast" type="text">';
-    html += '<input class="input-xlarge focused span3" id="image-CONTRAST_SET" readonly title="SET Contrast" type="number" value=0>';
-    html += '<div class="span3" id="slider-CONTRAST" title="Camera Contrast"> </div>';
+    html += '<input class="input-xlarge focused span4" id="image-CONTRAST_READOUT" readonly title="Camera Readout Contrast" type="text">';
+    html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-CONTRAST" title="SET Contrast" type="number" value=0>';
+   // html += '<div class="span3" id="slider-CONTRAST" title="Camera Contrast"> </div>';
 
     html += '<label class="label span3">Sharpness</label>';
-    html += '<input class="input-xlarge focused span3" id="image-SHARPNESS_READOUT" readonly title="Camera Readout Sharpness" type="text">';
-    html += '<input class="input-xlarge focused span3" id="image-SHARPNESS_SET" readonly title="SET Sharpness" type="number" value=0>';
-    html += '<div class="span3" id="slider-SHARPNESS" title="Camera Sharpness"> </div>';
+    html += '<input class="input-xlarge focused span4" id="image-SHARPNESS_READOUT" readonly title="Camera Readout Sharpness" type="text">';
+    html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-SHARPNESS" title="SET Sharpness" type="number" value=0>';
+   // html += '<div class="span3" id="slider-SHARPNESS" title="Camera Sharpness"> </div>';
 
     html += '</div>';
     html += '</div>';
