@@ -747,6 +747,7 @@
   
   function retriveCurrentCmdArguments(tmpObj, alias) {
     var arglist = [];
+    var node_selected=tmpObj.node_selected;
     if (node_selected == null) {
       return arglist;
     }
@@ -1365,10 +1366,10 @@
         format: "tabs"
       }
 
-      jsonEditWindow("Loaded", templ, scriptTmp, algoSave);
+      jsonEditWindow("Loaded", templ, scriptTmp, algoSave,tmpObj);
     });
   }
-  function algoSave(json) {
+  function algoSave(json,obj) {
     console.log("newScript :" + JSON.stringify(json));
     var proc = {};
     if (json.script_name == null || json.script_name == "") {
@@ -1424,14 +1425,16 @@
 
   }
 
-  function algoSaveInstance(json) {
+  function algoSaveInstance(json,obj) {
+    var node_name_to_desc=obj.node_name_to_desc;
     jchaos.updateScriptInstance(json, node_name_to_desc[pather_selected], function (data) {
       console.log("saving Instance:" + JSON.stringify(json));
     });
 
 
   }
-  function newCuSave(json) {
+  function newCuSave(json,obj) {
+    var node_selected=obj.node_selected;
     if ((node_selected == null || node_selected == "")) {
       if (json.ndk_parent == "") {
         alert("not US selected!");
@@ -1463,7 +1466,7 @@
       alert("missing required field ndk_uid");
     }
   }
-  function unitServerSave(json) {
+  function unitServerSave(json,obj) {
     if ((json == null) || !json.hasOwnProperty("ndk_uid")) {
       alert("no ndk_uid key found");
       return;
@@ -1472,7 +1475,7 @@
       alert("US name cannot be empty");
       return;
     }
-    node_selected = json.ndk_uid;
+    var node_selected = json.ndk_uid;
     if (node_selected == null || node_selected == "") {
       alert("not US selected!");
       return;
@@ -1508,7 +1511,7 @@
       console.log("unitServer save: \"" + node_selected + "\" value:" + JSON.stringify(json));
     });
   }
-  function cuSave(json) {
+  function cuSave(json,obj) {
 
     if ((json != null) && json.hasOwnProperty("ndk_uid")) {
       var name = json.ndk_uid;
@@ -1524,7 +1527,38 @@
     }
   }
 
-  function agentSave(json) {
+  function agentSave(json,obj) {
+    // remove all the associations
+    if(obj!=null){
+      var node_selected = obj.node_selected;
+      var list_to_remove=[];
+    jchaos.node(node_selected, "info", "agent", "", null, function (data) {
+       if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
+            //rimuovi tutte le associazioni precedenti.
+            data.andk_node_associated.forEach(function (item) {
+              if (item.hasOwnProperty("ndk_uid")) {
+                var found=false;
+                if (json.hasOwnProperty("andk_node_associated") && (json.andk_node_associated instanceof Array)) {
+                  json.andk_node_associated.forEach(function (tostay) {
+                    if(tostay.ndk_uid == item.ndk_uid){
+                      found =true;
+                    }
+                  });
+                  
+                }
+                if(found==false){
+                  list_to_remove.push(item.ndk_uid);
+                }
+              }
+            });
+            list_to_remove.forEach(function(item){
+              console.log("Agent remove association "+item);
+              jchaos.node(node_selected, "del", "agent", item, function (daa) { });
+            });
+          }
+    });
+  }
+
     if (json.hasOwnProperty("andk_node_associated") && (json.andk_node_associated instanceof Array)) {
       json.andk_node_associated.forEach(function (item) {
         jchaos.node(node_selected, "set", "agent", null, item, function (data) {
@@ -1548,7 +1582,7 @@
   /***
    * 
    */
-  function jsonEditWindow(name, jsontemp, jsonin, editorFn) {
+  function jsonEditWindow(name, jsontemp, jsonin, editorFn,tmpObj) {
     var instant = $('<div id=edit-temp></div>').dialog({
       minWidth: hostWidth / 4,
       minHeight: hostHeight / 4,
@@ -1567,7 +1601,7 @@
             } else {
               // It's valid!
               var json_editor_value = json_editor.getValue();
-              editorFn(json_editor_value);
+              editorFn(json_editor_value,tmpObj);
             }
             $(this).remove();
           }
@@ -1591,7 +1625,7 @@
             getFile("Upload","upload the json",function(obj){
               $("#edit-temp").dialog('close');
               console.log("uploaded:"+JSON.stringify(obj));
-              jsonEditWindow(name,jsontemp,obj,editorFn);
+              jsonEditWindow(name,jsontemp,obj,editorFn,tmpObj);
               $(this).remove();
             }
             );
@@ -2720,15 +2754,15 @@
       def['tag_name'] = "NONAME_" + (new Date()).getTime();
       def['tag_duration'] = 1;
       def['tag_desc'] = JSON.stringify(tmpObj.node_multi_selected) + " at:" + (new Date());
-      jsonEditWindow("TAG Editor", templ, def, function (data) {
+      jsonEditWindow("TAG Editor", templ, def, function (data,obj) {
         var ttype = 2;
         if (data.tag_type == "CYCLE") {
           ttype = 1;
         }
-        jchaos.tag(data.tag_name, tmpObj.node_multi_selected, ttype, data.tag_duration, function () {
+        jchaos.tag(data.tag_name, obj.node_multi_selected, ttype, data.tag_duration, function () {
           var tag_obj = jchaos.variable("tags", "get", null, null);
           data.tag_ts = (new Date()).getTime();
-          data.tag_elements = tmpObj.node_multi_selected;
+          data.tag_elements = obj.node_multi_selected;
           tag_obj[data.tag_name] = data;
           jchaos.variable("tags", "set", tag_obj, null);
           instantMessage("Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 3000, true);
@@ -2738,7 +2772,7 @@
           instantMessage("ERROR Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 5000, false);
 
         });
-      });
+      },tmpObj);
 
     } else if (cmd == "load") {
 
@@ -3396,7 +3430,7 @@
         if (data != null) {
           // editorFn = agentSave;
           //jsonEdit(templ, data);
-          jsonEditWindow("Agent Editor", templ, data, agentSave);
+          jsonEditWindow("Agent Editor", templ, data, agentSave,tmpObj);
          /* if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
             //rimuovi tutte le associazioni precedenti.
             data.andk_node_associated.forEach(function (item) {
@@ -3417,7 +3451,7 @@
         if (data != null) {
           //editorFn = cuSave;
           //jsonEdit(templ, data);
-          jsonEditWindow("CU Editor", templ, data, cuSave);
+          jsonEditWindow("CU Editor", templ, data, cuSave,tmpObj);
 
         }
       });
@@ -3435,7 +3469,7 @@
         if (data.hasOwnProperty("us_desc")) {
           //    editorFn = unitServerSave;
           //    jsonEdit(templ, data.us_desc);
-          jsonEditWindow("US Editor", templ, data.us_desc, unitServerSave);
+          jsonEditWindow("US Editor", templ, data.us_desc, unitServerSave,tmpObj);
 
         }
       });
@@ -3447,7 +3481,7 @@
       }
       //editorFn = unitServerSave;
       //jsonEdit(templ, null);
-      jsonEditWindow("US Editor", templ, null, unitServerSave);
+      jsonEditWindow("US Editor", templ, null, unitServerSave,tmpObj);
 
       return;
     } else if (cmd == "del-nt_unit_server") {
@@ -3543,7 +3577,7 @@
             var tmp = config.cu_desc;
             tmp.ndk_parent = node_selected;
             //jsonEdit(templ, tmp);
-            jsonEditWindow("New CU", templ, tmp, newCuSave);
+            jsonEditWindow("New CU", templ, tmp, newCuSave,tmpObj);
 
           }
         }, "Cancel", function () {
@@ -3565,7 +3599,7 @@
           }
           // editorFn = newCuSave;
           // jsonEdit(templ, template);
-          jsonEditWindow("New CU from Template", templ, template, newCuSave);
+          jsonEditWindow("New CU from Template", templ, template, newCuSave,tmpObj);
 
         } else {
           // custom
@@ -3576,7 +3610,7 @@
 
           //editorFn = newCuSave;
           //jsonEdit(templ, template);
-          jsonEditWindow("New CU from Template", templ, template, newCuSave);
+          jsonEditWindow("New CU from Template", templ, template, newCuSave,tmpObj);
 
         }
       }
@@ -3662,7 +3696,7 @@
           }
           //editorFn = agentSave;
           //jsonEdit(templ, data);
-          jsonEditWindow("Agent Editor", templ, data, agentSave);
+          jsonEditWindow("Agent Editor", templ, data, agentSave,tmpObj);
 
         };
       });
@@ -3684,7 +3718,7 @@
         jchaos.loadScript(node_selected, node_name_to_desc[node_selected].seq, function (data) {
           console.log("script:" + node_selected + " =" + JSON.stringify(data));
 
-          jsonEditWindow(node_selected, templ, data, algoSave);
+          jsonEditWindow(node_selected, templ, data, algoSave,tmpObj);
 
         });
       }
@@ -3739,7 +3773,7 @@
           //editorFn = algoSave;
           algo_copied.script_name = inst_name;
           //jsonEdit(algo_copied, null);
-          jsonEditWindow("Algo Editor", algo_copied, null, algoSave);
+          jsonEditWindow("Algo Editor", algo_copied, null, algoSave,tmpObj);
 
 
         }, "Cancel");
@@ -3773,7 +3807,7 @@
           if (item.instance_name == node_selected) {
             console.log("editing instance: " + node_selected + " of:" + pather_selected + ":" + JSON.stringify(item));
             var fname = encodeName(node_selected);
-            jsonEditWindow(fname, templ, item, algoSaveInstance);
+            jsonEditWindow(fname, templ, item, algoSaveInstance,tmpObj);
           }
         })
       }
@@ -4135,7 +4169,7 @@
       scriptTmp['eudk_script_language'] = "bash";
       scriptTmp['script_description'] = "PUT YOUR DESCRIPTION";
       scriptTmp['default_argument'] ="";
-      jsonEditWindow("NewScript", templ, scriptTmp, algoSave);
+      jsonEditWindow("NewScript", templ, scriptTmp, algoSave,tmpObj);
       return;
     } else if (cmd == "manage-script") {
       updateScriptModal(tmpObj);
@@ -4149,14 +4183,14 @@
         format: "tabs"
       }
 
-      jsonEditWindow("New Process Template", templ, null, function (data) {
+      jsonEditWindow("New Process Template", templ, null, function (data,obj) {
         var processTemplates = jchaos.variable("app_templates", "get", processTemplates, null);
         var name = data['app_name'];
         processTemplates[name] = data;
         jchaos.variable("app_templates", "set", processTemplates, null);
-        tmpObj['app-templates'] = processTemplates;
+        obj['app-templates'] = processTemplates;
 
-      });
+      },tmpObj);
 
     } else if (cmd == "purge-script") {
       purgeScripts(tmpObj, 1);
@@ -4176,10 +4210,10 @@
             format: "tabs"
           }
 
-          jsonEditWindow("Application Run", templ, processTemplates[k], function (data) {
+          jsonEditWindow("Application Run", templ, processTemplates[k], function (data,obj) {
             // save template and run template
             jchaos.variable("app_templates", "set", processTemplates, null);
-            var server = findBestServer(tmpObj);
+            var server = findBestServer(obj);
             jchaos.rmtGetEnvironment(server + ":8071", "CHAOS_PREFIX", function (r) {
               if (r.err != 0) {
                 instantMessage("Cannot retrive environment", "cannot read CHAOS_PREFIX:" + r.errmsg, 5000, false);
@@ -4189,7 +4223,7 @@
                 var cmd_line = chaos_prefix + "/bin/" + data['app_exec'] + " " + data['app_cmdline'];
                 var name = data['app_name'];
                 if (data['app_broadcast']) {
-                  var serverlist = tmpObj['agents'];
+                  var serverlist = obj['agents'];
                   for (var server in serverlist) {
                     jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", "",function (r) {
                       console.log("Script running onto:" + server + " :" + JSON.stringify(r));
@@ -4203,7 +4237,7 @@
                     });
                   }
                 } else {
-                  var server = findBestServer(tmpObj);
+                  var server = findBestServer(obj);
 
                   jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", "",function (r) {
                     console.log("Script running onto:" + server + " :" + JSON.stringify(r));
@@ -4218,7 +4252,7 @@
                 }
               }
             });
-          });
+          },tmpObj);
         }
       }
     }
@@ -4684,7 +4718,7 @@
         $("#mdl-script").modal("hide");
         tmpObj.node_selected = null;
         data['eudk_script_content'] = decodeURIComponent(escape(atob(data['eudk_script_content'])));
-        jsonEditWindow(tmpObj.node_selected, templ, data, algoSave);
+        jsonEditWindow(tmpObj.node_selected, templ, data, algoSave,tmpObj);
 
       });
 
@@ -7162,13 +7196,13 @@
               node_selected = config.us_desc.ndk_uid;
               // editorFn = unitServerSave;
               //jsonEdit(templ, config.us_desc);
-              jsonEditWindow("US Editor", templ, config.us_desc, unitServerSave);
+              jsonEditWindow("US Editor", templ, config.us_desc, unitServerSave,tmpObj);
 
             }
           }, "Join", function () {
             // editorFn = unitServerSave;
             //jsonEdit(templ, config.us_desc);
-            jsonEditWindow("US Editor Join", templ, config.us_desc, unitServerSave);
+            jsonEditWindow("US Editor Join", templ, config.us_desc, unitServerSave,tmpObj);
 
           });
         } else if (config.hasOwnProperty("cu_desc")) {
@@ -7185,7 +7219,7 @@
               //editorFn = newCuSave;
               var tmp = config.cu_desc;
               //jsonEdit(templ, tmp);
-              jsonEditWindow("New CU Editor", templ, tmp, newCuSave);
+              jsonEditWindow("New CU Editor", templ, tmp, newCuSave,tmpObj);
 
             }
           }, "Cancel", function () {
@@ -7505,6 +7539,7 @@
     return html;
   }
   function generateCmdModal(tmpObj, cmdselected, cu) {
+    var node_selected=tmpObj.node_selected;
     var arguments = retriveCurrentCmdArguments(tmpObj, cmdselected);
     var input_type = "number";
     var html = "";
