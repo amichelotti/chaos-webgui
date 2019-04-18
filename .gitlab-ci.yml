@@ -38,7 +38,7 @@ deploy_chaos_dashboard:
     - git clone git@baltig.infn.it:chaos-lnf-control/chaos-webgui.git
     - mkdir -p $INSTALL_DIR/html
     - cp -r chaos-webgui/w3chaos/public_html/chaos_dashboard/ $INSTALL_DIR/html
-    - tar cfz $DISTRIB_NAME.tar.gz -C $INSTALL_DIR/..  $DISTRIB_NAME
+    - tar cfz $DISTRIB_NAME.tar.gz -C $INSTALL_DIR/..  chaos_distrib
     - scp $DISTRIB_NAME.tar.gz chaosweb@opensource.lnf.infn.it:/var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch
   artifacts:
     name: "$DISTRIB_NAME.tar.gz"
