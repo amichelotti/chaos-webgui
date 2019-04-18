@@ -1,0 +1,51 @@
+stages:
+    - deploy
+
+
+
+before_script:
+  - export GNOW=$(date +"%Y%m%d")
+  - export NOW=$(date +"%Y%m%d-%H%M%S")
+  - export TAR_NAME_POSTFIX=$NOW
+  - export SYS=`uname -s`
+  - if [ "$SYS" == "Linux" ];then export NPROC=`nproc`;else export NPROC=4;fi
+  - echo "[$CI_RUNNER_DESCRIPTION] $SYS $CI_JOB_NAME Working directory:$PWD tag $CI_COMMIT_REF_NAME CPUS:$NPROC"
+  - export ARCH=`uname -m`
+  - eval export `cat /etc/*-release|grep -e "^VERSION_ID="|tr -d "\" "`
+  - eval export `cat /etc/*-release|grep -e "^ID="|tr -d "\" "`
+  - export REV_POSTFIX=$CI_COMMIT_REF_NAME-$ID-$VERSION_ID-$ARCH
+  - export DISTRIB_NAME=chaos-web-distrib.$NOW
+  - export DISTRIB_PREFIX=/usr/local/chaos/chaos-distrib
+  - export INSTALL_DIR=$DISTRIB_PREFIX
+  - export CHAOS_MDS=localhost:5000
+  - export CHAOS_INTERFACE=lo
+  - export CHAOS_LIVE_SERVERS=couchbase
+  - export CHAOS_DB_SERVERS=mongo
+  - export PATH=/usr/local/chaos/qt-56/bin:$PATH
+  - echo "Running on $ID $VERSION_ID $ARCH (distrib name '$DISTRIB_NAME')"
+  - git config --global user.email andrea.michelotti@lnf.infn.it
+  - git config --global user.name amichelo
+  - git config --global color.ui true
+
+
+deploy_chaos_dashboard:
+  stage: deploy
+  retry: 2
+  tags:
+    - shared
+  image: baltig.infn.it:4567/chaos-lnf-control/chaos_bundle_compilation:lite
+  script:
+    - git clone git@baltig.infn.it:chaos-lnf-control/chaos-webgui.git
+    - mkdir -p $INSTALL_DIR/html
+    - cp -r chaos-webgui/w3chaos/public_html/chaos_dashboard/ $INSTALL_DIR/html
+    - tar cfz $DISTRIB_NAME.tar.gz -C $INSTALL_DIR/..  $DISTRIB_NAME
+    - scp $DISTRIB_NAME.tar.gz chaosweb@opensource.lnf.infn.it:/var/www/html/binary/chaos/$CI_COMMIT_REF_NAME/noarch
+  artifacts:
+    name: "$DISTRIB_NAME.tar.gz"
+    paths:
+      - ./*.tar.gz
+    expire_in: 2 day
+    when: always
+
+
+    
