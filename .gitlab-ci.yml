@@ -32,7 +32,7 @@ deploy_chaos_dashboard:
   stage: deploy
   retry: 2
   tags:
-    - shared
+    - lnf
   image: baltig.infn.it:4567/chaos-lnf-control/chaos_bundle_compilation:lite
   script:
     - git clone git@baltig.infn.it:chaos-lnf-control/chaos-webgui.git
