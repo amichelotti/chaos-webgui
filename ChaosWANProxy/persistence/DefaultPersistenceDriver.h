@@ -88,8 +88,8 @@ namespace chaos {
 				DefaultPersistenceDriver(chaos::common::network::NetworkBroker *_network_broker);
 				~DefaultPersistenceDriver();
 				
-				void init(void *init_data) throw (chaos::CException);
-				void deinit() throw (chaos::CException);
+				void init(void *init_data);
+				void deinit() ;
 				
 				void addServerList(const std::vector<std::string>& _cds_address_list);
 				

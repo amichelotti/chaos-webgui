@@ -48,6 +48,11 @@
       "format": "text",
       "description": "Full Description"
     },
+    "default_argument": {
+      "type": "string",
+      "format": "text",
+      "description": "Default/last command argument"
+    },
     "seq": {
       "type": "integer",
       "description": "identifier id"
