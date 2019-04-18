@@ -18,7 +18,7 @@
 		"type": "string",
 		"format":"textarea",
 		"required": true,
-		"default":"log-on-console=1",
+		"default":"",
 	    "description":"Initialization file"
 	},
 	"node_launch_cmd_line": {

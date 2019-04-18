@@ -364,10 +364,6 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
     int err = 0;
     DEBUG_CODE(uint64_t execution_time_start = TimingUtil::getTimeStampInMicroseconds();)
     DEBUG_CODE(uint64_t execution_time_end = 0;)
-    Json::Value json_request;
-    Json::Value json_response;
-    Json::StyledWriter json_writer;
-    Json::Reader json_reader;
     HTTPWANInterfaceStringResponse response("text/html");
     response.addHeaderKeyValue("Access-Control-Allow-Origin", "*");
 
@@ -445,6 +441,7 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
         std::stringstream answer_multi;
         if (dev_param.size() == 0)
         {
+            ChaosReadLock l(devio_mutex);
             std::string ret;
             if (info->get(cmd, (char *)parm.c_str(), 0, atoi(cmd_prio.c_str()), atoi(cmd_schedule.c_str()), atoi(cmd_mode.c_str()), 0, ret) != ::driver::misc::ChaosController::CHAOS_DEV_OK)
             {
