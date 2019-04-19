@@ -62,7 +62,7 @@ $('#main-dashboard').chaosDashboard({
                 collapsed: true,
 				withQuotes: true,
 				template:"cu",
-                Interval: 1000
+                Interval: 2000
 
             });
 </script>

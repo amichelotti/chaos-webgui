@@ -1,0 +1,5 @@
+ssh root@chaos-webui01.chaos.lnf.infn.it "systemctl restart chaos-webui"
+ssh root@chaos-webui02.chaos.lnf.infn.it "systemctl restart chaos-webui"
+ssh root@chaos-webui03.chaos.lnf.infn.it "systemctl restart chaos-webui"
+ssh chaos@chaos-webui1.chaos.lnf.infn.it "sudo service stop chaos-webui;sudo service start chaos-webui;"
+ssh chaos@chaos-webui2.chaos.lnf.infn.it "sudo service stop chaos-webui;sudo service start chaos-webui;"
