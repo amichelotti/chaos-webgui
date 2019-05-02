@@ -2191,10 +2191,14 @@
 
     $("#graph-save").on('click', function () {
       saveGraph();
+      $("#graph-save").effect( "highlight", {color: 'green'}, 1000 );
+
       $("#graph-run").removeAttr('disabled');
+
     });
 
     $("#graph-run").on('click', function () {
+      $("#graph-run").effect( "highlight", {color: 'green'}, 1000 );
 
       runGraph();
       $("#mdl-graph").modal("hide");
@@ -2217,6 +2221,10 @@
         alert("no graph selected");
         return;
       }
+      $("#mdl-graph-list").modal("hide");
+
+      confirm("Delete Graph", "Your are deleting GRAPH: " + graph_selected, "Ok", function () {
+      
       delete high_graphs[graph_selected];
 
 
@@ -2231,7 +2239,12 @@
       }
       graph_selected = null;
       jchaos.variable("highcharts", "set", high_graphs, null);
+
       updateGraph();
+    }, "Cancel",function(){
+      $("#mdl-graph-list").modal("show");
+
+    });
     });
 
 
@@ -3339,7 +3352,7 @@
    * 
    */
   function changeView(tmpObj, cutype) {
-    jchaos.setOptions({"timeout":3000});
+    jchaos.setOptions({"timeout":5000});
     tmpObj.refresh_rate=options.Interval;
 
     if ((cutype.indexOf("SCPowerSupply") != -1)) {
@@ -6731,6 +6744,7 @@
                 var page = $("#query-page").val();
                 jchaos.options.history_page_len = Number(page);
                 jchaos.options.updateEachCall = true;
+                jchaos.setOptions({"timeout":60000});
 
                 if (qstop == "" || qstop == "NOW") {
                   qstop = (new Date()).getTime();
@@ -7156,7 +7170,9 @@
     };
     console.log("saving Graph:" + JSON.stringify(high_graphs[graphname]));
 
-    jchaos.variable("highcharts", "set", high_graphs, null);
+    jchaos.variable("highcharts", "set", high_graphs, function(){
+
+    });
     graph_selected = graphname;
 
   }
@@ -8074,6 +8090,8 @@
         close: function (event, ui) {
           clearInterval(updateLogInterval);
           $(this).remove();
+          jchaos.setOptions({"timeout":5000});
+
         },
         open: function (event, ui) {
           updateLogInterval = setInterval(function () {
