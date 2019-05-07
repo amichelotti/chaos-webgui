@@ -1466,6 +1466,81 @@
       alert("missing required field ndk_uid");
     }
   }
+  function newMCCuSave(json,obj) {
+    var node_selected=obj.node_selected;
+    if ((node_selected == null || node_selected == "")) {
+      if (json.ndk_parent == "") {
+        alert("not US selected!");
+        return;
+      } else {
+        console.log("using US specified into CU:" + json.ndk_parent);
+        var us_list = jchaos.search(json.ndk_parent, "us", false, false);
+        if (us_list.length == 0) {
+          alert("US specified in CU does not exist (create before)");
+          return;
+        }
+        node_selected = json.ndk_parent;
+      }
+    }
+    if((!json.hasOwnProperty("mc_server"))|| json['mc_server']==""){
+      alert("bad memcache server specified");
+      return;
+    }
+    if(!json.hasOwnProperty("mc_keys") || (json.mc_keys.length==0)){
+      alert("bad keys specified");
+      return;
+    }
+	
+    if(!json.hasOwnProperty("mc_imported_keys") || (json.mc_imported_keys.length==0)){
+      alert("No Output specified!");
+      return;
+    }
+
+    json['cudk_driver_description']=[];
+    var drv={};
+    drv['cudk_driver_description_name']="MemcachedDataImporterDriver";//1.0.0
+    /**
+     * "server_url":["192.168.192.107:11211"],"data_keys":"DCTEL002_DYN","data_pack_len":256}
+     * cudk_load_param:{"dataset": [{"name": "current","description": "readout current","type": "double","factor": 1.1,"offset": 24,"len": 8,"lbe":false}]}
+     */
+    var param={};
+    param["server_url"]=[json.mc_server];
+    param["data_keys"]=json.mc_keys;
+    param["data_pack_len"]=json.mc_buffer_size;
+    drv['cudk_driver_description_init_parameter']=JSON.stringify(param);
+    json['cudk_driver_description'].push(drv);
+    var cudk_load_param={};
+    cudk_load_param['dataset']=[];
+    json.mc_imported_keys.forEach(function(elem){
+      var tmp=elem;
+      tmp['type']=elem.type[0];
+      cudk_load_param['dataset'].push(tmp);
+    });
+    
+    json['cudk_load_param']=cudk_load_param;
+    delete json.mc_imported_keys;
+    delete json.mc_keys;
+    delete json.mc_server;
+    delete json.mc_buffer_size;
+
+    if (json.hasOwnProperty("ndk_uid") && (json.ndk_uid != "")) {
+      jchaos.node(node_selected, "get", "us", "", null, function (data) {
+        console.log("adding \"" + json.ndk_uid + "\" to US:\"" + node_selected + "\"");
+        json.ndk_parent = node_selected;
+        if (data.us_desc.hasOwnProperty("cu_desc") && (data.us_desc.cu_desc instanceof Array)) {
+          data.us_desc.cu_desc.push(json);
+        } else {
+          data.us_desc["cu_desc"] = [json];
+        }
+        jchaos.node(node_selected, "set", "us", "", data.us_desc, function (data) {
+          console.log("unitServer save: \"" + name + "\" value:" + JSON.stringify(json));
+        });
+      });
+    } else {
+      alert("missing required field ndk_uid");
+    }
+  }
+
   function unitServerSave(json,obj) {
     if ((json == null) || !json.hasOwnProperty("ndk_uid")) {
       alert("no ndk_uid key found");
@@ -3597,6 +3672,22 @@
         });
 
       });
+      return;
+    } else if (cmd.includes("new-nt_control_unit-mcimport")) {
+      
+          // custom
+      var templ = {
+        $ref: "cu_mc_import.json",
+        format: "tabs"
+      }
+      var def = {};
+      def['ndk_parent']=node_selected;
+      //editorFn = newCuSave;
+      //jsonEdit(templ, template);
+      jsonEditWindow("New MemCache import CU", templ, def, newMCCuSave,tmpObj);
+
+        
+      
       return;
     } else if (cmd.includes("new-nt_control_unit")) {
       var regex = /new-nt_control_unit-(.*)$/;
@@ -8275,6 +8366,8 @@
 
     }
     items["new-nt_control_unit-custom"] = { name: "Custom CU" };
+    items["new-nt_control_unit-mcimport"] = { name: "MemCache import CU" };
+
     return items;
   }
   function updateNodeMenu(tmpObj, node_name) {
