@@ -10,10 +10,6 @@
 		jchaos.ops_abort = false;
 		jchaos.lastChannel = {};
 		var uri_default="localhost:8081";
-		if ('WEBUI_SERVER' in Object.keys(process.env)){
-			uri_default=process.env.WEBUI_SERVER;
-			console.log("Setting webui server to:"+uri_default);
-		}
 		
 		jchaos.options = {
 			updateEachCall: false,
