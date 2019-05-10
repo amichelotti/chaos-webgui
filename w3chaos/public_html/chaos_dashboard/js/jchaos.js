@@ -9,13 +9,19 @@
 		jchaos.ops_on_going = 0;
 		jchaos.ops_abort = false;
 		jchaos.lastChannel = {};
+		var uri_default="localhost:8081";
+		if ('WEBUI_SERVER' in Object.keys(process.env)){
+			uri_default=process.env.WEBUI_SERVER;
+			console.log("Setting webui server to:"+uri_default);
+		}
+		
 		jchaos.options = {
 			updateEachCall: false,
-			uri: "localhost:8081",
+			uri: uri_default,
 			async: true,
 			limit_on_going: 10000,
 			history_page_len: 1000,
-			timeout:3000,
+			timeout:5000,
 			console_log: function (str) { console.log(str); },
 			console_err: function (str) { console.error(str); }
 
