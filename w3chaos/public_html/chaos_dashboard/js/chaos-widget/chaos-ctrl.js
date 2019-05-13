@@ -5970,7 +5970,11 @@
 
         }
         if (elem.output.powerOn ) {
+        
+        
           $("#" + cuname + "_flag_output_status").html('<i class="material-icons verde">trending_down</i>');
+          $("#" + cuname + "_flag_output_status").html('<i class="material-icons verde">trending_down</i>');
+
         } else {
           $("#" + cuname + "_flag_output_status").html('<i class="material-icons rosso">pause_circle_outline</i>');
 
@@ -5989,6 +5993,26 @@
         }
 
       }
+      if(elem.health.ndk_uid == tmpObj.node_selected){
+
+        if (elem.output.powerOn ) {
+          $("#scraper_setPoweron").childen().remove();
+          html = '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweron" cucmdid="poweron" cucmdvalue={\"on\":1}>';
+          html += '<i class="material-icons green">trending_down</i>';
+          html += '<p class="name-cmd">OFF</p>';
+          html += '</a>';
+          $("#scraper_setPoweron").html(html);
+        } else {
+          $("#scraper_setPoweron").childen().remove();
+
+          html = '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweron" cucmdid="poweron" cucmdvalue={\"on\":0}>';
+          html += '<i class="material-icons red">pause</i>';
+          html += '<p class="name-cmd">ON</p>';
+          html += '</a>';
+          $("#scraper_setPoweron").html(html);
+
+        }
+      }
     });
 
     updateGenericTableDataset(tmpObj);
@@ -5998,8 +6022,7 @@
   function generateScraperCmd() {
     var html = '<div class="row-fluid">';
     html += '<div class="box span12 box-cmd">';
-    html += '<div class="Bmd">Oper</p>';
-    html += '</a>';
+    html += '<div>';
     html += '<a class="quick-button-small span1 btn-cmd cucmd" id="scraper_reset" cucmdid="rset" cucmdvalue=1>';
     html += '<i class="material-icons rosso">error</i>';
     html += '<p class="name-cmd">Reset</p>';
@@ -6011,13 +6034,18 @@
     html += '<p>Set Absolute</p>';
     html += '</a>';
 
+    html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweron" cucmdid="poweron" cucmdvalue={\"on\":1}>';
+    html += '<i class="material-icons green">trending_down</i>';
+    html += '<p class="name-cmd">ON</p>';
+    html += '</a>';
     html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setStop" cucmdid="stopMotion">';
     html += '<i class="material-icons rosso">cancel</i>';
     html += '<p class="name-cmd">STOP</p>';
     html += '</a>';
+    
     html += '</div>';
     html += '<div class="span12 statbox" style="margin-left:0">';
-    html += '<a class="quick-button-small span1 btn-cmd offset2 cucmd" id="scraper_in" cucmdid="mov_rel" cucmdvalueMult=-1>';
+    html += '<a class="quick-button-small span1 btn-cmd offset0 cucmd" id="scraper_in" cucmdid="mov_rel" cucmdvalueMult=-1>';
     html += '<i class="icon-angle-left"></i>';
     html += '<p class="name-cmd">In</p>';
     html += '</a>';
@@ -6030,6 +6058,10 @@
     html += '<p class="name-cmd">Out</p>';
     html += '</a>';
     
+    html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweroff" cucmdid="poweron" cucmdvalue={\"on\":0}>';
+    html += '<i class="material-icons red">pause</i>';
+    html += '<p class="name-cmd">OFF</p>';
+    html += '</a>';
     html += '<a href="#mdl-homing" role="button" class="quick-button-small span1 btn-cmd cucmd" cucmdid="homing" cucmdvalue=1>';
     html += '<i class="icon-home"></i>';
     html += '<p class="name-cmd">Homing</p>';
@@ -6039,8 +6071,8 @@
     html += '</div>';
     html += '</div>';
     html += '</div>';
-
     html += '</div>';
+
 
     return html;
   }
