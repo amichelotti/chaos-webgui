@@ -13,6 +13,7 @@
 	"ndk_parent": {
 		"type": "string",
 		"format":"text",
+		"required": true,
 		"description":"US owner"
 		
 	},
@@ -20,6 +21,7 @@
 	"control_unit_implementation": {
 		"type": "string",
 		"format":"text",
+		"required": true,
 	    "description":"C++ Class that implements the CU"
 	},
 	"cudk_load_param": {
@@ -28,15 +30,18 @@
 	    "description":"Parameters given in load (Constructor of the CU class)"
 	},
 	"auto_load": {
-	    "type": "boolean",
+		"type": "boolean",
+		"default":true,
 	    "description":"Load automatically on registration"
 	},
 	"auto_init": {
-	    "type": "boolean",
+		"type": "boolean",
+		"default":true,
 	    "description":"Initialize automatically on registration"
 	},
 	"auto_start": {
-	    "type": "boolean",
+		"type": "boolean",
+		"default":true,
 	    "description":"start automatically on registration"
 	},
 	

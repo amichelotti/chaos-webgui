@@ -1438,17 +1438,25 @@
     if ((node_selected == null || node_selected == "")) {
       if (json.ndk_parent == "") {
         alert("not US selected!");
-        return;
+        return 1;
       } else {
         console.log("using US specified into CU:" + json.ndk_parent);
         var us_list = jchaos.search(json.ndk_parent, "us", false, false);
         if (us_list.length == 0) {
           alert("US specified in CU does not exist (create before)");
-          return;
+          return -1;
         }
         node_selected = json.ndk_parent;
       }
     }
+    if(!json.hasOwnProperty("control_unit_implementation") || json.control_unit_implementation==""){
+      alert("You must specify a valid implementation 'control_unit_implementation'");
+      return 1;
+  }
+    if(!json.hasOwnProperty("control_unitndk_uid_implementation") || json.ndk_uid==""){
+        alert("You must specify a valid UID 'ndk_uid'");
+        return 1;
+    } 
     if (json.hasOwnProperty("ndk_uid") && (json.ndk_uid != "")) {
       jchaos.node(node_selected, "get", "us", "", null, function (data) {
         console.log("adding \"" + json.ndk_uid + "\" to US:\"" + node_selected + "\"");
@@ -1464,20 +1472,22 @@
       });
     } else {
       alert("missing required field ndk_uid");
+      return 1;
     }
+    return 0;
   }
   function newMCCuSave(json,obj) {
     var node_selected=obj.node_selected;
     if ((node_selected == null || node_selected == "")) {
       if (json.ndk_parent == "") {
         alert("not US selected!");
-        return;
+        return 1;
       } else {
         console.log("using US specified into CU:" + json.ndk_parent);
         var us_list = jchaos.search(json.ndk_parent, "us", false, false);
         if (us_list.length == 0) {
           alert("US specified in CU does not exist (create before)");
-          return;
+          return -1;
         }
         node_selected = json.ndk_parent;
       }
@@ -1488,12 +1498,12 @@
     }
     if(!json.hasOwnProperty("mc_keys") || (json.mc_keys.length==0)){
       alert("bad keys specified");
-      return;
+      return 1;
     }
 	
     if(!json.hasOwnProperty("mc_imported_keys") || (json.mc_imported_keys.length==0)){
       alert("No Output specified!");
-      return;
+      return 1;
     }
 
     json['cudk_driver_description']=[];
@@ -1538,22 +1548,24 @@
       });
     } else {
       alert("missing required field ndk_uid");
+      return 1;
     }
+    return 0;
   }
 
   function unitServerSave(json,obj) {
     if ((json == null) || !json.hasOwnProperty("ndk_uid")) {
       alert("no ndk_uid key found");
-      return;
+      return 1;
     }
     if (json.ndk_uid == "") {
       alert("US name cannot be empty");
-      return;
+      return 2;
     }
     var node_selected = json.ndk_uid;
     if (node_selected == null || node_selected == "") {
       alert("not US selected!");
-      return;
+      return 3;
     }
 
     var data = jchaos.node(node_selected, "get", "us", "", null, null);
@@ -1585,6 +1597,7 @@
     jchaos.node(node_selected, "set", "us", "", json, function (data) {
       console.log("unitServer save: \"" + node_selected + "\" value:" + JSON.stringify(json));
     });
+    return 0;
   }
   function cuSave(json,obj) {
 
@@ -1592,7 +1605,7 @@
       var name = json.ndk_uid;
       if (!json.hasOwnProperty("ndk_parent")) {
         alert("CU parent not defined");
-        return
+        return 1;
       }
       jchaos.node(json.ndk_uid, "set", "cu", json.ndk_parent, json, function (data) {
         console.log("cu save: \"" + node_selected + "\" value:" + JSON.stringify(json));
@@ -1600,6 +1613,7 @@
     } else {
       alert("No ndk_uid field found");
     }
+    return 0;
   }
 
   function agentSave(json,obj) {
@@ -1632,6 +1646,7 @@
             });
           }
     });
+    return 0;
   }
 
     if (json.hasOwnProperty("andk_node_associated") && (json.andk_node_associated instanceof Array)) {
@@ -1669,16 +1684,18 @@
           text: "save", click: function (e) {
             // editor validation
             var errors = json_editor.validate();
-
+            var ret=0;
             if (errors.length) {
               alert("JSON NOT VALID");
               console.log(errors);
             } else {
               // It's valid!
               var json_editor_value = json_editor.getValue();
-              editorFn(json_editor_value,tmpObj);
+              ret=editorFn(json_editor_value,tmpObj);
             }
-            $(this).remove();
+            if(ret<=0){
+              $(this).remove();
+            }
           }
         }, {
           text: "download", click: function (e) {
@@ -2847,7 +2864,8 @@
         if (data.tag_type == "CYCLE") {
           ttype = 1;
         }
-        jchaos.tag(data.tag_name, obj.node_multi_selected, ttype, data.tag_duration, function () {
+        jchaos.tag(data.tag_name, obj.node_multi_selected, ttype, data.tag_duration, 
+          function () {
           var tag_obj = jchaos.variable("tags", "get", null, null);
           data.tag_ts = (new Date()).getTime();
           data.tag_elements = obj.node_multi_selected;
@@ -2860,6 +2878,7 @@
           instantMessage("ERROR Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 5000, false);
 
         });
+        return 0;
       },tmpObj);
 
     } else if (cmd == "load") {
@@ -3507,6 +3526,7 @@
 
   function executeNodeMenuCmd(tmpObj, cmd, opt) {
     node_selected = tmpObj.node_selected;
+    var node_multi_selected=tmpObj.node_multi_selected;
     var node_name_to_desc=tmpObj.node_name_to_desc;
     if (cmd == "edit-nt_agent") {
       var templ = {
@@ -3585,6 +3605,8 @@
             var parent = desc[0].instance_description.ndk_parent;
             confirm("Delete CU", "Your are deleting CU: \"" + nod + "\"(" + parent + ")", "Ok", function () {
               jchaos.node(nod, "del", "cu", parent, null);
+              updateInterface(tmpObj);
+
             }, "Cancel");
           }
         });
@@ -3694,9 +3716,11 @@
       var match = regex.exec(cmd);
       if (match != null) {
         var template = cu_templates[match[1]];
+
         if (template != null) {
-          console.log("selected template:\"" + match[1]);
           template["ndk_parent"] = node_selected;
+
+          console.log("selected template:\"" + match[1]);
           var templ = {
             $ref: "cu.json",
             format: "tabs"
@@ -3707,10 +3731,12 @@
 
         } else {
           // custom
+          var template={};
           var templ = {
             $ref: "cu.json",
             format: "tabs"
           }
+          template["ndk_parent"] = node_selected;
 
           //editorFn = newCuSave;
           //jsonEdit(templ, template);

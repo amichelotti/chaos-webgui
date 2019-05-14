@@ -986,7 +986,7 @@
 						if ( (ds.Y[0].hasOwnProperty("FRAMEBUFFER")) && (ds.Y[0].FRAMEBUFFER.hasOwnProperty("$binary")) && (ds.Y[0].hasOwnProperty("FMT"))) {
 							ds.Y.forEach(function (img) {
 
-								var name = ci + "/" + img.dpck_seq_id + "_" + img.dpck_ats + "_" + img.FMT;
+								var name = ci + "/" + img.dpck_seq_id + "_" + img.dpck_ats + "" + img.FMT;
 								zipf.file(name, img.FRAMEBUFFER.$binary.base64, { base64: true });
 								jchaos.print("zipping image: " + name + " into:" + zipname);
 
