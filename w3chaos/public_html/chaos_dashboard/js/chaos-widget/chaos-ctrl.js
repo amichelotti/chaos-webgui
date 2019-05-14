@@ -1505,10 +1505,19 @@
       alert("No Output specified!");
       return 1;
     }
+    var cudk_load_param={};
+    cudk_load_param['dataset']=[];
+    json['ndk_parent']=node_selected;
+    json['control_unit_implementation']="DataImport";
+    json.mc_imported_keys.forEach(function(elem){
+      var tmp=elem;
+      tmp['type']=elem.type[0];
+      cudk_load_param['dataset'].push(tmp);
+    });
+    json['cudk_load_param']=JSON.stringify(cudk_load_param);
 
     json['cudk_driver_description']=[];
     var drv={};
-    drv['cudk_driver_description_name']="MemcachedDataImporterDriver";//1.0.0
     /**
      * "server_url":["192.168.192.107:11211"],"data_keys":"DCTEL002_DYN","data_pack_len":256}
      * cudk_load_param:{"dataset": [{"name": "current","description": "readout current","type": "double","factor": 1.1,"offset": 24,"len": 8,"lbe":false}]}
@@ -1517,17 +1526,13 @@
     param["server_url"]=[json.mc_server];
     param["data_keys"]=json.mc_keys;
     param["data_pack_len"]=json.mc_buffer_size;
+    drv['cudk_driver_description_name']="MemcachedDataImporterDriver";//1.0.0
+    drv['cudk_driver_description_version']="1.0.0";
     drv['cudk_driver_description_init_parameter']=JSON.stringify(param);
     json['cudk_driver_description'].push(drv);
     var cudk_load_param={};
     cudk_load_param['dataset']=[];
-    json.mc_imported_keys.forEach(function(elem){
-      var tmp=elem;
-      tmp['type']=elem.type[0];
-      cudk_load_param['dataset'].push(tmp);
-    });
     
-    json['cudk_load_param']=cudk_load_param;
     delete json.mc_imported_keys;
     delete json.mc_keys;
     delete json.mc_server;
@@ -1543,7 +1548,7 @@
           data.us_desc["cu_desc"] = [json];
         }
         jchaos.node(node_selected, "set", "us", "", data.us_desc, function (data) {
-          console.log("unitServer save: \"" + name + "\" value:" + JSON.stringify(json));
+          console.log("unitServer ["+json.ndk_parent+"] save: \"" + json.ndk_uid + "\" value:" + JSON.stringify(json));
         });
       });
     } else {
@@ -3702,11 +3707,11 @@
         $ref: "cu_mc_import.json",
         format: "tabs"
       }
-      var def = {};
-      def['ndk_parent']=node_selected;
+      //var def = {};
+      //def['ndk_parent']=node_selected;
       //editorFn = newCuSave;
       //jsonEdit(templ, template);
-      jsonEditWindow("New MemCache import CU", templ, def, newMCCuSave,tmpObj);
+      jsonEditWindow("New MemCache import CU", templ, null, newMCCuSave,tmpObj);
 
         
       
