@@ -1672,6 +1672,7 @@
       alert("No andk_node_associated field found");
 
     }
+    return 0;
   }
 
   /***
