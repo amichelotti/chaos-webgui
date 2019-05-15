@@ -31,7 +31,7 @@
   var graph_selected;
   var search_string;
   var notupdate_dataset = 1;
-  var implementation_map = { "powersupply": "SCPowerSupply", "scraper": "SCActuator", "camera": "RTCamera","BPM":"SCLibera" };
+  var implementation_map = { "powersupply": "SCPowerSupply", "scraper": "SCActuator", "camera": "RTCamera", "BPM": "SCLibera" };
   var histdataset = {};
   var hostWidth = 640;
   var hostHeight = 640;
@@ -73,7 +73,7 @@
     return buf.buffer;
   }
   function convertBinaryToArrays(obj) {
-    
+
     if (obj.hasOwnProperty("$binary")) {
       var objtmp;
       var type = obj.$binary.subType;
@@ -136,13 +136,13 @@
 
     })
   }*/
-  function saveAsBinary(binary_string,name){
+  function saveAsBinary(binary_string, name) {
     var len = binary_string.length;
     var bytes = new Uint8Array(len);
     for (var i = 0; i < len; i++) {
       bytes[i] = binary_string.charCodeAt(i);
     }
-   
+
     var blob = new Blob([bytes], { type: "application/octet-stream" });
     saveAs(blob, name);
   }
@@ -265,7 +265,7 @@
     });
   }
 
-  function showJson(tmpObj,msg, cuname, json) {
+  function showJson(tmpObj, msg, cuname, json) {
     var name = encodeName(cuname);
 
     var instant = $('<div id=desc-' + name + '></div>').dialog({
@@ -301,7 +301,7 @@
           jsonhtml = '<a  class="json-toggle"></a>' + jsonhtml;
         }
         $("#desc-" + name).html(jsonhtml);
-        jsonSetup($(this),tmpObj);
+        jsonSetup($(this), tmpObj);
         $(".json-toggle").trigger("click");
         $(this).before($(this).parent().find('.ui-dialog-buttonpane'));
 
@@ -309,11 +309,11 @@
     });
   }
 
-  function showDataset(msghead, cuname, refresh,tmpObj) {
+  function showDataset(msghead, cuname, refresh, tmpObj) {
     var update;
     var started = 0;
     var stop_update = false;
-    var showformat=0;
+    var showformat = 0;
     var last_dataset = {};
     var name = encodeName(cuname);
     var instant = $('<div id=dataset-' + name + '></div>').dialog({
@@ -328,26 +328,26 @@
             // var interval=$(this).attr("refresh_time");
             stop_update = !stop_update;
             if (stop_update) {
-             // $('#dataset-update-' + name).text("Update");
+              // $('#dataset-update-' + name).text("Update");
               $(e.target).text("Update");
             } else {
-             // $('#dataset-update-' + name).text("Not Update");
+              // $('#dataset-update-' + name).text("Not Update");
               $(e.target).text("Not Update");
 
             }
             // $(instant).dialog("close");
           }
-        },  {
-          text: "Format", id: 'dataset-radix-' + name,click: function (e) {
+        }, {
+          text: "Format", id: 'dataset-radix-' + name, click: function (e) {
             // var interval=$(this).attr("refresh_time");
             showformat++;
-            switch(showformat){
+            switch (showformat) {
               case 0:
                 $(e.target).text("Dec(s)");
                 break;
               case 1:
                 $(e.target).text("Dec(u)");
-              break;
+                break;
               case 2:
                 $(e.target).text("Hex");
                 break;
@@ -355,13 +355,13 @@
                 $(e.target).text("Bin");
                 break;
               default:
-                showformat=0;
+                showformat = 0;
                 $(e.target).text("Dec(s)");
             }
-            
+
             // $(instant).dialog("close");
           }
-        },{
+        }, {
           text: "save", click: function (e) {
             var blob = new Blob([JSON.stringify(last_dataset)], { type: "json;charset=utf-8" });
             saveAs(blob, name + ".json");
@@ -387,22 +387,22 @@
         console.log(cuname + "dataset update refresh:" + refresh);
         //$(".ui-dialog-titlebar-close", ui.dialog | ui).show();
         update = setInterval(function () {
-         
-          var isediting=false;
-          if(tmpObj.hasOwnProperty('json_editing')){
-            isediting=tmpObj.json_editing;
+
+          var isediting = false;
+          if (tmpObj.hasOwnProperty('json_editing')) {
+            isediting = tmpObj.json_editing;
           }
-          if ((!stop_update)&&(isediting==false)) {
+          if ((!stop_update) && (isediting == false)) {
             jchaos.getChannel(cuname, -1, function (imdata) {
               last_dataset = imdata[0];
-              if(showformat==1){
-               options["format"]=10+0x100;
-              } else if(showformat==2){
-               options["format"]=16;
-              } else if(showformat==3){
-                options["format"]=2;
+              if (showformat == 1) {
+                options["format"] = 10 + 0x100;
+              } else if (showformat == 2) {
+                options["format"] = 16;
+              } else if (showformat == 3) {
+                options["format"] = 2;
               } else {
-                options["format"]=10;
+                options["format"] = 10;
               }
               var converted = convertBinaryToArrays(imdata[0]);
               var jsonhtml = json2html(converted, options, cuname);
@@ -424,7 +424,7 @@
 
         }, refresh);
 
-        jsonSetup($(this),tmpObj);
+        jsonSetup($(this), tmpObj);
         $(this).before($(this).parent().find('.ui-dialog-buttonpane'));
 
       }
@@ -538,15 +538,15 @@
         {
           text: "save", click: function (e) {
             var binary_string = atob(data.FRAMEBUFFER.$binary.base64);
-           /* var len = binary_string.length;
-            var bytes = new Uint8Array(len);
-            for (var i = 0; i < len; i++) {
-              bytes[i] = binary_string.charCodeAt(i);
-            }
-            var blob = new Blob([bytes], { type: "image/png" });
-           */
-            saveAsBinary(binary_string,name + ".png");
-            
+            /* var len = binary_string.length;
+             var bytes = new Uint8Array(len);
+             for (var i = 0; i < len; i++) {
+               bytes[i] = binary_string.charCodeAt(i);
+             }
+             var blob = new Blob([bytes], { type: "image/png" });
+            */
+            saveAsBinary(binary_string, name + ".png");
+
           }
         },
         {
@@ -744,10 +744,10 @@
     return ret;
 
   }
-  
+
   function retriveCurrentCmdArguments(tmpObj, alias) {
     var arglist = [];
-    var node_selected=tmpObj.node_selected;
+    var node_selected = tmpObj.node_selected;
     if (node_selected == null) {
       return arglist;
     }
@@ -822,20 +822,20 @@
             break;
           case "int32":
             //integer
-            if(parvalue!=""){
+            if (parvalue != "") {
               cmdparam[parname] = parseInt(parvalue);
             }
             break;
           case "double": {
             var d = {};
-            if(parvalue!=""){
-            if (typeof parvalue === 'string') {
-              d['$numberDouble'] = parvalue;
-            } else {
-              d['$numberDouble'] = parvalue.toString();
+            if (parvalue != "") {
+              if (typeof parvalue === 'string') {
+                d['$numberDouble'] = parvalue;
+              } else {
+                d['$numberDouble'] = parvalue.toString();
+              }
+              cmdparam[parname] = d;
             }
-            cmdparam[parname] = d;
-          }
             break;
           }
           case "string": {
@@ -843,15 +843,15 @@
             break;
           }
           case "int64": {
-            if(parvalue!=""){
-            var d = {};
-            if (typeof parvalue === 'string') {
-              d['$numberLong'] = parvalue;
-            } else {
-              d['$numberLong'] = parvalue.toString();
+            if (parvalue != "") {
+              var d = {};
+              if (typeof parvalue === 'string') {
+                d['$numberLong'] = parvalue;
+              } else {
+                d['$numberLong'] = parvalue.toString();
+              }
+              cmdparam[parname] = d;
             }
-            cmdparam[parname] = d;
-          }
             break;
           }
 
@@ -1359,17 +1359,17 @@
       scriptTmp['eudk_script_content'] = script['data'];
       scriptTmp['eudk_script_language'] = language;
       scriptTmp['script_description'] = "Imported from " + script['name'];
-      scriptTmp['default_argument'] ="";
+      scriptTmp['default_argument'] = "";
 
       var templ = {
         $ref: "algo.json",
         format: "tabs"
       }
 
-      jsonEditWindow("Loaded", templ, scriptTmp, algoSave,tmpObj);
+      jsonEditWindow("Loaded", templ, scriptTmp, algoSave, tmpObj);
     });
   }
-  function algoSave(json,obj) {
+  function algoSave(json, obj) {
     console.log("newScript :" + JSON.stringify(json));
     var proc = {};
     if (json.script_name == null || json.script_name == "") {
@@ -1392,49 +1392,49 @@
     json['eudk_script_language'] = json.eudk_script_language[0];
     proc[json.script_name] = json;
     //    jchaos.variable("script", "set", proc, null);
-    jchaos.search(json.script_name, "script", false, function (l) { 
-      var script_inst = l['found_script_list'];     
-      if(script_inst.length==0){
+    jchaos.search(json.script_name, "script", false, function (l) {
+      var script_inst = l['found_script_list'];
+      if (script_inst.length == 0) {
         jchaos.saveScript(json, function (data) {
           console.log("saving script:" + JSON.stringify(json));
           instantMessage("Script " + json.script_name, "Saved", 1000, null, null, true)
-    
+
         });
       } else {
-        confirm("Script Already Exist", "Do you want to replace:" +json.script_name, "Ok", function () {
-          var cnt=0;
-          script_inst.forEach(function(elem){
+        confirm("Script Already Exist", "Do you want to replace:" + json.script_name, "Ok", function () {
+          var cnt = 0;
+          script_inst.forEach(function (elem) {
             jchaos.rmScript(elem, function (data) {
               cnt++;
-              console.log(cnt+"] removing script:" + json.script_name);
+              console.log(cnt + "] removing script:" + json.script_name);
 
-              if(cnt==script_inst.length){
+              if (cnt == script_inst.length) {
                 jchaos.saveScript(json, function (data) {
-                  console.log("Replacing script:" +json.script_name);
+                  console.log("Replacing script:" + json.script_name);
                   instantMessage("Replacing Script " + json.script_name, "Saved", 1000, null, null, true)
-            
+
                 });
               }
             });
           });
-          
+
         }, "Cancel");
       }
     });
-    
+
 
   }
 
-  function algoSaveInstance(json,obj) {
-    var node_name_to_desc=obj.node_name_to_desc;
+  function algoSaveInstance(json, obj) {
+    var node_name_to_desc = obj.node_name_to_desc;
     jchaos.updateScriptInstance(json, node_name_to_desc[pather_selected], function (data) {
       console.log("saving Instance:" + JSON.stringify(json));
     });
 
 
   }
-  function newCuSave(json,obj) {
-    var node_selected=obj.node_selected;
+  function newCuSave(json, obj) {
+    var node_selected = obj.node_selected;
     if ((node_selected == null || node_selected == "")) {
       if (json.ndk_parent == "") {
         alert("not US selected!");
@@ -1449,14 +1449,14 @@
         node_selected = json.ndk_parent;
       }
     }
-    if(!json.hasOwnProperty("control_unit_implementation") || json.control_unit_implementation==""){
+    if (!json.hasOwnProperty("control_unit_implementation") || json.control_unit_implementation == "") {
       alert("You must specify a valid implementation 'control_unit_implementation'");
       return 1;
-  }
-    if(!json.hasOwnProperty("control_unitndk_uid_implementation") || json.ndk_uid==""){
-        alert("You must specify a valid UID 'ndk_uid'");
-        return 1;
-    } 
+    }
+    if (!json.hasOwnProperty("control_unitndk_uid_implementation") || json.ndk_uid == "") {
+      alert("You must specify a valid UID 'ndk_uid'");
+      return 1;
+    }
     if (json.hasOwnProperty("ndk_uid") && (json.ndk_uid != "")) {
       jchaos.node(node_selected, "get", "us", "", null, function (data) {
         console.log("adding \"" + json.ndk_uid + "\" to US:\"" + node_selected + "\"");
@@ -1476,8 +1476,8 @@
     }
     return 0;
   }
-  function newMCCuSave(json,obj) {
-    var node_selected=obj.node_selected;
+  function newMCCuSave(json, obj) {
+    var node_selected = obj.node_selected;
     if ((node_selected == null || node_selected == "")) {
       if (json.ndk_parent == "") {
         alert("not US selected!");
@@ -1492,47 +1492,47 @@
         node_selected = json.ndk_parent;
       }
     }
-    if((!json.hasOwnProperty("mc_server"))|| json['mc_server']==""){
+    if ((!json.hasOwnProperty("mc_server")) || json['mc_server'] == "") {
       alert("bad memcache server specified");
       return;
     }
-    if(!json.hasOwnProperty("mc_keys") || (json.mc_keys.length==0)){
+    if (!json.hasOwnProperty("mc_keys") || (json.mc_keys.length == 0)) {
       alert("bad keys specified");
       return 1;
     }
-	
-    if(!json.hasOwnProperty("mc_imported_keys") || (json.mc_imported_keys.length==0)){
+
+    if (!json.hasOwnProperty("mc_imported_keys") || (json.mc_imported_keys.length == 0)) {
       alert("No Output specified!");
       return 1;
     }
-    var cudk_load_param={};
-    cudk_load_param['dataset']=[];
-    json['ndk_parent']=node_selected;
-    json['control_unit_implementation']="DataImport";
-    json.mc_imported_keys.forEach(function(elem){
-      var tmp=elem;
-      tmp['type']=elem.type[0];
+    var cudk_load_param = {};
+    cudk_load_param['dataset'] = [];
+    json['ndk_parent'] = node_selected;
+    json['control_unit_implementation'] = "DataImport";
+    json.mc_imported_keys.forEach(function (elem) {
+      var tmp = elem;
+      tmp['type'] = elem.type[0];
       cudk_load_param['dataset'].push(tmp);
     });
-    json['cudk_load_param']=JSON.stringify(cudk_load_param);
+    json['cudk_load_param'] = JSON.stringify(cudk_load_param);
 
-    json['cudk_driver_description']=[];
-    var drv={};
+    json['cudk_driver_description'] = [];
+    var drv = {};
     /**
      * "server_url":["192.168.192.107:11211"],"data_keys":"DCTEL002_DYN","data_pack_len":256}
      * cudk_load_param:{"dataset": [{"name": "current","description": "readout current","type": "double","factor": 1.1,"offset": 24,"len": 8,"lbe":false}]}
      */
-    var param={};
-    param["server_url"]=[json.mc_server];
-    param["data_keys"]=json.mc_keys;
-    param["data_pack_len"]=json.mc_buffer_size;
-    drv['cudk_driver_description_name']="MemcachedDataImporterDriver";//1.0.0
-    drv['cudk_driver_description_version']="1.0.0";
-    drv['cudk_driver_description_init_parameter']=JSON.stringify(param);
+    var param = {};
+    param["server_url"] = [json.mc_server];
+    param["data_keys"] = json.mc_keys;
+    param["data_pack_len"] = json.mc_buffer_size;
+    drv['cudk_driver_description_name'] = "MemcachedDataImporterDriver";//1.0.0
+    drv['cudk_driver_description_version'] = "1.0.0";
+    drv['cudk_driver_description_init_parameter'] = JSON.stringify(param);
     json['cudk_driver_description'].push(drv);
-    var cudk_load_param={};
-    cudk_load_param['dataset']=[];
-    
+    var cudk_load_param = {};
+    cudk_load_param['dataset'] = [];
+
     delete json.mc_imported_keys;
     delete json.mc_keys;
     delete json.mc_server;
@@ -1548,7 +1548,7 @@
           data.us_desc["cu_desc"] = [json];
         }
         jchaos.node(node_selected, "set", "us", "", data.us_desc, function (data) {
-          console.log("unitServer ["+json.ndk_parent+"] save: \"" + json.ndk_uid + "\" value:" + JSON.stringify(json));
+          console.log("unitServer [" + json.ndk_parent + "] save: \"" + json.ndk_uid + "\" value:" + JSON.stringify(json));
         });
       });
     } else {
@@ -1558,7 +1558,7 @@
     return 0;
   }
 
-  function unitServerSave(json,obj) {
+  function unitServerSave(json, obj) {
     if ((json == null) || !json.hasOwnProperty("ndk_uid")) {
       alert("no ndk_uid key found");
       return 1;
@@ -1587,9 +1587,9 @@
             }
           });
           if (found == false) {
-              console.log("deleting cu:\"" + item.ndk_uid + "\"");
-              jchaos.node(item.ndk_uid, "del", "cu", node_selected, null);
-            
+            console.log("deleting cu:\"" + item.ndk_uid + "\"");
+            jchaos.node(item.ndk_uid, "del", "cu", node_selected, null);
+
           }
         });
 
@@ -1604,7 +1604,7 @@
     });
     return 0;
   }
-  function cuSave(json,obj) {
+  function cuSave(json, obj) {
 
     if ((json != null) && json.hasOwnProperty("ndk_uid")) {
       var name = json.ndk_uid;
@@ -1621,38 +1621,37 @@
     return 0;
   }
 
-  function agentSave(json,obj) {
+  function agentSave(json, obj) {
     // remove all the associations
-    if(obj!=null){
+    if (obj != null) {
       var node_selected = obj.node_selected;
-      var list_to_remove=[];
-    jchaos.node(node_selected, "info", "agent", "", null, function (data) {
-       if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
-            //rimuovi tutte le associazioni precedenti.
-            data.andk_node_associated.forEach(function (item) {
-              if (item.hasOwnProperty("ndk_uid")) {
-                var found=false;
-                if (json.hasOwnProperty("andk_node_associated") && (json.andk_node_associated instanceof Array)) {
-                  json.andk_node_associated.forEach(function (tostay) {
-                    if(tostay.ndk_uid == item.ndk_uid){
-                      found =true;
-                    }
-                  });
-                  
-                }
-                if(found==false){
-                  list_to_remove.push(item.ndk_uid);
-                }
+      var list_to_remove = [];
+      jchaos.node(node_selected, "info", "agent", "", null, function (data) {
+        if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
+          //rimuovi tutte le associazioni precedenti.
+          data.andk_node_associated.forEach(function (item) {
+            if (item.hasOwnProperty("ndk_uid")) {
+              var found = false;
+              if (json.hasOwnProperty("andk_node_associated") && (json.andk_node_associated instanceof Array)) {
+                json.andk_node_associated.forEach(function (tostay) {
+                  if (tostay.ndk_uid == item.ndk_uid) {
+                    found = true;
+                  }
+                });
+
               }
-            });
-            list_to_remove.forEach(function(item){
-              console.log("Agent remove association "+item);
-              jchaos.node(node_selected, "del", "agent", item, function (daa) { });
-            });
-          }
-    });
-    return 0;
-  }
+              if (found == false) {
+                list_to_remove.push(item.ndk_uid);
+              }
+            }
+          });
+          list_to_remove.forEach(function (item) {
+            console.log("Agent remove association " + item);
+            jchaos.node(node_selected, "del", "agent", item, function (daa) { });
+          });
+        }
+      });
+    }
 
     if (json.hasOwnProperty("andk_node_associated") && (json.andk_node_associated instanceof Array)) {
       json.andk_node_associated.forEach(function (item) {
@@ -1666,19 +1665,20 @@
 
             });
           }
+          return 0;
         });
       });
     } else {
       alert("No andk_node_associated field found");
+      return 0;
 
     }
-    return 0;
   }
 
   /***
    * 
    */
-  function jsonEditWindow(name, jsontemp, jsonin, editorFn,tmpObj) {
+  function jsonEditWindow(name, jsontemp, jsonin, editorFn, tmpObj) {
     var instant = $('<div id=edit-temp></div>').dialog({
       minWidth: hostWidth / 4,
       minHeight: hostHeight / 4,
@@ -1690,16 +1690,16 @@
           text: "save", click: function (e) {
             // editor validation
             var errors = json_editor.validate();
-            var ret=0;
+            var ret = 0;
             if (errors.length) {
               alert("JSON NOT VALID");
               console.log(errors);
             } else {
               // It's valid!
               var json_editor_value = json_editor.getValue();
-              ret=editorFn(json_editor_value,tmpObj);
+              ret = editorFn(json_editor_value, tmpObj);
             }
-            if(ret<=0){
+            if (ret <= 0) {
               $(this).remove();
             }
           }
@@ -1720,14 +1720,14 @@
           }
         }, {
           text: "Upload", click: function (e) {
-            getFile("Upload","upload the json",function(obj){
+            getFile("Upload", "upload the json", function (obj) {
               $("#edit-temp").dialog('close');
-              console.log("uploaded:"+JSON.stringify(obj));
-              jsonEditWindow(name,jsontemp,obj,editorFn,tmpObj);
+              console.log("uploaded:" + JSON.stringify(obj));
+              jsonEditWindow(name, jsontemp, obj, editorFn, tmpObj);
               $(this).remove();
             }
             );
-            
+
           }
         },
         {
@@ -2022,7 +2022,7 @@
    * **/
 
   function datasetSetup(tmpObj) {
-    var node_selected=tmpObj.node_selected;
+    var node_selected = tmpObj.node_selected;
     $("a.show_dataset").on('click', function () {
       var dataset = jchaos.getChannel(node_selected, -1, null);
       var converted = convertBinaryToArrays(dataset[0]);
@@ -2088,10 +2088,10 @@
    * JSON SETUP
    */
 
-  function jsonSetup(dom,tmpObj) {
+  function jsonSetup(dom, tmpObj) {
     var collapsed = options.collapsed;
-    var node_selected=tmpObj.node_selected;
-    tmpObj['json_editing']=false;
+    var node_selected = tmpObj.node_selected;
+    tmpObj['json_editing'] = false;
     $(dom).off('click');
     $(dom).off('keypress');
 
@@ -2114,8 +2114,8 @@
       var attr = id.split("-")[1];
 
       $("#attr-" + attr).toggle();
-      tmpObj['json_editing']=true;
-      
+      tmpObj['json_editing'] = true;
+
       //var tt =prompt('type value');
       return false;
     });
@@ -2125,15 +2125,15 @@
       if (e.keyCode == 13) {
         var id = this.id;
         var attr = id.split("-")[1];
-        var value=$("#" + id).val();
+        var value = $("#" + id).val();
         jchaos.setAttribute(node_selected, attr, value, function () {
-          instantMessage(node_selected+" Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 1000, null, null, true)
+          instantMessage(node_selected + " Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 1000, null, null, true)
 
         }, function () {
-          instantMessage(node_selected+" Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 1000, null, null, false)
+          instantMessage(node_selected + " Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 1000, null, null, false)
 
         });
-        tmpObj['json_editing']=false;
+        tmpObj['json_editing'] = false;
 
         $("#" + this.id).toggle();
         return false;
@@ -2289,14 +2289,14 @@
 
     $("#graph-save").on('click', function () {
       saveGraph();
-      $("#graph-save").effect( "highlight", {color: 'green'}, 1000 );
+      $("#graph-save").effect("highlight", { color: 'green' }, 1000);
 
       $("#graph-run").removeAttr('disabled');
 
     });
 
     $("#graph-run").on('click', function () {
-      $("#graph-run").effect( "highlight", {color: 'green'}, 1000 );
+      $("#graph-run").effect("highlight", { color: 'green' }, 1000);
 
       runGraph();
       $("#mdl-graph").modal("hide");
@@ -2322,27 +2322,27 @@
       $("#mdl-graph-list").modal("hide");
 
       confirm("Delete Graph", "Your are deleting GRAPH: " + graph_selected, "Ok", function () {
-      
-      delete high_graphs[graph_selected];
+
+        delete high_graphs[graph_selected];
 
 
-      if (active_plots[graph_selected] != null) {
-        if (active_plots[graph_selected].hasOwnProperty('interval')) {
+        if (active_plots[graph_selected] != null) {
+          if (active_plots[graph_selected].hasOwnProperty('interval')) {
 
-          clearInterval(active_plots[graph_selected].interval);
-          delete active_plots[graph_selected].interval;
+            clearInterval(active_plots[graph_selected].interval);
+            delete active_plots[graph_selected].interval;
+          }
+          $("#dialog-" + active_plots[grap_selected].count).modal("hide");
+          delete active_plots[graph_selected];
         }
-        $("#dialog-" + active_plots[grap_selected].count).modal("hide");
-        delete active_plots[graph_selected];
-      }
-      graph_selected = null;
-      jchaos.variable("highcharts", "set", high_graphs, null);
+        graph_selected = null;
+        jchaos.variable("highcharts", "set", high_graphs, null);
 
-      updateGraph();
-    }, "Cancel",function(){
-      $("#mdl-graph-list").modal("show");
+        updateGraph();
+      }, "Cancel", function () {
+        $("#mdl-graph-list").modal("show");
 
-    });
+      });
     });
 
 
@@ -2488,18 +2488,18 @@
   }
 
 
-  function updateCameraInterface(tmpObj){
+  function updateCameraInterface(tmpObj) {
     updateInterfaceCU(tmpObj);
     $("#triggerType").off();
-    $("#triggerType").on("change",function(){
-      var node_selected=tmpObj.node_selected;
+    $("#triggerType").on("change", function () {
+      var node_selected = tmpObj.node_selected;
       var value = $("#triggerType option:selected").val();
-      var attr="TRIGGER_MODE";
+      var attr = "TRIGGER_MODE";
       jchaos.setAttribute(node_selected, attr, value, function () {
-        instantMessage(node_selected+" Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 2000, null, null, true)
+        instantMessage(node_selected + " Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 2000, null, null, true)
 
       }, function () {
-        instantMessage(node_selected+" Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 3000, null, null, false)
+        instantMessage(node_selected + " Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 3000, null, null, false)
 
       });
     });
@@ -2514,12 +2514,12 @@
   function updateInterfaceCU(tmpObj) {
     var template = tmpObj.type;
     var descs = jchaos.getDesc(tmpObj['elems'], null);
-    if(descs instanceof Array){
+    if (descs instanceof Array) {
       descs.forEach(function (elem, id) {
         var name = tmpObj['elems'][id];
         tmpObj.node_name_to_desc[name] = elem;
       });
-  }
+    }
     $("#main_table-" + template + " tbody tr").click(function (e) {
       mainTableCommonHandling("main_table-" + template, tmpObj, e);
     });
@@ -2529,13 +2529,13 @@
     } else {
       $("#table-scroll").css('height', '');
     }
-   
-    
+
+
     $(".setSchedule").off('keypress');
     $(".setSchedule").on('keypress', function (event) {
       var t = $(event.target);
 
-      if ((event.which == 13) ) {
+      if ((event.which == 13)) {
         //  var name = $(t).attr("cuname");
         var value = $(t).attr("value");
         jchaos.setSched(tmpObj.node_selected, value);
@@ -2546,7 +2546,7 @@
       var alias = $(this).attr("cucmdid");
       var parvalue = $(this).attr("cucmdvalue");
       var mult = $(this).attr("cucmdvalueMult");
-      var complete_command=false;
+      var complete_command = false;
       var cmdparam = {};
       var cuselection;
       if (tmpObj.node_multi_selected.length > 0) {
@@ -2554,56 +2554,56 @@
       } else {
         cuselection = tmpObj.node_selected;
       }
-      if(alias=="cu_clear_current_cmd"){
-      jchaos.node(cuselection, "killcmd", "cu", null, null, function () {
-        instantMessage("Clear Current Command", "Clearing last command OK", 1000, true);
-      }, function () {
-        instantMessage("ERROR Clear Current Command","Clearing last command ", 3000, false);
-      });
-      return;
-    }
+      if (alias == "cu_clear_current_cmd") {
+        jchaos.node(cuselection, "killcmd", "cu", null, null, function () {
+          instantMessage("Clear Current Command", "Clearing last command OK", 1000, true);
+        }, function () {
+          instantMessage("ERROR Clear Current Command", "Clearing last command ", 3000, false);
+        });
+        return;
+      }
 
-      if(parvalue!=null){
-        try{
-          cmdparam=JSON.parse(parvalue);
-          for(var key in cmdparam){
-            if($("#"+alias+"_"+key).length){
-              var inputType = $("#"+alias+"_"+key).attr('type');
-              if(inputType=="number"){
-                cmdparam[key]=Number($("#"+alias+"_"+key).val());
+      if (parvalue != null) {
+        try {
+          cmdparam = JSON.parse(parvalue);
+          for (var key in cmdparam) {
+            if ($("#" + alias + "_" + key).length) {
+              var inputType = $("#" + alias + "_" + key).attr('type');
+              if (inputType == "number") {
+                cmdparam[key] = Number($("#" + alias + "_" + key).val());
               } else {
-                cmdparam[key]=$("#"+alias+"_"+key).val();
+                cmdparam[key] = $("#" + alias + "_" + key).val();
 
               }
             }
           }
-          complete_command=true;
-        } catch(e){
+          complete_command = true;
+        } catch (e) {
 
         }
       }
-      if(!complete_command){
-      var arglist;
-      var arguments = {};
-      arglist = retriveCurrentCmdArguments(tmpObj, alias);
-      arglist.forEach(function (item, index) {
-        // search for values
-        if (parvalue == null) {
-          parvalue = $("#" + alias + "_" + item['name']).val();
-        }
-        if ((parvalue == null) && (item['optional'] == false)) {
-          alert("argument '" + item['name'] + "' is required in command:'" + alias + "'");
-          return;
-        }
-        if ((parvalue != null) && (mult != null)) {
-          parvalue = parvalue * mult;
-        }
-        item['value'] = parvalue;
-      });
+      if (!complete_command) {
+        var arglist;
+        var arguments = {};
+        arglist = retriveCurrentCmdArguments(tmpObj, alias);
+        arglist.forEach(function (item, index) {
+          // search for values
+          if (parvalue == null) {
+            parvalue = $("#" + alias + "_" + item['name']).val();
+          }
+          if ((parvalue == null) && (item['optional'] == false)) {
+            alert("argument '" + item['name'] + "' is required in command:'" + alias + "'");
+            return;
+          }
+          if ((parvalue != null) && (mult != null)) {
+            parvalue = parvalue * mult;
+          }
+          item['value'] = parvalue;
+        });
 
-      cmdparam = buildCmdParams(arglist);
-    }
-      
+        cmdparam = buildCmdParams(arglist);
+      }
+
       jchaos.sendCUCmd(cuselection, alias, cmdparam, function (d) {
         var pp;
         if ((cmdparam != null) && (cmdparam instanceof Object)) {
@@ -2714,25 +2714,25 @@
       var dslive = ($("input[type=radio][name=live-enable]:checked").val() == "true");
       var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
       var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0);
-      var node_multi_selected=tmpObj.node_multi_selected;
+      var node_multi_selected = tmpObj.node_multi_selected;
       jchaos.setProperty(node_multi_selected[0], [{ "dsndk_storage_type": storage_type }],
-        function () { instantMessage("Property Set", node_multi_selected[0]+" dsndk_storage_type:" + storage_type, 1000, true); },
-        function () { instantMessage("ERROR Property Set", node_multi_selected[0]+" dsndk_storage_type:" + storage_type, 3000, false); });
+        function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); },
+        function () { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
 
     });
     $("input[type=radio][name=histo-enable]").change(function (e) {
       var dslive = ($("input[type=radio][name=live-enable]:checked").val() == "true");
       var dshisto = ($("input[type=radio][name=histo-enable]:checked").val() == "true");
       var storage_type = ((dslive) ? 2 : 0) | ((dshisto) ? 1 : 0);
-      var node_multi_selected=tmpObj.node_multi_selected;
+      var node_multi_selected = tmpObj.node_multi_selected;
 
       jchaos.setProperty(node_multi_selected[0], [{ "dsndk_storage_type": storage_type }],
-        function () { instantMessage("Property Set", node_multi_selected[0]+" dsndk_storage_type:" + storage_type, 1000, true); }
-        , function () { instantMessage("ERROR Property Set", node_multi_selected[0]+" dsndk_storage_type:" + storage_type, 3000, false); });
+        function () { instantMessage("Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 1000, true); }
+        , function () { instantMessage("ERROR Property Set", node_multi_selected[0] + " dsndk_storage_type:" + storage_type, 3000, false); });
 
     });
     $("#cu_clear_current_cmd").click(function (e) {
-      var node_multi_selected=tmpObj.node_multi_selected;
+      var node_multi_selected = tmpObj.node_multi_selected;
 
       jchaos.node(node_multi_selected, "killcmd", "cu", null, null, function () {
         instantMessage("Clear Current Command", node_multi_selected[0] + ":Clearing last command OK", 1000, true);
@@ -2742,7 +2742,7 @@
     });
 
     $("#cu_clear_queue").click(function (e) {
-      var node_multi_selected=tmpObj.node_multi_selected;
+      var node_multi_selected = tmpObj.node_multi_selected;
 
       jchaos.node(node_multi_selected, "clrcmdq", "cu", null, null, function () {
         instantMessage("Clear  Command Queue", node_multi_selected[0] + ":Clearing Command Queue OK", 1000, true);
@@ -2792,23 +2792,23 @@
     $("#mdl-description").draggable();
     $("#mdl-snap").draggable();
     $("#mdl-log").resizable().draggable();
-   /* configureSliderCommands(tmpObj,"slider-GAIN", "image_gain");
-    configureSliderCommands(tmpObj,"slider-BRIGHTNESS", "image_brightness");
-    configureSliderCommands(tmpObj,"slider-SHUTTER", "image_shutter");
-    configureSliderCommands(tmpObj,"slider-CONTRAST", "image_contrast");
-    configureSliderCommands(tmpObj,"slider-SHARPNESS", "image_sharpness");
-    */
+    /* configureSliderCommands(tmpObj,"slider-GAIN", "image_gain");
+     configureSliderCommands(tmpObj,"slider-BRIGHTNESS", "image_brightness");
+     configureSliderCommands(tmpObj,"slider-SHUTTER", "image_shutter");
+     configureSliderCommands(tmpObj,"slider-CONTRAST", "image_contrast");
+     configureSliderCommands(tmpObj,"slider-SHARPNESS", "image_sharpness");
+     */
     $(main_dom).on("keypress", "input.cucmdattr", function (e) {
       if (e.keyCode == 13) {
         var id = this.id;
         var attr = id.split("-")[1];
-        var value =$("#" + id).val();
-        var node_selected=tmpObj.node_selected;
+        var value = $("#" + id).val();
+        var node_selected = tmpObj.node_selected;
         jchaos.setAttribute(node_selected, attr, value, function () {
-          instantMessage(node_selected +" Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 1000, true);
+          instantMessage(node_selected + " Attribute ", "\"" + attr + "\"=\"" + value + "\" sent", 1000, true);
 
         }, function () {
-          instantMessage(node_selected +" Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 1000, false);
+          instantMessage(node_selected + " Attribute Error", "\"" + attr + "\"=\"" + value + "\" sent", 1000, false);
 
         });
         $("#" + this.id).toggle();
@@ -2865,27 +2865,27 @@
       def['tag_name'] = "NONAME_" + (new Date()).getTime();
       def['tag_duration'] = 1;
       def['tag_desc'] = JSON.stringify(tmpObj.node_multi_selected) + " at:" + (new Date());
-      jsonEditWindow("TAG Editor", templ, def, function (data,obj) {
+      jsonEditWindow("TAG Editor", templ, def, function (data, obj) {
         var ttype = 2;
         if (data.tag_type == "CYCLE") {
           ttype = 1;
         }
-        jchaos.tag(data.tag_name, obj.node_multi_selected, ttype, data.tag_duration, 
+        jchaos.tag(data.tag_name, obj.node_multi_selected, ttype, data.tag_duration,
           function () {
-          var tag_obj = jchaos.variable("tags", "get", null, null);
-          data.tag_ts = (new Date()).getTime();
-          data.tag_elements = obj.node_multi_selected;
-          tag_obj[data.tag_name] = data;
-          jchaos.variable("tags", "set", tag_obj, null);
-          instantMessage("Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 3000, true);
+            var tag_obj = jchaos.variable("tags", "get", null, null);
+            data.tag_ts = (new Date()).getTime();
+            data.tag_elements = obj.node_multi_selected;
+            tag_obj[data.tag_name] = data;
+            jchaos.variable("tags", "set", tag_obj, null);
+            instantMessage("Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 3000, true);
 
-        }, function () {
+          }, function () {
 
-          instantMessage("ERROR Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 5000, false);
+            instantMessage("ERROR Creating " + data.tag_type + " Tag \"" + data.tag_name + "\"", " during " + data.tag_duration + " cycles", 5000, false);
 
-        });
+          });
         return 0;
-      },tmpObj);
+      }, tmpObj);
 
     } else if (cmd == "load") {
 
@@ -2956,12 +2956,12 @@
 
 
     } else if (cmd == "show-dataset") {
-      showDataset(currsel, currsel, 1000,tmpObj);
+      showDataset(currsel, currsel, 1000, tmpObj);
     } else if (cmd == "show-desc") {
       jchaos.getDesc(currsel, function (data) {
         tmpObj.node_name_to_desc[currsel] = data[0];
 
-        showJson(tmpObj,"Description " + currsel, currsel, data[0]);
+        showJson(tmpObj, "Description " + currsel, currsel, data[0]);
       });
 
     } else if (cmd == "show-picture") {
@@ -2992,10 +2992,10 @@
         var tagname = $("#select-tag option:selected").val();
         $("#query-tag").val(tagname);
         var tags = jchaos.variable("tags", "get", null, null);
-        if(tags.hasOwnProperty(tagname)){
+        if (tags.hasOwnProperty(tagname)) {
           var tag = tags[tagname];
           var desc = tag['tag_desc'];
-       // $("#query-start").val(tagname);
+          // $("#query-start").val(tagname);
           $("#query-tag").attr('title', desc);
         }
 
@@ -3008,7 +3008,7 @@
         var qtag = $("#query-tag").val();
         var page = $("#query-page").val();
         $("#mdl-query").modal("hide");
-        jchaos.options.history_page_len=Number(page);
+        jchaos.options.history_page_len = Number(page);
         /* node_multi_selected.forEach(function(elem){
            var enc=encodeName(elem);
            if(node_name_to_desc[enc].hasOwnProperty('instance_description') && node_name_to_desc[enc].instance_description.hasOwnProperty("control_unit_implementation") && (node_name_to_desc[enc].instance_description.control_unit_implementation.indexOf("Camera"))){
@@ -3017,7 +3017,7 @@
  
          });*/
         progressBar("Retrive and Zip", "zipprogress", "zipping");
-        jchaos.setOptions({"timeout":60000});
+        jchaos.setOptions({ "timeout": 60000 });
 
         jchaos.fetchHistoryToZip(qtag, tmpObj.node_multi_selected, qstart, qstop, qtag, function (meta) {
           $("#zipprogress").progressbar("value", parseInt(meta.percent.toFixed(2)));
@@ -3026,7 +3026,7 @@
         });
 
         $("#query-close").on("click", function () {
-          jchaos.setOptions({"timeout":5000});
+          jchaos.setOptions({ "timeout": 5000 });
 
           $("#mdl-query").modal("hide");
         });
@@ -3192,20 +3192,20 @@
 
     return html;
   }
-  function updateProcessServer(tmpObj){
+  function updateProcessServer(tmpObj) {
     jchaos.search("", "agent", true, function (ag) {
       var agent_obj = {};
-      var agent_list=[];
+      var agent_list = [];
       ag.forEach(function (elem) {
         var regx = /ChaosAgent_(.+)\:(.+)/;
         var match = regx.exec(elem);
         if (match) {
           var server = match[1];
           agent_list.push(server)
-          
+
         }
       });
-      tmpObj['agent_list']=agent_list;
+      tmpObj['agent_list'] = agent_list;
     });
   }
   function setupProcess(tempObj) {
@@ -3214,14 +3214,14 @@
 
     var list_class = [];
     var list_zone = [];
-    if(tempObj.hasOwnProperty('update-server-interval')){
+    if (tempObj.hasOwnProperty('update-server-interval')) {
       clearInterval('update-server-interval');
       delete tempObj['update-server-interval'];
     }
     updateProcessServer(tempObj);
-    tempObj['update-server-interval']=setInterval(function(){
+    tempObj['update-server-interval'] = setInterval(function () {
       updateProcessServer(tempObj);
-    },10000);
+    }, 10000);
 
     updateProcessList(tempObj, function (tmpObj) {
       updateProcessTable(tmpObj);
@@ -3414,7 +3414,7 @@
     $("#specific-table-" + tmpObj.template).html(htmlt);
     $("#specific-control-" + tmpObj.template).html(htmlc);
     tmpObj.updateInterfaceFn(tmpObj);
-    if(tmpObj.hasOwnProperty('update-server-interval')){
+    if (tmpObj.hasOwnProperty('update-server-interval')) {
       clearInterval('update-server-interval');
       delete tmpObj['update-server-interval'];
     }
@@ -3452,8 +3452,8 @@
    * 
    */
   function changeView(tmpObj, cutype) {
-    jchaos.setOptions({"timeout":5000});
-    tmpObj.refresh_rate=options.Interval;
+    jchaos.setOptions({ "timeout": 5000 });
+    tmpObj.refresh_rate = options.Interval;
 
     if ((cutype.indexOf("SCPowerSupply") != -1)) {
       tmpObj.upd_chan = -1;
@@ -3478,8 +3478,8 @@
       tmpObj.updateFn = updateCameraTable;
       tmpObj.updateInterfaceFn = updateCameraInterface;
 
-      tmpObj.refresh_rate=2*options.Interval;
-      jchaos.setOptions({"timeout":6000});
+      tmpObj.refresh_rate = 2 * options.Interval;
+      jchaos.setOptions({ "timeout": 6000 });
     } else if ((cutype.indexOf("SCLibera") != -1)) {
       tmpObj.type = "SCLibera";
 
@@ -3488,8 +3488,8 @@
       tmpObj.updateFn = updateBPM;
       tmpObj.generateCmdFn = generateBPMCmd;
 
-      tmpObj.refresh_rate=options.Interval;
-      jchaos.setOptions({"timeout":6000});
+      tmpObj.refresh_rate = options.Interval;
+      jchaos.setOptions({ "timeout": 6000 });
     } else {
       tmpObj.upd_chan = 255;
       tmpObj.type = "cu";
@@ -3532,8 +3532,8 @@
 
   function executeNodeMenuCmd(tmpObj, cmd, opt) {
     node_selected = tmpObj.node_selected;
-    var node_multi_selected=tmpObj.node_multi_selected;
-    var node_name_to_desc=tmpObj.node_name_to_desc;
+    var node_multi_selected = tmpObj.node_multi_selected;
+    var node_name_to_desc = tmpObj.node_name_to_desc;
     if (cmd == "edit-nt_agent") {
       var templ = {
         $ref: "agent.json",
@@ -3544,15 +3544,15 @@
         if (data != null) {
           // editorFn = agentSave;
           //jsonEdit(templ, data);
-          jsonEditWindow("Agent Editor", templ, data, agentSave,tmpObj);
-         /* if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
-            //rimuovi tutte le associazioni precedenti.
-            data.andk_node_associated.forEach(function (item) {
-              if (item.hasOwnProperty("ndk_uid")) {
-                jchaos.node(node_selected, "del", "agent", item.ndk_uid, function (daa) { });
-              }
-            });
-          }*/
+          jsonEditWindow("Agent Editor", templ, data, agentSave, tmpObj);
+          /* if (data.hasOwnProperty("andk_node_associated") && (data.andk_node_associated instanceof Array)) {
+             //rimuovi tutte le associazioni precedenti.
+             data.andk_node_associated.forEach(function (item) {
+               if (item.hasOwnProperty("ndk_uid")) {
+                 jchaos.node(node_selected, "del", "agent", item.ndk_uid, function (daa) { });
+               }
+             });
+           }*/
         };
       });
       return;
@@ -3565,7 +3565,7 @@
         if (data != null) {
           //editorFn = cuSave;
           //jsonEdit(templ, data);
-          jsonEditWindow("CU Editor", templ, data, cuSave,tmpObj);
+          jsonEditWindow("CU Editor", templ, data, cuSave, tmpObj);
 
         }
       });
@@ -3583,7 +3583,7 @@
         if (data.hasOwnProperty("us_desc")) {
           //    editorFn = unitServerSave;
           //    jsonEdit(templ, data.us_desc);
-          jsonEditWindow("US Editor", templ, data.us_desc, unitServerSave,tmpObj);
+          jsonEditWindow("US Editor", templ, data.us_desc, unitServerSave, tmpObj);
 
         }
       });
@@ -3595,7 +3595,7 @@
       }
       //editorFn = unitServerSave;
       //jsonEdit(templ, null);
-      jsonEditWindow("US Editor", templ, null, unitServerSave,tmpObj);
+      jsonEditWindow("US Editor", templ, null, unitServerSave, tmpObj);
 
       return;
     } else if (cmd == "del-nt_unit_server") {
@@ -3683,27 +3683,39 @@
     } else if (cmd == "new-nt_control_unit-fromfile") {
       getFile("LOAD JSON CU description", "select the JSON to load", function (config) {
         //console.log("loaded:"+JSON.stringify(data));
-        confirm("Add CU " + config.cu_desc.ndk_uid, "Add CU to " + node_selected + "?", "Add", function () {
-          if (config.hasOwnProperty("cu_desc")) {
+        var cuname;
+        var def_obj;
+
+        if(config.hasOwnProperty("cu_desc") && config.cu_desc.hasOwnProperty("ndk_uid")){
+          cuname=config.cu_desc.ndk_uid;
+          def_obj=config.cu_desc;
+        } else if(config.hasOwnProperty("ndk_uid")){
+          cuname=config.ndk_uid;
+          def_obj=config;
+
+        } else {
+          alert("Invalid CU");
+          return;
+        }
+        confirm("Add CU " +cuname, "Add CU to " + node_selected + "?", "Add", function () {
             var templ = {
               $ref: "cu.json",
               format: "tabs"
             }
             // editorFn = newCuSave;
-            var tmp = config.cu_desc;
-            tmp.ndk_parent = node_selected;
+            def_obj.ndk_parent = node_selected;
             //jsonEdit(templ, tmp);
-            jsonEditWindow("New CU", templ, tmp, newCuSave,tmpObj);
+            jsonEditWindow("New CU", templ, def_obj, newCuSave, tmpObj);
 
-          }
+          
         }, "Cancel", function () {
         });
 
       });
       return;
     } else if (cmd.includes("new-nt_control_unit-mcimport")) {
-      
-          // custom
+
+      // custom
       var templ = {
         $ref: "cu_mc_import.json",
         format: "tabs"
@@ -3712,10 +3724,10 @@
       //def['ndk_parent']=node_selected;
       //editorFn = newCuSave;
       //jsonEdit(templ, template);
-      jsonEditWindow("New MemCache import CU", templ, null, newMCCuSave,tmpObj);
+      jsonEditWindow("New MemCache import CU", templ, null, newMCCuSave, tmpObj);
 
-        
-      
+
+
       return;
     } else if (cmd.includes("new-nt_control_unit")) {
       var regex = /new-nt_control_unit-(.*)$/;
@@ -3733,11 +3745,11 @@
           }
           // editorFn = newCuSave;
           // jsonEdit(templ, template);
-          jsonEditWindow("New CU from Template", templ, template, newCuSave,tmpObj);
+          jsonEditWindow("New CU from Template", templ, template, newCuSave, tmpObj);
 
         } else {
           // custom
-          var template={};
+          var template = {};
           var templ = {
             $ref: "cu.json",
             format: "tabs"
@@ -3746,7 +3758,7 @@
 
           //editorFn = newCuSave;
           //jsonEdit(templ, template);
-          jsonEditWindow("New CU from Template", templ, template, newCuSave,tmpObj);
+          jsonEditWindow("New CU from Template", templ, template, newCuSave, tmpObj);
 
         }
       }
@@ -3772,10 +3784,10 @@
       return;
     } else if (cmd == "console-node") {
       var agentn = node_name_to_desc[node_selected].parent;
-      var server=node_name_to_desc[node_selected].desc.ndk_host_name;
+      var server = node_name_to_desc[node_selected].desc.ndk_host_name;
       jchaos.node(agentn, "get", "agent", node_selected, null, function (data) {
         console.log("->" + JSON.stringify(data));
-        getConsole(server+":" + node_selected, data.association_uid, server+":8071", 2, 1, 1000);
+        getConsole(server + ":" + node_selected, data.association_uid, server + ":8071", 2, 1, 1000);
       });
 
 
@@ -3815,7 +3827,7 @@
                   alert("node already associated");
                   found = 1;
                 }
-        //        jchaos.node(node_selected, "del", "agent", item.ndk_uid, function (daa) { });
+                //        jchaos.node(node_selected, "del", "agent", item.ndk_uid, function (daa) { });
               }
             });
             if (found == 0) {
@@ -3832,7 +3844,7 @@
           }
           //editorFn = agentSave;
           //jsonEdit(templ, data);
-          jsonEditWindow("Agent Editor", templ, data, agentSave,tmpObj);
+          jsonEditWindow("Agent Editor", templ, data, agentSave, tmpObj);
 
         };
       });
@@ -3854,7 +3866,7 @@
         jchaos.loadScript(node_selected, node_name_to_desc[node_selected].seq, function (data) {
           console.log("script:" + node_selected + " =" + JSON.stringify(data));
 
-          jsonEditWindow(node_selected, templ, data, algoSave,tmpObj);
+          jsonEditWindow(node_selected, templ, data, algoSave, tmpObj);
 
         });
       }
@@ -3909,7 +3921,7 @@
           //editorFn = algoSave;
           algo_copied.script_name = inst_name;
           //jsonEdit(algo_copied, null);
-          jsonEditWindow("Algo Editor", algo_copied, null, algoSave,tmpObj);
+          jsonEditWindow("Algo Editor", algo_copied, null, algoSave, tmpObj);
 
 
         }, "Cancel");
@@ -3943,7 +3955,7 @@
           if (item.instance_name == node_selected) {
             console.log("editing instance: " + node_selected + " of:" + pather_selected + ":" + JSON.stringify(item));
             var fname = encodeName(node_selected);
-            jsonEditWindow(fname, templ, item, algoSaveInstance,tmpObj);
+            jsonEditWindow(fname, templ, item, algoSaveInstance, tmpObj);
           }
         })
       }
@@ -4266,19 +4278,19 @@
 
     } else if (cmd == "download-output") {
       var server = tmpObj.data[node_selected].hostname + ":8071";
-      jchaos.setOptions({"timeout":60000});
+      jchaos.setOptions({ "timeout": 60000 });
 
-      jchaos.rmtDownload(server, node_selected, "",function (r) {
+      jchaos.rmtDownload(server, node_selected, "", function (r) {
         instantMessage("Downloading", "Zipping Output of " + node_selected + " ", 1000, true);
-        var zipname=node_selected+".zip";
-        var binary_string=atob(r.data.base64);
-        saveAsBinary(binary_string,zipname);
-        jchaos.setOptions({"timeout":5000});
+        var zipname = node_selected + ".zip";
+        var binary_string = atob(r.data.base64);
+        saveAsBinary(binary_string, zipname);
+        jchaos.setOptions({ "timeout": 5000 });
 
 
       }, function (bad) {
         instantMessage("Downloading", "Zipping Output of " + node_selected + " via agent", 1000, false);
-        jchaos.setOptions({"timeout":5000});
+        jchaos.setOptions({ "timeout": 5000 });
 
       });
     } else if (cmd == "kill-process") {
@@ -4304,8 +4316,8 @@
       scriptTmp['eudk_script_content'] = "";
       scriptTmp['eudk_script_language'] = "bash";
       scriptTmp['script_description'] = "PUT YOUR DESCRIPTION";
-      scriptTmp['default_argument'] ="";
-      jsonEditWindow("NewScript", templ, scriptTmp, algoSave,tmpObj);
+      scriptTmp['default_argument'] = "";
+      jsonEditWindow("NewScript", templ, scriptTmp, algoSave, tmpObj);
       return;
     } else if (cmd == "manage-script") {
       updateScriptModal(tmpObj);
@@ -4319,14 +4331,14 @@
         format: "tabs"
       }
 
-      jsonEditWindow("New Process Template", templ, null, function (data,obj) {
+      jsonEditWindow("New Process Template", templ, null, function (data, obj) {
         var processTemplates = jchaos.variable("app_templates", "get", processTemplates, null);
         var name = data['app_name'];
         processTemplates[name] = data;
         jchaos.variable("app_templates", "set", processTemplates, null);
         obj['app-templates'] = processTemplates;
 
-      },tmpObj);
+      }, tmpObj);
 
     } else if (cmd == "purge-script") {
       purgeScripts(tmpObj, 1);
@@ -4346,7 +4358,7 @@
             format: "tabs"
           }
 
-          jsonEditWindow("Application Run", templ, processTemplates[k], function (data,obj) {
+          jsonEditWindow("Application Run", templ, processTemplates[k], function (data, obj) {
             // save template and run template
             jchaos.variable("app_templates", "set", processTemplates, null);
             var server = findBestServer(obj);
@@ -4361,10 +4373,10 @@
                 if (data['app_broadcast']) {
                   var serverlist = obj['agents'];
                   for (var server in serverlist) {
-                    jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", "",function (r) {
+                    jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", "", function (r) {
                       console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                       instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                      getConsole(server+":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
+                      getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
 
                     }, function (bad) {
                       console.log("Some error getting loading script:" + bad);
@@ -4375,10 +4387,10 @@
                 } else {
                   var server = findBestServer(obj);
 
-                  jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", "",function (r) {
+                  jchaos.rmtCreateProcess(server + ":8071", name, cmd_line, "exec", "", function (r) {
                     console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                     instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                    getConsole(server+":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
+                    getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
 
                   }, function (bad) {
                     console.log("Some error getting loading script:" + bad);
@@ -4388,7 +4400,7 @@
                 }
               }
             });
-          },tmpObj);
+          }, tmpObj);
         }
       }
     }
@@ -4452,11 +4464,11 @@
 
         getEntryWindow(name, "Additional args", '', "Run", function (parm) {
 
-          jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + parm, language, "",function (r) {
+          jchaos.rmtCreateProcess(server + ":8071", name, launch_arg + " " + parm, language, "", function (r) {
             console.log("Script running onto:" + server + " :" + JSON.stringify(r));
             var node_selected = tmpObj.node_selected;
             instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-            getConsole(server+":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
+            getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
           }, function (bad) {
             console.log("Some error getting loading script:" + bad);
             instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
@@ -4486,7 +4498,7 @@
 
     if (node_selected != null) {
       items['open-process-console'] = { name: "Open Console " };
-     // items['open-process-errconsole'] = { name: "Open Error console" };
+      // items['open-process-errconsole'] = { name: "Open Error console" };
       items['download-output'] = { name: "Download Files" };
       items['kill-process'] = { name: "Kill " };
 
@@ -4517,7 +4529,7 @@
       var status = tmpObj.data[p].msg;
       var parent = tmpObj.data[p].parent;
       var infoServer = tmpObj.agents[hostname];
-      var parent_str = parent + " (" + infoServer.idletime +")";
+      var parent_str = parent + " (" + infoServer.idletime + ")";
       var encoden = encodeName(p);
       $("#" + encoden + "_start_ts").html(started_timestamp);
       $("#" + encoden + "_end_ts").html(end_timestamp);
@@ -4537,11 +4549,11 @@
         var infoServer = tmpObj.agents[server];
         var enc = encodeName(server);
         var chart = tmpObj['server_charts'][enc];
-        if(chart.hasOwnProperty("series") && ( chart.series instanceof Array)){
+        if (chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
           chart.series[0].addPoint([now, infoServer.idletime], false, false);
           chart.series[1].addPoint([now, infoServer.usertime], false, false);
           chart.series[2].addPoint([now, infoServer.systime], false, false);
-          chart.series[3].addPoint([now, infoServer.iowait], false, false); 
+          chart.series[3].addPoint([now, infoServer.iowait], false, false);
           chart.redraw();
         }
       }
@@ -4562,17 +4574,17 @@
         var encoden = encodeName(p.script_name);
         var date = new Date(p.seq);
         tmpObj.node_name_to_desc[p.script_name] = p;
-        $("#table_script").append('<tr class="row_element" title="'+p.script_description+'" id="' + encoden + '"' + template + '-name="' + p.script_name + '">' +
+        $("#table_script").append('<tr class="row_element" title="' + p.script_description + '" id="' + encoden + '"' + template + '-name="' + p.script_name + '">' +
           '<td>' + p.script_name + '</td>' +
           '<td>' + p.eudk_script_language + '</td>' +
           '<td>' + p.script_description + '</td>' +
           '<td>' + date + '</td></tr>');
       });
       $("#mdl-script").resizable().draggable();
-      $("#mdl-script").width(hostWidth/2);
+      $("#mdl-script").width(hostWidth / 2);
 
-    //  $("#mdl-script").css('width', hostWidth/2);
-     // $("#mdl-script").css('height', hostHeight/2);
+      //  $("#mdl-script").css('width', hostWidth/2);
+      // $("#mdl-script").css('height', hostHeight/2);
 
       $("#mdl-script").modal("show");
 
@@ -4587,25 +4599,25 @@
     if ((serveList == null) || (!(serverList instanceof Array))) {
       // load on all servers
       var ag = tmpObj['agent_list'];
-        var cnt=ag.length;
-        ag.forEach(function (server) {
-            jchaos.rmtUploadScript(server + ":8071", jsonscript, function (r) {
-              if (r.err != 0) {
-                instantMessage(server+": Load Script", "cannot load:" + r.errmsg, 5000, false);
-              } else {
-                instantMessage("Script loaded onto:" + server, 2000, false);
-                if(--cnt == 0){
-                  handler(r);
-                }
-              }
+      var cnt = ag.length;
+      ag.forEach(function (server) {
+        jchaos.rmtUploadScript(server + ":8071", jsonscript, function (r) {
+          if (r.err != 0) {
+            instantMessage(server + ": Load Script", "cannot load:" + r.errmsg, 5000, false);
+          } else {
+            instantMessage("Script loaded onto:" + server, 2000, false);
+            if (--cnt == 0) {
+              handler(r);
+            }
+          }
 
 
-            }, function (bad) {
-              console.log("Some error getting loading script:" + bad);
-              instantMessage("Load Script", "Exception  loading:" + bad, 5000, false);
+        }, function (bad) {
+          console.log("Some error getting loading script:" + bad);
+          instantMessage("Load Script", "Exception  loading:" + bad, 5000, false);
 
-            });
-          });
+        });
+      });
     } else {
       serveList.forEach(function (elem) {
         jchaos.rmtUploadScript(elem + ":8071", jsonscript, function (r) {
@@ -4620,18 +4632,18 @@
     }
 
   }
-  function makeDynamicGraphTable(tmpObj,graph_table_name,highchartOpt,culist){
+  function makeDynamicGraphTable(tmpObj, graph_table_name, highchartOpt, culist) {
     var cnt = 0;
     var num_chart = 3;
     var hostWidth = $(window).width();
     var hostHeight = $(window).height();
     var server_charts = {};
-    var html="";
+    var html = "";
     $("#" + graph_table_name).find("tr:gt(0)").remove();
-    highchartOpt['chart']['height']=(1 / (num_chart) * 100) + '%';
-    highchartOpt['chart']['width']= (hostWidth / (num_chart + 1));
-    culist.forEach(function(key){
-    var encoden = encodeName(key);
+    highchartOpt['chart']['height'] = (1 / (num_chart) * 100) + '%';
+    highchartOpt['chart']['width'] = (hostWidth / (num_chart + 1));
+    culist.forEach(function (key) {
+      var encoden = encodeName(key);
       if ((cnt % num_chart) == 0) {
         if (cnt > 0) {
           html += "</tr>"
@@ -4645,7 +4657,7 @@
     if (cnt > 0) {
       html += "</tr>";
       $("#" + graph_table_name).append(html);
-      culist.forEach(function(key){
+      culist.forEach(function (key) {
         var encoden = encodeName(key);
         highchartOpt.title.text = key;
 
@@ -4656,10 +4668,10 @@
 
     }
   }
-  
-  
+
+
   function updateProcessInterface(tmpObj) {
-  //  updateProcessList(tmpObj);
+    //  updateProcessList(tmpObj);
     var tablename = "main_table-" + tmpObj.template;
     var graph_table = "graph_table-" + tmpObj.template;
     var template = tmpObj.type;
@@ -4854,7 +4866,7 @@
         $("#mdl-script").modal("hide");
         tmpObj.node_selected = null;
         data['eudk_script_content'] = decodeURIComponent(escape(atob(data['eudk_script_content'])));
-        jsonEditWindow(tmpObj.node_selected, templ, data, algoSave,tmpObj);
+        jsonEditWindow(tmpObj.node_selected, templ, data, algoSave, tmpObj);
 
       });
 
@@ -4867,17 +4879,17 @@
         loadScriptOnServer(tmpObj, data, null, function (p) {
           if (tmpObj.hasOwnProperty("agents") && p.data.hasOwnProperty('path')) {
             var path = p.data.path;
-            var workingdir=p.data.workingdir;
-            tmpObj.node_name_to_desc[tmpObj.node_selected]['workingdir']=workingdir;
+            var workingdir = p.data.workingdir;
+            tmpObj.node_name_to_desc[tmpObj.node_selected]['workingdir'] = workingdir;
             var launch_arg = "";
             var name = data['script_name'];
             var language = data['eudk_script_language'];
-            var defargs =data['default_argument']
+            var defargs = data['default_argument']
             var serverlist = tmpObj['agents'];
             var maxIdle = 0;
             var server = null;
             var chaos_prefix = "";
-            server=findBestServer(tmpObj);
+            server = findBestServer(tmpObj);
             if (server == null) {
               alert("NO Server Available");
               return;
@@ -4889,27 +4901,27 @@
                 return;
               } else {
                 chaos_prefix = r.data.value;
-                
+
 
                 getEntryWindow(data['script_name'], "Additional args", defargs, "Run", function (parm) {
                   if (language == "CPP") {
-                    launch_arg = chaos_prefix + "/bin/chaosRoot --conf-file " + chaos_prefix + "/etc/chaos_root.cfg --rootopt \"-q " + path + parm+"\"";
+                    launch_arg = chaos_prefix + "/bin/chaosRoot --conf-file " + chaos_prefix + "/etc/chaos_root.cfg --rootopt \"-q " + path + parm + "\"";
                   } else if (language == "bash") {
-                    launch_arg = "bash " + path+parm;
+                    launch_arg = "bash " + path + parm;
                   } else if (language == "nodejs") {
-                    launch_arg = "node " + path +parm;
-  
+                    launch_arg = "node " + path + parm;
+
                   } else if (language == "python") {
-                    launch_arg = "python " + path+parm;
-  
+                    launch_arg = "python " + path + parm;
+
                   } else {
-                    launch_arg = language + " " + path+parm;
+                    launch_arg = language + " " + path + parm;
                   }
-                  jchaos.rmtCreateProcess(server + ":8071", name, launch_arg , language, workingdir,function (r) {
+                  jchaos.rmtCreateProcess(server + ":8071", name, launch_arg, language, workingdir, function (r) {
                     console.log("Script running onto:" + server + " :" + JSON.stringify(r));
                     var node_selected = tmpObj.node_selected;
                     instantMessage("Script " + name + "launched on:" + server, "Started " + JSON.stringify(r), 2000, true);
-                    getConsole(server+":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
+                    getConsole(server + ":" + name + "(" + r.data.uid + ")", r.data.uid, server + ":8071", 2, 1, 1000);
                   }, function (bad) {
                     console.log("Some error getting loading script:" + bad);
                     instantMessage("Script " + name, "Failed to start " + bad, 2000, false);
@@ -4967,77 +4979,77 @@
 
   function updateProcessList(tmpObj, handler) {
     var proc = {};
-    if(!tmpObj.hasOwnProperty('agent_list')){
+    if (!tmpObj.hasOwnProperty('agent_list')) {
       return;
     }
-    var ag=tmpObj['agent_list'];
-    var agent_obj={};
-    var proc_list=[];
-    var cnt=0;
+    var ag = tmpObj['agent_list'];
+    var agent_obj = {};
+    var proc_list = [];
+    var cnt = 0;
     ag.forEach(function (server) {
       agent_obj[server] = {};
-    /*  var r=jchaos.rmtListProcess(server + ":8071",null,null);
-      if (r.hasOwnProperty("info")) {
-        agent_obj[server]['idletime'] = parseFloat(r.info.idletime);
-        agent_obj[server]['usertime'] = parseFloat(r.info.usertime);
-        agent_obj[server]['systime'] = parseFloat(r.info.systime);
-        agent_obj[server]['iowait'] = parseFloat(r.info.iowait);
-        agent_obj[server]['ts'] = r.info.ts;
-      }
-
-      if (r.data.hasOwnProperty("processes") && (r.data.processes instanceof Array)) {
-        var processes = r.data.processes;
-        processes.forEach(function (p) {
-          p['hostname'] = server;
-          p['parent'] = server;
-
-          proc[p.uid] = p;
-          proc_list.push(p.uid);
-        });
-      }
-    });
-      */
-      jchaos.rmtListProcess(server + ":8071", function (r) {
-            if (r.hasOwnProperty("info")) {
-              agent_obj[server]['idletime'] = parseFloat(r.info.idletime);
-              agent_obj[server]['usertime'] = parseFloat(r.info.usertime);
-              agent_obj[server]['systime'] = parseFloat(r.info.systime);
-              agent_obj[server]['iowait'] = parseFloat(r.info.iowait);
-              agent_obj[server]['ts'] = r.info.ts;
-            }
-
-            if (r.data.hasOwnProperty("processes") && (r.data.processes instanceof Array)) {
-              var processes = r.data.processes;
-              processes.forEach(function (p) {
-                p['hostname'] = server;
-                p['parent'] = server;
-
-                proc[p.uid] = p;
-                proc_list.push(p.uid);
-              });
-            }
-            if(++cnt >= ag.length) {
-              tmpObj['data'] = proc;
-              tmpObj['elems']=proc_list;
-              tmpObj['agents'] = agent_obj;
-              if (typeof handler === "function") {
-                handler(tmpObj);
-              }
-            }
-          }, function (bad) {
-            console.log("Some error state of server:"+server+" occur:" + bad);
-            if(++cnt >= ag.length) {
-              tmpObj['data'] = proc;
-              tmpObj['elems']=proc_list;
-              tmpObj['agents'] = agent_obj;
-              if (typeof handler === "function") {
-                handler(tmpObj);
-              }
-            }
+      /*  var r=jchaos.rmtListProcess(server + ":8071",null,null);
+        if (r.hasOwnProperty("info")) {
+          agent_obj[server]['idletime'] = parseFloat(r.info.idletime);
+          agent_obj[server]['usertime'] = parseFloat(r.info.usertime);
+          agent_obj[server]['systime'] = parseFloat(r.info.systime);
+          agent_obj[server]['iowait'] = parseFloat(r.info.iowait);
+          agent_obj[server]['ts'] = r.info.ts;
+        }
+  
+        if (r.data.hasOwnProperty("processes") && (r.data.processes instanceof Array)) {
+          var processes = r.data.processes;
+          processes.forEach(function (p) {
+            p['hostname'] = server;
+            p['parent'] = server;
+  
+            proc[p.uid] = p;
+            proc_list.push(p.uid);
           });
+        }
       });
-      
-    
+        */
+      jchaos.rmtListProcess(server + ":8071", function (r) {
+        if (r.hasOwnProperty("info")) {
+          agent_obj[server]['idletime'] = parseFloat(r.info.idletime);
+          agent_obj[server]['usertime'] = parseFloat(r.info.usertime);
+          agent_obj[server]['systime'] = parseFloat(r.info.systime);
+          agent_obj[server]['iowait'] = parseFloat(r.info.iowait);
+          agent_obj[server]['ts'] = r.info.ts;
+        }
+
+        if (r.data.hasOwnProperty("processes") && (r.data.processes instanceof Array)) {
+          var processes = r.data.processes;
+          processes.forEach(function (p) {
+            p['hostname'] = server;
+            p['parent'] = server;
+
+            proc[p.uid] = p;
+            proc_list.push(p.uid);
+          });
+        }
+        if (++cnt >= ag.length) {
+          tmpObj['data'] = proc;
+          tmpObj['elems'] = proc_list;
+          tmpObj['agents'] = agent_obj;
+          if (typeof handler === "function") {
+            handler(tmpObj);
+          }
+        }
+      }, function (bad) {
+        console.log("Some error state of server:" + server + " occur:" + bad);
+        if (++cnt >= ag.length) {
+          tmpObj['data'] = proc;
+          tmpObj['elems'] = proc_list;
+          tmpObj['agents'] = agent_obj;
+          if (typeof handler === "function") {
+            handler(tmpObj);
+          }
+        }
+      });
+    });
+
+
     return proc;
   }
   function searchEu(str, alive, list_zone, list_class, list_eu_name) {
@@ -5075,7 +5087,7 @@
 
   function mainCU(tmpObj) {
     var list_cu = [];
-    var classe = ["powersupply", "scraper", "camera","BPM"];
+    var classe = ["powersupply", "scraper", "camera", "BPM"];
     var $radio = $("input:radio[name=search-alive]");
     if ($radio.is(":checked") === false) {
       $radio.filter("[value=true]").prop('checked', true);
@@ -5220,7 +5232,7 @@
     return tmp;
   }
 
-  
+
   function rebuildAlgoInterface(template) {
 
     var search_string = $("#search-chaos").val();
@@ -5390,28 +5402,28 @@
     html += '<label class="label span3">Gain:</label>';
     html += '<input class="input-xlarge focused span4" id="image-GAIN_READOUT" readonly title="Image Readout Gain" type="text" value="0">';
     html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-GAIN" title="Set Gain" type="number" value=0>';
-  //  html += '<div class="span3" id="slider-GAIN" title="Camera Gain"> </div>';
+    //  html += '<div class="span3" id="slider-GAIN" title="Camera Gain"> </div>';
 
     html += '<label class="label span3">Brightness</label>';
     html += '<input class="input-xlarge focused span4" id="image-BRIGHTNESS_READOUT" readonly title="Image Readout Brightnessn" type="text">';
     html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-BRIGHTNESS" title="SET Brightness" type="number" value=0>';
-   // html += '<div class="span3" id="slider-BRIGHTNESS" title="Camera Brightness"></div>';
+    // html += '<div class="span3" id="slider-BRIGHTNESS" title="Camera Brightness"></div>';
 
     html += '<label class="label span3">Shutter</label>';
     html += '<input class="input-xlarge focused span4" id="image-SHUTTER_READOUT" readonly title="Camera Readout Shutter" type="text">';
     html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-SHUTTER" title="SET Shutter" type="number" value=0>';
-   // html += '<div class="span3" id="slider-SHUTTER" title="Camera Shutter"> </div>';
+    // html += '<div class="span3" id="slider-SHUTTER" title="Camera Shutter"> </div>';
 
 
     html += '<label class="label span3">Contrast</label>';
     html += '<input class="input-xlarge focused span4" id="image-CONTRAST_READOUT" readonly title="Camera Readout Contrast" type="text">';
     html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-CONTRAST" title="SET Contrast" type="number" value=0>';
-   // html += '<div class="span3" id="slider-CONTRAST" title="Camera Contrast"> </div>';
+    // html += '<div class="span3" id="slider-CONTRAST" title="Camera Contrast"> </div>';
 
     html += '<label class="label span3">Sharpness</label>';
     html += '<input class="input-xlarge focused span4" id="image-SHARPNESS_READOUT" readonly title="Camera Readout Sharpness" type="text">';
     html += '<input class="input-xlarge focused span5 cucmdattr" id="attr-SHARPNESS" title="SET Sharpness" type="number" value=0>';
-   // html += '<div class="span3" id="slider-SHARPNESS" title="Camera Sharpness"> </div>';
+    // html += '<div class="span3" id="slider-SHARPNESS" title="Camera Sharpness"> </div>';
 
     html += '</div>';
     html += '</div>';
@@ -5419,7 +5431,7 @@
     html += generateGenericTable(node_list, template);
     return html;
   }
-  function configureSliderCommands(tmpObj,slname, slinput) {
+  function configureSliderCommands(tmpObj, slname, slinput) {
     $("#" + slname).slider({
       range: "max",
       min: 0,
@@ -5428,7 +5440,7 @@
       slide: function (event, ui) {
         $("#" + slinput).val(ui.value);
         var id = this.id;
-        var node_selected=tmpObj.node_selected;
+        var node_selected = tmpObj.node_selected;
         var attr = id.split("-")[1];
         jchaos.setAttribute(node_selected, attr, String(ui.value), function () {
           //   instantMessage("Attribute ", "\"" + attr + "\"=\"" + ui.value + "\" sent", 1000)
@@ -5485,7 +5497,7 @@
       html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
       html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td>";
       html += "<td id='" + cuname + "_health_prate'></td><td id='" + cuname + "_health_pband'></td></tr>";
-      
+
 
     });
 
@@ -5525,8 +5537,8 @@
           $("#" + name_id + "_health_usertime").html(el.usrTime);
           $("#" + name_id + "_health_systemtime").html(el.systTime);
           $("#" + name_id + "_health_prate").html(Number(el.health.cuh_dso_prate).toFixed(3));
-          if(el.health.hasOwnProperty("cuh_dso_size")){
-            var band=Number(el.health.cuh_dso_prate)*Number(el.health.cuh_dso_size)/1024;
+          if (el.health.hasOwnProperty("cuh_dso_size")) {
+            var band = Number(el.health.cuh_dso_prate) * Number(el.health.cuh_dso_size) / 1024;
             $("#" + name_id + "_health_pband").html(band.toFixed(3));
           }
           if ((tmpObj.off_line[name_device_db] > 0) && (status != "Unload")) {
@@ -5594,7 +5606,7 @@
           } else {
             $("#" + name_id + "_system_cu_alarm").html('');
           }
-          
+
           if (el.system.hasOwnProperty("running_cmd_alias")) {
             var cmd_state = el.system.running_cmd_alias;
             if (el.system.hasOwnProperty("cudk_set_tag") && el.system.hasOwnProperty("cudk_set_state")) {
@@ -5629,7 +5641,7 @@
             $("#" + name_id + "_health_status").html('<i class="material-icons verde">videocam</i>');
             $("#" + name_id + "_health_status").attr('title', "TAG:'" + el.system.cudk_burst_tag + "'");
           }
-          
+
 
           if (busy == 'true') {
             $("#" + name_id + "_system_busy").attr('title', "The device is busy command in queue:" + el.system.dp_sys_que_cmd);
@@ -5641,26 +5653,26 @@
           } else {
             $("#" + name_id + "_system_busy").html('');
           }
-          if(el.system.hasOwnProperty("dp_sys_unit_type") && (el.system.dp_sys_unit_type=="nt_script_eu")){
+          if (el.system.hasOwnProperty("dp_sys_unit_type") && (el.system.dp_sys_unit_type == "nt_script_eu")) {
             $("#" + name_id + "_system_bypass").attr('title', "Script EU")
             $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">settings</i>');
           } else {
-          if (el.system.hasOwnProperty("cudk_bypass_state")) {
-            if (el.system.cudk_bypass_state == false) {
-              $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">usb</i>');
-              $("#" + name_id + "_system_bypass").attr('title', "Bypass disabled")
+            if (el.system.hasOwnProperty("cudk_bypass_state")) {
+              if (el.system.cudk_bypass_state == false) {
+                $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">usb</i>');
+                $("#" + name_id + "_system_bypass").attr('title', "Bypass disabled")
 
-            } else {
-              $("#" + name_id + "_system_bypass").attr('title', "Bypass enabled")
+              } else {
+                $("#" + name_id + "_system_bypass").attr('title', "Bypass enabled")
 
-              $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons yellow">cached</i>');
+                $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons yellow">cached</i>');
+              }
+            } else if (!el.system.hasOwnProperty("dp_sys_unit_type") || (el.system.dp_sys_unit_type != "nt_rt_cu")) {
+              $("#" + name_id + "_system_bypass").attr('title', "Rest CU")
+              $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">http</i>');
             }
-          } else if(!el.system.hasOwnProperty("dp_sys_unit_type") || (el.system.dp_sys_unit_type!="nt_rt_cu")){
-            $("#" + name_id + "_system_bypass").attr('title', "Rest CU")
-            $("#" + name_id + "_system_bypass").html('<i id="td_bypass_' + name_id + '" class="material-icons verde">http</i>');
           }
         }
-      }
 
       } catch (e) {
         console.log(name_device_db + " warning :", e);
@@ -5674,32 +5686,32 @@
       var node = $(this).attr("cuname");
       var cindex = tmpObj.node_name_to_index[node];
 
-      var alarm=tmpObj.data[cindex];
-     
-      if(alarm !=null && alarm.hasOwnProperty("device_alarms")){
+      var alarm = tmpObj.data[cindex];
+
+      if (alarm != null && alarm.hasOwnProperty("device_alarms")) {
         decodeDeviceAlarm(alarm.device_alarms);
-    }
+      }
     });
     $("a.cu-alarm").off();
     $("a.cu-alarm").click(function (e) {
-      
-//      var node=tmpObj.node_selected;
+
+      //      var node=tmpObj.node_selected;
       var node = $(this).attr("cuname");
       var cindex = tmpObj.node_name_to_index[node];
 
-      var alarm=tmpObj.data[cindex];
-      if(alarm !=null && alarm.hasOwnProperty("cu_alarms")){
+      var alarm = tmpObj.data[cindex];
+      if (alarm != null && alarm.hasOwnProperty("cu_alarms")) {
         decodeDeviceAlarm(alarm.cu_alarms);
-    }
-  });
+      }
+    });
   }
   function generateBPMTable(tmpObj) {
     var cu = tmpObj.elems;
     var template = tmpObj.type;
-    
+
     var html = '<table class="table table-bordered" id="graph_table_BPM">';
     html += '</table>';
-    
+
     html += '<div class="row-fluid">';
     html += '<div class="box span12">';
     html += '<div class="box-content">';
@@ -5709,7 +5721,7 @@
     html += '<th>Element</th>';
     html += '<th colspan="3">Status</th>';
     html += '<th>X</th>';
-    html += '<th>Y</th>'; 
+    html += '<th>Y</th>';
     html += '<th>VA</th>';
     html += '<th>VB</th>';
     html += '<th>VC</th>';
@@ -5723,23 +5735,23 @@
 
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html+= "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
-      html+= "<td class='td_element td_name'>" + cu[i] + "</td>";
-      html+= "<td id='" + cuname + "_health_status'></td>";
-      html+= "<td id='" + cuname + "_system_busy'></td>";
-      html+= "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
-      html+= "<td title='Calculated X position' id='" + cuname + "_output_X'></td>";
-      html+= "<td title='Calculated Y position' id='" + cuname + "_output_Y'></td>";
-      html+= "<td title='VA' id='" + cuname + "_output_VA'></td>";
-      html+= "<td title='VB' id='" + cuname + "_output_VB'></td>";
-      html+= "<td title='VC' id='" + cuname + "_output_VC'></td>";
-      html+= "<td title='VD' id='" + cuname + "_output_VD'></td>";
-      html+= "<td title='SUM' id='" + cuname + "_output_SUM'></td>";
-      html+= "<td title='Samples' id='" + cuname + "_input_SAMPLES'></td>";
-      html+= "<td title='Trigger' id='" + cuname + "_input_TRIGGER'></td>";
+      html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
+      html += "<td class='td_element td_name'>" + cu[i] + "</td>";
+      html += "<td id='" + cuname + "_health_status'></td>";
+      html += "<td id='" + cuname + "_system_busy'></td>";
+      html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
+      html += "<td title='Calculated X position' id='" + cuname + "_output_X'></td>";
+      html += "<td title='Calculated Y position' id='" + cuname + "_output_Y'></td>";
+      html += "<td title='VA' id='" + cuname + "_output_VA'></td>";
+      html += "<td title='VB' id='" + cuname + "_output_VB'></td>";
+      html += "<td title='VC' id='" + cuname + "_output_VC'></td>";
+      html += "<td title='VD' id='" + cuname + "_output_VD'></td>";
+      html += "<td title='SUM' id='" + cuname + "_output_SUM'></td>";
+      html += "<td title='Samples' id='" + cuname + "_input_SAMPLES'></td>";
+      html += "<td title='Trigger' id='" + cuname + "_input_TRIGGER'></td>";
 
-      html+="<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
-      html+="<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td></tr>";
+      html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
+      html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td></tr>";
 
     });
 
@@ -5780,8 +5792,8 @@
     html += '<i class="material-icons rosso">pause_circle_outline</i>';
     html += '<p class="name-cmd">Stop Acquisition</p>';
     html += '</a>';
-    
-    
+
+
     html += '</div>';
     html += '<div class="span12 statbox">';
     html += '<textarea class="form-control" rows="5" id="BPM_STATUS"></textarea>';
@@ -5820,22 +5832,22 @@
 
     $(cu).each(function (i) {
       var cuname = encodeName(cu[i]);
-      html+= "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
-      html+= "<td class='td_element td_name'>" + cu[i] + "</td>";
-      html+= "<td id='" + cuname + "_health_status'></td>";
-      html+= "<td id='" + cuname + "_system_busy'></td>";
-      html+= "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
-      html+= "<td class='position_element' id='" + cuname + "_output_position'></td>";
-      html+="<td class='position_element' id='" + cuname + "_input_position'></td>";
-      html+="<td id='" + cuname + "_input_saved_position'></td>";
-      html+="<td id='" + cuname + "_input_saved_status'></td>";
-      html+="<td id='" + cuname + "_flag_output_status'></td>";
-      html+="<td id='" + cuname + "_flag_in'></td>";
-      html+="<td id='" + cuname + "_flag_out'></td>";
-      html+="<td id='" + cuname + "_flag_home'></td>";
+      html += "<tr class='row_element cuMenu' " + template + "-name='" + cu[i] + "' id='" + cuname + "'>";
+      html += "<td class='td_element td_name'>" + cu[i] + "</td>";
+      html += "<td id='" + cuname + "_health_status'></td>";
+      html += "<td id='" + cuname + "_system_busy'></td>";
+      html += "<td title='Bypass Mode' id='" + cuname + "_system_bypass'></td>";
+      html += "<td class='position_element' id='" + cuname + "_output_position'></td>";
+      html += "<td class='position_element' id='" + cuname + "_input_position'></td>";
+      html += "<td id='" + cuname + "_input_saved_position'></td>";
+      html += "<td id='" + cuname + "_input_saved_status'></td>";
+      html += "<td id='" + cuname + "_flag_output_status'></td>";
+      html += "<td id='" + cuname + "_flag_in'></td>";
+      html += "<td id='" + cuname + "_flag_out'></td>";
+      html += "<td id='" + cuname + "_flag_home'></td>";
 
-      html+="<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
-      html+="<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td></tr>";
+      html += "<td title='Device alarms' id='" + cuname + "_system_device_alarm'></td>";
+      html += "<td title='Control Unit alarms' id='" + cuname + "_system_cu_alarm'></td></tr>";
     });
 
     html += '</table>';
@@ -5851,10 +5863,10 @@
     var cu = tmpObj.data;
     if (JSON.stringify(tmpObj['elems']) !== JSON.stringify(tmpObj['old_elems'])) {
       var chart_options = {
-        maxpoints:10,
-        npoints:0,  
+        maxpoints: 10,
+        npoints: 0,
         chart: {
-          
+
         },
         title: {
           text: ''
@@ -5870,7 +5882,7 @@
           title: {
             text: 'V'
           }
-          
+
         },
         legend: {
           layout: 'vertical',
@@ -5902,7 +5914,7 @@
           data: []
         }]
       };
-      makeDynamicGraphTable(tmpObj,"graph_table_BPM",chart_options,tmpObj['elems']);
+      makeDynamicGraphTable(tmpObj, "graph_table_BPM", chart_options, tmpObj['elems']);
       tmpObj['old_elems'] = tmpObj['elems'];
     }
     var now = (new Date()).getTime();
@@ -5912,7 +5924,7 @@
       if (elem.hasOwnProperty('health') && elem.health.hasOwnProperty("ndk_uid")) {   //if el health
 
         var cuname = encodeName(elem.health.ndk_uid);
-        if((tmpObj.node_selected!=null) && (elem.health.ndk_uid == tmpObj.node_selected)){
+        if ((tmpObj.node_selected != null) && (elem.health.ndk_uid == tmpObj.node_selected)) {
           $("#BPM_STATUS").html(elem.output.STATUS);
         }
         $("#" + cuname + "_output_X").html(elem.output.X.toFixed(3));
@@ -5923,47 +5935,47 @@
         $("#" + cuname + "_output_VD").html(elem.output.VD);
         $("#" + cuname + "_output_SUM").html(elem.output.SUM);
         $("#" + cuname + "_input_SAMPLES").html(elem.input.SAMPLES);
-        if(elem.input.TRIGGER){
+        if (elem.input.TRIGGER) {
           $("#" + cuname + "_input_TRIGGER").html("Triggered");
         } else {
           $("#" + cuname + "_input_TRIGGER").html("No Trigger");
         }
         if (tmpObj.hasOwnProperty("graph_table_BPM")) {
           var chart = tmpObj['graph_table_BPM'][cuname];
-            if(chart.hasOwnProperty("series") && ( chart.series instanceof Array)){
-              var shift=false;
-              if(tmpObj['graph_table_BPM'][cuname].options.npoints>tmpObj['graph_table_BPM'][cuname].options.maxpoints){
-                shift=true;
-              }
-              tmpObj['graph_table_BPM'][cuname].options.npoints++;
-              if((elem.output.MODE&0x1)&&(elem.output.hasOwnProperty("SUM_ACQ"))){
-                var arrv=[];
-                arrv[0]=convertBinaryToArrays(elem.output.VA_ACQ);
-                arrv[1]=convertBinaryToArrays(elem.output.VB_ACQ);
-                arrv[2]=convertBinaryToArrays(elem.output.VC_ACQ);
-                arrv[3]=convertBinaryToArrays(elem.output.VD_ACQ);
-                arrv[4]=convertBinaryToArrays(elem.output.SUM_ACQ);
-                for(var i=0;i<5;i++){
-                  if(arrv[i] instanceof Array){
-                    var setp=[]
-                    arrv[i].forEach(function(elem,n){
-                      setp.push([now+n, elem]);
-                      
-                    });
-                    chart.series[i].setData(setp, true, true,true);
-                  }
+          if (chart.hasOwnProperty("series") && (chart.series instanceof Array)) {
+            var shift = false;
+            if (tmpObj['graph_table_BPM'][cuname].options.npoints > tmpObj['graph_table_BPM'][cuname].options.maxpoints) {
+              shift = true;
+            }
+            tmpObj['graph_table_BPM'][cuname].options.npoints++;
+            if ((elem.output.MODE & 0x1) && (elem.output.hasOwnProperty("SUM_ACQ"))) {
+              var arrv = [];
+              arrv[0] = convertBinaryToArrays(elem.output.VA_ACQ);
+              arrv[1] = convertBinaryToArrays(elem.output.VB_ACQ);
+              arrv[2] = convertBinaryToArrays(elem.output.VC_ACQ);
+              arrv[3] = convertBinaryToArrays(elem.output.VD_ACQ);
+              arrv[4] = convertBinaryToArrays(elem.output.SUM_ACQ);
+              for (var i = 0; i < 5; i++) {
+                if (arrv[i] instanceof Array) {
+                  var setp = []
+                  arrv[i].forEach(function (elem, n) {
+                    setp.push([now + n, elem]);
+
+                  });
+                  chart.series[i].setData(setp, true, true, true);
                 }
-              } else {
-                chart.series[0].addPoint([now, elem.output.VA], false, shift);
-                chart.series[1].addPoint([now, elem.output.VB], false, shift);
-                chart.series[2].addPoint([now, elem.output.VC], false, shift);
-                chart.series[3].addPoint([now, elem.output.VD], false, shift); 
-                chart.series[3].addPoint([now, elem.output.SUM], false,shift);
               }
-              chart.redraw();    
+            } else {
+              chart.series[0].addPoint([now, elem.output.VA], false, shift);
+              chart.series[1].addPoint([now, elem.output.VB], false, shift);
+              chart.series[2].addPoint([now, elem.output.VC], false, shift);
+              chart.series[3].addPoint([now, elem.output.VD], false, shift);
+              chart.series[3].addPoint([now, elem.output.SUM], false, shift);
+            }
+            chart.redraw();
 
           }
-    
+
         }
       }
     });
@@ -5982,28 +5994,28 @@
 
         $("#" + cuname + "_output_position").html(elem.output.position.toFixed(3));
         $("#" + cuname + "_input_position").html(elem.input.position);
-       /* switch (elem.output.polarity) {
-          case 1:
-            $("#" + cuname + "_output_polarity").html('<i class="material-icons rosso">add_circle</i>');
-            break;
-          case -1:
-            $("#" + cuname + "_output_polarity").html('<i class="material-icons blu">remove_circle</i>');
-            break;
-          case 0:
-            $("#" + cuname + "_output_polarity").html('<i class="material-icons">radio_button_unchecked</i>');
-            break;
+        /* switch (elem.output.polarity) {
+           case 1:
+             $("#" + cuname + "_output_polarity").html('<i class="material-icons rosso">add_circle</i>');
+             break;
+           case -1:
+             $("#" + cuname + "_output_polarity").html('<i class="material-icons blu">remove_circle</i>');
+             break;
+           case 0:
+             $("#" + cuname + "_output_polarity").html('<i class="material-icons">radio_button_unchecked</i>');
+             break;
+ 
+         }*/
 
-        }*/
-
-        if(elem.output.home){
+        if (elem.output.home) {
           $("#" + cuname + "_flag_home").html('<i class="material-icons verde">home</i>');
         } else {
           $("#" + cuname + "_flag_home").html('');
 
         }
-        if (elem.output.powerOn ) {
-        
-        
+        if (elem.output.powerOn) {
+
+
           $("#" + cuname + "_flag_output_status").html('<i class="material-icons verde">trending_down</i>');
           $("#" + cuname + "_flag_output_status").html('<i class="material-icons verde">trending_down</i>');
 
@@ -6025,9 +6037,9 @@
         }
 
       }
-      if(elem.health.ndk_uid == tmpObj.node_selected){
+      if (elem.health.ndk_uid == tmpObj.node_selected) {
 
-        if (elem.output.powerOn ) {
+        if (elem.output.powerOn) {
           $("#scraper_setPoweron").childen().remove();
           html = '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweron" cucmdid="poweron" cucmdvalue={\"on\":1}>';
           html += '<i class="material-icons green">trending_down</i>';
@@ -6074,7 +6086,7 @@
     html += '<i class="material-icons rosso">cancel</i>';
     html += '<p class="name-cmd">STOP</p>';
     html += '</a>';
-    
+
     html += '</div>';
     html += '<div class="span12 statbox" style="margin-left:0">';
     html += '<a class="quick-button-small span1 btn-cmd offset0 cucmd" id="scraper_in" cucmdid="mov_rel" cucmdvalueMult=-1>';
@@ -6089,7 +6101,7 @@
     html += '<i class="icon-angle-right"></i>';
     html += '<p class="name-cmd">Out</p>';
     html += '</a>';
-    
+
     html += '<a class="quick-button-small span1 btn-value cucmd" id="scraper_setPoweroff" cucmdid="poweron" cucmdvalue={\"on\":0}>';
     html += '<i class="material-icons red">pause</i>';
     html += '<p class="name-cmd">OFF</p>';
@@ -6098,8 +6110,8 @@
     html += '<i class="icon-home"></i>';
     html += '<p class="name-cmd">Homing</p>';
     html += '</a>';
-    
-    
+
+
     html += '</div>';
     html += '</div>';
     html += '</div>';
@@ -6151,73 +6163,74 @@
 
     return html;
   }
-  function updateCameraProperties(propname,json){
-    if(json.input.hasOwnProperty(propname)){
-      $("#image-"+propname+"_SET").val(json.input[propname]);
-   //   $("#slider-"+propname).val(json.input[propname]);
+  function updateCameraProperties(propname, json) {
+    if (json.input.hasOwnProperty(propname)) {
+      $("#image-" + propname + "_SET").val(json.input[propname]);
+      //   $("#slider-"+propname).val(json.input[propname]);
     }
-    if(json.output.hasOwnProperty(propname)){
-      $("#image-"+propname+"_READOUT").val(json.output[propname]);
+    if (json.output.hasOwnProperty(propname)) {
+      $("#image-" + propname + "_READOUT").val(json.output[propname]);
 
     }
   }
   function updateCameraTable(tmpObj) {
     var cu = tmpObj.elems;
-   
-    if(tmpObj.skip_fetch>0){
+
+    if (tmpObj.skip_fetch > 0) {
       tmpObj.skip_fetch--;
     } else {
-    jchaos.getChannel(tmpObj.node_selected, -1, function (d) {
-      var selected=d[0];
-//    var selected = tmpObj.data[tmpObj.index];
-    if (selected != null && selected.hasOwnProperty("output")) {
-      $("#cameraName").html("<b>" + selected.output.ndk_uid + "</b>");
-      if (selected.output.hasOwnProperty("FRAMEBUFFER")) {
-        var bin = selected.output.FRAMEBUFFER.$binary.base64;
-        var fmt = "png";
-        if (selected.hasOwnProperty("input")) {
-          if (selected.input.FMT != null) {
-            fmt = selected.input.FMT;
-          }
-          updateCameraProperties("GAIN",selected);
-          updateCameraProperties("WIDTH",selected);
-          updateCameraProperties("HEIGHT",selected);
-          updateCameraProperties("OFFSETX",selected);
-          updateCameraProperties("OFFSETY",selected);
-          updateCameraProperties("BRIGHTNESS",selected);
-          updateCameraProperties("SHUTTER",selected);
-          updateCameraProperties("CONTRAST",selected);
-          updateCameraProperties("SHARPNESS",selected);
-/*
-          if(selected.input.hasOwnProperty('GAIN')){
-            $("#image-GAIN").val(selected.input.GAIN);
-            $("#slider-GAIN").val(selected.input.GAIN);
-          }
-          
-          if(selected.input.hasOwnProperty('GAIN')){
-            $("#image-GAIN").val(selected.input.GAIN);
-            $("#slider-GAIN").val(selected.input.GAIN);
-          }
-          $("#image-WIDTH").val(selected.input.WIDTH);
-          $("#image-HEIGHT").val(selected.input.HEIGHT);
-          $("#image-OFFSETX").val(selected.input.OFFSETX);
-          $("#image-OFFSETY").val(selected.input.OFFSETY);
-          $("#image-BRIGHTNESS").val(selected.input.BRIGHTNESS);
-          $("#image-SHUTTER").val(selected.input.SHUTTER);
-          $("#image-CONTRAST").val(selected.input.CONTRAST);
-          $("#image-SHARPNESS").val(selected.input.SHARPNESS);
-          */
-        }
-        $('#triggerType').val(selected.output.TRIGGER_MODE)
+      jchaos.getChannel(tmpObj.node_selected, -1, function (d) {
+        var selected = d[0];
+        //    var selected = tmpObj.data[tmpObj.index];
+        if (selected != null && selected.hasOwnProperty("output")) {
+          $("#cameraName").html("<b>" + selected.output.ndk_uid + "</b>");
+          if (selected.output.hasOwnProperty("FRAMEBUFFER")) {
+            var bin = selected.output.FRAMEBUFFER.$binary.base64;
+            var fmt = "png";
+            if (selected.hasOwnProperty("input")) {
+              if (selected.input.FMT != null) {
+                fmt = selected.input.FMT;
+              }
+              updateCameraProperties("GAIN", selected);
+              updateCameraProperties("WIDTH", selected);
+              updateCameraProperties("HEIGHT", selected);
+              updateCameraProperties("OFFSETX", selected);
+              updateCameraProperties("OFFSETY", selected);
+              updateCameraProperties("BRIGHTNESS", selected);
+              updateCameraProperties("SHUTTER", selected);
+              updateCameraProperties("CONTRAST", selected);
+              updateCameraProperties("SHARPNESS", selected);
+              /*
+                        if(selected.input.hasOwnProperty('GAIN')){
+                          $("#image-GAIN").val(selected.input.GAIN);
+                          $("#slider-GAIN").val(selected.input.GAIN);
+                        }
+                        
+                        if(selected.input.hasOwnProperty('GAIN')){
+                          $("#image-GAIN").val(selected.input.GAIN);
+                          $("#slider-GAIN").val(selected.input.GAIN);
+                        }
+                        $("#image-WIDTH").val(selected.input.WIDTH);
+                        $("#image-HEIGHT").val(selected.input.HEIGHT);
+                        $("#image-OFFSETX").val(selected.input.OFFSETX);
+                        $("#image-OFFSETY").val(selected.input.OFFSETY);
+                        $("#image-BRIGHTNESS").val(selected.input.BRIGHTNESS);
+                        $("#image-SHUTTER").val(selected.input.SHUTTER);
+                        $("#image-CONTRAST").val(selected.input.CONTRAST);
+                        $("#image-SHARPNESS").val(selected.input.SHARPNESS);
+                        */
+            }
+            $('#triggerType').val(selected.output.TRIGGER_MODE)
 
-        $("#cameraName").html('<font color="green"><b>'+selected.health.ndk_uid+'</b></font> '+selected.output.dpck_seq_id);
-        $("#cameraImage").attr("src", "data:image/" + fmt + ";base64," + bin);
-      }
-    }},function(d){
-      tmpObj.skip_fetch=3;
-      $("#cameraName").html('<font color="red"><b>'+tmpObj.node_selected+'</b> (cannot fetch correctly)</font> skipping next:'+tmpObj.skip_fetch+' updates');
-    });
-  } 
+            $("#cameraName").html('<font color="green"><b>' + selected.health.ndk_uid + '</b></font> ' + selected.output.dpck_seq_id);
+            $("#cameraImage").attr("src", "data:image/" + fmt + ";base64," + bin);
+          }
+        }
+      }, function (d) {
+        tmpObj.skip_fetch = 3;
+        $("#cameraName").html('<font color="red"><b>' + tmpObj.node_selected + '</b> (cannot fetch correctly)</font> skipping next:' + tmpObj.skip_fetch + ' updates');
+      });
+    }
     jchaos.getChannel(cu, 255, function (selected) {
       tmpObj.data = selected;
 
@@ -6899,7 +6912,7 @@
                 var page = $("#query-page").val();
                 jchaos.options.history_page_len = Number(page);
                 jchaos.options.updateEachCall = true;
-                jchaos.setOptions({"timeout":60000});
+                jchaos.setOptions({ "timeout": 60000 });
 
                 if (qstop == "" || qstop == "NOW") {
                   qstop = (new Date()).getTime();
@@ -7032,10 +7045,10 @@
                                 if (ds.hasOwnProperty(variable)) {
                                   var ts = data.X[ele_count++];
                                   var tmp = ds[variable];
-                                  
+
                                   if (index != null) {
-                                    if(tmp.hasOwnProperty("$binary")){
-                                      tmp=convertBinaryToArrays(tmp);
+                                    if (tmp.hasOwnProperty("$binary")) {
+                                      tmp = convertBinaryToArrays(tmp);
                                     }
 
                                     if (index == "-1") {
@@ -7325,7 +7338,7 @@
     };
     console.log("saving Graph:" + JSON.stringify(high_graphs[graphname]));
 
-    jchaos.variable("highcharts", "set", high_graphs, function(){
+    jchaos.variable("highcharts", "set", high_graphs, function () {
 
     });
     graph_selected = graphname;
@@ -7367,13 +7380,13 @@
               node_selected = config.us_desc.ndk_uid;
               // editorFn = unitServerSave;
               //jsonEdit(templ, config.us_desc);
-              jsonEditWindow("US Editor", templ, config.us_desc, unitServerSave,tmpObj);
+              jsonEditWindow("US Editor", templ, config.us_desc, unitServerSave, tmpObj);
 
             }
           }, "Join", function () {
             // editorFn = unitServerSave;
             //jsonEdit(templ, config.us_desc);
-            jsonEditWindow("US Editor Join", templ, config.us_desc, unitServerSave,tmpObj);
+            jsonEditWindow("US Editor Join", templ, config.us_desc, unitServerSave, tmpObj);
 
           });
         } else if (config.hasOwnProperty("cu_desc")) {
@@ -7390,7 +7403,7 @@
               //editorFn = newCuSave;
               var tmp = config.cu_desc;
               //jsonEdit(templ, tmp);
-              jsonEditWindow("New CU Editor", templ, tmp, newCuSave,tmpObj);
+              jsonEditWindow("New CU Editor", templ, tmp, newCuSave, tmpObj);
 
             }
           }, "Cancel", function () {
@@ -7710,7 +7723,7 @@
     return html;
   }
   function generateCmdModal(tmpObj, cmdselected, cu) {
-    var node_selected=tmpObj.node_selected;
+    var node_selected = tmpObj.node_selected;
     var arguments = retriveCurrentCmdArguments(tmpObj, cmdselected);
     var input_type = "number";
     var html = "";
@@ -8022,12 +8035,12 @@
         html += '<span class="json-string">"' + json + '"</span>';
     }
     else if (typeof json === 'number') {
-      if(options.hasOwnProperty("format")){
-        if(options.format!=10){
-         //convert to unsigned 
-         json=json>>>0;
+      if (options.hasOwnProperty("format")) {
+        if (options.format != 10) {
+          //convert to unsigned 
+          json = json >>> 0;
         }
-        var fmtstring = json.toString(options.format&0xFF);
+        var fmtstring = json.toString(options.format & 0xFF);
 
         html += '<span class="json-literal" cuport="' + json + '">' + fmtstring + '</span>';
       } else {
@@ -8245,7 +8258,7 @@
         close: function (event, ui) {
           clearInterval(updateLogInterval);
           $(this).remove();
-          jchaos.setOptions({"timeout":5000});
+          jchaos.setOptions({ "timeout": 5000 });
 
         },
         open: function (event, ui) {
@@ -8962,7 +8975,7 @@
         type: options.template,
         filter: "",
         refresh_rate: options.Interval,
-        skip_fetch:0,
+        skip_fetch: 0,
         check_interval: 10000,
         last_check: 0,
         node_list_interval: null,
@@ -8970,7 +8983,7 @@
         health_time_stamp_old: {},
         node_name_to_desc: [],
         node_name_to_index: [],
-        off_line:{},
+        off_line: {},
         index: 0,
         data: null,
         upd_chan: -1,
