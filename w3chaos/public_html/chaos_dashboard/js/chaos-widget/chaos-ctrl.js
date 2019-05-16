@@ -1453,7 +1453,7 @@
       alert("You must specify a valid implementation 'control_unit_implementation'");
       return 1;
     }
-    if (!json.hasOwnProperty("control_unitndk_uid_implementation") || json.ndk_uid == "") {
+    if (!json.hasOwnProperty("ndk_uid") || json.ndk_uid == "") {
       alert("You must specify a valid UID 'ndk_uid'");
       return 1;
     }
