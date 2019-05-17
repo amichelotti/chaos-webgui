@@ -16,7 +16,7 @@
 		<span class="icon-bar"></span>
 	    </a>
 	    
-            <a class="brand" href="<?php echo $index; ?>"><span>!CHAOS Dashboard</span><?php echo file_get_contents("target.txt");echo file_get_contents("version.txt");?></a>
+            <a class="brand" href="<?php echo $index; ?>"><span>!CHAOS Dashboard</span><?php echo file_get_contents("target.html");echo file_get_contents("version.html");?></a>
 								
 		<!-- start: Header Menu -->
 		<div class="nav-no-collapse header-nav">
