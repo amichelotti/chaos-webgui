@@ -9022,6 +9022,7 @@
 
         templateObj.updateFn = updateNode;
         templateObj.checkLiveFn = checkLiveCU;
+        jchaos.setOptions({ "timeout": 5000 });
 
       } else if (options.template == "process") {
         templateObj.upd_chan = -2; // custom channel update
@@ -9033,6 +9034,7 @@
         templateObj.updateInterfaceFn = updateProcessInterface;
         templateObj.updateFn = updateProcess;
 
+        jchaos.setOptions({ "timeout": 5000 });
 
       } /*else if (options.template == "ctrl") {
         var html = "";
