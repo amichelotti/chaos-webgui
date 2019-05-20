@@ -1,0 +1,99 @@
+{
+    "title":"CU Memcache Import",
+    "type":"object",
+	"id":"editor-cu",
+	"format":"tab",
+    "properties": {
+	"ndk_uid": {
+		"type": "string",
+		"required": true,
+		"format":"text",
+	    "description":"CU Unique Identifier ZONE/TYPE/ID"
+	},
+	
+	"mc_server": {
+		"type": "string",
+		"format":"text",
+		"required":true,
+		"description":"Memcache Server <ip:port>"
+		
+	},
+	"mc_keys": {
+		"type": "array",
+		"uniqueItems": true,
+		"required": true,
+		"description":"list of keys to fetch",
+		"items": {
+		  "type": "string"
+		}
+	  },
+	  "mc_buffer_size": {
+		"type": "integer",
+		"required": true,
+		"description":"buffer size to hold keys",
+		"default":4096
+	  },
+	"auto_load": {
+		"type": "boolean",
+		"default":true,
+	    "description":"Load automatically on registration"
+	},
+	"auto_init": {
+		"type": "boolean",
+		"default":true,
+	    "description":"Initialize automatically on registration"
+	},
+	"auto_start": {
+		"type": "boolean",
+		"default":true,
+	    "description":"start automatically on registration"
+	},
+	
+	"cudk_thr_sch_delay" : {
+		"type":"integer",
+		"default":1000000,
+		"required":true,
+
+		"description":"Default schedule of a CU"
+
+
+	},
+	"dsndk_storage_type" : {
+		"type":"integer",
+		"default":2,
+		"required":true,
+
+		"description":"2=Just Live,1=Just Storage,3=Both"
+
+
+	},
+	"dsndk_storage_history_ageing" : {
+		"type":"integer",
+		"default":36000,
+		"required":true,
+
+		"description":"Time in Seconds before the data will be wiped out (0=disabled)"
+
+	},
+	"dsndk_storage_live_time" : {
+		"type":"integer",
+		"default":0,
+		"required":true,
+		"description":"the time in us that need to pass before store another datapack into the live system"
+
+	},
+	"mc_imported_keys":{
+		"type":"array",
+		"format": "tab",
+		"title": "Output Values",
+		"required":true,
+		"items":{
+		    "$ref":"cu_mc_import_keys.json",
+		    "title":"Outputs"
+		}
+	}
+	
+	
+	}
+}
+    

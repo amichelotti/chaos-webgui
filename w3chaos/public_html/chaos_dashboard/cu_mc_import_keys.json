@@ -1,0 +1,52 @@
+{
+    "title":"Output",
+    "type":"object",
+    "id":"editor-mc_object",
+    "properties": {
+		"name" : {
+			"type": "string",
+			"format":"text",
+			"required":true,
+			"description":"Output Name"
+		},
+		"type" :
+	{
+		"type": "array",
+  		"format": "select",
+		  "uniqueItems": true,
+			"description":"Type of output",
+			"default":"double",
+  		"items": {
+    	"type": "string",
+			"enum": ["double","int32","int64","boolean","uint32","uint64","string","binary"]
+		  }
+  },
+		"description" : {
+			"type": "string",
+			"description":"A description of the output"
+		},
+		"offset" : {
+			"type": "integer",
+			"required":true,
+			"description":"The offset in bytes within the buffer of the concatenated keys"
+		},
+		"len" : {
+			"type": "integer",
+			"description":"The max length in byte of the type (just for binaries and strings)"
+		},
+		"factor" : {
+			"type": "number",
+			"default":0,
+			"description":"An optional conversion factor (0=no conversion) "
+		},
+		"lbe" : {
+			"type": "boolean",
+			"default":false,
+			"required":true,
+			"description":"Enable big to little endian conversion (i,e needed for labview data)"
+		}
+	} 
+}
+    
+    
+    
