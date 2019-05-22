@@ -64,7 +64,6 @@ uint64_t HTTPUIInterface::last_check_activity = 0;
  * The handlers below are written in C to do the binding of the C mongoose with
  * the C++ API
  */
-ChaosSharedMutex http_mutex;
 static int event_handler(struct mg_connection *connection, enum mg_event ev)
 {
 
