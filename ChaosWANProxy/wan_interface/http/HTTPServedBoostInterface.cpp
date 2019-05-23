@@ -46,7 +46,7 @@ using namespace chaos::common::async_central;
 #define API_PATH_REGEX_V1(p) API_PREFIX_V1 p
 
 #define HTTWANINTERFACE_LOG_HEAD "[HTTPServedBoostInterface" << current_index << "] -"
-#define LOG_CONNECTION "[" << connection->remote_ip << ":" << std::dec << connection->remote_port << ","<<connection->server_param<<"] "
+#define LOG_CONNECTION "[" << request.source()<<"] "
 
 #define HTTWAN_INTERFACE_APP_ INFO_LOG(HTTPServedBoostInterface)
 #define HTTWAN_INTERFACE_DBG_ DBG_LOG(HTTPServedBoostInterface)
@@ -374,11 +374,33 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
   //  HTTPWANInterfaceStringResponse response("text/html");
     //response.addHeaderKeyValue("Access-Control-Allow-Origin", "*");
     std::stringstream ss;
-    for ( const auto & query_param : request.query ){
+    served::method method=request.method();
+    std::map<std::string, std::string> request_param;
+    std::string query;
+    if (method == served::method::GET ){
+        query=request.url().query();
+        request_param=mappify(query);
+    } else if(method == served::method::POST){
+        query=request.body();
+        request_param=mappify(query);
+
+    } else {
+                HTTWAN_INTERFACE_ERR_  << "UNSUPPORTED METHOD:" << method_to_string(method);
+                res.set_status(served::status_4XX::METHOD_NOT_ALLOWED);
+                return 1;
+    }
+    if(request_param.size()==0){
+                HTTWAN_INTERFACE_ERR_  << "Malformed Query:" << query;
+                res.set_status(served::status_4XX::BAD_REQUEST);
+                return 1;
+
+    }
+    res.set_header("Access-Control-Allow-Origin","*");
+   /* for ( const auto & query_param : request.query ){
 				ss << "Key: " << query_param.first << ", Value: " << query_param.second << "\n";
 	}
     HTTWAN_INTERFACE_DBG_<<" process params:"<<ss.str();
-
+    */
     ::driver::misc::ChaosController *controller = NULL;
 
     //scsan for content type request
@@ -392,12 +414,12 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
             //remove the prefix and tokenize the url
          
         std::string cmd, parm, dev_param;
-        dev_param = request.params["dev"];
-        cmd = request.params["cmd"];
-        parm = request.params["parm"];
-        std::string cmd_schedule = request.params["sched"];
-        std::string cmd_prio = request.params["prio"];
-        std::string cmd_mode = request.params["mode"];
+        dev_param = request_param["dev"];
+        cmd = request_param["cmd"];
+        parm = request_param["parm"];
+        std::string cmd_schedule = request_param["sched"];
+        std::string cmd_prio = request_param["prio"];
+        std::string cmd_mode = request_param["mode"];
         bool always_vector = true;
         if (cmd.find("query") != std::string::npos)
         {
@@ -412,20 +434,20 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
             std::string ret;
             if (info->get(cmd, (char *)parm.c_str(), 0, atoi(cmd_prio.c_str()), atoi(cmd_schedule.c_str()), atoi(cmd_mode.c_str()), 0, ret) != ::driver::misc::ChaosController::CHAOS_DEV_OK)
             {
-                HTTWAN_INTERFACE_ERR_  << "An error occurred during get without dev:" << info->getJsonState();
+                HTTWAN_INTERFACE_ERR_  << LOG_CONNECTION <<"An error occurred during get without dev:" << info->getJsonState();
                // response.setCode(400);
-               res.set_status(400);
+               res.set_status(served::status_4XX::EXPECTATION_FAILED);
                
             }
             else
             {
-               res.set_status(200);
+               res.set_status(served::status_2XX::OK);
             }
             res << ret;
         }
         else
         {
-            res.set_status(200);
+            res.set_status(served::status_2XX::OK);
             if (dev_v.size() > 1 || always_vector)
             {
                 answer_multi << "[";
@@ -446,7 +468,7 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
                     {
                         if (controller->init(*idevname, DEFAULT_TIMEOUT_FOR_CONTROLLER) != 0)
                         {
-                            HTTWAN_INTERFACE_ERR_ << "cannot init controller for " << *idevname << "\"";
+                            HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION <<"cannot init controller for " << *idevname << "\"";
                             //  response << "{}";
                             //response.setCode(400);
                             delete controller;
@@ -478,7 +500,7 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
                     controller = dd->second;
                     if (controller->get(cmd, (char *)parm.c_str(), 0, atoi(cmd_prio.c_str()), atoi(cmd_schedule.c_str()), atoi(cmd_mode.c_str()), 0, ret) != ::driver::misc::ChaosController::CHAOS_DEV_OK)
                     {
-                        HTTWAN_INTERFACE_ERR_  << "An error occurred during get of:\"" << *idevname << "\"";
+                        HTTWAN_INTERFACE_ERR_  << LOG_CONNECTION <<"An error occurred during get of:\"" << *idevname << "\"";
                         res.set_status(400);
                     }
                 }
@@ -504,15 +526,15 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
     }
     catch (std::exception e)
     {
-        HTTWAN_INTERFACE_ERR_  << "An exception occurred:" << e.what();
+        HTTWAN_INTERFACE_ERR_  <<LOG_CONNECTION << "An exception occurred:" << e.what();
         res << "{}";
-        res.set_status(200);
+        res.set_status(served::status_4XX::EXPECTATION_FAILED);
     }
     catch (...)
     {
-        HTTWAN_INTERFACE_ERR_  << "Uknown exception occurred:";
+        HTTWAN_INTERFACE_ERR_  <<LOG_CONNECTION << "Uknown exception occurred:";
         res << "{}";
-        res.set_status(400);
+        res.set_status(served::status_4XX::EXPECTATION_FAILED);
     }
     {
         boost::mutex::scoped_lock lurl(devurl_mutex);
@@ -582,9 +604,9 @@ void HTTPServedBoostInterface::checkActivity()
 
                     
 
-int HTTPServedBoostInterface::processRest(served::response & res, const served::request & req)
+int HTTPServedBoostInterface::processRest(served::response & res, const served::request & request)
 {
-/*    CHAOS_ASSERT(handler)
+   CHAOS_ASSERT(handler)
     int err = 0;
     DEBUG_CODE(uint64_t execution_time_start = TimingUtil::getTimeStampInMicroseconds();)
     DEBUG_CODE(uint64_t execution_time_end = 0;)
@@ -592,27 +614,31 @@ int HTTPServedBoostInterface::processRest(served::response & res, const served::
     Json::Value json_response;
     Json::StyledWriter json_writer;
     Json::Reader json_reader;
-    HTTPWANInterfaceStringResponse response("application/json");
-    
+//    HTTPWANInterfaceStringResponse response("application/json");
+    res.set_header("Content-Type","application/json");  
     //scsan for content type request
-    const std::string url = req.url;
     
-    const std::string method = req.method;
-    const std::string api_uri = url.substr(strlen(API_PREFIX_V1) + 1);
+    const std::string api_uri = request.url().path();
     const bool json = true; 
     //remove the prefix and tokenize the url
     std::vector<std::string> api_token_list;
+    served::method method=request.method();
+    std::string query;
+    std::map<std::string,std::string> headers;
+
     try
     {
-        if (method == "GET")
+        if (method == served::method::GET)
         {
-            if (connection->query_string)
+            query=request.url().query();
+
+            if (query.size())
             {
                 boost::algorithm::split(api_token_list,
-                                        connection->query_string,
+                                        query,
                                         boost::algorithm::is_any_of("&"),
                                         boost::algorithm::token_compress_on);
-                HTTWAN_INTERFACE_DBG_ << "GET url:" << url << " api:" << api_uri << "content:" << connection->content << " query:" << connection->query_string;
+                HTTWAN_INTERFACE_DBG_ << "GET api:" <<api_uri<< " query:" << query;
             }
             else
             {
@@ -620,27 +646,25 @@ int HTTPServedBoostInterface::processRest(served::response & res, const served::
                                         api_uri,
                                         boost::algorithm::is_any_of("/"),
                                         boost::algorithm::token_compress_on);
-                HTTWAN_INTERFACE_DBG_ << "GET url:" << url << " api:" << api_uri << " content:" << connection->content << " EMPTY QUERY";
+                HTTWAN_INTERFACE_DBG_ << "GET api:" << api_uri << " content:" << query << " EMPTY QUERY";
             }
-
             if ((err = handler->handleCall(1, api_token_list, json_request,
-                                           response.getHeader(),
+                                           headers,
                                            json_response)))
             {
-                HTTWAN_INTERFACE_ERR_ << "Error on api call :" << connection->uri;
+                HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION <<" Error on api call :" << api_uri;
                 //return the error for the api call
-                response.setCode(400);
+                res.set_status(served::status_4XX::EXPECTATION_FAILED);
                 json_response["error"] = err;
                 json_response["error_message"].append("Call Error");
             }
             else
             {
                 //return the infromation of api call success
-                response.setCode(200);
+                res.set_status(served::status_2XX::OK);
                 //   json_response["error"] = 0;
             }
-            response << json_writer.write(json_response);
-            flush_response(connection, &response);
+            res << json_writer.write(json_response);
             DEBUG_CODE(execution_time_end = TimingUtil::getTimeStampInMicroseconds();)
             DEBUG_CODE(uint64_t duration = execution_time_end - execution_time_start;)
             DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << "Execution time is:" << duration << " microseconds";)
@@ -655,45 +679,44 @@ int HTTPServedBoostInterface::processRest(served::response & res, const served::
         if (api_token_list.size() >= 2 &&
             json)
         {
-            std::string content_data(connection->content, connection->content_len);
-            if (json_reader.parse(content_data, json_request))
+            if (json_reader.parse(request.body(), json_request))
             {
                 //print the received JSON document
-                DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << "Received JSON pack:" << json_writer.write(json_request);)
+                DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION <<"Received JSON pack:" << json_writer.write(json_request);)
 
                 //call the handler
                 if ((err = handler->handleCall(1,
                                                api_token_list,
                                                json_request,
-                                               response.getHeader(),
+                                               headers,
                                                json_response)))
                 {
-                    HTTWAN_INTERFACE_ERR_ << "Error on api call :" << connection->uri << (content_data.size() ? (" with message data: " + content_data) : " with no message data");
+                    std::string content_data=request.body();
+                    HTTWAN_INTERFACE_ERR_ << "Error on api call :" << api_uri << (content_data.size() ? (" with message data: " + content_data) : " with no message data");
                     //return the error for the api call
-                    response.setCode(400);
+                    res.set_status(served::status_4XX::EXPECTATION_FAILED);
                     json_response["error"] = err;
                     json_response["error_message"].append("Call Error");
                 }
                 else
                 {
                     //return the infromation of api call success
-                    response.setCode(200);
+                res.set_status(served::status_2XX::OK);
                     //json_response["error"] = 0;
                 }
             }
             else
             {
-                response.setCode(400);
+                res.set_status(served::status_4XX::EXPECTATION_FAILED);
                 json_response["error"] = -1;
                 json_response["error_message"].append("Error parsing the json post data");
-                HTTWAN_INTERFACE_ERR_ << "Error decoding the request:" << json_writer.write(json_response) << " BODY:'" << connection->content << "'";
+                HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION <<"Error decoding the request:" << json_writer.write(json_response) << " BODY:'" << request.body() << "'";
             }
         }
         else
         {
             //return the error for bad json or invalid url
-            response.setCode(400);
-            response.addHeaderKeyValue("Content-Type", "application/json");
+            res.set_status(served::status_4XX::EXPECTATION_FAILED);
             json_response["error"] = -1;
             if (api_token_list.size() < 2)
             {
@@ -703,27 +726,26 @@ int HTTPServedBoostInterface::processRest(served::response & res, const served::
             {
                 json_response["error_message"].append("The content of the request need to be json");
             }
-            HTTWAN_INTERFACE_ERR_ << "Error decoding the request:" << json_writer.write(json_response) << " BODY:'" << connection->content << "'";
+            HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION <<"Error decoding the request:" << json_writer.write(json_response) << " BODY:'" << request.body() << "'";
         }
     }
     catch (std::exception e)
     {
-        HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION << "An exception occurred:" << e.what();
-        response << "{}";
-        response.setCode(400);
+        HTTWAN_INTERFACE_ERR_  << "An exception occurred:" << e.what();
+        res << "{}";
+        res.set_status(served::status_4XX::EXPECTATION_FAILED);
     }
     catch (...)
     {
         HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION << "Uknown exception occurred:";
-        response << "{}";
-        response.setCode(400);
+        res << "{}";
+        res.set_status(served::status_4XX::EXPECTATION_FAILED);
     }
 
-    response << json_writer.write(json_response);
-    flush_response(connection, &response);
+    res << json_writer.write(json_response);
     DEBUG_CODE(execution_time_end = TimingUtil::getTimeStampInMicroseconds();)
     DEBUG_CODE(uint64_t duration = execution_time_end - execution_time_start;)
     DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << "Execution time is:" << duration << " microseconds";)
-    */
+
     return 1; //
 }
