@@ -53,7 +53,14 @@ namespace chaos {
                 //!
                 static const char * const	OPT_HTTP_THREAD_NUMBER  = "HTTP_wi_thread_number";
                 static const char * const	OPT_CHAOS_THREAD_NUMBER  = "CHAOS_thread_number";
+                class HTTPServedBoostInterface;
+class ServerMutexWrap:public served::multiplexer{
+    protected:
+    public:
+        static HTTPServedBoostInterface*parent;
 
+        ServerMutexWrap(){}
+};
                 /*
                  Class that implement the Chaos RPC server using HTTP
                  */
@@ -75,7 +82,7 @@ namespace chaos {
                     static ::driver::misc::ChaosController* info;
                     static std::vector< ::common::misc::scheduler::Scheduler* > sched_cu_v;
                     static int sched_alloc;
-                    served::multiplexer mux;
+                    ServerMutexWrap mux;
                     served::net::server* server;
                     static void addDevice(std::string,::driver::misc::ChaosController*);
                     int removeDevice(const std::string&);
@@ -87,8 +94,8 @@ namespace chaos {
 
                     void checkActivity();
                 public:
-                    static int process(served::response & res, const served::request & req);
-                    static int processRest(served::response & res, const served::request & req);
+                     int process(served::response & res, const served::request & req);
+                     int processRest(served::response & res, const served::request & req);
 
                 protected:
                     void timeout();

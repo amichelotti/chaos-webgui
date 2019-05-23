@@ -61,16 +61,16 @@ namespace chaos {
 			public:
 				// inherited method
 				//! init data need to be filled with json string
-				void init(void *init_data) throw(chaos::CException);
+				void init(void *init_data) ;
 				
 				// inherited method
-				void deinit() throw(chaos::CException);
+				void deinit() ;
 				
 				// inherited method
-				void start() throw(chaos::CException);
+				void start();
 				
 				// inherited method
-				void stop() throw(chaos::CException);
+				void stop();
 				
 				//inherited method
 				const std::string& getUrl();

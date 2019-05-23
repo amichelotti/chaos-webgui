@@ -62,12 +62,8 @@ boost::mutex HTTPServedBoostInterface::devurl_mutex;
 
 uint64_t HTTPServedBoostInterface::last_check_activity = 0;
 
-class ServerMutexWrap:public served::multiplexer{
-    protected:
-        HTTPServedBoostInterface*parent;
-    public:
-        ServerMutexWrap(HTTPServedBoostInterface*p):parent(p){}
-};
+
+HTTPServedBoostInterface* ServerMutexWrap::parent=NULL;
 /**
  * The handlers below are written in C to do the binding of the C mongoose with
  * the C++ API
@@ -128,6 +124,7 @@ HTTPServedBoostInterface::HTTPServedBoostInterface(const string &alias) : Abstra
     if(info==NULL){
         info = new ::driver::misc::ChaosController();
     }
+    ServerMutexWrap::parent=this;
 }
 
 HTTPServedBoostInterface::~HTTPServedBoostInterface() {}
@@ -184,34 +181,48 @@ void HTTPServedBoostInterface::init(void *init_data)
 
 
 // GET /hello
-/*	mux.handle(API_PREFIX_V1)
+/*    mux.handle("/CU")
 		.get([](served::response & res, const served::request & req) {
-            processRest(res,req);
-		});
-    mux.handle("/CU")
-		.get([](served::response & res, const served::request & req) {
+            HTTWAN_INTERFACE_DBG_<<" GET /CU"<<req.body();
+
             process(res,req);
 		});
     mux.handle("/MDS")
 		.get([](served::response & res, const served::request & req) {
+            HTTWAN_INTERFACE_DBG_<<" GET /MDS"<<req.body();
+
             process(res,req);
 		});
 
+	mux.handle(API_PREFIX_V1)
+		.get([](served::response & res, const served::request & req) {
+            processRest(res,req);
+		});
+*/
 mux.handle(API_PREFIX_V1)
 		.post([](served::response & res, const served::request & req) {
-            processRest(res,req);
-		});*/
-    mux.handle("/CU")
-		.post([](served::response & res, const served::request & req) {
-            HTTWAN_INTERFACE_DBG_<<"/CU"<<req.body();
-            process(res,req);
-		});
+            ServerMutexWrap::parent->processRest(res,req);
+		}).get([](served::response & res, const served::request & req) {
+            ServerMutexWrap::parent->processRest(res,req);
+		});;
+    mux.handle("/CU").post([](served::response & res, const served::request & req) {
+            HTTWAN_INTERFACE_DBG_<<" POST /CU"<<req.body();
+            ServerMutexWrap::parent->process(res,req);
+		}).get([](served::response & res, const served::request & req) {
+            HTTWAN_INTERFACE_DBG_<<" GET /CU"<<req.body();
+
+            ServerMutexWrap::parent->process(res,req);
+		});;
     mux.handle("/MDS")
 		.post([](served::response & res, const served::request & req) {
-            HTTWAN_INTERFACE_DBG_<<"/MDS"<<req.body();
+            HTTWAN_INTERFACE_DBG_<<" POST /MDS"<<req.body();
+           
+            ServerMutexWrap::parent->process(res,req);
+		}).get([](served::response & res, const served::request & req) {
+            HTTWAN_INTERFACE_DBG_<<" GET /CU"<<req.body();
 
-            process(res,req);
-		});
+            ServerMutexWrap::parent->process(res,req);
+		});;
 
 	// Create the server and run with 10 handler threads.
 	
@@ -362,6 +373,11 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
     DEBUG_CODE(uint64_t execution_time_end = 0;)
   //  HTTPWANInterfaceStringResponse response("text/html");
     //response.addHeaderKeyValue("Access-Control-Allow-Origin", "*");
+    std::stringstream ss;
+    for ( const auto & query_param : request.query ){
+				ss << "Key: " << query_param.first << ", Value: " << query_param.second << "\n";
+	}
+    HTTWAN_INTERFACE_DBG_<<" process params:"<<ss.str();
 
     ::driver::misc::ChaosController *controller = NULL;
 
@@ -376,12 +392,12 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
             //remove the prefix and tokenize the url
          
         std::string cmd, parm, dev_param;
-        dev_param = request.query["dev"];
-        cmd = request.query["cmd"];
-        parm = request.query["parm"];
-        std::string cmd_schedule = request.query["sched"];
-        std::string cmd_prio = request.query["prio"];
-        std::string cmd_mode = request.query["mode"];
+        dev_param = request.params["dev"];
+        cmd = request.params["cmd"];
+        parm = request.params["parm"];
+        std::string cmd_schedule = request.params["sched"];
+        std::string cmd_prio = request.params["prio"];
+        std::string cmd_mode = request.params["mode"];
         bool always_vector = true;
         if (cmd.find("query") != std::string::npos)
         {
