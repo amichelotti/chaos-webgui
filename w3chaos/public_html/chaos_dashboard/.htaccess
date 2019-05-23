@@ -1,3 +1,0 @@
-Options +ExecCGI
-SetHandler cgi-script
-#Header set Access-Control-Allow-Origin "*"

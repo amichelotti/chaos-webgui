@@ -19,7 +19,7 @@
  * permissions and limitations under the Licence.
  */
 
-#include "HTTPUIInterface.h"
+#include "HTTPServedBoostInterface.h"
 #include "HTTPWANInterfaceStringResponse.h"
 #include <map>
 #include <vector>
@@ -40,36 +40,41 @@ using namespace chaos::common::data;
 using namespace chaos::common::utility;
 using namespace chaos::wan_proxy::wan_interface;
 using namespace chaos::wan_proxy::wan_interface::http;
-using namespace mongoose;
 using namespace chaos::common::async_central;
 
 #define API_PREFIX_V1 "/api/v1"
 #define API_PATH_REGEX_V1(p) API_PREFIX_V1 p
 
-#define HTTWANINTERFACE_LOG_HEAD "[HTTPUIInterface" << current_index << "] -"
+#define HTTWANINTERFACE_LOG_HEAD "[HTTPServedBoostInterface" << current_index << "] -"
 #define LOG_CONNECTION "[" << connection->remote_ip << ":" << std::dec << connection->remote_port << ","<<connection->server_param<<"] "
 
-#define HTTWAN_INTERFACE_APP_ INFO_LOG(HTTPUIInterface)
-#define HTTWAN_INTERFACE_DBG_ DBG_LOG(HTTPUIInterface)
-#define HTTWAN_INTERFACE_ERR_ ERR_LOG(HTTPUIInterface)
+#define HTTWAN_INTERFACE_APP_ INFO_LOG(HTTPServedBoostInterface)
+#define HTTWAN_INTERFACE_DBG_ DBG_LOG(HTTPServedBoostInterface)
+#define HTTWAN_INTERFACE_ERR_ ERR_LOG(HTTPServedBoostInterface)
 static const boost::regex REG_API_URL_FORMAT(API_PATH_REGEX_V1("((/[a-zA-Z0-9_]+))*")); //"/api/v1((/[a-zA-Z0-9_]+))*"
+int HTTPServedBoostInterface::chaos_thread_number=1;
+int HTTPServedBoostInterface::sched_alloc=0;
+std::map<std::string, ::driver::misc::ChaosController *> HTTPServedBoostInterface::devs;
+std::vector< ::common::misc::scheduler::Scheduler* > HTTPServedBoostInterface::sched_cu_v;
+ChaosSharedMutex HTTPServedBoostInterface::devio_mutex;
+boost::mutex HTTPServedBoostInterface::devurl_mutex;
+::driver::misc::ChaosController* HTTPServedBoostInterface::info=NULL;
 
-std::map<std::string, ::driver::misc::ChaosController *> HTTPUIInterface::devs;
-ChaosSharedMutex HTTPUIInterface::devio_mutex;
-boost::mutex HTTPUIInterface::devurl_mutex;
+uint64_t HTTPServedBoostInterface::last_check_activity = 0;
 
-uint64_t HTTPUIInterface::last_check_activity = 0;
 
+HTTPServedBoostInterface* ServerMutexWrap::parent=NULL;
 /**
  * The handlers below are written in C to do the binding of the C mongoose with
  * the C++ API
  */
-static int event_handler(struct mg_connection *connection, enum mg_event ev)
+ChaosSharedMutex http_mutex;
+/*static int event_handler(struct mg_connection *connection, enum mg_event ev)
 {
 
     if ((ev == MG_REQUEST) && (connection->server_param != NULL))
     {
-        HTTPUIInterface *ptr=(HTTPUIInterface *)connection->server_param;
+        HTTPServedBoostInterface *ptr=(HTTPServedBoostInterface *)connection->server_param;
         if ((strstr(connection->uri, API_PREFIX_V1)) && ptr->handle(connection))
         {
             ptr->processRest(connection);
@@ -110,33 +115,33 @@ static void flush_response(struct mg_connection *connection,
     mg_send_data(connection, body, body_len);
     connection->server_param=0;
 }
-
-DEFINE_CLASS_FACTORY(HTTPUIInterface, AbstractWANInterface);
-HTTPUIInterface::HTTPUIInterface(const string &alias) : AbstractWANInterface(alias),
+*/
+DEFINE_CLASS_FACTORY(HTTPServedBoostInterface, AbstractWANInterface);
+HTTPServedBoostInterface::HTTPServedBoostInterface(const string &alias) : AbstractWANInterface(alias),
                                                         run(false),
-                                                        thread_number(1), chaos_thread_number(1), sched_alloc(0)
+                                                        thread_number(1),server(NULL)
 {
-
-    info = new ::driver::misc::ChaosController();
+    if(info==NULL){
+        info = new ::driver::misc::ChaosController();
+    }
+    ServerMutexWrap::parent=this;
 }
 
-HTTPUIInterface::~HTTPUIInterface() {}
+HTTPServedBoostInterface::~HTTPServedBoostInterface() {}
 
-void HTTPUIInterface::timeout()
+void HTTPServedBoostInterface::timeout()
 {
-    HTTPUIInterface::checkActivity();
+    HTTPServedBoostInterface::checkActivity();
 }
 
 //inherited method
-void HTTPUIInterface::init(void *init_data) throw(CException)
+void HTTPServedBoostInterface::init(void *init_data) 
 {
     signal(SIGPIPE, SIG_IGN);
     //! forward message to superclass
 
     AbstractWANInterface::init(init_data);
-
     //clear in case last deinit fails
-    http_server_list.clear();
 
     //check for parameter
     if (getParameter()[OPT_HTTP_PORT].isNull() ||
@@ -174,39 +179,55 @@ void HTTPUIInterface::init(void *init_data) throw(CException)
     HTTWAN_INTERFACE_APP_ << "HTTP server thread used: " << thread_number;
     HTTWAN_INTERFACE_APP_ << "CHAOS client threads used: " << chaos_thread_number;
 
-    //allcoate each server for every thread
-    for (int idx = 1;
-         idx <= thread_number;
-         idx++)
-    {
-        struct mg_server *http_server = mg_create_server(this, event_handler);
-        if (!http_server)
-        {
-            HTTWAN_INTERFACE_ERR_ << "cannot create server " << idx;
-            continue;
-        }
 
-        //configure server
-       // HTTWAN_INTERFACE_APP_ << " Thread " << idx << " allocated";
-        std::string str_port = boost::lexical_cast<std::string>(service_port);
-        mg_set_option(http_server, "listening_port", str_port.c_str());
-        mg_set_option(http_server, "enable_keep_alive", "yes");
-        mg_set_option(http_server, "enable_directory_listing", "false");
-        //HTTWAN_INTERFACE_APP_ << " Thread " << idx << " configured";
-        //configure handler
-        //		mg_add_uri_handler(http_server, "/CU", event_handler);
-        //	mg_add_uri_handler(http_server, "/MDS", event_handler);
-        //		mg_server_do_i_handle(http_server, do_i_handle);
-        HTTWAN_INTERFACE_APP_ << " Thread " << idx << " attached to handler";
-        //add server to the list
-        http_server_list.push_back(http_server);
-        if (http_server_list.size() > 1)
-        {
-            mg_copy_listeners(http_server_list[0], http_server);
-        }
-    }
-    if (!http_server_list.size())
-        throw chaos::CException(-1, "No http server has been instantiated", __PRETTY_FUNCTION__);
+// GET /hello
+/*    mux.handle("/CU")
+		.get([](served::response & res, const served::request & req) {
+            HTTWAN_INTERFACE_DBG_<<" GET /CU"<<req.body();
+
+            process(res,req);
+		});
+    mux.handle("/MDS")
+		.get([](served::response & res, const served::request & req) {
+            HTTWAN_INTERFACE_DBG_<<" GET /MDS"<<req.body();
+
+            process(res,req);
+		});
+
+	mux.handle(API_PREFIX_V1)
+		.get([](served::response & res, const served::request & req) {
+            processRest(res,req);
+		});
+*/
+mux.handle(API_PREFIX_V1)
+		.post([](served::response & res, const served::request & req) {
+            ServerMutexWrap::parent->processRest(res,req);
+		}).get([](served::response & res, const served::request & req) {
+            ServerMutexWrap::parent->processRest(res,req);
+		});;
+    mux.handle("/CU").post([](served::response & res, const served::request & req) {
+            HTTWAN_INTERFACE_DBG_<<" POST /CU"<<req.body();
+            ServerMutexWrap::parent->process(res,req);
+		}).get([](served::response & res, const served::request & req) {
+            HTTWAN_INTERFACE_DBG_<<" GET /CU"<<req.body();
+
+            ServerMutexWrap::parent->process(res,req);
+		});;
+    mux.handle("/MDS")
+		.post([](served::response & res, const served::request & req) {
+            HTTWAN_INTERFACE_DBG_<<" POST /MDS"<<req.body();
+           
+            ServerMutexWrap::parent->process(res,req);
+		}).get([](served::response & res, const served::request & req) {
+            HTTWAN_INTERFACE_DBG_<<" GET /CU"<<req.body();
+
+            ServerMutexWrap::parent->process(res,req);
+		});;
+
+	// Create the server and run with 10 handler threads.
+	
+    //allcoate each server for every thread
+    
     sched_cu_v.resize(chaos_thread_number);
     for (int cnt = 0; cnt < chaos_thread_number; cnt++)
     {
@@ -217,49 +238,44 @@ void HTTPUIInterface::init(void *init_data) throw(CException)
 }
 
 //inherited method
-void HTTPUIInterface::start() throw(CException)
+void HTTPServedBoostInterface::start()
 {
 
     run = true;
-    thread_index = 0;
     HTTWAN_INTERFACE_APP_ << " Starting...";
     AsyncCentralManager::getInstance()->addTimer(this, CHECK_ACTIVITY_CU, CHECK_ACTIVITY_CU);
 
-    for (ServerListIterator it = http_server_list.begin();
-         it != http_server_list.end();
-         it++)
-    {
-        http_server_thread.add_thread(new boost::thread(boost::bind(&HTTPUIInterface::pollHttpServer, this, *it)));
-    }
+    
     for (std::vector<::common::misc::scheduler::Scheduler *>::iterator i = sched_cu_v.begin(); i != sched_cu_v.end(); i++)
     {
         (*i)->start();
     }
+    if(server){
+        delete server;
+        server=NULL;
+    }
+    char port[256];
+    sprintf(port,"%d",service_port);
+    server =new served::net::server("127.0.0.1",port,mux);
+	server->run(chaos_thread_number);
 }
 
 //inherited method
-void HTTPUIInterface::stop() throw(CException)
+void HTTPServedBoostInterface::stop() 
 {
     run = false;
-    http_server_thread.join_all();
     for (std::vector<::common::misc::scheduler::Scheduler *>::iterator i = sched_cu_v.begin(); i != sched_cu_v.end(); i++)
     {
         (*i)->stop();
     }
+    server->stop();
 }
 
 //inherited method
-void HTTPUIInterface::deinit() throw(CException)
+void HTTPServedBoostInterface::deinit()
 {
     AsyncCentralManager::getInstance()->removeTimer(this);
 
-    for (ServerListIterator it = http_server_list.begin();
-         it != http_server_list.end();
-         it++)
-    {
-        mg_destroy_server(&(*it));
-    }
-    http_server_list.clear();
     //clear the service url
     service_port = 0;
     for (int cnt = 0; cnt < chaos_thread_number; cnt++)
@@ -270,21 +286,12 @@ void HTTPUIInterface::deinit() throw(CException)
         }
         sched_cu_v[cnt] = NULL;
     }
+    server->stop();
+    delete server;
+    server=NULL;
 }
 
-void HTTPUIInterface::pollHttpServer(struct mg_server *http_server)
-{
-    int current_index = ++thread_index;
-    HTTWAN_INTERFACE_APP_ << "Entering http thread " << current_index;
-    while (run)
-    {
-        mg_poll_server(http_server, 1000);
-        //usleep(500);
-    }
-    HTTWAN_INTERFACE_APP_ << "Leaving http thread " << current_index;
-}
-
-void HTTPUIInterface::addDevice(std::string name, ::driver::misc::ChaosController *d)
+void HTTPServedBoostInterface::addDevice(std::string name, ::driver::misc::ChaosController *d)
 {
     devs[name] = d;
 }
@@ -325,7 +332,7 @@ static std::map<std::string, std::string> mappify(const std::string &s)
 
     return m;
 }
-int HTTPUIInterface::removeFromQueue(const std::string &devname)
+int HTTPServedBoostInterface::removeFromQueue(const std::string &devname)
 {
     int cntt = 0;
     ChaosReadLock l(devio_mutex);
@@ -340,7 +347,7 @@ int HTTPUIInterface::removeFromQueue(const std::string &devname)
     }
     return cntt;
 }
-int HTTPUIInterface::removeDevice(const std::string &devname)
+int HTTPServedBoostInterface::removeDevice(const std::string &devname)
 {
 
     std::map<std::string, ::driver::misc::ChaosController *>::iterator i = devs.find(devname);
@@ -357,79 +364,40 @@ int HTTPUIInterface::removeDevice(const std::string &devname)
     }
     return 0;
 }
-int HTTPUIInterface::process(mongoose::mg_connection *connection)
+    
+
+int HTTPServedBoostInterface::process(served::response & res, const served::request & request)
 {
-    CHAOS_ASSERT(handler)
     int err = 0;
     DEBUG_CODE(uint64_t execution_time_start = TimingUtil::getTimeStampInMicroseconds();)
     DEBUG_CODE(uint64_t execution_time_end = 0;)
-    HTTPWANInterfaceStringResponse response("text/html");
-    response.addHeaderKeyValue("Access-Control-Allow-Origin", "*");
+  //  HTTPWANInterfaceStringResponse response("text/html");
+    //response.addHeaderKeyValue("Access-Control-Allow-Origin", "*");
+    std::stringstream ss;
+    for ( const auto & query_param : request.query ){
+				ss << "Key: " << query_param.first << ", Value: " << query_param.second << "\n";
+	}
+    HTTWAN_INTERFACE_DBG_<<" process params:"<<ss.str();
 
     ::driver::misc::ChaosController *controller = NULL;
 
     //scsan for content type request
 
-    std::map<std::string, std::string> request;
     //	const std::string api_uri = url.substr(strlen(API_PREFIX_V1)+1);
     //const bool        json    = checkForContentType(connection,"application/json");
     try
     {
-        {
-            boost::mutex::scoped_lock lurl(devurl_mutex);
-            const std::string method = connection->request_method;
-            const std::string url = connection->uri;
+        
+        boost::mutex::scoped_lock lurl(devurl_mutex);
             //remove the prefix and tokenize the url
-            if (method == "GET")
-            {
-                if (connection->query_string == NULL)
-                {
-                    // sometimes web browser ask for favicon
-                    //   HTTWAN_INTERFACE_ERR_<<LOG_CONNECTION<<"Bad query GET params";
-                    response.setCode(200);
-                    flush_response(connection, &response);
-                    return 1;
-                }
-                int size_query = strlen(connection->query_string) + 2;
-                char decoded[size_query];
-                mg_url_decode(connection->query_string, size_query, decoded, size_query, 0);
-                HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION << "GET:\"" << decoded << "\"";
-
-                std::string query = decoded;
-                request = mappify(query);
-            }
-            else if (method == "POST")
-            {
-                if (connection->content == NULL)
-                {
-                    HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION << "Bad query POST params";
-                    response.setCode(400);
-                    flush_response(connection, &response);
-                    return 1;
-                }
-                char decoded[connection->content_len + 2];
-                connection->content[connection->content_len] = 0;
-                mg_url_decode(connection->content, connection->content_len + 1, decoded, connection->content_len + 1, 0);
-
-                std::string content_data(decoded);
-                HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION << "POST:\"" << content_data << "\"";
-                request = mappify(content_data);
-            }
-            else
-            {
-                HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION << "UNSUPPORTED METHOD:" << method << " data:" << connection->content;
-                response.setCode(400);
-                flush_response(connection, &response);
-                return 1;
-            }
-        }
+         
         std::string cmd, parm, dev_param;
-        dev_param = request["dev"];
-        cmd = request["cmd"];
-        parm = request["parm"];
-        std::string cmd_schedule = request["sched"];
-        std::string cmd_prio = request["prio"];
-        std::string cmd_mode = request["mode"];
+        dev_param = request.params["dev"];
+        cmd = request.params["cmd"];
+        parm = request.params["parm"];
+        std::string cmd_schedule = request.params["sched"];
+        std::string cmd_prio = request.params["prio"];
+        std::string cmd_mode = request.params["mode"];
         bool always_vector = true;
         if (cmd.find("query") != std::string::npos)
         {
@@ -444,18 +412,20 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
             std::string ret;
             if (info->get(cmd, (char *)parm.c_str(), 0, atoi(cmd_prio.c_str()), atoi(cmd_schedule.c_str()), atoi(cmd_mode.c_str()), 0, ret) != ::driver::misc::ChaosController::CHAOS_DEV_OK)
             {
-                HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION << "An error occurred during get without dev:" << info->getJsonState();
-                response.setCode(400);
+                HTTWAN_INTERFACE_ERR_  << "An error occurred during get without dev:" << info->getJsonState();
+               // response.setCode(400);
+               res.set_status(400);
+               
             }
             else
             {
-                response.setCode(200);
+               res.set_status(200);
             }
-            response << ret;
+            res << ret;
         }
         else
         {
-            response.setCode(200);
+            res.set_status(200);
             if (dev_v.size() > 1 || always_vector)
             {
                 answer_multi << "[";
@@ -476,7 +446,7 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
                     {
                         if (controller->init(*idevname, DEFAULT_TIMEOUT_FOR_CONTROLLER) != 0)
                         {
-                            HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION << "cannot init controller for " << *idevname << "\"";
+                            HTTWAN_INTERFACE_ERR_ << "cannot init controller for " << *idevname << "\"";
                             //  response << "{}";
                             //response.setCode(400);
                             delete controller;
@@ -508,8 +478,8 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
                     controller = dd->second;
                     if (controller->get(cmd, (char *)parm.c_str(), 0, atoi(cmd_prio.c_str()), atoi(cmd_schedule.c_str()), atoi(cmd_mode.c_str()), 0, ret) != ::driver::misc::ChaosController::CHAOS_DEV_OK)
                     {
-                        HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION << "An error occurred during get of:\"" << *idevname << "\"";
-                        response.setCode(400);
+                        HTTWAN_INTERFACE_ERR_  << "An error occurred during get of:\"" << *idevname << "\"";
+                        res.set_status(400);
                     }
                 }
                 if ((idevname + 1) == dev_v.end())
@@ -528,32 +498,31 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
                     answer_multi << ret << ",";
                 }
             }
-            response << answer_multi.str();
+            res << answer_multi.str();
             /***** CHECK FOR DEVICES NOT ACCESSED IN xx MIN**/
         }
     }
     catch (std::exception e)
     {
-        HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION << "An exception occurred:" << e.what();
-        response << "{}";
-        response.setCode(400);
+        HTTWAN_INTERFACE_ERR_  << "An exception occurred:" << e.what();
+        res << "{}";
+        res.set_status(200);
     }
     catch (...)
     {
-        HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION << "Uknown exception occurred:";
-        response << "{}";
-        response.setCode(400);
+        HTTWAN_INTERFACE_ERR_  << "Uknown exception occurred:";
+        res << "{}";
+        res.set_status(400);
     }
     {
         boost::mutex::scoped_lock lurl(devurl_mutex);
-        flush_response(connection, &response);
         DEBUG_CODE(execution_time_end = TimingUtil::getTimeStampInMicroseconds();)
         DEBUG_CODE(uint64_t duration = execution_time_end - execution_time_start;)
-        DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION << "Execution time is:" << duration * 1.0 / 1000.0 << " ms";)
+        DEBUG_CODE(HTTWAN_INTERFACE_DBG_  << "Execution time is:" << duration * 1.0 / 1000.0 << " ms";)
     }
     return 1; //
 }
-void HTTPUIInterface::checkActivity()
+void HTTPServedBoostInterface::checkActivity()
 {
     int64_t now = TimingUtil::getTimeStampInMicroseconds();
     /* if((now-last_check_activity)<CHECK_ACTIVITY_CU){
@@ -611,38 +580,11 @@ void HTTPUIInterface::checkActivity()
     }
 }
 
-bool HTTPUIInterface::handle(struct mg_connection *connection)
-{
-    bool accepted = false;
-    if (!(accepted = regex_match(connection->uri, REG_API_URL_FORMAT)))
-    {
-        //HTTWAN_INTERFACE_ERR_ << "URI:" << connection->uri << ", not accepted";
-    }
-    return accepted;
-}
-bool HTTPUIInterface::checkForContentType(struct mg_connection *connection,
-                                          const std::string &type)
-{
-    bool result = false;
-    for (int idx = 0;
-         idx < 30;
-         idx++)
-    {
-        if (connection->http_headers[idx].name &&
-            (std::strcmp(connection->http_headers[idx].name, "Content-Type") == 0))
-        {
-            //we have content type
-            result = (connection->http_headers[idx].value &&
-                      (type.compare(connection->http_headers[idx].value) == 0));
-            break;
-        }
-    }
-    return result;
-}
+                    
 
-int HTTPUIInterface::processRest(mongoose::mg_connection *connection)
+int HTTPServedBoostInterface::processRest(served::response & res, const served::request & req)
 {
-    CHAOS_ASSERT(handler)
+/*    CHAOS_ASSERT(handler)
     int err = 0;
     DEBUG_CODE(uint64_t execution_time_start = TimingUtil::getTimeStampInMicroseconds();)
     DEBUG_CODE(uint64_t execution_time_end = 0;)
@@ -651,14 +593,13 @@ int HTTPUIInterface::processRest(mongoose::mg_connection *connection)
     Json::StyledWriter json_writer;
     Json::Reader json_reader;
     HTTPWANInterfaceStringResponse response("application/json");
-
+    
     //scsan for content type request
-    const std::string url = connection->uri;
-    const std::string method = connection->request_method;
+    const std::string url = req.url;
+    
+    const std::string method = req.method;
     const std::string api_uri = url.substr(strlen(API_PREFIX_V1) + 1);
-    const bool json = true; /*checkForContentType(connection,
-                                                   "application/json");*/
-
+    const bool json = true; 
     //remove the prefix and tokenize the url
     std::vector<std::string> api_token_list;
     try
@@ -783,5 +724,6 @@ int HTTPUIInterface::processRest(mongoose::mg_connection *connection)
     DEBUG_CODE(execution_time_end = TimingUtil::getTimeStampInMicroseconds();)
     DEBUG_CODE(uint64_t duration = execution_time_end - execution_time_start;)
     DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << "Execution time is:" << duration << " microseconds";)
+    */
     return 1; //
 }

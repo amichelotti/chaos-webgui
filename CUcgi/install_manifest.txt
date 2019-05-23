@@ -1,1 +1,0 @@
-/home/michelo/chaos_bundle/chaosframework/usr/local/bin/cu.cgi

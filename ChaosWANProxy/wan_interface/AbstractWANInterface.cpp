@@ -30,7 +30,7 @@ handler(NULL){}
 AbstractWANInterface::~AbstractWANInterface() {}
 
 // inherited method
-void AbstractWANInterface::init(void *init_data) throw(chaos::CException) {
+void AbstractWANInterface::init(void *init_data){
     std::string param_str = (char*)init_data;
     if(!json_reader.parse(param_str, wan_interface_parameter)) {
         throw chaos::CException(-1, "Error reading json parameter", __PRETTY_FUNCTION__);
@@ -38,17 +38,17 @@ void AbstractWANInterface::init(void *init_data) throw(chaos::CException) {
 }
 
 // inherited method
-void AbstractWANInterface::deinit() throw(chaos::CException) {
+void AbstractWANInterface::deinit() {
 	
 }
 
 // inherited method
-void AbstractWANInterface::start() throw(chaos::CException) {
+void AbstractWANInterface::start()  {
 	
 }
 
 // inherited method
-void AbstractWANInterface::stop() throw(chaos::CException) {
+void AbstractWANInterface::stop(){
 	
 }
 
