@@ -47,7 +47,7 @@ SET(wp_src ${wp_src}	persistence/AbstractPersistenceDriver.cpp
 
 ExternalProject_Add(
 					cpprestsdk
-					GIT_REPOSITORY https://github.com/meltwater/served.git
+					GIT_REPOSITORY https://github.com/amichelotti/served.git
 					GIT_TAG master
 					PREFIX "${CMAKE_BINARY_DIR}/ext_dep/served-prefix"
 					SOURCE_DIR "${CMAKE_BINARY_DIR}/ext_dep/served-src"
