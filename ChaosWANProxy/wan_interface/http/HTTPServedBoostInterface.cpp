@@ -256,7 +256,7 @@ void HTTPServedBoostInterface::start()
     }
     char port[256];
     sprintf(port,"%d",service_port);
-    server =new served::net::server("127.0.0.1",port,mux);
+    server =new served::net::server("0.0.0.0",port,mux); // all interfaces
 	server->run(chaos_thread_number);
 }
 
