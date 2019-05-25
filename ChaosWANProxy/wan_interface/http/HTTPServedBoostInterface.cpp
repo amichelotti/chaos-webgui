@@ -617,8 +617,9 @@ int HTTPServedBoostInterface::processRest(served::response & res, const served::
 //    HTTPWANInterfaceStringResponse response("application/json");
     res.set_header("Content-Type","application/json");  
     //scsan for content type request
-    
-    const std::string api_uri = request.url().path();
+    const std::string api_uri = request.url().path().substr(strlen(API_PREFIX_V1) + 1);
+
+    //const std::string api_uri = request.url().path();
     const bool json = true; 
     //remove the prefix and tokenize the url
     std::vector<std::string> api_token_list;
@@ -682,7 +683,7 @@ int HTTPServedBoostInterface::processRest(served::response & res, const served::
             if (json_reader.parse(request.body(), json_request))
             {
                 //print the received JSON document
-                DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION <<"Received JSON pack:" << json_writer.write(json_request);)
+                DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION <<"["<<api_uri<<"] Received JSON pack:" << json_writer.write(json_request);)
 
                 //call the handler
                 if ((err = handler->handleCall(1,
