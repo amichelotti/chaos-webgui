@@ -25,7 +25,6 @@
 #include <vector>
 #include <chaos/common/async_central/async_central.h>
 #include <chaos/common/utility/TimingUtil.h>
-
 #include <boost/regex.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
@@ -365,7 +364,22 @@ int HTTPServedBoostInterface::removeDevice(const std::string &devname)
     return 0;
 }
     
-
+static std::string decode(const std::string& s) {
+        std::ostringstream oss;
+        for (int i = 0; i < s.size(); ++i) {
+            char c = s[i];
+            if (c == '%') {
+                int d;
+                std::istringstream iss(s.substr(i+1, 2));
+                iss >> std::hex >> d;
+                oss << static_cast<char>(d);
+                i += 2;
+            } else {
+                oss << c;
+            }
+        }
+        return oss.str();
+    }
 int HTTPServedBoostInterface::process(served::response & res, const served::request & request)
 {
     int err = 0;
@@ -378,7 +392,8 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
     std::map<std::string, std::string> request_param;
     std::string query;
     if (method == served::method::GET ){
-        query=request.url().query();
+        query=decode(request.url().query());
+
         request_param=mappify(query);
     } else if(method == served::method::POST){
         query=request.body();
