@@ -25,7 +25,6 @@
 #include <vector>
 #include <chaos/common/async_central/async_central.h>
 #include <chaos/common/utility/TimingUtil.h>
-
 #include <boost/regex.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
@@ -365,7 +364,22 @@ int HTTPServedBoostInterface::removeDevice(const std::string &devname)
     return 0;
 }
     
-
+static std::string decode(const std::string& s) {
+        std::ostringstream oss;
+        for (int i = 0; i < s.size(); ++i) {
+            char c = s[i];
+            if (c == '%') {
+                int d;
+                std::istringstream iss(s.substr(i+1, 2));
+                iss >> std::hex >> d;
+                oss << static_cast<char>(d);
+                i += 2;
+            } else {
+                oss << c;
+            }
+        }
+        return oss.str();
+    }
 int HTTPServedBoostInterface::process(served::response & res, const served::request & request)
 {
     int err = 0;
@@ -378,7 +392,8 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
     std::map<std::string, std::string> request_param;
     std::string query;
     if (method == served::method::GET ){
-        query=request.url().query();
+        query=decode(request.url().query());
+
         request_param=mappify(query);
     } else if(method == served::method::POST){
         query=request.body();
@@ -617,8 +632,9 @@ int HTTPServedBoostInterface::processRest(served::response & res, const served::
 //    HTTPWANInterfaceStringResponse response("application/json");
     res.set_header("Content-Type","application/json");  
     //scsan for content type request
-    
-    const std::string api_uri = request.url().path();
+    const std::string api_uri = request.url().path().substr(strlen(API_PREFIX_V1) + 1);
+
+    //const std::string api_uri = request.url().path();
     const bool json = true; 
     //remove the prefix and tokenize the url
     std::vector<std::string> api_token_list;
@@ -682,7 +698,7 @@ int HTTPServedBoostInterface::processRest(served::response & res, const served::
             if (json_reader.parse(request.body(), json_request))
             {
                 //print the received JSON document
-                DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION <<"Received JSON pack:" << json_writer.write(json_request);)
+                DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION <<"["<<api_uri<<"] Received JSON pack:" << json_writer.write(json_request);)
 
                 //call the handler
                 if ((err = handler->handleCall(1,
