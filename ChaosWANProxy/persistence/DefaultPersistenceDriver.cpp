@@ -397,11 +397,10 @@ void DefaultPersistenceDriver::timeout(){
 
 }
 void DefaultPersistenceDriver::searchMetrics(const std::string&search_string,ChaosStringVector& metrics,bool alive){
-    int node_type=2; //CU
     ChaosStringVector node_tmp;
     metrics.clear();
     if(mds_message_channel->searchNode(search_string,
-                                       node_type,
+                                       chaos::NodeType::NodeSearchType::node_type_cu,
                                        alive,
                                        0,
                                        10000,
@@ -434,10 +433,10 @@ void DefaultPersistenceDriver::searchMetrics(const std::string&search_string,Cha
 
 chaos::common::data::CDWShrdPtr DefaultPersistenceDriver::searchMetrics(const std::string&search_string,bool alive){
     chaos::common::data::CDWShrdPtr ret(new CDataWrapper());
-    int node_type=2; //CU
+   
     ChaosStringVector node_tmp;
     if(mds_message_channel->searchNode(search_string,
-                                       node_type,
+                                       chaos::NodeType::NodeSearchType::node_type_cu,
                                        alive,
                                        0,
                                        10000,
