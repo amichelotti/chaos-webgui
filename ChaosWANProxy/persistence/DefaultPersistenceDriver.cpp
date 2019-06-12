@@ -274,17 +274,15 @@ int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
 
         }
     }
-#ifndef HEALTH_ASYNC
     if(i_cuid!=m_cuid.end()){
-        if((ts - i_cuid->second.last_ts) >= chaos::common::constants::CUTimersTimeoutinMSec /*(HEALT_FIRE_TIMEOUT / HEALT_FIRE_SLOTS)*1000*/ ){
-            i_cuid->second.ts = ts;
+        if((ts - i_cuid->second.last_ts) >=chaos::common::constants::CUTimersTimeoutinMSec*100 /*(HEALT_FIRE_TIMEOUT / HEALT_FIRE_SLOTS)*1000*/ ){
+           //re-add node
+         DPD_LDBG << "["<<producer_key<<"] Re-adding to health after "<<(ts - i_cuid->second.last_ts)<<" ms";
 
-            timeout();
-            i_cuid->second.last_ts=ts;
+            HealtManager::getInstance()->addNewNode(producer_key);
         }
 
     }
-#endif
 
     return err;
 }
@@ -332,11 +330,8 @@ int DefaultPersistenceDriver::registerDataset(const std::string& producer_key,
                                                         NodeHealtDefinitionKey::NODE_HEALT_STATUS,
                                                         NodeHealtDefinitionValue::NODE_HEALT_STATUS_START,
                                                         true);
-#ifdef HEALTH_ASYNC
         chaos::common::async_central::AsyncCentralManager::getInstance()->addTimer(this, chaos::common::constants::CUTimersTimeoutinMSec, chaos::common::constants::CUTimersTimeoutinMSec);
-#else 
- HealtManager::getInstance()->stop();
-#endif
+
         std::map<std::string,cuids_t>::iterator i_cuid=m_cuid.find(producer_key);
         if(i_cuid==m_cuid.end()){
             cuids_t tt;
@@ -348,6 +343,7 @@ int DefaultPersistenceDriver::registerDataset(const std::string& producer_key,
             tt.last_ts=0;
             tt.freq=0;
             tt.pckts_size=0;
+            tt.healt_update=chaos::common::constants::CUTimersTimeoutinMSec;
             if(last_dataset.hasKey(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE)&&last_dataset.isInt32Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE)){
                tt.storage_type=last_dataset.getInt32Value(chaos::DataServiceNodeDefinitionKey::DS_STORAGE_TYPE);
             } else {
@@ -382,16 +378,20 @@ void DefaultPersistenceDriver::timeout(){
                                                         chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_SIZE,
                                                        (int32_t)size_pcks,false);                                                
         DPD_LDBG << "Health :"<<i_cuid->first<<" rate:"<<  i_cuid->second.freq << " size"<<size_pcks<<" pkid:"<<pkid<<" at:"<<ts<<" last pckid:"<<i_cuid->second.last_pckid<<" at:"<<i_cuid->second.last_ts<< " delta packet:"<<(pkid-i_cuid->second.last_pckid)<< " delta time:"<<(ts-i_cuid->second.last_ts);
-      
+        
+        if((ts - i_cuid->second.last_ts) >=chaos::common::constants::CUTimersTimeoutinMSec*100 /*(HEALT_FIRE_TIMEOUT / HEALT_FIRE_SLOTS)*1000*/ ){
+            DPD_LDBG << "["<<i_cuid->first<<"] Elapsed "<<(ts - i_cuid->second.last_ts)<<" ms, Remonving from health";
+
+            HealtManager::getInstance()->removeNode(i_cuid->first);
+
+        }
         i_cuid->second.last_ts=ts;
         i_cuid->second.pckts_size=0;
         i_cuid->second.last_pckid=pkid;
 
 
     
-#ifndef HEALTH_ASYNC
-     HealtManager::getInstance()->publishNodeHealt(i_cuid->first);
-#endif
+        HealtManager::getInstance()->publishNodeHealt(i_cuid->first);
     }
    
 
