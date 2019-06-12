@@ -167,10 +167,15 @@ void ChaosWANProxy::start()  throw(CException) {
 	//lock o monitor for waith the end
 	try {
 		//start all wan interface
-		LCND_LAPP << "Publishing as:"<<uid<<" registration:"<<result->getCompliantJSONString();
- 		mds_message_channel->sendNodeRegistration(MOVE(result));
 		StartableService::startImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__);
 
+		LCND_LAPP << "Publishing as:"<<uid<<" registration:"<<result->getCompliantJSONString();
+ 		mds_message_channel->sendNodeRegistration(MOVE(result));
+		HealtManager::getInstance()->addNewNode(uid);
+		HealtManager::getInstance()->addNodeMetricValue(uid,
+                                                        NodeHealtDefinitionKey::NODE_HEALT_STATUS,
+                                                    NodeHealtDefinitionValue::NODE_HEALT_STATUS_LOAD);
+		HealtManager::getInstance()->publishNodeHealt(uid);
 		
 		for(WanInterfaceListIterator it = wan_active_interfaces.begin();
 			it != wan_active_interfaces.end();
@@ -181,11 +186,7 @@ void ChaosWANProxy::start()  throw(CException) {
 												 __PRETTY_FUNCTION__);
 		}
 		NetworkBroker::getInstance()->disposeMessageChannel(mds_message_channel);
-		HealtManager::getInstance()->addNodeMetricValue(uid,
-                                                        NodeHealtDefinitionKey::NODE_HEALT_STATUS,
-                                                    NodeHealtDefinitionValue::NODE_HEALT_STATUS_LOAD);
-   	 	HealtManager::getInstance()->addNewNode(uid);
-		HealtManager::getInstance()->publishNodeHealt(uid);
+		
 		
 		//at this point i must with for end signal
 		waitCloseSemaphore.wait();
