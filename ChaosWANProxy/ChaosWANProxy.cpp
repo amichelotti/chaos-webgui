@@ -95,7 +95,7 @@ void ChaosWANProxy::init(void *init_data)  throw(CException) {
 		if (signal((int) SIGQUIT, ChaosWANProxy::signalHanlder) == SIG_ERR) {
 			throw CException(-3, "Error registering SIG_ERR signal", __PRETTY_FUNCTION__);
 		}
-		
+
 		persistence_driver.reset(new DefaultPersistenceDriver(NetworkBroker::getInstance()), "DefaultPresistenceDriver");
 		persistence_driver.init(NULL, __PRETTY_FUNCTION__);
 		//setting.list_cds_server.push_back(getGlobalConfigurationInstance()->getMetadataServerAddress());
@@ -147,10 +147,36 @@ void ChaosWANProxy::init(void *init_data)  throw(CException) {
  *
  */
 void ChaosWANProxy::start()  throw(CException) {
+	common::message::MDSMessageChannel                              *mds_message_channel;
+    mds_message_channel = NetworkBroker::getInstance()->getMetadataserverMessageChannel();
+
+	ChaosUniquePtr<chaos::common::data::CDataWrapper> result(new chaos::common::data::CDataWrapper());
+	std::string uid="webui_"+chaos::GlobalConfiguration::getInstance()->getLocalServerAddressAnBasePort();
+    result->addStringValue(NodeDefinitionKey::NODE_UNIQUE_ID,
+                           uid);
+    result->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE,
+                           chaos::NodeType::NODE_TYPE_WAN_PROXY);
+    result->addStringValue(NodeDefinitionKey::NODE_RPC_ADDR,
+                           chaos::GlobalConfiguration::getInstance()->getLocalServerAddressAnBasePort());
+    result->addStringValue(NodeDefinitionKey::NODE_RPC_DOMAIN,
+                           "webui");
+    result->addInt64Value(NodeDefinitionKey::NODE_TIMESTAMP,
+                          TimingUtil::getTimeStamp());
+	
+
 	//lock o monitor for waith the end
 	try {
-	      StartableService::startImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__);
 		//start all wan interface
+		StartableService::startImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__);
+
+		LCND_LAPP << "Publishing as:"<<uid<<" registration:"<<result->getCompliantJSONString();
+ 		mds_message_channel->sendNodeRegistration(MOVE(result));
+		HealtManager::getInstance()->addNewNode(uid);
+		HealtManager::getInstance()->addNodeMetricValue(uid,
+                                                        NodeHealtDefinitionKey::NODE_HEALT_STATUS,
+                                                    NodeHealtDefinitionValue::NODE_HEALT_STATUS_LOAD);
+		HealtManager::getInstance()->publishNodeHealt(uid);
+		
 		for(WanInterfaceListIterator it = wan_active_interfaces.begin();
 			it != wan_active_interfaces.end();
 			it++) {
@@ -159,6 +185,8 @@ void ChaosWANProxy::start()  throw(CException) {
 												 (*it)->getName(),
 												 __PRETTY_FUNCTION__);
 		}
+		NetworkBroker::getInstance()->disposeMessageChannel(mds_message_channel);
+		
 		
 		//at this point i must with for end signal
 		waitCloseSemaphore.wait();

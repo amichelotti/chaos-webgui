@@ -68,6 +68,7 @@ namespace chaos {
 					 double freq;
 					 uint64_t pckts_size;
 					 int storage_type;
+					 int healt_update;
             } cuids_t;
                 cuids_t& getCuid(const std::string& name){return m_cuid[name];}
 			protected:

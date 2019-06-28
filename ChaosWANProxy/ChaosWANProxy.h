@@ -29,7 +29,7 @@
 #include "wan_interface/BaseWANInterfaceHandler.h"
 
 #include <boost/thread/condition.hpp>
-
+#include "WANProxyRegister.h"
 #include <chaos/common/global.h>
 #include <chaos/common/ChaosCommon.h>
 #include <chaos/common/thread/WaitSemaphore.h>
@@ -52,7 +52,8 @@ namespace chaos {
 		public ChaosCommon<ChaosWANProxy>,
 		public ServerDelegator {
 			friend class common::utility::Singleton<ChaosWANProxy>;
-			
+		//	common::utility::StartableServiceContainer<WANProxyRegister> wan_register;
+
 			static WaitSemaphore waitCloseSemaphore;
 			
 			chaos::common::utility::InizializableServiceContainer<chaos::wan_proxy::persistence::DefaultPersistenceDriver> persistence_driver;
@@ -66,6 +67,7 @@ namespace chaos {
 			
 			//!base handler pinter
 			wan_interface::BaseWANInterfacelHandler *wan_interface_handler;
+            common::message::MDSMessageChannel                              *mds_message_channel;
 
 		public:
 			//gloabl applicaiton settin
