@@ -33,7 +33,9 @@
 #include <boost/algorithm/string.hpp>
 
 #include <json/json.h>
-
+#if CHAOS_PROMETHEUS
+using namespace chaos::common::metric;
+#endif
 using namespace chaos;
 using namespace chaos::common::data;
 using namespace chaos::common::utility;
@@ -124,6 +126,39 @@ HTTPServedBoostInterface::HTTPServedBoostInterface(const string &alias) : Abstra
         info = new ::driver::misc::ChaosController();
     }
     ServerMutexWrap::parent=this;
+
+#ifdef CHAOS_PROMETHEUS
+    chaos::common::metric::MetricManager::getInstance()->createGaugeFamily("webui_gauge_ops", "Realtine performance information");
+    chaos::common::metric::MetricManager::getInstance()->createGaugeFamily("webui_gauge_mon", "Reatime live monitoring");
+    //add custom driver metric
+    counter_post_uptr = MetricManager::getInstance()->getNewGaugeFromFamily("webui_gauge_ops", {{"type","rest_ctrl_post"}});
+    counter_get_uptr= MetricManager::getInstance()->getNewGaugeFromFamily("webui_gauge_ops",{{"type","rest_ctrl_get"}});
+    counter_mds_post_uptr = MetricManager::getInstance()->getNewGaugeFromFamily("webui_gauge_ops", {{"type","rest_admin_post"}});
+    counter_mds_get_uptr= MetricManager::getInstance()->getNewGaugeFromFamily("webui_gauge_ops",{{"type","rest_admin_get"}});
+    counter_json_post_uptr = MetricManager::getInstance()->getNewGaugeFromFamily("webui_gauge_ops",{{"type","rest_json_post"}});
+    counter_json_get_uptr= MetricManager::getInstance()->getNewGaugeFromFamily("webui_gauge_ops",{{"type","rest_json_get"}});
+    monitored_objects_uptr=MetricManager::getInstance()->getNewGaugeFromFamily("webui_gauge_mon",{{"type","monitored_chaos_objects"}});
+    answer_ms_uptr=MetricManager::getInstance()->getNewGaugeFromFamily("webui_gauge_mon",{{"type","answer_ms"}});
+
+#else
+    counter_post_uptr.reset(new uint32_t);
+    counter_get_uptr.reset(new uint32_t);
+    counter_mds_post_uptr.reset(new uint32_t);
+    counter_mds_get_uptr.reset(new uint32_t);
+    counter_json_post_uptr.reset(new uint32_t);
+    counter_json_get_uptr.reset(new uint32_t);
+    monitored_objects_uptr.reset(new uint32_t);
+    answer_ms_uptr.reset(new double);
+
+#endif
+    *counter_post_uptr=0;
+    *counter_get_uptr=0;
+    *counter_mds_post_uptr=0;
+    *counter_mds_get_uptr=0;
+    *counter_json_post_uptr=0;
+    *counter_json_get_uptr=0;
+    *monitored_objects_uptr=0;
+    *answer_ms_uptr=0;
 }
 
 HTTPServedBoostInterface::~HTTPServedBoostInterface() {}
@@ -200,25 +235,33 @@ void HTTPServedBoostInterface::init(void *init_data)
 */
 mux.handle(API_PREFIX_V1)
 		.post([](served::response & res, const served::request & req) {
+            (*ServerMutexWrap::parent->counter_json_post_uptr)++;
             ServerMutexWrap::parent->processRest(res,req);
 		}).get([](served::response & res, const served::request & req) {
+            (*ServerMutexWrap::parent->counter_json_get_uptr)++;
+
             ServerMutexWrap::parent->processRest(res,req);
 		});;
     mux.handle("/CU").post([](served::response & res, const served::request & req) {
             HTTWAN_INTERFACE_DBG_<<" POST /CU"<<req.body();
+            (*ServerMutexWrap::parent->counter_post_uptr)++;
+
             ServerMutexWrap::parent->process(res,req);
 		}).get([](served::response & res, const served::request & req) {
             HTTWAN_INTERFACE_DBG_<<" GET /CU"<<req.body();
+            (*ServerMutexWrap::parent->counter_get_uptr)++;
 
             ServerMutexWrap::parent->process(res,req);
 		});;
     mux.handle("/MDS")
 		.post([](served::response & res, const served::request & req) {
             HTTWAN_INTERFACE_DBG_<<" POST /MDS"<<req.body();
-           
+            (*ServerMutexWrap::parent->counter_mds_post_uptr)++;
+
             ServerMutexWrap::parent->process(res,req);
 		}).get([](served::response & res, const served::request & req) {
             HTTWAN_INTERFACE_DBG_<<" GET /CU"<<req.body();
+            (*ServerMutexWrap::parent->counter_mds_get_uptr)++;
 
             ServerMutexWrap::parent->process(res,req);
 		});;
@@ -556,6 +599,7 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
         DEBUG_CODE(execution_time_end = TimingUtil::getTimeStampInMicroseconds();)
         DEBUG_CODE(uint64_t duration = execution_time_end - execution_time_start;)
         DEBUG_CODE(HTTWAN_INTERFACE_DBG_  << "Execution time is:" << duration * 1.0 / 1000.0 << " ms";)
+        *answer_ms_uptr=duration * 1.0 / 1000.0;
     }
     return 1; //
 }
@@ -586,7 +630,7 @@ void HTTPServedBoostInterface::checkActivity()
         ChaosReadLock l(devio_mutex);
         i = devs.begin();
     }
-
+    *monitored_objects_uptr=devs.size();
     while (i != devs.end())
     {
 

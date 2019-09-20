@@ -135,6 +135,8 @@ void ChaosWANProxy::init(void *init_data)  throw(CException) {
 			LCND_LAPP << "Wan interface: " <<tmp_interface_instance->getName()<< " have been installed";
 
 		}
+	
+   
 
 	} catch (CException& ex) {
 		DECODE_CHAOS_EXCEPTION(ex)
