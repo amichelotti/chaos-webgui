@@ -426,8 +426,8 @@ static std::string decode(const std::string& s) {
 int HTTPServedBoostInterface::process(served::response & res, const served::request & request)
 {
     int err = 0;
-    DEBUG_CODE(uint64_t execution_time_start = TimingUtil::getTimeStampInMicroseconds();)
-    DEBUG_CODE(uint64_t execution_time_end = 0;)
+    uint64_t execution_time_start = TimingUtil::getTimeStampInMicroseconds();
+    uint64_t execution_time_end = 0;
   //  HTTPWANInterfaceStringResponse response("text/html");
     //response.addHeaderKeyValue("Access-Control-Allow-Origin", "*");
     std::stringstream ss;
@@ -596,8 +596,7 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
     }
     {
         boost::mutex::scoped_lock lurl(devurl_mutex);
-        DEBUG_CODE(execution_time_end = TimingUtil::getTimeStampInMicroseconds();)
-        DEBUG_CODE(uint64_t duration = execution_time_end - execution_time_start;)
+        uint64_t duration = execution_time_end - execution_time_start;
         DEBUG_CODE(HTTWAN_INTERFACE_DBG_  << "Execution time is:" << duration * 1.0 / 1000.0 << " ms";)
         *answer_ms_uptr=duration * 1.0 / 1000.0;
     }
@@ -667,8 +666,8 @@ int HTTPServedBoostInterface::processRest(served::response & res, const served::
 {
    CHAOS_ASSERT(handler)
     int err = 0;
-    DEBUG_CODE(uint64_t execution_time_start = TimingUtil::getTimeStampInMicroseconds();)
-    DEBUG_CODE(uint64_t execution_time_end = 0;)
+    uint64_t execution_time_start = TimingUtil::getTimeStampInMicroseconds();
+    uint64_t execution_time_end = 0;
     Json::Value json_request;
     Json::Value json_response;
     Json::StyledWriter json_writer;
@@ -725,9 +724,10 @@ int HTTPServedBoostInterface::processRest(served::response & res, const served::
                 //   json_response["error"] = 0;
             }
             res << json_writer.write(json_response);
-            DEBUG_CODE(execution_time_end = TimingUtil::getTimeStampInMicroseconds();)
-            DEBUG_CODE(uint64_t duration = execution_time_end - execution_time_start;)
+            execution_time_end = TimingUtil::getTimeStampInMicroseconds();
+            uint64_t duration = execution_time_end - execution_time_start;
             DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << "Execution time is:" << duration << " microseconds";)
+	      *answer_ms_uptr=duration * 1.0 / 1000.0;
             return 1; //
         }
         boost::algorithm::split(api_token_list,
@@ -803,9 +803,9 @@ int HTTPServedBoostInterface::processRest(served::response & res, const served::
     }
 
     res << json_writer.write(json_response);
-    DEBUG_CODE(execution_time_end = TimingUtil::getTimeStampInMicroseconds();)
-    DEBUG_CODE(uint64_t duration = execution_time_end - execution_time_start;)
+    execution_time_end = TimingUtil::getTimeStampInMicroseconds();
+    uint64_t duration = execution_time_end - execution_time_start;
     DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << "Execution time is:" << duration << " microseconds";)
-
+      *answer_ms_uptr=duration * 1.0 / 1000.0;
     return 1; //
 }
