@@ -30,7 +30,9 @@
 #include <boost/atomic.hpp>
 #include <boost/thread/mutex.hpp>
 #include <served/served.hpp>
-
+#if CHAOS_PROMETHEUS
+#include <chaos/common/metric/metric.h>
+#endif
 namespace chaos {
     
     //forward declaration

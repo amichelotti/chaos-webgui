@@ -76,7 +76,7 @@ namespace chaos {
 				void  disposeService(void *service_ptr);
 				
 				//! inherited by @common::network::URLServiceFeederHandler
-				void* serviceForURL(const URL& url, uint32_t service_index);
+				void* serviceForURL(const chaos::common::network::URL& url, uint32_t service_index);
 				
 				//! inherited by @chaos::common::direct_io::DirectIOClientConnectionEventHandler
 				void handleEvent(chaos_direct_io::DirectIOClientConnection *client_connection,
