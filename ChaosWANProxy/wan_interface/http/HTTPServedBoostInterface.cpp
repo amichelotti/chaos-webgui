@@ -596,6 +596,8 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
     }
     {
         boost::mutex::scoped_lock lurl(devurl_mutex);
+        execution_time_end = TimingUtil::getTimeStampInMicroseconds();
+
         uint64_t duration = execution_time_end - execution_time_start;
         DEBUG_CODE(HTTWAN_INTERFACE_DBG_  << "Execution time is:" << duration * 1.0 / 1000.0 << " ms";)
         *answer_ms_uptr=duration * 1.0 / 1000.0;
