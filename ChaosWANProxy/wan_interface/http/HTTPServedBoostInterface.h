@@ -30,7 +30,9 @@
 #include <boost/atomic.hpp>
 #include <boost/thread/mutex.hpp>
 #include <served/served.hpp>
-
+#if CHAOS_PROMETHEUS
+#include <chaos/common/metric/metric.h>
+#endif
 namespace chaos {
     
     //forward declaration
@@ -96,6 +98,32 @@ class ServerMutexWrap:public served::multiplexer{
                 public:
                      int process(served::response & res, const served::request & req);
                      int processRest(served::response & res, const served::request & req);
+                    #if CHAOS_PROMETHEUS
+        //custom driver metrics
+                    chaos::common::metric::GaugeUniquePtr counter_post_uptr;
+                    chaos::common::metric::GaugeUniquePtr counter_get_uptr;
+                    chaos::common::metric::GaugeUniquePtr counter_mds_post_uptr;
+                    chaos::common::metric::GaugeUniquePtr counter_mds_get_uptr;
+                    chaos::common::metric::GaugeUniquePtr counter_json_post_uptr;
+                    chaos::common::metric::GaugeUniquePtr counter_json_get_uptr;
+                    chaos::common::metric::GaugeUniquePtr monitored_objects_uptr;
+                    chaos::common::metric::GaugeUniquePtr answer_ms_uptr;
+                    chaos::common::metric::GaugeUniquePtr answer_kb_uptr;
+
+
+                    #else
+                        ChaosUniquePtr<uint32_t> counter_post_uptr;
+                        ChaosUniquePtr<uint32_t> counter_get_uptr;
+
+                        ChaosUniquePtr<uint32_t> counter_mds_post_uptr;
+                        ChaosUniquePtr<uint32_t> counter_mds_get_uptr;
+                        ChaosUniquePtr<uint32_t> counter_json_post_uptr;
+                        ChaosUniquePtr<uint32_t> counter_json_get_uptr;
+                        ChaosUniquePtr<uint32_t> monitored_objects_uptr;
+                        ChaosUniquePtr<double> answer_ms_uptr;
+                        ChaosUniquePtr<double> answer_kb_uptr;
+
+                    #endif
 
                 protected:
                     void timeout();
