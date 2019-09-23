@@ -139,6 +139,8 @@ HTTPServedBoostInterface::HTTPServedBoostInterface(const string &alias) : Abstra
     counter_json_get_uptr= MetricManager::getInstance()->getNewGaugeFromFamily("webui_gauge_ops",{{"type","rest_json_get"}});
     monitored_objects_uptr=MetricManager::getInstance()->getNewGaugeFromFamily("webui_gauge_mon",{{"type","monitored_chaos_objects"}});
     answer_ms_uptr=MetricManager::getInstance()->getNewGaugeFromFamily("webui_gauge_mon",{{"type","answer_ms"}});
+    answer_kb_uptr=MetricManager::getInstance()->getNewGaugeFromFamily("webui_gauge_mon",{{"type","answer_kb"}});
+
 
 #else
     counter_post_uptr.reset(new uint32_t);
@@ -149,6 +151,8 @@ HTTPServedBoostInterface::HTTPServedBoostInterface(const string &alias) : Abstra
     counter_json_get_uptr.reset(new uint32_t);
     monitored_objects_uptr.reset(new uint32_t);
     answer_ms_uptr.reset(new double);
+    answer_kb_uptr.reset(new double);
+
 
 #endif
     *counter_post_uptr=0;
@@ -159,6 +163,8 @@ HTTPServedBoostInterface::HTTPServedBoostInterface(const string &alias) : Abstra
     *counter_json_get_uptr=0;
     *monitored_objects_uptr=0;
     *answer_ms_uptr=0;
+    *answer_kb_uptr=0;
+
 }
 
 HTTPServedBoostInterface::~HTTPServedBoostInterface() {}
@@ -237,21 +243,29 @@ mux.handle(API_PREFIX_V1)
 		.post([](served::response & res, const served::request & req) {
             (*ServerMutexWrap::parent->counter_json_post_uptr)++;
             ServerMutexWrap::parent->processRest(res,req);
+            (*ServerMutexWrap::parent->answer_kb_uptr)+=res.body_size();
 		}).get([](served::response & res, const served::request & req) {
             (*ServerMutexWrap::parent->counter_json_get_uptr)++;
 
             ServerMutexWrap::parent->processRest(res,req);
+            (*ServerMutexWrap::parent->answer_kb_uptr)+=res.body_size();
+
+            
 		});;
     mux.handle("/CU").post([](served::response & res, const served::request & req) {
             HTTWAN_INTERFACE_DBG_<<" POST /CU"<<req.body();
             (*ServerMutexWrap::parent->counter_post_uptr)++;
 
             ServerMutexWrap::parent->process(res,req);
+            (*ServerMutexWrap::parent->answer_kb_uptr)+=res.body_size();
+
 		}).get([](served::response & res, const served::request & req) {
             HTTWAN_INTERFACE_DBG_<<" GET /CU"<<req.body();
             (*ServerMutexWrap::parent->counter_get_uptr)++;
 
             ServerMutexWrap::parent->process(res,req);
+            (*ServerMutexWrap::parent->answer_kb_uptr)+=res.body_size();
+
 		});;
     mux.handle("/MDS")
 		.post([](served::response & res, const served::request & req) {
@@ -259,11 +273,15 @@ mux.handle(API_PREFIX_V1)
             (*ServerMutexWrap::parent->counter_mds_post_uptr)++;
 
             ServerMutexWrap::parent->process(res,req);
+            (*ServerMutexWrap::parent->answer_kb_uptr)+=res.body_size();
+
 		}).get([](served::response & res, const served::request & req) {
             HTTWAN_INTERFACE_DBG_<<" GET /CU"<<req.body();
             (*ServerMutexWrap::parent->counter_mds_get_uptr)++;
 
             ServerMutexWrap::parent->process(res,req);
+            (*ServerMutexWrap::parent->answer_kb_uptr)+=res.body_size();
+
 		});;
 
 	// Create the server and run with 10 handler threads.

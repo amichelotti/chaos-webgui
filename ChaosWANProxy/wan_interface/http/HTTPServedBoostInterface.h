@@ -108,6 +108,7 @@ class ServerMutexWrap:public served::multiplexer{
                     chaos::common::metric::GaugeUniquePtr counter_json_get_uptr;
                     chaos::common::metric::GaugeUniquePtr monitored_objects_uptr;
                     chaos::common::metric::GaugeUniquePtr answer_ms_uptr;
+                    chaos::common::metric::GaugeUniquePtr answer_kb_uptr;
 
 
                     #else
@@ -120,6 +121,7 @@ class ServerMutexWrap:public served::multiplexer{
                         ChaosUniquePtr<uint32_t> counter_json_get_uptr;
                         ChaosUniquePtr<uint32_t> monitored_objects_uptr;
                         ChaosUniquePtr<double> answer_ms_uptr;
+                        ChaosUniquePtr<double> answer_kb_uptr;
 
                     #endif
 
