@@ -243,12 +243,12 @@ mux.handle(API_PREFIX_V1)
 		.post([](served::response & res, const served::request & req) {
             (*ServerMutexWrap::parent->counter_json_post_uptr)++;
             ServerMutexWrap::parent->processRest(res,req);
-            (*ServerMutexWrap::parent->answer_kb_uptr)+=res.body_size();
+            (*ServerMutexWrap::parent->answer_kb_uptr)+=(res.body_size()*1.0/1024.0);
 		}).get([](served::response & res, const served::request & req) {
             (*ServerMutexWrap::parent->counter_json_get_uptr)++;
 
             ServerMutexWrap::parent->processRest(res,req);
-            (*ServerMutexWrap::parent->answer_kb_uptr)+=res.body_size();
+            (*ServerMutexWrap::parent->answer_kb_uptr)+=(res.body_size()*1.0/1024.0);
 
             
 		});;
@@ -257,14 +257,14 @@ mux.handle(API_PREFIX_V1)
             (*ServerMutexWrap::parent->counter_post_uptr)++;
 
             ServerMutexWrap::parent->process(res,req);
-            (*ServerMutexWrap::parent->answer_kb_uptr)+=res.body_size();
+            (*ServerMutexWrap::parent->answer_kb_uptr)+=(res.body_size()*1.0/1024.0);
 
 		}).get([](served::response & res, const served::request & req) {
             HTTWAN_INTERFACE_DBG_<<" GET /CU"<<req.body();
             (*ServerMutexWrap::parent->counter_get_uptr)++;
 
             ServerMutexWrap::parent->process(res,req);
-            (*ServerMutexWrap::parent->answer_kb_uptr)+=res.body_size();
+            (*ServerMutexWrap::parent->answer_kb_uptr)+=(res.body_size()*1.0/1024.0);
 
 		});;
     mux.handle("/MDS")
@@ -273,14 +273,14 @@ mux.handle(API_PREFIX_V1)
             (*ServerMutexWrap::parent->counter_mds_post_uptr)++;
 
             ServerMutexWrap::parent->process(res,req);
-            (*ServerMutexWrap::parent->answer_kb_uptr)+=res.body_size();
+            (*ServerMutexWrap::parent->answer_kb_uptr)+=(res.body_size()*1.0/1024.0);
 
 		}).get([](served::response & res, const served::request & req) {
             HTTWAN_INTERFACE_DBG_<<" GET /CU"<<req.body();
             (*ServerMutexWrap::parent->counter_mds_get_uptr)++;
 
             ServerMutexWrap::parent->process(res,req);
-            (*ServerMutexWrap::parent->answer_kb_uptr)+=res.body_size();
+            (*ServerMutexWrap::parent->answer_kb_uptr)+=(res.body_size()*1.0/1024.0);
 
 		});;
 
