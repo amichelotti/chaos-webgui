@@ -63,13 +63,28 @@ boost::mutex HTTPServedBoostInterface::devurl_mutex;
 
 uint64_t HTTPServedBoostInterface::last_check_activity = 0;
 
-
+std::map<std::string,ConnectedClientInfo> HTTPServedBoostInterface::clientInfo;
+ boost::mutex HTTPServedBoostInterface::clientMapMutex;
 HTTPServedBoostInterface* ServerMutexWrap::parent=NULL;
 /**
  * The handlers below are written in C to do the binding of the C mongoose with
  * the C++ API
  */
 ChaosSharedMutex http_mutex;
+
+
+std::string ConnectedClientInfo::getJson(){
+    chaos::common::data::CDataWrapper cw;
+    cw.addStringValue("client",src);
+    cw.addDoubleValue("kb",kbOps);
+    cw.addInt64Value("lastConnection",lastConnection);
+    cw.addInt64Value("ops",ops);
+    cw.addInt32Value("avgTimeConn",avgTimeConn);
+    cw.addInt32Value("avgTimeExec",avgTimeExec);
+    return cw.getCompliantJSONString();
+
+}
+
 /*static int event_handler(struct mg_connection *connection, enum mg_event ev)
 {
 
@@ -140,7 +155,7 @@ HTTPServedBoostInterface::HTTPServedBoostInterface(const string &alias) : Abstra
     monitored_objects_uptr=MetricManager::getInstance()->getNewGaugeFromFamily("webui_gauge_mon",{{"type","monitored_chaos_objects"}});
     answer_ms_uptr=MetricManager::getInstance()->getNewGaugeFromFamily("webui_gauge_mon",{{"type","answer_ms"}});
     answer_kb_uptr=MetricManager::getInstance()->getNewGaugeFromFamily("webui_gauge_mon",{{"type","answer_kb"}});
-
+    concurrent_clients_uptr=MetricManager::getInstance()->getNewGaugeFromFamily("webui_gauge_mon",{{"type","concurrent_clients"}});
 
 #else
     counter_post_uptr.reset(new uint32_t);
@@ -164,6 +179,7 @@ HTTPServedBoostInterface::HTTPServedBoostInterface(const string &alias) : Abstra
     *monitored_objects_uptr=0;
     *answer_ms_uptr=0;
     *answer_kb_uptr=0;
+    *concurrent_clients_uptr=0;
 
 }
 
@@ -172,6 +188,32 @@ HTTPServedBoostInterface::~HTTPServedBoostInterface() {}
 void HTTPServedBoostInterface::timeout()
 {
     HTTPServedBoostInterface::checkActivity();
+}
+
+
+void HTTPServedBoostInterface::updateClientInfoPre(const std::string& key,ConnectedClientInfo&src){
+    {
+        boost::mutex::scoped_lock ll(clientMapMutex);
+    if(HTTPServedBoostInterface::clientInfo.find(key)!=HTTPServedBoostInterface::clientInfo.end()){
+                src=HTTPServedBoostInterface::clientInfo[key];
+                
+    } else {
+        src.src=key;
+    }
+    }
+    src.ops++;
+    
+    src.avgTimeConn=(TimingUtil::getTimeStampInMicroseconds()-src.lastConnection)/src.ops;
+    src.lastConnection=TimingUtil::getTimeStampInMicroseconds();
+            
+}
+void HTTPServedBoostInterface::updateClientInfoPost(const std::string& key,ConnectedClientInfo&src,double kb){
+
+    src.avgTimeExec=(TimingUtil::getTimeStampInMicroseconds()-src.lastConnection)/src.ops;
+    src.kbOps+=kb;
+    boost::mutex::scoped_lock ll(clientMapMutex);
+
+    HTTPServedBoostInterface::clientInfo[key]=src;
 }
 
 //inherited method
@@ -241,46 +283,133 @@ void HTTPServedBoostInterface::init(void *init_data)
 */
 mux.handle(API_PREFIX_V1)
 		.post([](served::response & res, const served::request & req) {
+            ConnectedClientInfo tmp;
+            
+            ServerMutexWrap::parent->updateClientInfoPre(req.source(),tmp);
             (*ServerMutexWrap::parent->counter_json_post_uptr)++;
             ServerMutexWrap::parent->processRest(res,req);
+
             (*ServerMutexWrap::parent->answer_kb_uptr)+=(res.body_size()*1.0/1024.0);
+            ServerMutexWrap::parent->updateClientInfoPost(req.source(),tmp,(res.body_size()*1.0/1024.0));
+
 		}).get([](served::response & res, const served::request & req) {
+            ConnectedClientInfo tmp;
+
             (*ServerMutexWrap::parent->counter_json_get_uptr)++;
+            ServerMutexWrap::parent->updateClientInfoPre(req.source(),tmp);
 
             ServerMutexWrap::parent->processRest(res,req);
             (*ServerMutexWrap::parent->answer_kb_uptr)+=(res.body_size()*1.0/1024.0);
+            ServerMutexWrap::parent->updateClientInfoPost(req.source(),tmp,(res.body_size()*1.0/1024.0));
 
             
 		});;
     mux.handle("/CU").post([](served::response & res, const served::request & req) {
+            ConnectedClientInfo tmp;
+            ServerMutexWrap::parent->updateClientInfoPre(req.source(),tmp);
+
             HTTWAN_INTERFACE_DBG_<<" POST /CU"<<req.body();
             (*ServerMutexWrap::parent->counter_post_uptr)++;
 
             ServerMutexWrap::parent->process(res,req);
             (*ServerMutexWrap::parent->answer_kb_uptr)+=(res.body_size()*1.0/1024.0);
+            ServerMutexWrap::parent->updateClientInfoPost(req.source(),tmp,(res.body_size()*1.0/1024.0));
 
 		}).get([](served::response & res, const served::request & req) {
+            ConnectedClientInfo tmp;
+
             HTTWAN_INTERFACE_DBG_<<" GET /CU"<<req.body();
             (*ServerMutexWrap::parent->counter_get_uptr)++;
+            ServerMutexWrap::parent->updateClientInfoPre(req.source(),tmp);
 
             ServerMutexWrap::parent->process(res,req);
             (*ServerMutexWrap::parent->answer_kb_uptr)+=(res.body_size()*1.0/1024.0);
+            ServerMutexWrap::parent->updateClientInfoPost(req.source(),tmp,(res.body_size()*1.0/1024.0));
 
 		});;
+
     mux.handle("/MDS")
 		.post([](served::response & res, const served::request & req) {
+            ConnectedClientInfo tmp;
+
             HTTWAN_INTERFACE_DBG_<<" POST /MDS"<<req.body();
             (*ServerMutexWrap::parent->counter_mds_post_uptr)++;
+            ServerMutexWrap::parent->updateClientInfoPre(req.source(),tmp);
 
             ServerMutexWrap::parent->process(res,req);
             (*ServerMutexWrap::parent->answer_kb_uptr)+=(res.body_size()*1.0/1024.0);
+            ServerMutexWrap::parent->updateClientInfoPost(req.source(),tmp,(res.body_size()*1.0/1024.0));
+
 
 		}).get([](served::response & res, const served::request & req) {
+            ConnectedClientInfo tmp;
+
             HTTWAN_INTERFACE_DBG_<<" GET /CU"<<req.body();
             (*ServerMutexWrap::parent->counter_mds_get_uptr)++;
+            ServerMutexWrap::parent->updateClientInfoPre(req.source(),tmp);
 
             ServerMutexWrap::parent->process(res,req);
             (*ServerMutexWrap::parent->answer_kb_uptr)+=(res.body_size()*1.0/1024.0);
+            ServerMutexWrap::parent->updateClientInfoPost(req.source(),tmp,(res.body_size()*1.0/1024.0));
+
+		});;
+
+
+    mux.handle("/clients")
+		.post([](served::response & res, const served::request & req) {
+            ConnectedClientInfo tmp;
+
+            (*ServerMutexWrap::parent->counter_mds_post_uptr)++;
+            HTTWAN_INTERFACE_DBG_<<" GET /clients:"<<req.source();
+            ServerMutexWrap::parent->updateClientInfoPre(req.source(),tmp);
+
+            std::stringstream ss;
+            ss<<"[";
+            {
+                boost::mutex::scoped_lock ll(clientMapMutex);
+
+            for(auto i = clientInfo.begin();i!=clientInfo.end();){
+                ss<<i->second.getJson();
+                if(++i != clientInfo.end()){
+                    ss<<",";
+                }
+            }
+            }
+            ss<<"]";
+            res<<ss.str();
+            res.set_header("Access-Control-Allow-Origin","*");
+            res.set_status(served::status_2XX::OK);
+            (*ServerMutexWrap::parent->answer_kb_uptr)+=(res.body_size()*1.0/1024.0);
+            ServerMutexWrap::parent->updateClientInfoPost(req.source(),tmp,(res.body_size()*1.0/1024.0));
+
+		}).get([](served::response & res, const served::request & req) {
+            ConnectedClientInfo tmp;
+
+            std::stringstream ss;
+            HTTWAN_INTERFACE_DBG_<<" POST /clients:"<<req.source();
+            ServerMutexWrap::parent->updateClientInfoPre(req.source(),tmp);
+
+            (*ServerMutexWrap::parent->counter_mds_get_uptr)++;
+
+            ss<<"[";
+            {
+                boost::mutex::scoped_lock ll(clientMapMutex);
+
+            for(auto i = clientInfo.begin();i!=clientInfo.end();){
+                ss<<i->second.getJson();
+                
+                if(++i != clientInfo.end()){
+                    ss<<",";
+                }
+            }
+            }
+            ss<<"]";
+            res<<ss.str();
+            res.set_header("Access-Control-Allow-Origin","*");
+            res.set_status(served::status_2XX::OK);
+             (*ServerMutexWrap::parent->answer_kb_uptr)+=(res.body_size()*1.0/1024.0);
+            ServerMutexWrap::parent->updateClientInfoPost(req.source(),tmp,(res.body_size()*1.0/1024.0));
+
 
 		});;
 
@@ -644,6 +773,21 @@ void HTTPServedBoostInterface::checkActivity()
             }
         }
     }*/
+    {
+        boost::mutex::scoped_lock ll(clientMapMutex);
+        for(auto i=clientInfo.begin();i!=clientInfo.end();){
+            if(now - i->second.lastConnection > (1000*CHECK_ACTIVITY_CU )){
+                HTTWAN_INTERFACE_DBG_<< " * removing client \""<<i->second.src<<" from known clients";
+                i=clientInfo.erase(i);
+            } else {
+                HTTWAN_INTERFACE_DBG_<< " * connected client \""<<i->second.src<<" ops:"<<i->second.ops<<" kb:"<<i->second.kbOps<<" average conn time:"<<i->second.avgTimeConn<<" us, average exec time:"<<i->second.avgTimeExec<<" us";
+
+                ++i;
+            }
+        }
+
+    }
+    *concurrent_clients_uptr=clientInfo.size();
     std::map<std::string, ::driver::misc::ChaosController *>::iterator i;
     {
         ChaosReadLock l(devio_mutex);
