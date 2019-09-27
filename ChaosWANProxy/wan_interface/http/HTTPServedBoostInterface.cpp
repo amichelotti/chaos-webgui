@@ -167,6 +167,7 @@ HTTPServedBoostInterface::HTTPServedBoostInterface(const string &alias) : Abstra
     monitored_objects_uptr.reset(new uint32_t);
     answer_ms_uptr.reset(new double);
     answer_kb_uptr.reset(new double);
+    concurrent_clients_uptr.reset(new uint32_t);
 
 
 #endif

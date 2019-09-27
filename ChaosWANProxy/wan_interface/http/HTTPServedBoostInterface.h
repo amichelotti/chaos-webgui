@@ -129,6 +129,7 @@ class ServerMutexWrap:public served::multiplexer{
 
 
                     #else
+
                         ChaosUniquePtr<uint32_t> counter_post_uptr;
                         ChaosUniquePtr<uint32_t> counter_get_uptr;
                         ChaosUniquePtr<uint32_t> concurrent_clients_uptr;
