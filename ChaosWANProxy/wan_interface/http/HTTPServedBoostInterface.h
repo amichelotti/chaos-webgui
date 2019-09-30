@@ -56,11 +56,22 @@ namespace chaos {
                 static const char * const	OPT_HTTP_THREAD_NUMBER  = "HTTP_wi_thread_number";
                 static const char * const	OPT_CHAOS_THREAD_NUMBER  = "CHAOS_thread_number";
                 class HTTPServedBoostInterface;
+                struct ConnectedClientInfo{
+                    std::string src;
+                    std::string lastQuery;
+                    uint64_t ops;
+                    uint64_t lastConnection;
+                    double avgTimeConn;
+                    double avgTimeExec;
+
+                    double kbOps;
+                    ConnectedClientInfo():ops(0),lastConnection(0),kbOps(0),avgTimeExec(0),avgTimeConn(0){};
+                    std::string getJson();
+                };
 class ServerMutexWrap:public served::multiplexer{
     protected:
     public:
         static HTTPServedBoostInterface*parent;
-
         ServerMutexWrap(){}
 };
                 /*
@@ -76,6 +87,7 @@ class ServerMutexWrap:public served::multiplexer{
                     
                     int thread_number;
                     static int chaos_thread_number;
+                    
                      
                     std::string basePath;
                     //!poll the http server in a thread
@@ -93,9 +105,13 @@ class ServerMutexWrap:public served::multiplexer{
                     static ChaosSharedMutex devio_mutex;
                     static boost::mutex devurl_mutex;
                     static uint64_t last_check_activity;
+                    void updateClientInfoPre(const std::string& key,ConnectedClientInfo&src);
+                    void updateClientInfoPost(const std::string& key,ConnectedClientInfo&src,double kb);
 
                     void checkActivity();
+                    static boost::mutex clientMapMutex;
                 public:
+                    static std::map<std::string,ConnectedClientInfo> clientInfo;
                      int process(served::response & res, const served::request & req);
                      int processRest(served::response & res, const served::request & req);
                     #if CHAOS_PROMETHEUS
@@ -109,11 +125,14 @@ class ServerMutexWrap:public served::multiplexer{
                     chaos::common::metric::GaugeUniquePtr monitored_objects_uptr;
                     chaos::common::metric::GaugeUniquePtr answer_ms_uptr;
                     chaos::common::metric::GaugeUniquePtr answer_kb_uptr;
+                    chaos::common::metric::GaugeUniquePtr concurrent_clients_uptr;
 
 
                     #else
+
                         ChaosUniquePtr<uint32_t> counter_post_uptr;
                         ChaosUniquePtr<uint32_t> counter_get_uptr;
+                        ChaosUniquePtr<uint32_t> concurrent_clients_uptr;
 
                         ChaosUniquePtr<uint32_t> counter_mds_post_uptr;
                         ChaosUniquePtr<uint32_t> counter_mds_get_uptr;
