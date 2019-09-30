@@ -79,8 +79,8 @@ std::string ConnectedClientInfo::getJson(){
     cw.addDoubleValue("kb",kbOps);
     cw.addInt64Value("lastConnection",lastConnection);
     cw.addInt64Value("ops",ops);
-    cw.addInt32Value("avgTimeConn",avgTimeConn);
-    cw.addInt32Value("avgTimeExec",avgTimeExec);
+    cw.addDoubleValue("avgTimeConn",avgTimeConn);
+    cw.addDoubleValue("avgTimeExec",avgTimeExec);
     return cw.getCompliantJSONString();
 
 }
@@ -204,13 +204,13 @@ void HTTPServedBoostInterface::updateClientInfoPre(const std::string& key,Connec
     }
     src.ops++;
     
-    src.avgTimeConn=(TimingUtil::getTimeStampInMicroseconds()-src.lastConnection)/src.ops;
+    src.avgTimeConn=(TimingUtil::getTimeStampInMicroseconds()-src.lastConnection)*1.0/src.ops;
     src.lastConnection=TimingUtil::getTimeStampInMicroseconds();
             
 }
 void HTTPServedBoostInterface::updateClientInfoPost(const std::string& key,ConnectedClientInfo&src,double kb){
 
-    src.avgTimeExec=(TimingUtil::getTimeStampInMicroseconds()-src.lastConnection)/src.ops;
+    src.avgTimeExec=(TimingUtil::getTimeStampInMicroseconds()-src.lastConnection)*1.0/src.ops;
     src.kbOps+=kb;
     boost::mutex::scoped_lock ll(clientMapMutex);
 

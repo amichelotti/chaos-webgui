@@ -61,8 +61,8 @@ namespace chaos {
                     std::string lastQuery;
                     uint64_t ops;
                     uint64_t lastConnection;
-                    uint32_t avgTimeConn;
-                    uint32_t avgTimeExec;
+                    double avgTimeConn;
+                    double avgTimeExec;
 
                     double kbOps;
                     ConnectedClientInfo():ops(0),lastConnection(0),kbOps(0),avgTimeExec(0),avgTimeConn(0){};
