@@ -774,6 +774,7 @@ void HTTPServedBoostInterface::checkActivity()
             }
         }
     }*/
+    std::vector<std::string> alive=info->searchAllAlive();
     {
         boost::mutex::scoped_lock ll(clientMapMutex);
         for(auto i=clientInfo.begin();i!=clientInfo.end();){
@@ -797,7 +798,17 @@ void HTTPServedBoostInterface::checkActivity()
     *monitored_objects_uptr=devs.size();
     while (i != devs.end())
     {
+        if(std::find(alive.begin(),alive.end(),i->first)==alive.end()){
+            HTTWAN_INTERFACE_DBG_ << "* removing from update queue \"" << i->first << "\" because not alive";
+            removeFromQueue(i->first);
+            ChaosWriteLock ll(devio_mutex);
 
+                HTTWAN_INTERFACE_DBG_ << "* removing \"" << i->first << "\" from known devices";
+                ::driver::misc::ChaosController *tmp = i->second;
+                devs.erase(i++);
+                delete tmp;
+                continue;
+        }
         if ((i->second->lastAccess() > 0))
         {
             int64_t elapsed = (now - (i->second)->lastAccess());
