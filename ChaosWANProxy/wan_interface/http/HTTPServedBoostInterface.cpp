@@ -796,44 +796,55 @@ void HTTPServedBoostInterface::checkActivity()
         i = devs.begin();
     }
     *monitored_objects_uptr=devs.size();
-    while (i != devs.end())
-    {
+    // remove not alive first;
+    int cnt=devs.size();
+    while (i != devs.end()){
         if(std::find(alive.begin(),alive.end(),i->first)==alive.end()){
-            HTTWAN_INTERFACE_DBG_ << "* removing from update queue \"" << i->first << "\" because not alive";
+            cnt--;
+            HTTWAN_INTERFACE_DBG_ << "* removing from update queue \"" << i->first << "\" because not alive remaining:"<<cnt;
             removeFromQueue(i->first);
-            ChaosWriteLock ll(devio_mutex);
+            ::driver::misc::ChaosController *tmp;
+           { ChaosWriteLock ll(devio_mutex);
 
                 HTTWAN_INTERFACE_DBG_ << "* removing \"" << i->first << "\" from known devices";
-                ::driver::misc::ChaosController *tmp = i->second;
+                tmp = i->second;
                 devs.erase(i++);
+           }
                 delete tmp;
                 continue;
         }
+        i++;
+    }
+    {
+        ChaosReadLock l(devio_mutex);
+        i = devs.begin();
+    }
+    cnt=devs.size();
+    while (i != devs.end()){
         if ((i->second->lastAccess() > 0))
         {
             int64_t elapsed = (now - (i->second)->lastAccess());
             if ((elapsed > PRUNE_NOT_ACCESSED_CU))
             {
+                cnt--;
                 HTTWAN_INTERFACE_DBG_ << "* pruning \"" << i->first << "\" because elapsed " << ((1.0 * elapsed) / 1000000.0) << " s last time access:" << ((i->second)->lastAccess() / 1000000.0) << " s ago";
                 removeFromQueue(i->first);
+                ::driver::misc::ChaosController *tmp;
+                {ChaosWriteLock ll(devio_mutex);
 
-                ChaosWriteLock ll(devio_mutex);
-
-                HTTWAN_INTERFACE_DBG_ << "* removing \"" << i->first << "\" from known devices";
-                ::driver::misc::ChaosController *tmp = i->second;
+                HTTWAN_INTERFACE_DBG_ << "* removing \"" << i->first << "\" from known devices remaining:"<<cnt;
+                 tmp= i->second;
                 devs.erase(i++);
+                }
                 delete tmp;
+                continue;
             }
-            else
-            {
-                ++i;
-            }
+            
         }
-        else
-        {
-            ++i;
-        }
-    }
+        i++;
+       }
+        HTTWAN_INTERFACE_DBG_ << "check activity ENDS";
+
 }
 
                     
