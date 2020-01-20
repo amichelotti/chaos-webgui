@@ -669,6 +669,7 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
 
                 if (devs.find(*idevname) == devs.end())
                 {
+                     HTTWAN_INTERFACE_DBG_ << "* Creating controller for \"" << *idevname << "\"";
                     controller = new ::driver::misc::ChaosController();
                     if (controller)
                     {
@@ -806,11 +807,13 @@ void HTTPServedBoostInterface::checkActivity()
             ::driver::misc::ChaosController *tmp;
            { ChaosWriteLock ll(devio_mutex);
 
-                HTTWAN_INTERFACE_DBG_ << "* removing \"" << i->first << "\" from known devices";
                 tmp = i->second;
+                
+                HTTWAN_INTERFACE_DBG_ << "* removing \"" << i->first << "\" from known devices";
                 devs.erase(i++);
-           }
                 delete tmp;
+
+           }
                 continue;
         }
         i++;
