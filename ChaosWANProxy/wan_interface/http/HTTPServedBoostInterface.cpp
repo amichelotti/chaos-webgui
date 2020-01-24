@@ -775,7 +775,7 @@ void HTTPServedBoostInterface::checkActivity()
             }
         }
     }*/
-    std::vector<std::string> alive=info->searchAllAlive();
+   // std::vector<std::string> alive=info->searchAllAlive();
     {
         boost::mutex::scoped_lock ll(clientMapMutex);
         for(auto i=clientInfo.begin();i!=clientInfo.end();){
@@ -803,11 +803,11 @@ void HTTPServedBoostInterface::checkActivity()
     std::vector<std::string> controller_toremove;
 
     while (i != devs.end()){
-        if(std::find(alive.begin(),alive.end(),i->first)==alive.end()){
+   /*     if(std::find(alive.begin(),alive.end(),i->first)==alive.end()){
             HTTWAN_INTERFACE_DBG_ << "* removing from update queue \"" << i->first << "\" because not alive"<<cnt;
             removeFromQueue(i->first);
             controller_toremove.push_back(i->first);  
-        }
+        }*/
         if ((i->second->lastAccess() > 0)){
             int64_t elapsed = (now - (i->second)->lastAccess());
             if ((elapsed > PRUNE_NOT_ACCESSED_CU)){
