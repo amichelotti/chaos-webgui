@@ -921,7 +921,7 @@ int HTTPServedBoostInterface::processRest(served::response & res, const served::
             if (json_reader.parse(request.body(), json_request))
             {
                 //print the received JSON document
-                DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION <<"["<<api_uri<<"] Received JSON pack:" << json_writer.write(json_request);)
+              //  DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION <<"["<<api_uri<<"] Received JSON pack:" << json_writer.write(json_request);)
 
                 //call the handler
                 if ((err = handler->handleCall(1,

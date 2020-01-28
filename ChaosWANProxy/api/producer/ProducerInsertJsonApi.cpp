@@ -90,9 +90,6 @@ int ProducerInsertJsonApi::execute(std::vector<std::string>& api_tokens,
     //   PID_LDBG << "PROCESSING:"<<json_str.c_str();//json_writer.write(input_data).c_str();
     output_dataset->setSerializedJsonData(json_str.c_str()	);
 
-    if(!output_dataset->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
-        output_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP,chaos::common::utility::TimingUtil::getTimeStamp());
-    }
     //scan other memebrs to create the datapack
     //call persistence api for insert the data
     if((err = persistence_driver->pushNewDataset(producer_name ,

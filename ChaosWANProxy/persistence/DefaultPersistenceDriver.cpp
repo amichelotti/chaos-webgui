@@ -239,20 +239,21 @@ int DefaultPersistenceDriver::pushNewDataset(const std::string& producer_key,
     new_dataset->addInt32Value(chaos::DataPackCommonKey::DPCK_DATASET_TYPE, chaos::DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT);
     if(!new_dataset->hasKey(chaos::DataPackCommonKey::DPCK_TIMESTAMP)){
         // add timestamp of the datapack
+        i_cuid->second.ts=ts;
         new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP, i_cuid->second.ts);
-    } /*else {
+    } else {
         i_cuid->second.ts=new_dataset->getInt64Value(chaos::DataPackCommonKey::DPCK_TIMESTAMP);
-    }*/
+    }
     i_cuid->second.pckid++;
     /*if(store_hint==0){
         store_hint=i_cuid->second.storage_type;
     }*/
     if(!new_dataset->hasKey(chaos::DataPackCommonKey::DPCK_SEQ_ID)){
         new_dataset->addInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID,i_cuid->second.pckid );
-    }/* else {
+    } else {
         // to evaluate push rate
         i_cuid->second.pckid= new_dataset->getInt64Value(chaos::DataPackCommonKey::DPCK_SEQ_ID);
-    }*/
+    }
     if(!new_dataset->hasKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID)){
         new_dataset->addInt64Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_RUN_ID,i_cuid->second.runid );
     }
@@ -361,6 +362,9 @@ void DefaultPersistenceDriver::timeout(){
     for(std::map<std::string,cuids_t>::iterator i_cuid=m_cuid.begin();i_cuid!=m_cuid.end();i_cuid++){
         int64_t pkid=i_cuid->second.pckid;
         int64_t ts=i_cuid->second.ts;
+        if(ts==i_cuid->second.last_ts){
+            ts=chaos::common::utility::TimingUtil::getTimeStamp();
+        }
         double time_offset = (double(ts - i_cuid->second.last_ts))/1000.0; //time in seconds
         uint32_t pckts=(pkid -i_cuid->second.last_pckid);
         double output_ds_rate = ((time_offset>0)&&(pckts>0))?(double)pckts/time_offset:0; //rate in seconds
@@ -379,14 +383,17 @@ void DefaultPersistenceDriver::timeout(){
                                                        (int32_t)size_pcks,false);                                                
         DPD_LDBG << "Health :"<<i_cuid->first<<" rate:"<<  i_cuid->second.freq << " size"<<size_pcks<<" pkid:"<<pkid<<" at:"<<ts<<" last pckid:"<<i_cuid->second.last_pckid<<" at:"<<i_cuid->second.last_ts<< " delta packet:"<<(pkid-i_cuid->second.last_pckid)<< " delta time:"<<(ts-i_cuid->second.last_ts);
         
-        if((ts - i_cuid->second.last_ts) >=chaos::common::constants::CUTimersTimeoutinMSec*100 /*(HEALT_FIRE_TIMEOUT / HEALT_FIRE_SLOTS)*1000*/ ){
+        if((i_cuid->second.last_ts>0)&&((ts - i_cuid->second.last_ts) >=chaos::common::constants::CUTimersTimeoutinMSec*100 /*(HEALT_FIRE_TIMEOUT / HEALT_FIRE_SLOTS)*1000*/ )){
             DPD_LDBG << "["<<i_cuid->first<<"] Elapsed "<<(ts - i_cuid->second.last_ts)<<" ms, Remonving from health";
 
             HealtManager::getInstance()->removeNode(i_cuid->first);
 
         }
-        i_cuid->second.last_ts=ts;
-        i_cuid->second.pckts_size=0;
+        if(pckts>0){
+             i_cuid->second.last_ts=ts;
+             i_cuid->second.pckts_size=0;
+
+        }
         i_cuid->second.last_pckid=pkid;
 
 
