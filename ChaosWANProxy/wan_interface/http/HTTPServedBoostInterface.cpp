@@ -668,6 +668,7 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
 
                 if (devs.find(*idevname) == devs.end())
                 {
+                     HTTWAN_INTERFACE_DBG_ << "* Creating controller for \"" << *idevname << "\"";
                     controller = new ::driver::misc::ChaosController();
                     if (controller)
                     {
@@ -761,7 +762,7 @@ void HTTPServedBoostInterface::checkActivity()
     HTTWAN_INTERFACE_DBG_<<" checking activity after:"<<(1.0*(now-last_check_activity)/1000000.0)<<" s";
     last_check_activity = now;
     */
-    HTTWAN_INTERFACE_DBG_ << " check activity";
+    HTTWAN_INTERFACE_APP_ << " check activity";
     /*
     for (std::map<std::string, ::driver::misc::ChaosController *>::iterator i = devs.begin(); i != devs.end(); i++)
     {
@@ -774,7 +775,7 @@ void HTTPServedBoostInterface::checkActivity()
             }
         }
     }*/
-    std::vector<std::string> alive=info->searchAllAlive();
+   // std::vector<std::string> alive=info->searchAllAlive();
     {
         boost::mutex::scoped_lock ll(clientMapMutex);
         for(auto i=clientInfo.begin();i!=clientInfo.end();){
@@ -795,55 +796,46 @@ void HTTPServedBoostInterface::checkActivity()
         ChaosReadLock l(devio_mutex);
         i = devs.begin();
     }
-    *monitored_objects_uptr=devs.size();
     // remove not alive first;
     int cnt=devs.size();
-    while (i != devs.end()){
-        if(std::find(alive.begin(),alive.end(),i->first)==alive.end()){
-            cnt--;
-            HTTWAN_INTERFACE_DBG_ << "* removing from update queue \"" << i->first << "\" because not alive remaining:"<<cnt;
-            removeFromQueue(i->first);
-            ::driver::misc::ChaosController *tmp;
-           { ChaosWriteLock ll(devio_mutex);
+    *monitored_objects_uptr=cnt;
 
-                HTTWAN_INTERFACE_DBG_ << "* removing \"" << i->first << "\" from known devices";
-                tmp = i->second;
-                devs.erase(i++);
-           }
-                delete tmp;
-                continue;
-        }
-        i++;
-    }
-    {
-        ChaosReadLock l(devio_mutex);
-        i = devs.begin();
-    }
-    cnt=devs.size();
+    std::vector<std::string> controller_toremove;
+
     while (i != devs.end()){
-        if ((i->second->lastAccess() > 0))
-        {
+   /*     if(std::find(alive.begin(),alive.end(),i->first)==alive.end()){
+            HTTWAN_INTERFACE_DBG_ << "* removing from update queue \"" << i->first << "\" because not alive"<<cnt;
+            removeFromQueue(i->first);
+            controller_toremove.push_back(i->first);  
+        }*/
+        if ((i->second->lastAccess() > 0)){
             int64_t elapsed = (now - (i->second)->lastAccess());
-            if ((elapsed > PRUNE_NOT_ACCESSED_CU))
-            {
-                cnt--;
+            if ((elapsed > PRUNE_NOT_ACCESSED_CU)){
                 HTTWAN_INTERFACE_DBG_ << "* pruning \"" << i->first << "\" because elapsed " << ((1.0 * elapsed) / 1000000.0) << " s last time access:" << ((i->second)->lastAccess() / 1000000.0) << " s ago";
                 removeFromQueue(i->first);
-                ::driver::misc::ChaosController *tmp;
-                {ChaosWriteLock ll(devio_mutex);
+                controller_toremove.push_back(i->first);  
 
-                HTTWAN_INTERFACE_DBG_ << "* removing \"" << i->first << "\" from known devices remaining:"<<cnt;
-                 tmp= i->second;
-                devs.erase(i++);
-                }
-                delete tmp;
-                continue;
             }
-            
         }
+
         i++;
-       }
-        HTTWAN_INTERFACE_DBG_ << "check activity ENDS";
+    }
+
+    for(std::vector<std::string>::iterator i=controller_toremove.begin();i!=controller_toremove.end();i++){
+            std::map<std::string, ::driver::misc::ChaosController *>::iterator j=devs.find(*i);
+            if(j!=devs.end()){
+                ChaosWriteLock ll(devio_mutex);
+
+                ::driver::misc::ChaosController *tmp = j->second;
+                devs.erase(j);
+                HTTWAN_INTERFACE_DBG_ << "* removing \"" << j->first << "\" from known devices remaining "<<devs.size()<<"/"<<cnt;
+
+                delete tmp;
+            }
+
+    }
+   
+    HTTWAN_INTERFACE_APP_ << "check activity ENDS remaining dev:"<<devs.size();
 
 }
 
@@ -929,7 +921,7 @@ int HTTPServedBoostInterface::processRest(served::response & res, const served::
             if (json_reader.parse(request.body(), json_request))
             {
                 //print the received JSON document
-                DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION <<"["<<api_uri<<"] Received JSON pack:" << json_writer.write(json_request);)
+              //  DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << LOG_CONNECTION <<"["<<api_uri<<"] Received JSON pack:" << json_writer.write(json_request);)
 
                 //call the handler
                 if ((err = handler->handleCall(1,

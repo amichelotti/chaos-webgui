@@ -90,7 +90,6 @@ int ProducerInsertJsonApi::execute(std::vector<std::string>& api_tokens,
     //   PID_LDBG << "PROCESSING:"<<json_str.c_str();//json_writer.write(input_data).c_str();
     output_dataset->setSerializedJsonData(json_str.c_str()	);
 
-
     //scan other memebrs to create the datapack
     //call persistence api for insert the data
     if((err = persistence_driver->pushNewDataset(producer_name ,
@@ -101,7 +100,11 @@ int ProducerInsertJsonApi::execute(std::vector<std::string>& api_tokens,
         PRODUCER_INSERT_ERR(output_data, err, err_msg);
         return err;
     }
-    } catch(std::exception e){
+    } catch (chaos::CException& e ){
+            	PID_LERR << "Exception: err:"<<e.errorCode<<" domain:"<<e.errorDomain<<" msg:\""<<e.errorMessage<<"\"";
+            err=e.errorCode;
+
+    }catch(std::exception e){
     	PID_LERR << "Exception:\""<<e.what()<<"\"";
 		err=-1;
 	} catch(...){
