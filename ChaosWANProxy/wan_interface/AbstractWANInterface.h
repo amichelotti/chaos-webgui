@@ -32,7 +32,7 @@
 #include <json/json.h>
 #define CHECK_ACTIVITY_CU 5*60*1000
 // microsecs
-#define PRUNE_NOT_ACCESSED_CU 10*60*1000*1000
+#define PRUNE_NOT_ACCESSED_CU 2*60*1000*1000
 
 namespace chaos {
 	namespace wan_proxy {

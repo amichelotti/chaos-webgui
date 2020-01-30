@@ -525,8 +525,6 @@ static std::map<std::string, std::string> mappify(const std::string &s)
 int HTTPServedBoostInterface::removeFromQueue(const std::string &devname)
 {
     int cntt = 0;
-    ChaosReadLock l(devio_mutex);
-
     for (int cnt = 0; cnt < chaos_thread_number; cnt++)
     {
         if (sched_cu_v[cnt]->remove(devname))
@@ -618,7 +616,7 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
         
         boost::mutex::scoped_lock lurl(devurl_mutex);
             //remove the prefix and tokenize the url
-         
+        std::vector<std::string> devToRemove;
         std::string cmd, parm, dev_param;
         dev_param = request_param["dev"];
         cmd = request_param["cmd"];
@@ -686,7 +684,11 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
                         {
                             HTTWAN_INTERFACE_DBG_ << "* adding device \"" << *idevname << "\"";
                             addDevice(*idevname, controller);
-                            sched_cu_v[sched_alloc++ % chaos_thread_number]->add(*idevname, controller);
+                            if(info->searchAlive(*idevname).size()>0){
+                                sched_cu_v[sched_alloc++ % chaos_thread_number]->add(*idevname, controller);
+                            } else {
+                                devToRemove.push_back(*idevname);
+                            }
                         }
                     }
                 }
@@ -728,6 +730,15 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
                 }
             }
             res << answer_multi.str();
+            for (std::vector<std::string>::iterator idevname = devToRemove.begin(); idevname != devToRemove.end(); idevname++){
+                ChaosWriteLock l(devio_mutex);
+                std::map<std::string, ::driver::misc::ChaosController *>::iterator dd =devs.find(*idevname);
+                if(dd !=devs.end()){
+                    delete (dd->second);
+                    devs.erase(dd);
+                }
+            }
+
             /***** CHECK FOR DEVICES NOT ACCESSED IN xx MIN**/
         }
     }

@@ -152,7 +152,13 @@ int ProducerRegisterJsonApi::execute(std::vector<std::string>& api_tokens,
            }
            ds.addInt32Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_BINARY_SUBTYPE,subtype);
            ds.addInt32Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_ATTRIBUTE_TYPE,dstype);
+		   if(dataset_pack.hasKey(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_ATTRIBUTE_DIRECTION)){
+           ds.addInt32Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_ATTRIBUTE_DIRECTION,dataset_pack.getInt32Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_ATTRIBUTE_DIRECTION));
+
+		   } else {
            ds.addInt32Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_ATTRIBUTE_DIRECTION,chaos::DataType::Output);
+
+		   }
            ds.addInt32Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_VALUE_MAX_SIZE,size);
 
            PRA_LDBG<<"- ATTRIBUTE \""<<*it<<"\" SIZE:"<<size<<" TYPE:"<<dstype<<" SUBTYPE:"<<subtype;
