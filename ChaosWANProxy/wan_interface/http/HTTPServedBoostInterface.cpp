@@ -773,7 +773,7 @@ void HTTPServedBoostInterface::checkActivity()
     HTTWAN_INTERFACE_DBG_<<" checking activity after:"<<(1.0*(now-last_check_activity)/1000000.0)<<" s";
     last_check_activity = now;
     */
-    HTTWAN_INTERFACE_APP_ << "checkActivity - ENDS";
+    HTTWAN_INTERFACE_APP_ << "checkActivity - STARTS";
     /*
     for (std::map<std::string, ::driver::misc::ChaosController *>::iterator i = devs.begin(); i != devs.end(); i++)
     {
@@ -837,15 +837,17 @@ void HTTPServedBoostInterface::checkActivity()
             if(j!=devs.end()){
                  ::driver::misc::ChaosController *tmp = j->second;
 
-                {
-                    ChaosWriteLock ll(devio_mutex);
+                
+                    if(devio_mutex.try_lock()){
+                        //ChaosWriteLock ll(devio_mutex);
 
-                    devs.erase(j);
-                    HTTWAN_INTERFACE_DBG_ << "* removing \"" << j->first << "\" from known devices remaining "<<devs.size()<<"/"<<cnt;
+                        devs.erase(j);
+                        HTTWAN_INTERFACE_DBG_ << "* removing \"" << j->first << "\" from known devices remaining "<<devs.size()<<"/"<<cnt;
+                        delete tmp;
+                        devio_mutex.unlock();
+                    }
 
-                }
-
-                delete tmp;
+                
             }
 
     }
