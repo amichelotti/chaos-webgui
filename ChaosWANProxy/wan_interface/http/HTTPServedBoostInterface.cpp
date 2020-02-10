@@ -811,7 +811,7 @@ void HTTPServedBoostInterface::checkActivity()
     int cnt=devs.size();
     *monitored_objects_uptr=cnt;
 
-    std::vector<std::string> controller_toremove;
+    //std::vector<std::string> controller_toremove;
 
     while (i != devs.end()){
    /*     if(std::find(alive.begin(),alive.end(),i->first)==alive.end()){
@@ -822,9 +822,16 @@ void HTTPServedBoostInterface::checkActivity()
         if ((i->second->lastAccess() > 0)){
             int64_t elapsed = (now - (i->second)->lastAccess());
             if ((elapsed > PRUNE_NOT_ACCESSED_CU)){
-                HTTWAN_INTERFACE_DBG_ << "* pruning \"" << i->first << "\" because elapsed " << ((1.0 * elapsed) / 1000000.0) << " s last time access:" << ((i->second)->lastAccess() / 1000000.0) << " s ago";
-                removeFromQueue(i->first);
-                controller_toremove.push_back(i->first);  
+                if(devio_mutex.try_lock()){
+
+                    HTTWAN_INTERFACE_DBG_ << "* pruning \"" << i->first << "\" because elapsed " << ((1.0 * elapsed) / 1000000.0) << " s last time access:" << ((i->second)->lastAccess() / 1000000.0) << " s ago";
+                    removeFromQueue(i->first);
+                    ::driver::misc::ChaosController *tmp = i->second;
+                    delete tmp;
+
+                    devs.erase(i++);
+                    continue;
+                }
 
             }
         }
@@ -832,7 +839,7 @@ void HTTPServedBoostInterface::checkActivity()
         i++;
     }
 
-    for(std::vector<std::string>::iterator i=controller_toremove.begin();i!=controller_toremove.end();i++){
+    /*for(std::vector<std::string>::iterator i=controller_toremove.begin();i!=controller_toremove.end();i++){
             std::map<std::string, ::driver::misc::ChaosController *>::iterator j=devs.find(*i);
             if(j!=devs.end()){
                  ::driver::misc::ChaosController *tmp = j->second;
@@ -850,7 +857,7 @@ void HTTPServedBoostInterface::checkActivity()
                 
             }
 
-    }
+    }*/
    
     HTTWAN_INTERFACE_APP_ << "checkActivity ENDS remaining dev:"<<devs.size();
 
