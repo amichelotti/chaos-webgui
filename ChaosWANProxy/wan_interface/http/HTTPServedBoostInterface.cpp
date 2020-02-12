@@ -830,6 +830,7 @@ void HTTPServedBoostInterface::checkActivity()
                     delete tmp;
 
                     devs.erase(i++);
+                    devio_mutex.unlock();
                     continue;
                 }
 
