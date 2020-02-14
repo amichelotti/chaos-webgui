@@ -633,7 +633,7 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
         std::stringstream answer_multi;
         if (dev_param.size() == 0)
         {
-            ChaosReadLock l(devio_mutex);
+           // ChaosReadLock l(devio_mutex);
             std::string ret;
             if (info->get(cmd, (char *)parm.c_str(), 0, atoi(cmd_prio.c_str()), atoi(cmd_schedule.c_str()), atoi(cmd_mode.c_str()), 0, ret) != ::driver::misc::ChaosController::CHAOS_DEV_OK)
             {
@@ -823,13 +823,15 @@ void HTTPServedBoostInterface::checkActivity()
             int64_t elapsed = (now - (i->second)->lastAccess());
             if ((elapsed > PRUNE_NOT_ACCESSED_CU)){
                 if(devio_mutex.try_lock()){
-
-                    HTTWAN_INTERFACE_DBG_ << "* pruning \"" << i->first << "\" because elapsed " << ((1.0 * elapsed) / 1000000.0) << " s last time access:" << ((i->second)->lastAccess() / 1000000.0) << " s ago";
-                    removeFromQueue(i->first);
+                    std::string name=i->first;
                     ::driver::misc::ChaosController *tmp = i->second;
+                    devs.erase(i++);
+                    devio_mutex.unlock();
+                    HTTWAN_INTERFACE_DBG_ << "* pruning \"" << name << "\" because elapsed " << ((1.0 * elapsed) / 1000000.0) << " s last time access:" << (tmp->lastAccess() / 1000000.0) << " s ago";
+                    removeFromQueue(name);
                     delete tmp;
 
-                    devs.erase(i++);
+                    
                     continue;
                 }
 
@@ -859,7 +861,7 @@ void HTTPServedBoostInterface::checkActivity()
 
     }*/
    
-    HTTWAN_INTERFACE_APP_ << "checkActivity ENDS remaining dev:"<<devs.size();
+    HTTWAN_INTERFACE_APP_ << "checkActivity ENDS remaining dev:"<<devs.size()<<" balance:"<<(int)(cnt-devs.size());
 
 }
 
