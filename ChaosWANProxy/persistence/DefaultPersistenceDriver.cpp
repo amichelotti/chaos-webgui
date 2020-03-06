@@ -366,10 +366,7 @@ void DefaultPersistenceDriver::timeout(){
     //uint64_t rate_acq_ts = TimingUtil::getTimeStamp();
     int64_t now=chaos::common::utility::TimingUtil::getTimeStamp();
     for(std::map<std::string,cuids_t>::iterator i_cuid=m_cuid.begin();i_cuid!=m_cuid.end();i_cuid++){
-        int64_t ts=i_cuid->second.ts;
-        if(ts==i_cuid->second.last_ts){
-            ts=chaos::common::utility::TimingUtil::getTimeStamp();
-        }
+       
         double time_offset = (double(now - i_cuid->second.last_sampled_ts))/1000.0; //time in seconds
         uint32_t pckts=(i_cuid->second.npcks -i_cuid->second.last_npcks);
         double output_ds_rate = (double)pckts/time_offset; //rate in seconds
@@ -385,7 +382,7 @@ void DefaultPersistenceDriver::timeout(){
                                                         chaos::ControlUnitHealtDefinitionValue::CU_HEALT_OUTPUT_DATASET_PUSH_SIZE,
                                                        (int32_t)size_pcks,false);                                                
         }
-        DPD_LDBG << "Health :"<<i_cuid->first<<" rate:"<<  i_cuid->second.freq << " size"<<size_pcks<<" pkts:"<<pckts<<" at:"<<common::utility::TimingUtil::toString(ts);
+        DPD_LDBG << "Health :"<<i_cuid->first<<" rate:"<<  i_cuid->second.freq << " size"<<size_pcks<<" pkts:"<<pckts<<" at:"<<common::utility::TimingUtil::toString(now)<<" last pack:"<<common::utility::TimingUtil::toString(i_cuid->second.ts)<<" previous pack was:"<<common::utility::TimingUtil::toString(i_cuid->second.last_ts);
         
         if((i_cuid->second.last_ts>0)&&((now - i_cuid->second.last_ts) >=chaos::common::constants::CUTimersTimeoutinMSec*100 )){
             DPD_LDBG << "["<<i_cuid->first<<"] Elapsed "<<(now - i_cuid->second.last_ts)<<" ms, Removing from health";
@@ -394,7 +391,7 @@ void DefaultPersistenceDriver::timeout(){
 
         }
         if(pckts>0){
-             i_cuid->second.last_ts=ts;
+             i_cuid->second.last_ts=i_cuid->second.ts;
              i_cuid->second.pckts_size=0;
 
         }
