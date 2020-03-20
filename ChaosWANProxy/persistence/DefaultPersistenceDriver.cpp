@@ -26,11 +26,11 @@
 #include <chaos/common/network/URL.h>
 #include <chaos/common/chaos_constants.h>
 
-#define DPD_LOG_HEAD "[DefaultPersistenceDriver] - "
 
-#define DPD_LAPP LAPP_ << DPD_LOG_HEAD
-#define DPD_LDBG LDBG_ << DPD_LOG_HEAD << __PRETTY_FUNCTION__
-#define DPD_LERR LERR_ << DPD_LOG_HEAD << __PRETTY_FUNCTION__ << "(" << __LINE__ << ") "
+#define DPD_LAPP INFO_LOG(DefaultPersistenceDriver)
+#define DPD_LDBG DBG_LOG(DefaultPersistenceDriver)
+#define DPD_LERR ERR_LOG(DefaultPersistenceDriver)
+
 #define MDS_TIMEOUT 5000
 
 using namespace chaos::wan_proxy::persistence;
