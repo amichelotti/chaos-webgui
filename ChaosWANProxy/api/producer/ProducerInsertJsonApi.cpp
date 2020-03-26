@@ -92,9 +92,13 @@ int ProducerInsertJsonApi::execute(std::vector<std::string>& api_tokens,
 
     //scan other memebrs to create the datapack
     //call persistence api for insert the data
+    int dststo=3;
+    if(output_dataset->hasKey(DataPackCommonKey::DPCK_DATASET_DESTINATION_STORAGE)){
+        dststo=output_dataset->getInt32Value(DataPackCommonKey::DPCK_DATASET_DESTINATION_STORAGE);
+    }
     if((err = persistence_driver->pushNewDataset(producer_name ,
                                                  output_dataset.get(),
-                                                 3))) {
+                                                 dststo))) {
         err_msg = "Error during push of the dataset";
         PID_LERR << err_msg;
         PRODUCER_INSERT_ERR(output_data, err, err_msg);
