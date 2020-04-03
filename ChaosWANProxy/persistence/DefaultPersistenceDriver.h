@@ -62,13 +62,17 @@ namespace chaos {
                 typedef struct _cuids {
                      uint64_t runid;
                      uint64_t pckid;
-                     uint64_t last_pckid;
-					 uint64_t ts;
-                     uint64_t last_ts;
+                     uint64_t last_npcks;
+					 uint64_t npcks;
+
+					 int64_t ts;
+                     int64_t last_ts;
+					 int64_t last_sampled_ts;
 					 double freq;
 					 uint64_t pckts_size;
 					 int storage_type;
 					 int healt_update;
+					 std::mutex lock;
             } cuids_t;
                 cuids_t& getCuid(const std::string& name){return m_cuid[name];}
 			protected:
