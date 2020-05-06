@@ -433,7 +433,7 @@ void HTTPServedBoostInterface::start()
 
     run = true;
     HTTWAN_INTERFACE_APP_ << " Starting...";
-    AsyncCentralManager::getInstance()->addTimer(this, CHECK_ACTIVITY_CU, CHECK_ACTIVITY_CU);
+   // AsyncCentralManager::getInstance()->addTimer(this, CHECK_ACTIVITY_CU, CHECK_ACTIVITY_CU);
 
     
     for (std::vector<::common::misc::scheduler::Scheduler *>::iterator i = sched_cu_v.begin(); i != sched_cu_v.end(); i++)
@@ -446,6 +446,8 @@ void HTTPServedBoostInterface::start()
     }
     char port[256];
     sprintf(port,"%d",service_port);
+    check_enabled=true;
+    check_th = boost::thread(&HTTPServedBoostInterface::checkActivity,this);
     server =new served::net::server("0.0.0.0",port,mux); // all interfaces
 	server->run(chaos_thread_number);
 }
@@ -454,10 +456,13 @@ void HTTPServedBoostInterface::start()
 void HTTPServedBoostInterface::stop() 
 {
     run = false;
+    check_enabled=false;
+
     for (std::vector<::common::misc::scheduler::Scheduler *>::iterator i = sched_cu_v.begin(); i != sched_cu_v.end(); i++)
     {
         (*i)->stop();
     }
+    check_th.join();
     server->stop();
 }
 
@@ -766,6 +771,9 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
 }
 void HTTPServedBoostInterface::checkActivity()
 {
+    HTTWAN_INTERFACE_APP_ << "checkActivity - THREAD STARTS";
+
+    while(check_enabled){
     int64_t now = TimingUtil::getTimeStampInMicroseconds();
     /* if((now-last_check_activity)<CHECK_ACTIVITY_CU){
         return;
@@ -862,6 +870,10 @@ void HTTPServedBoostInterface::checkActivity()
     }*/
    
     HTTWAN_INTERFACE_APP_ << "checkActivity ENDS remaining dev:"<<devs.size()<<" balance:"<<(int)(cnt-devs.size());
+    boost::this_thread::sleep_for(boost::chrono::milliseconds{CHECK_ACTIVITY_CU});
+
+    }
+    HTTWAN_INTERFACE_APP_ << "checkActivity - THREAD EXITS";
 
 }
 
