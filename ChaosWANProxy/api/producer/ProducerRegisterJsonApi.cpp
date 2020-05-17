@@ -59,7 +59,6 @@ int ProducerRegisterJsonApi::execute(std::vector<std::string>& api_tokens,
 	int err = 0;
 	std::string err_msg;
 	std::string producer_name;
-	int cnt;
 	try{
 		const Json::Value& pname = input_data[chaos::NodeDefinitionKey::NODE_UNIQUE_ID];
 	if(pname.isNull()){
@@ -187,7 +186,7 @@ int ProducerRegisterJsonApi::execute(std::vector<std::string>& api_tokens,
 		output_data["producer_register_err"] = 0;
 		output_data["producer_register_bson"] =  mds_registration_pack.getJSONString();
 	}
-	} catch(std::exception e){
+	} catch(std::exception& e){
 		PRA_LERR << "Exception:"<<e.what();
 		err=-1;
 	} catch(...){
