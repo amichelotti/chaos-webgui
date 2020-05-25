@@ -615,8 +615,8 @@ void allocateMetrics(uint64_t ts,chaos::common::data::CDWShrdPtr ds,std::map<std
 int DefaultPersistenceDriver::queryMetrics(const std::string& start,const std::string& end,const std::vector<std::string>& metrics_name,metrics_results_t& res,int limit){
     int ret=0;
     boost::regex expr("(.*)/(.*)$");
-    uint64_t start_t=chaos::common::utility::TimingUtil::getTimestampFromString(start,true);
-    uint64_t end_t=chaos::common::utility::TimingUtil::getTimestampFromString(end,true);
+    uint64_t start_t=chaos::common::utility::TimingUtil::getTimestampFromString(start);
+    uint64_t end_t=chaos::common::utility::TimingUtil::getTimestampFromString(end);
     std::map<std::string,std::vector<std::string> > accesses;
     res.clear();
     for ( int index = 0; index < metrics_name.size(); ++index ){
