@@ -118,8 +118,8 @@ int GrafanaQuery::execute(std::vector<std::string>& api_tokens,
             }
             ss<<"]";
         }
-        uint64_t diff_from_now_s=chaos::common::utility::TimingUtil::getTimeStamp()-chaos::common::utility::TimingUtil::getTimestampFromString(start,true);
-        uint64_t diff_from_now_e=chaos::common::utility::TimingUtil::getTimeStamp()-chaos::common::utility::TimingUtil::getTimestampFromString(end,true);
+        uint64_t diff_from_now_s=chaos::common::utility::TimingUtil::getTimeStamp()-chaos::common::utility::TimingUtil::getTimestampFromString(start);
+        uint64_t diff_from_now_e=chaos::common::utility::TimingUtil::getTimeStamp()-chaos::common::utility::TimingUtil::getTimestampFromString(end);
 
         PID_LDBG << "ANSWER "<<start<<"("<< chaos::common::utility::TimingUtil::getTimestampFromString(start)<<" diff from now:"<<diff_from_now_s<<") - "<<end<<"("<<chaos::common::utility::TimingUtil::getTimestampFromString(end)<<" diff from now:"<<diff_from_now_e<<"):"<<ss.str();
 
