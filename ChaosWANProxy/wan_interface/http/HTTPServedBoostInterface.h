@@ -61,7 +61,6 @@ namespace chaos {
                     uint64_t lastConnection;
                     double avgTimeConn;
                     double avgTimeExec;
-
                     double kbOps;
                     ConnectedClientInfo():ops(0),lastConnection(0),kbOps(0),avgTimeExec(0),avgTimeConn(0){};
                     std::string getJson();
