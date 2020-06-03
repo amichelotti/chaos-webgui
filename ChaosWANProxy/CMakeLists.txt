@@ -65,4 +65,7 @@ IF(BUILD_FORCE_STATIC)
 ENDIF()
 
 TARGET_LINK_LIBRARIES(ChaosWANProxy chaos_common chaos_metadata_service_client  chaos_driver_misc common_misc_scheduler common_debug served ${FrameworkLib})
-INSTALL_TARGETS(/bin ChaosWANProxy)
+#INSTALL_TARGETS(/bin ChaosWANProxy)
+INSTALL(TARGETS ChaosWANProxy
+        DESTINATION "bin"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)

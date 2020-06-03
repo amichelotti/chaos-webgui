@@ -61,7 +61,6 @@ namespace chaos {
                     uint64_t lastConnection;
                     double avgTimeConn;
                     double avgTimeExec;
-
                     double kbOps;
                     ConnectedClientInfo():ops(0),lastConnection(0),kbOps(0),avgTimeExec(0),avgTimeConn(0){};
                     std::string getJson();
@@ -108,6 +107,8 @@ class ServerMutexWrap:public served::multiplexer{
 
                     void checkActivity();
                     static boost::mutex clientMapMutex;
+                    boost::thread check_th;
+                    bool check_enabled;
                 public:
                     static std::map<std::string,ConnectedClientInfo> clientInfo;
                      int process(served::response & res, const served::request & req);
