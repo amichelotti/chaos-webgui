@@ -825,7 +825,14 @@ void HTTPServedBoostInterface::checkActivity()
         bool dev_alive=true;
         if(std::find(alive.begin(),alive.end(),i->first)==alive.end()){
             HTTWAN_INTERFACE_DBG_ << "* device  \"" << i->first << "\" is not alive";
-            dev_alive=false;  
+            dev_alive=false; 
+        } else {
+            uint64_t healt=i->second->getCachedHealthTimeStamp();
+            if((now> healt)&&(now-healt)>(2*CHECK_ACTIVITY_CU)){
+                dev_alive=false;
+                HTTWAN_INTERFACE_DBG_ << "* device \""<<i->first<<"\" does not update live since  "<<(now-healt)<<" ms ago"; 
+            }
+            // check also if driver is linked to a live cu
         }
         if ((i->second->lastAccess() > 0)||(dev_alive == false)){
             int64_t elapsed = (now - (i->second)->lastAccess());
