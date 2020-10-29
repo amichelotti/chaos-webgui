@@ -161,6 +161,9 @@ ChaosUniquePtr<chaos::common::data::CDataWrapper> WANProxyRegister::getAgentRegi
                           TimingUtil::getTimeStamp());
     result->addStringValue(AgentNodeDefinitionKey::WORKING_DIRECTORY,
                            ChaosAgent::getInstance()->settings.working_directory);
+
+    result->addInt32Value(NodeDefinitionKey::NODE_REST_PORT, getParameter()[OPT_HTTP_PORT].asInt());
+
     //add control unit alias
     for(MapWorkerIterator iter = map_worker.begin();
         iter != map_worker.end();
