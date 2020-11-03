@@ -165,7 +165,8 @@ void ChaosWANProxy::start()  throw(CException) {
     result->addInt64Value(NodeDefinitionKey::NODE_TIMESTAMP,
                           TimingUtil::getTimeStamp());
 	
-
+	result->addStringValue(NodeDefinitionKey::NODE_BUILD_INFO,
+                           getBuildInfo(chaos::common::data::CDWUniquePtr ())->getJSONString());
 	//lock o monitor for waith the end
 	try {
 		//start all wan interface
