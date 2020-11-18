@@ -177,7 +177,7 @@ void ChaosWANProxy::start()  throw(CException) {
 		HealtManager::getInstance()->addNewNode(uid);
 		HealtManager::getInstance()->addNodeMetricValue(uid,
                                                         NodeHealtDefinitionKey::NODE_HEALT_STATUS,
-                                                    NodeHealtDefinitionValue::NODE_HEALT_STATUS_LOAD);
+                                                    NodeHealtDefinitionValue::NODE_HEALT_STATUS_START);
 		HealtManager::getInstance()->publishNodeHealt(uid);
 		
 		for(WanInterfaceListIterator it = wan_active_interfaces.begin();
