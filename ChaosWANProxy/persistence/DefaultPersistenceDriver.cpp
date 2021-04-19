@@ -77,7 +77,6 @@ void DefaultPersistenceDriver::init(void *init_data){
     if(!ioLiveDataDriver){
         throw chaos::CException(-1, "No LIVE Channel created", "DefaultPersistenceDriver()");
     }
-    ChaosUniquePtr<chaos::common::data::CDataWrapper> best_available_da_ptr;
 
     if(!mds_message_channel->getDataDriverBestConfiguration(best_available_da_ptr, 5000)){
         ioLiveDataDriver->updateConfiguration(best_available_da_ptr.get());
@@ -116,7 +115,6 @@ void DefaultPersistenceDriver::addServerList(const std::vector<std::string>& _cd
     //checkif someone has passed us the device indetification
     DPD_LAPP << "Scan the direction address";
 
-    ChaosUniquePtr<chaos::common::data::CDataWrapper> best_available_da_ptr;
 
     if(!mds_message_channel->getDataDriverBestConfiguration(best_available_da_ptr, 5000)){
         if(best_available_da_ptr.get()!=NULL){
