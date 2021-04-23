@@ -56,7 +56,7 @@ static const boost::regex REG_API_URL_FORMAT(API_PATH_REGEX_V1("((/[a-zA-Z0-9_]+
 int HTTPServedBoostInterface::chaos_thread_number=1;
 int HTTPServedBoostInterface::sched_alloc=0;
 std::map<std::string, ::driver::misc::ChaosController *> HTTPServedBoostInterface::devs;
-std::vector< ::common::misc::scheduler::Scheduler* > HTTPServedBoostInterface::sched_cu_v;
+//std::vector< ::common::misc::scheduler::Scheduler* > HTTPServedBoostInterface::sched_cu_v;
 ChaosSharedMutex HTTPServedBoostInterface::devio_mutex;
 boost::mutex HTTPServedBoostInterface::devurl_mutex;
 ::driver::misc::ChaosController* HTTPServedBoostInterface::info=NULL;
@@ -417,12 +417,13 @@ mux.handle(API_PREFIX_V1)
 	// Create the server and run with 10 handler threads.
 	
     //allcoate each server for every thread
-    
+   #if 0 
     sched_cu_v.resize(chaos_thread_number);
     for (int cnt = 0; cnt < chaos_thread_number; cnt++)
     {
         sched_cu_v[cnt] = new ::common::misc::scheduler::Scheduler();
     }
+    #endif
     sched_alloc = 0;
     last_check_activity = TimingUtil::getTimeStampInMicroseconds();
 }
@@ -435,15 +436,17 @@ void HTTPServedBoostInterface::start()
     HTTWAN_INTERFACE_APP_ << " Starting...";
    // AsyncCentralManager::getInstance()->addTimer(this, CHECK_ACTIVITY_CU, CHECK_ACTIVITY_CU);
 
-    
+    #if 0
     for (std::vector<::common::misc::scheduler::Scheduler *>::iterator i = sched_cu_v.begin(); i != sched_cu_v.end(); i++)
     {
         (*i)->start();
     }
+    #endif
     if(server){
         delete server;
         server=NULL;
     }
+
     char port[256];
     sprintf(port,"%d",service_port);
     check_enabled=true;
@@ -457,11 +460,12 @@ void HTTPServedBoostInterface::stop()
 {
     run = false;
     check_enabled=false;
-
+#if 0
     for (std::vector<::common::misc::scheduler::Scheduler *>::iterator i = sched_cu_v.begin(); i != sched_cu_v.end(); i++)
     {
         (*i)->stop();
     }
+#endif
     check_th.join();
     server->stop();
 }
@@ -473,14 +477,14 @@ void HTTPServedBoostInterface::deinit()
 
     //clear the service url
     service_port = 0;
-    for (int cnt = 0; cnt < chaos_thread_number; cnt++)
+   /* for (int cnt = 0; cnt < chaos_thread_number; cnt++)
     {
         if (sched_cu_v[cnt])
         {
             delete (sched_cu_v[cnt]);
         }
         sched_cu_v[cnt] = NULL;
-    }
+    }*/
     server->stop();
     delete server;
     server=NULL;
@@ -532,11 +536,11 @@ int HTTPServedBoostInterface::removeFromQueue(const std::string &devname)
     int cntt = 0;
     for (int cnt = 0; cnt < chaos_thread_number; cnt++)
     {
-        if (sched_cu_v[cnt]->remove(devname))
+      /*  if (sched_cu_v[cnt]->remove(devname))
         {
             cntt++;
             HTTWAN_INTERFACE_DBG_ << "* removing \"" << devname << "\" from scheduler " << cnt << " inst:" << cntt;
-        }
+        }*/
     }
     return cntt;
 }
@@ -689,7 +693,7 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
                         {
                             HTTWAN_INTERFACE_DBG_ << "* adding device \"" << *idevname << "\"";
                             addDevice(*idevname, controller);
-                            sched_cu_v[sched_alloc++ % chaos_thread_number]->add(*idevname, controller);
+                          //  sched_cu_v[sched_alloc++ % chaos_thread_number]->add(*idevname, controller);
 
                             
                         }
