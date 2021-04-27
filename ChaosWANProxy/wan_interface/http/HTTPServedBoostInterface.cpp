@@ -52,7 +52,6 @@ using namespace chaos::common::async_central;
 #define HTTWAN_INTERFACE_APP_ INFO_LOG(HTTPServedBoostInterface)
 #define HTTWAN_INTERFACE_DBG_ DBG_LOG(HTTPServedBoostInterface)
 #define HTTWAN_INTERFACE_ERR_ ERR_LOG(HTTPServedBoostInterface)
-static const boost::regex REG_API_URL_FORMAT(API_PATH_REGEX_V1("((/[a-zA-Z0-9_]+))*")); //"/api/v1((/[a-zA-Z0-9_]+))*"
 int HTTPServedBoostInterface::chaos_thread_number=1;
 int HTTPServedBoostInterface::sched_alloc=0;
 std::map<std::string, ::driver::misc::ChaosController *> HTTPServedBoostInterface::devs;
