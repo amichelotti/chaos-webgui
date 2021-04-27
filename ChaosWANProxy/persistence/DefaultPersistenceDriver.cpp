@@ -135,7 +135,7 @@ void DefaultPersistenceDriver::addServerList(const std::vector<std::string>& _cd
     for (std::vector<std::string>::const_iterator it = _cds_address_list.begin();
          it != _cds_address_list.end();
          it++ ){
-        if(!common::direct_io::DirectIOClient::checkURL(*it)) {
+        if(!common::direct_io::checkURL(*it)) {
             DPD_LDBG << "Data proxy server description " << *it << " non well formed";
             continue;
         }
