@@ -168,19 +168,20 @@ void ChaosWANProxy::start()  throw(CException) {
                           TimingUtil::getTimeStamp());
 	
 	result->addStringValue(NodeDefinitionKey::NODE_BUILD_INFO,
-                           getBuildInfo(chaos::common::data::CDWUniquePtr ())->getJSONString());
+                           getBuildInfo(chaos::common::data::CDWUniquePtr ())->getCompliantJSONString());
 	//lock o monitor for waith the end
 	try {
-		//start all wan interface
-		StartableService::startImplementation(HealtManagerDirect::getInstance(), "HealtManagerDirect", __PRETTY_FUNCTION__);
-
 		LCND_LAPP << "Publishing as:"<<uid<<" registration:"<<result->getCompliantJSONString();
  		mds_message_channel->sendNodeRegistration(MOVE(result));
+		 		//start all wan interface
+		StartableService::startImplementation(HealtManagerDirect::getInstance(), "HealtManagerDirect", __PRETTY_FUNCTION__);
+
+
 		HealtManagerDirect::getInstance()->addNewNode(uid);
 		HealtManagerDirect::getInstance()->addNodeMetricValue(uid,
                                                         NodeHealtDefinitionKey::NODE_HEALT_STATUS,
                                                     NodeHealtDefinitionValue::NODE_HEALT_STATUS_START);
-		HealtManagerDirect::getInstance()->publishNodeHealt(uid);
+		//HealtManagerDirect::getInstance()->publishNodeHealt(uid);
 		
 		for(WanInterfaceListIterator it = wan_active_interfaces.begin();
 			it != wan_active_interfaces.end();
