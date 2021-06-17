@@ -444,7 +444,7 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
             std::string ret;
             if (info->get(cmd, (char *)parm.c_str(), 0, atoi(cmd_prio.c_str()), atoi(cmd_schedule.c_str()), atoi(cmd_mode.c_str()), 0, ret) != ::driver::misc::ChaosController::CHAOS_DEV_OK)
             {
-                HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION << "An error occurred during get without dev:" << info->getJsonState();
+                HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION << "An error occurred during get without dev:" << info->getJsonState()<<" cmd:"<<cmd<<" parm:"<<parm;
                 response.setCode(400);
             }
             else
