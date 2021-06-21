@@ -70,7 +70,7 @@ static int event_handler(struct mg_connection *connection, enum mg_event ev)
     if ((ev == MG_REQUEST) && (connection->server_param != NULL))
     {
         HTTPUIInterface *ptr=(HTTPUIInterface *)connection->server_param;
-        if ((strstr(connection->uri, API_PREFIX_V1)) && ptr->handle(connection))
+        if (ptr&& (strstr(connection->uri, API_PREFIX_V1)) && ptr->handle(connection))
         {
             ptr->processRest(connection);
         }
@@ -407,8 +407,8 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
                     flush_response(connection, &response);
                     return 1;
                 }
-                char decoded[connection->content_len + 2];
-                connection->content[connection->content_len] = 0;
+                char decoded[connection->content_len + 8];
+                ((char*)connection->content)[connection->content_len] = 0;
                 mg_url_decode(connection->content, connection->content_len + 1, decoded, connection->content_len + 1, 0);
 
                 std::string content_data(decoded);
@@ -440,7 +440,7 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
         std::stringstream answer_multi;
         if (dev_param.size() == 0)
         {
-            ChaosReadLock l(devio_mutex);
+            ChaosWriteLock l(devio_mutex);
             std::string ret;
             if (info->get(cmd, (char *)parm.c_str(), 0, atoi(cmd_prio.c_str()), atoi(cmd_schedule.c_str()), atoi(cmd_mode.c_str()), 0, ret) != ::driver::misc::ChaosController::CHAOS_DEV_OK)
             {
