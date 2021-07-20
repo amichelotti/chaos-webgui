@@ -137,7 +137,7 @@ void ChaosWANProxy::init(void *init_data)  throw(CException) {
 
 		}
 		// initialize ChaosManager from MDS
-		chaos::service_common::ChaosManager::getInstance();
+//		chaos::service_common::ChaosManager::getInstance();
    
 
 	} catch (CException& ex) {
