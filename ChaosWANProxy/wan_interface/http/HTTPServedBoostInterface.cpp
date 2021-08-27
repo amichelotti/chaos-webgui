@@ -29,7 +29,7 @@
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/replace.hpp>
-
+#include <sstream>
 #include <boost/algorithm/string.hpp>
 
 #include <json/json.h>
@@ -71,7 +71,39 @@ HTTPServedBoostInterface* ServerMutexWrap::parent=NULL;
  */
 ChaosSharedMutex http_mutex;
 
+static std::map<std::string, std::string> mappify(const std::string &s)
+{
+    std::map<std::string, std::string> m;
+    std::vector<std::string> api_token_list0;
+    boost::regex regx("([a-zA-Z_]+)=(.+)");
+    try
+    {
+        /*
+        std::istringstream iss(s);
+        std::vector<std::string> api_token_list0((std::istream_iterator<WordDelimitedBy<'&'>>(iss)),
+                                 std::istream_iterator<WordDelimitedBy<'&'>>());
+                                 */          
+        boost::split(api_token_list0, s, boost::is_any_of("&"));
 
+        for (std::vector<std::string>::iterator i = api_token_list0.begin(); i != api_token_list0.end(); i++)
+        {
+            boost::match_results<std::string::const_iterator> what;
+            std::string::const_iterator startPos = (*i).begin();
+            std::string::const_iterator endPos = (*i).end();
+            while (boost::regex_search(startPos, endPos, what, regx))
+            {
+                m[what[1]] = what[2];
+                startPos = what[0].second;
+            }
+        }
+    }
+    catch (boost::bad_expression &ex)
+    {
+        LERR_ << ex.what();
+    }
+
+    return m;
+}
 std::string ConnectedClientInfo::getJson(){
     chaos::common::data::CDataWrapper cw;
     cw.addStringValue("client",src);
@@ -281,6 +313,7 @@ void HTTPServedBoostInterface::init(void *init_data)
             processRest(res,req);
 		});
 */
+
 mux.handle(API_PREFIX_V1)
 		.post([](served::response & res, const served::request & req) {
             ConnectedClientInfo tmp;
@@ -413,6 +446,37 @@ mux.handle(API_PREFIX_V1)
 
 		});;
 
+    mux.handle("/proxy").post([](served::response & res, const served::request & req) {
+            ConnectedClientInfo tmp;
+            std::stringstream out;
+            std::map<std::string, std::string> request_param=mappify(req.body());
+
+            chaos::common::data::CDataWrapper r;
+            try{
+             r.setSerializedJsonData(req.body().c_str());
+             HTTWAN_INTERFACE_DBG_<<"POST "<<r.getJSONString();
+            } catch(...){
+                    HTTWAN_INTERFACE_ERR_<<" Invalid JSON:"<<req.body();
+
+            }
+            if(r.hasKey("server")&&r.hasKey("api")){
+
+                int ret=ServerMutexWrap::parent->post.post(r.getStringValue("server"),r.getStringValue("api"),req.body(),out);
+                res<<out.str();
+                res.set_header("Access-Control-Allow-Origin","*");
+                res.set_status(ret);
+                
+                HTTWAN_INTERFACE_DBG_<<ret<<"] POST "<<request_param["server"]<<"/proxy/"<<request_param["api"]<<"request:"<<req.body()<<" Answer ["<<out.str().size()<<"]:"<<out.str();
+
+                return;
+            }
+            HTTWAN_INTERFACE_ERR_<<" POST /proxy:"<<req.source()<<" missing 'server' or 'api' keys";
+
+            res.set_status(served::status_4XX::BAD_REQUEST);
+
+
+		});       
+
 	// Create the server and run with 10 handler threads.
 	
     //allcoate each server for every thread
@@ -497,39 +561,7 @@ template<char delimiter>
 class WordDelimitedBy : public std::string
 {};
 
-static std::map<std::string, std::string> mappify(const std::string &s)
-{
-    std::map<std::string, std::string> m;
-    std::vector<std::string> api_token_list0;
-    boost::regex regx("([a-zA-Z_]+)=(.+)");
-    try
-    {
-        /*
-        std::istringstream iss(s);
-        std::vector<std::string> api_token_list0((std::istream_iterator<WordDelimitedBy<'&'>>(iss)),
-                                 std::istream_iterator<WordDelimitedBy<'&'>>());
-                                 */          
-        boost::split(api_token_list0, s, boost::is_any_of("&"));
 
-        for (std::vector<std::string>::iterator i = api_token_list0.begin(); i != api_token_list0.end(); i++)
-        {
-            boost::match_results<std::string::const_iterator> what;
-            std::string::const_iterator startPos = (*i).begin();
-            std::string::const_iterator endPos = (*i).end();
-            while (boost::regex_search(startPos, endPos, what, regx))
-            {
-                m[what[1]] = what[2];
-                startPos = what[0].second;
-            }
-        }
-    }
-    catch (boost::bad_expression &ex)
-    {
-        LERR_ << ex.what();
-    }
-
-    return m;
-}
 int HTTPServedBoostInterface::removeFromQueue(const std::string &devname)
 {
     int cntt = 0;
