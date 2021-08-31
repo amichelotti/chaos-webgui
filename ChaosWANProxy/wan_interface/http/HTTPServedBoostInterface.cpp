@@ -967,7 +967,7 @@ int HTTPServedBoostInterface::processRest(served::response & res, const served::
             res << json_writer.write(json_response);
             execution_time_end = TimingUtil::getTimeStampInMicroseconds();
             uint64_t duration = execution_time_end - execution_time_start;
-            DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << "Execution time is:" << duration << " microseconds";)
+          //  DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << "Execution time is:" << duration << " microseconds";)
 	      *answer_ms_uptr=duration * 1.0 / 1000.0;
             return 1; //
         }
