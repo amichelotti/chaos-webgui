@@ -120,7 +120,7 @@ void ChaosWANProxy::init(void *init_data)  throw(CException) {
 				continue;
 			}
 			
-            InizializableService::initImplementation(SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
+          //  InizializableService::initImplementation(SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
 
 			// try to initialize the implementation
 			StartableService::initImplementation(tmp_interface_instance,
