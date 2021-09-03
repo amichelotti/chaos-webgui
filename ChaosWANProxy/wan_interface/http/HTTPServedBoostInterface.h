@@ -111,6 +111,7 @@ class ServerMutexWrap:public served::multiplexer{
                     static boost::mutex clientMapMutex;
                     boost::thread check_th;
                     bool check_enabled;
+                    bool hasExited;
                 public:
                     static std::map<std::string,ConnectedClientInfo> clientInfo;
                      int process(served::response & res, const served::request & req);

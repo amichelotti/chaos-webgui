@@ -496,7 +496,6 @@ void HTTPServedBoostInterface::start()
 {
 
     run = true;
-    HTTWAN_INTERFACE_APP_ << " Starting...";
    // AsyncCentralManager::getInstance()->addTimer(this, CHECK_ACTIVITY_CU, CHECK_ACTIVITY_CU);
 
     #if 0
@@ -514,15 +513,29 @@ void HTTPServedBoostInterface::start()
     sprintf(port,"%d",service_port);
     check_enabled=true;
     check_th = boost::thread(&HTTPServedBoostInterface::checkActivity,this);
-    server =new served::net::server("0.0.0.0",port,mux); // all interfaces
-	server->run(chaos_thread_number);
+    server =new served::net::server("0.0.0.0",port,mux);
+    while(check_enabled&& server){
+        HTTWAN_INTERFACE_APP_ << " Starting REST Service on:"<<port<<", threads "<<chaos_thread_number;
+
+	    server->run(chaos_thread_number);
+        server->stop();
+        HTTWAN_INTERFACE_APP_ << " EXIT REST Service threads, restarting ...";
+        delete server;
+        server =new served::net::server("0.0.0.0",port,mux);
+
+    }
+    HTTWAN_INTERFACE_APP_ << " EXIT REST Service";
+
+    run=false;
 }
 
 //inherited method
 void HTTPServedBoostInterface::stop() 
 {
-    run = false;
+    HTTWAN_INTERFACE_APP_ << " STOP";
     check_enabled=false;
+
+    run = false;
 #if 0
     for (std::vector<::common::misc::scheduler::Scheduler *>::iterator i = sched_cu_v.begin(); i != sched_cu_v.end(); i++)
     {
@@ -799,6 +812,7 @@ void HTTPServedBoostInterface::checkActivity()
     HTTWAN_INTERFACE_APP_ << "checkActivity - THREAD STARTS";
 
     while(check_enabled){
+
     int64_t now = TimingUtil::getTimeStampInMicroseconds();
     /* if((now-last_check_activity)<CHECK_ACTIVITY_CU){
         return;
