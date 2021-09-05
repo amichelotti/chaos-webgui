@@ -46,8 +46,8 @@ using namespace chaos::wan_proxy::wan_interface::http;
 #define HTTWAN_INTERFACE_APP_ INFO_LOG(HTTPWANInterface)
 #define HTTWAN_INTERFACE_DBG_ DBG_LOG(HTTPWANInterface)
 #define HTTWAN_INTERFACE_ERR_ ERR_LOG(HTTPWANInterface)
-
-static const boost::regex REG_API_URL_FORMAT(API_PATH_REGEX_V1("((/[a-zA-Z0-9_]+))*")); //"/api/v1((/[a-zA-Z0-9_]+))*"
+#include <regex>
+static const std::regex REG_API_URL_FORMAT(API_PATH_REGEX_V1("((/[a-zA-Z0-9_]+))*")); //"/api/v1((/[a-zA-Z0-9_]+))*"
 
 
 static int do_i_handle(struct mg_connection *connection) {
@@ -318,7 +318,7 @@ int HTTPWANInterface::process(struct mg_connection *connection) {
 
 bool HTTPWANInterface::handle(struct mg_connection *connection) {
     bool accepted = false;
-    if(!(accepted = regex_match(connection->uri, REG_API_URL_FORMAT))) {
+    if(!(accepted = std::regex_match(connection->uri, REG_API_URL_FORMAT))) {
         HTTWAN_INTERFACE_ERR_ << "URI:" << connection->uri << ", not accepted";
     }
 	return accepted;

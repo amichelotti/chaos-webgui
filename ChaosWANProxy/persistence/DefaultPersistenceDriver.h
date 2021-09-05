@@ -58,7 +58,7 @@ namespace chaos {
                 chaos::common::io::IODataDriverShrdPtr ioLiveDataDriver;
 
 				chaos::common::network::URLServiceFeeder	connection_feeder;
-				
+
                 typedef struct _cuids {
                      uint64_t runid;
                      uint64_t pckid;

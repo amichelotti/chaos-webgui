@@ -26,6 +26,7 @@
 
 #include <chaos/common/utility/ObjectFactoryRegister.h>
 #include <common/misc/scheduler/Scheduler.h>
+#include <chaos/common/additional_lib/HttpPost.h>
 #include <boost/thread.hpp>
 #include <boost/atomic.hpp>
 #include <boost/thread/mutex.hpp>
@@ -67,6 +68,7 @@ namespace chaos {
                 };
 class ServerMutexWrap:public served::multiplexer{
     protected:
+
     public:
         static HTTPServedBoostInterface*parent;
         ServerMutexWrap(){}
@@ -109,10 +111,13 @@ class ServerMutexWrap:public served::multiplexer{
                     static boost::mutex clientMapMutex;
                     boost::thread check_th;
                     bool check_enabled;
+                    bool hasExited;
                 public:
                     static std::map<std::string,ConnectedClientInfo> clientInfo;
                      int process(served::response & res, const served::request & req);
                      int processRest(served::response & res, const served::request & req);
+                    chaos::common::http::HttpPost post;
+
                     #if CHAOS_PROMETHEUS
         //custom driver metrics
                     chaos::common::metric::GaugeUniquePtr counter_post_uptr;

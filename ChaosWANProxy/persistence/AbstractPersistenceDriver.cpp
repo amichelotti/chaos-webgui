@@ -14,6 +14,9 @@ AbstractPersistenceDriver::AbstractPersistenceDriver(const std::string& name):
 NamedService(name) {
 	
 }
+chaos::common::data::CDWUniquePtr AbstractPersistenceDriver::getServerConfig() const {
+    return best_available_da_ptr->clone();
+}
 
 AbstractPersistenceDriver::~AbstractPersistenceDriver() {
 	

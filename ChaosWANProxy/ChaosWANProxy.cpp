@@ -19,7 +19,8 @@
  * permissions and limitations under the Licence.
  */
 #include "ChaosWANProxy.h"
-#include <chaos/common/healt_system/HealtManager.h>
+#include <chaos_service_common/health_system/HealtManagerDirect.h>
+#include <chaos_service_common/ChaosManager.h>
 
 #include "global_constant.h"
 #include "DefaultWANInterfaceHandler.h"
@@ -36,7 +37,7 @@ using namespace std;
 using namespace chaos;
 using namespace chaos::common::network;
 using namespace chaos::common::utility;
-using namespace chaos::common::healt_system;
+using namespace chaos::service_common::health_system;
 using namespace chaos::common::io;
 
 using namespace chaos::wan_proxy;
@@ -81,7 +82,7 @@ void ChaosWANProxy::init(void *init_data)  throw(CException) {
 	std::string tmp_interface_name;
 	try {
 		ChaosCommon<ChaosWANProxy>::init(init_data);
-       StartableService::initImplementation(HealtManager::getInstance(), NULL, "HealtManager", __PRETTY_FUNCTION__);
+       StartableService::initImplementation(HealtManagerDirect::getInstance(), NULL, "HealtManagerDirect", __PRETTY_FUNCTION__);
 
 		if(!getGlobalConfigurationInstance()->hasOption(setting_options::OPT_INTERFACE_TO_ACTIVATE)) {
 			throw CException(-1, "The interface protocol are mandatory", __PRETTY_FUNCTION__);
@@ -119,7 +120,7 @@ void ChaosWANProxy::init(void *init_data)  throw(CException) {
 				continue;
 			}
 			
-            InizializableService::initImplementation(SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
+          //  InizializableService::initImplementation(SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
 
 			// try to initialize the implementation
 			StartableService::initImplementation(tmp_interface_instance,
@@ -135,7 +136,8 @@ void ChaosWANProxy::init(void *init_data)  throw(CException) {
 			LCND_LAPP << "Wan interface: " <<tmp_interface_instance->getName()<< " have been installed";
 
 		}
-	
+		// initialize ChaosManager from MDS
+//		chaos::service_common::ChaosManager::getInstance();
    
 
 	} catch (CException& ex) {
@@ -166,19 +168,20 @@ void ChaosWANProxy::start()  throw(CException) {
                           TimingUtil::getTimeStamp());
 	
 	result->addStringValue(NodeDefinitionKey::NODE_BUILD_INFO,
-                           getBuildInfo(chaos::common::data::CDWUniquePtr ())->getJSONString());
+                           getBuildInfo(chaos::common::data::CDWUniquePtr ())->getCompliantJSONString());
 	//lock o monitor for waith the end
 	try {
-		//start all wan interface
-		StartableService::startImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__);
-
 		LCND_LAPP << "Publishing as:"<<uid<<" registration:"<<result->getCompliantJSONString();
  		mds_message_channel->sendNodeRegistration(MOVE(result));
-		HealtManager::getInstance()->addNewNode(uid);
-		HealtManager::getInstance()->addNodeMetricValue(uid,
+		 		//start all wan interface
+		StartableService::startImplementation(HealtManagerDirect::getInstance(), "HealtManagerDirect", __PRETTY_FUNCTION__);
+
+
+		HealtManagerDirect::getInstance()->addNewNode(uid);
+		HealtManagerDirect::getInstance()->addNodeMetricValue(uid,
                                                         NodeHealtDefinitionKey::NODE_HEALT_STATUS,
                                                     NodeHealtDefinitionValue::NODE_HEALT_STATUS_START);
-		HealtManager::getInstance()->publishNodeHealt(uid);
+		//HealtManagerDirect::getInstance()->publishNodeHealt(uid);
 		
 		for(WanInterfaceListIterator it = wan_active_interfaces.begin();
 			it != wan_active_interfaces.end();
@@ -226,7 +229,7 @@ void ChaosWANProxy::stop()   throw(CException) {
 															 (*it)->getName(),
 															 __PRETTY_FUNCTION__);)
 	}
-	  CHAOS_NOT_THROW(StartableService::stopImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
+	  CHAOS_NOT_THROW(StartableService::stopImplementation(HealtManagerDirect::getInstance(), "HealtManagerDirect", __PRETTY_FUNCTION__););
 	//endWaithCondition.notify_one();
 	waitCloseSemaphore.unlock();
 
@@ -238,7 +241,7 @@ void ChaosWANProxy::stop()   throw(CException) {
  */
 void ChaosWANProxy::deinit()   throw(CException) {
 	//deinit all wan interface
-    CHAOS_NOT_THROW(StartableService::deinitImplementation(HealtManager::getInstance(), "HealtManager", __PRETTY_FUNCTION__););
+    CHAOS_NOT_THROW(StartableService::deinitImplementation(HealtManagerDirect::getInstance(), "HealtManagerDirect", __PRETTY_FUNCTION__););
 
 	for(WanInterfaceListIterator it = wan_active_interfaces.begin();
 		it != wan_active_interfaces.end();
