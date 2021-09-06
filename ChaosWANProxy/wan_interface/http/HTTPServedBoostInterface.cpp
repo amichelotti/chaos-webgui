@@ -29,7 +29,7 @@
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/replace.hpp>
-
+#include <sstream>
 #include <boost/algorithm/string.hpp>
 
 #include <json/json.h>
@@ -52,11 +52,10 @@ using namespace chaos::common::async_central;
 #define HTTWAN_INTERFACE_APP_ INFO_LOG(HTTPServedBoostInterface)
 #define HTTWAN_INTERFACE_DBG_ DBG_LOG(HTTPServedBoostInterface)
 #define HTTWAN_INTERFACE_ERR_ ERR_LOG(HTTPServedBoostInterface)
-static const boost::regex REG_API_URL_FORMAT(API_PATH_REGEX_V1("((/[a-zA-Z0-9_]+))*")); //"/api/v1((/[a-zA-Z0-9_]+))*"
 int HTTPServedBoostInterface::chaos_thread_number=1;
 int HTTPServedBoostInterface::sched_alloc=0;
 std::map<std::string, ::driver::misc::ChaosController *> HTTPServedBoostInterface::devs;
-std::vector< ::common::misc::scheduler::Scheduler* > HTTPServedBoostInterface::sched_cu_v;
+//std::vector< ::common::misc::scheduler::Scheduler* > HTTPServedBoostInterface::sched_cu_v;
 ChaosSharedMutex HTTPServedBoostInterface::devio_mutex;
 boost::mutex HTTPServedBoostInterface::devurl_mutex;
 ::driver::misc::ChaosController* HTTPServedBoostInterface::info=NULL;
@@ -72,7 +71,39 @@ HTTPServedBoostInterface* ServerMutexWrap::parent=NULL;
  */
 ChaosSharedMutex http_mutex;
 
+static std::map<std::string, std::string> mappify(const std::string &s)
+{
+    std::map<std::string, std::string> m;
+    std::vector<std::string> api_token_list0;
+    boost::regex regx("([a-zA-Z_]+)=(.+)");
+    try
+    {
+        /*
+        std::istringstream iss(s);
+        std::vector<std::string> api_token_list0((std::istream_iterator<WordDelimitedBy<'&'>>(iss)),
+                                 std::istream_iterator<WordDelimitedBy<'&'>>());
+                                 */          
+        boost::split(api_token_list0, s, boost::is_any_of("&"));
 
+        for (std::vector<std::string>::iterator i = api_token_list0.begin(); i != api_token_list0.end(); i++)
+        {
+            boost::match_results<std::string::const_iterator> what;
+            std::string::const_iterator startPos = (*i).begin();
+            std::string::const_iterator endPos = (*i).end();
+            while (boost::regex_search(startPos, endPos, what, regx))
+            {
+                m[what[1]] = what[2];
+                startPos = what[0].second;
+            }
+        }
+    }
+    catch (boost::bad_expression &ex)
+    {
+        LERR_ << ex.what();
+    }
+
+    return m;
+}
 std::string ConnectedClientInfo::getJson(){
     chaos::common::data::CDataWrapper cw;
     cw.addStringValue("client",src);
@@ -282,6 +313,7 @@ void HTTPServedBoostInterface::init(void *init_data)
             processRest(res,req);
 		});
 */
+
 mux.handle(API_PREFIX_V1)
 		.post([](served::response & res, const served::request & req) {
             ConnectedClientInfo tmp;
@@ -414,15 +446,47 @@ mux.handle(API_PREFIX_V1)
 
 		});;
 
+    mux.handle("/proxy").post([](served::response & res, const served::request & req) {
+            ConnectedClientInfo tmp;
+            std::stringstream out;
+            std::map<std::string, std::string> request_param=mappify(req.body());
+
+            chaos::common::data::CDataWrapper r;
+            try{
+             r.setSerializedJsonData(req.body().c_str());
+             HTTWAN_INTERFACE_DBG_<<"POST "<<r.getJSONString();
+            } catch(...){
+                    HTTWAN_INTERFACE_ERR_<<" Invalid JSON:"<<req.body();
+
+            }
+            if(r.hasKey("server")&&r.hasKey("api")){
+
+                int ret=ServerMutexWrap::parent->post.post(r.getStringValue("server"),r.getStringValue("api"),req.body(),out);
+                res<<out.str();
+                res.set_header("Access-Control-Allow-Origin","*");
+                res.set_status(ret);
+                
+                HTTWAN_INTERFACE_DBG_<<ret<<"] POST "<<request_param["server"]<<"/proxy/"<<request_param["api"]<<"request:"<<req.body()<<" Answer ["<<out.str().size()<<"]:"<<out.str();
+
+                return;
+            }
+            HTTWAN_INTERFACE_ERR_<<" POST /proxy:"<<req.source()<<" missing 'server' or 'api' keys";
+
+            res.set_status(served::status_4XX::BAD_REQUEST);
+
+
+		});       
+
 	// Create the server and run with 10 handler threads.
 	
     //allcoate each server for every thread
-    
+   #if 0 
     sched_cu_v.resize(chaos_thread_number);
     for (int cnt = 0; cnt < chaos_thread_number; cnt++)
     {
         sched_cu_v[cnt] = new ::common::misc::scheduler::Scheduler();
     }
+    #endif
     sched_alloc = 0;
     last_check_activity = TimingUtil::getTimeStampInMicroseconds();
 }
@@ -432,36 +496,52 @@ void HTTPServedBoostInterface::start()
 {
 
     run = true;
-    HTTWAN_INTERFACE_APP_ << " Starting...";
    // AsyncCentralManager::getInstance()->addTimer(this, CHECK_ACTIVITY_CU, CHECK_ACTIVITY_CU);
 
-    
+    #if 0
     for (std::vector<::common::misc::scheduler::Scheduler *>::iterator i = sched_cu_v.begin(); i != sched_cu_v.end(); i++)
     {
         (*i)->start();
     }
+    #endif
     if(server){
         delete server;
         server=NULL;
     }
+
     char port[256];
     sprintf(port,"%d",service_port);
     check_enabled=true;
     check_th = boost::thread(&HTTPServedBoostInterface::checkActivity,this);
-    server =new served::net::server("0.0.0.0",port,mux); // all interfaces
-	server->run(chaos_thread_number);
+    server =new served::net::server("0.0.0.0",port,mux);
+    while(check_enabled&& server){
+        HTTWAN_INTERFACE_APP_ << " Starting REST Service on:"<<port<<", threads "<<chaos_thread_number;
+
+	    server->run(chaos_thread_number);
+        server->stop();
+        HTTWAN_INTERFACE_APP_ << " EXIT REST Service threads, restarting ...";
+        delete server;
+        server =new served::net::server("0.0.0.0",port,mux);
+
+    }
+    HTTWAN_INTERFACE_APP_ << " EXIT REST Service";
+
+    run=false;
 }
 
 //inherited method
 void HTTPServedBoostInterface::stop() 
 {
-    run = false;
+    HTTWAN_INTERFACE_APP_ << " STOP";
     check_enabled=false;
 
+    run = false;
+#if 0
     for (std::vector<::common::misc::scheduler::Scheduler *>::iterator i = sched_cu_v.begin(); i != sched_cu_v.end(); i++)
     {
         (*i)->stop();
     }
+#endif
     check_th.join();
     server->stop();
 }
@@ -473,14 +553,14 @@ void HTTPServedBoostInterface::deinit()
 
     //clear the service url
     service_port = 0;
-    for (int cnt = 0; cnt < chaos_thread_number; cnt++)
+   /* for (int cnt = 0; cnt < chaos_thread_number; cnt++)
     {
         if (sched_cu_v[cnt])
         {
             delete (sched_cu_v[cnt]);
         }
         sched_cu_v[cnt] = NULL;
-    }
+    }*/
     server->stop();
     delete server;
     server=NULL;
@@ -494,49 +574,17 @@ template<char delimiter>
 class WordDelimitedBy : public std::string
 {};
 
-static std::map<std::string, std::string> mappify(const std::string &s)
-{
-    std::map<std::string, std::string> m;
-    std::vector<std::string> api_token_list0;
-    boost::regex regx("([a-zA-Z_]+)=(.+)");
-    try
-    {
-        /*
-        std::istringstream iss(s);
-        std::vector<std::string> api_token_list0((std::istream_iterator<WordDelimitedBy<'&'>>(iss)),
-                                 std::istream_iterator<WordDelimitedBy<'&'>>());
-                                 */          
-        boost::split(api_token_list0, s, boost::is_any_of("&"));
 
-        for (std::vector<std::string>::iterator i = api_token_list0.begin(); i != api_token_list0.end(); i++)
-        {
-            boost::match_results<std::string::const_iterator> what;
-            std::string::const_iterator startPos = (*i).begin();
-            std::string::const_iterator endPos = (*i).end();
-            while (boost::regex_search(startPos, endPos, what, regx))
-            {
-                m[what[1]] = what[2];
-                startPos = what[0].second;
-            }
-        }
-    }
-    catch (boost::bad_expression &ex)
-    {
-        LERR_ << ex.what();
-    }
-
-    return m;
-}
 int HTTPServedBoostInterface::removeFromQueue(const std::string &devname)
 {
     int cntt = 0;
     for (int cnt = 0; cnt < chaos_thread_number; cnt++)
     {
-        if (sched_cu_v[cnt]->remove(devname))
+      /*  if (sched_cu_v[cnt]->remove(devname))
         {
             cntt++;
             HTTWAN_INTERFACE_DBG_ << "* removing \"" << devname << "\" from scheduler " << cnt << " inst:" << cntt;
-        }
+        }*/
     }
     return cntt;
 }
@@ -688,7 +736,7 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
                         {
                             HTTWAN_INTERFACE_DBG_ << "* adding device \"" << *idevname << "\"";
                             addDevice(*idevname, controller);
-                            sched_cu_v[sched_alloc++ % chaos_thread_number]->add(*idevname, controller);
+                          //  sched_cu_v[sched_alloc++ % chaos_thread_number]->add(*idevname, controller);
 
                             
                         }
@@ -764,6 +812,7 @@ void HTTPServedBoostInterface::checkActivity()
     HTTWAN_INTERFACE_APP_ << "checkActivity - THREAD STARTS";
 
     while(check_enabled){
+
     int64_t now = TimingUtil::getTimeStampInMicroseconds();
     /* if((now-last_check_activity)<CHECK_ACTIVITY_CU){
         return;
@@ -932,7 +981,7 @@ int HTTPServedBoostInterface::processRest(served::response & res, const served::
             res << json_writer.write(json_response);
             execution_time_end = TimingUtil::getTimeStampInMicroseconds();
             uint64_t duration = execution_time_end - execution_time_start;
-            DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << "Execution time is:" << duration << " microseconds";)
+          //  DEBUG_CODE(HTTWAN_INTERFACE_DBG_ << "Execution time is:" << duration << " microseconds";)
 	      *answer_ms_uptr=duration * 1.0 / 1000.0;
             return 1; //
         }

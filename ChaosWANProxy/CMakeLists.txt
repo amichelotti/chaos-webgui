@@ -64,7 +64,7 @@ IF(BUILD_FORCE_STATIC)
   SET(CMAKE_EXE_LINKER_FLAGS "-static -Wl,--whole-archive -lchaos_common -Wl,--no-whole-archive")
 ENDIF()
 
-TARGET_LINK_LIBRARIES(ChaosWANProxy chaos_common chaos_metadata_service_client  chaos_driver_misc common_misc_scheduler common_debug served ${FrameworkLib})
+TARGET_LINK_LIBRARIES(ChaosWANProxy chaos_cds chaos_common chaos_metadata_service_client  chaos_driver_misc common_misc_scheduler common_debug served ${FrameworkLib})
 #INSTALL_TARGETS(/bin ChaosWANProxy)
 INSTALL(TARGETS ChaosWANProxy
         DESTINATION "bin"

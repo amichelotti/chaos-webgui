@@ -37,10 +37,13 @@ namespace chaos {
 			//! define the base class fro all persistence implementation
 			class AbstractPersistenceDriver:
 			public chaos::common::utility::NamedService {
+        protected:
+        	chaos::common::data::CDWUniquePtr best_available_da_ptr;
+
 			public:
 				AbstractPersistenceDriver(const std::string& name);
 				virtual ~AbstractPersistenceDriver();
-				
+			chaos::common::data::CDWUniquePtr getServerConfig() const;	
 				//! push a dataset
                 /*!
                  \param producer_key the producer key

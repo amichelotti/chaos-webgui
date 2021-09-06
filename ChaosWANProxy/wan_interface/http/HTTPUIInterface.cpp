@@ -70,7 +70,7 @@ static int event_handler(struct mg_connection *connection, enum mg_event ev)
     if ((ev == MG_REQUEST) && (connection->server_param != NULL))
     {
         HTTPUIInterface *ptr=(HTTPUIInterface *)connection->server_param;
-        if ((strstr(connection->uri, API_PREFIX_V1)) && ptr->handle(connection))
+        if (ptr&& (strstr(connection->uri, API_PREFIX_V1)) && ptr->handle(connection))
         {
             ptr->processRest(connection);
         }
@@ -207,11 +207,11 @@ void HTTPUIInterface::init(void *init_data) throw(CException)
     }
     if (!http_server_list.size())
         throw chaos::CException(-1, "No http server has been instantiated", __PRETTY_FUNCTION__);
-    sched_cu_v.resize(chaos_thread_number);
+    /*sched_cu_v.resize(chaos_thread_number);
     for (int cnt = 0; cnt < chaos_thread_number; cnt++)
     {
         sched_cu_v[cnt] = new ::common::misc::scheduler::Scheduler();
-    }
+    }*/
     sched_alloc = 0;
     last_check_activity = TimingUtil::getTimeStampInMicroseconds();
 }
@@ -231,10 +231,10 @@ void HTTPUIInterface::start() throw(CException)
     {
         http_server_thread.add_thread(new boost::thread(boost::bind(&HTTPUIInterface::pollHttpServer, this, *it)));
     }
-    for (std::vector<::common::misc::scheduler::Scheduler *>::iterator i = sched_cu_v.begin(); i != sched_cu_v.end(); i++)
+   /* for (std::vector<::common::misc::scheduler::Scheduler *>::iterator i = sched_cu_v.begin(); i != sched_cu_v.end(); i++)
     {
         (*i)->start();
-    }
+    }*/
 }
 
 //inherited method
@@ -242,10 +242,10 @@ void HTTPUIInterface::stop() throw(CException)
 {
     run = false;
     http_server_thread.join_all();
-    for (std::vector<::common::misc::scheduler::Scheduler *>::iterator i = sched_cu_v.begin(); i != sched_cu_v.end(); i++)
+   /* for (std::vector<::common::misc::scheduler::Scheduler *>::iterator i = sched_cu_v.begin(); i != sched_cu_v.end(); i++)
     {
         (*i)->stop();
-    }
+    }*/
 }
 
 //inherited method
@@ -262,14 +262,14 @@ void HTTPUIInterface::deinit() throw(CException)
     http_server_list.clear();
     //clear the service url
     service_port = 0;
-    for (int cnt = 0; cnt < chaos_thread_number; cnt++)
+   /* for (int cnt = 0; cnt < chaos_thread_number; cnt++)
     {
         if (sched_cu_v[cnt])
         {
             delete (sched_cu_v[cnt]);
         }
         sched_cu_v[cnt] = NULL;
-    }
+    }*/
 }
 
 void HTTPUIInterface::pollHttpServer(struct mg_server *http_server)
@@ -332,11 +332,11 @@ int HTTPUIInterface::removeFromQueue(const std::string &devname)
 
     for (int cnt = 0; cnt < chaos_thread_number; cnt++)
     {
-        if (sched_cu_v[cnt]->remove(devname))
+     /*   if (sched_cu_v[cnt]->remove(devname))
         {
             cntt++;
             HTTWAN_INTERFACE_DBG_ << "* removing \"" << devname << "\" from scheduler " << cnt << " inst:" << cntt;
-        }
+        }*/
     }
     return cntt;
 }
@@ -407,8 +407,8 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
                     flush_response(connection, &response);
                     return 1;
                 }
-                char decoded[connection->content_len + 2];
-                connection->content[connection->content_len] = 0;
+                char decoded[connection->content_len + 8];
+                ((char*)connection->content)[connection->content_len] = 0;
                 mg_url_decode(connection->content, connection->content_len + 1, decoded, connection->content_len + 1, 0);
 
                 std::string content_data(decoded);
@@ -440,11 +440,11 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
         std::stringstream answer_multi;
         if (dev_param.size() == 0)
         {
-            ChaosReadLock l(devio_mutex);
+            ChaosWriteLock l(devio_mutex);
             std::string ret;
             if (info->get(cmd, (char *)parm.c_str(), 0, atoi(cmd_prio.c_str()), atoi(cmd_schedule.c_str()), atoi(cmd_mode.c_str()), 0, ret) != ::driver::misc::ChaosController::CHAOS_DEV_OK)
             {
-                HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION << "An error occurred during get without dev:" << info->getJsonState();
+                HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION << "An error occurred during get without dev:" << info->getJsonState()<<" cmd:"<<cmd<<" parm:"<<parm;
                 response.setCode(400);
             }
             else
@@ -487,7 +487,7 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
                         {
                             HTTWAN_INTERFACE_DBG_ << "* adding device \"" << *idevname << "\"";
                             addDevice(*idevname, controller);
-                            sched_cu_v[sched_alloc++ % chaos_thread_number]->add(*idevname, controller);
+                            //sched_cu_v[sched_alloc++ % chaos_thread_number]->add(*idevname, controller);
                         }
                     }
                 }
