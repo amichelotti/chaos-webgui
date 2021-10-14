@@ -454,7 +454,7 @@ mux.handle(API_PREFIX_V1)
             chaos::common::data::CDataWrapper r;
             try{
              r.setSerializedJsonData(req.body().c_str());
-             HTTWAN_INTERFACE_DBG_<<"POST "<<r.getJSONString();
+             HTTWAN_INTERFACE_DBG_<<"POST /proxy "<<r.getJSONString();
             } catch(...){
                     HTTWAN_INTERFACE_ERR_<<" Invalid JSON:"<<req.body();
 
@@ -466,7 +466,7 @@ mux.handle(API_PREFIX_V1)
                 res.set_header("Access-Control-Allow-Origin","*");
                 res.set_status(ret);
                 
-                HTTWAN_INTERFACE_DBG_<<ret<<"] POST "<<request_param["server"]<<"/proxy/"<<request_param["api"]<<"request:"<<req.body()<<" Answer ["<<out.str().size()<<"]:"<<out.str();
+                HTTWAN_INTERFACE_DBG_<<ret<<"] POST "<<request_param["server"]<<"/proxy/"<<request_param["api"]<<"request:"<<req.body()<<" Answer ["<<out.str().size()<<"]";
 
                 return;
             }
