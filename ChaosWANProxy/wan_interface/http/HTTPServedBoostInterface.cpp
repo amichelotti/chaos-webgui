@@ -454,12 +454,12 @@ mux.handle(API_PREFIX_V1)
             chaos::common::data::CDataWrapper r;
             try{
              r.setSerializedJsonData(req.body().c_str());
-             HTTWAN_INTERFACE_DBG_<<"POST /proxy "<<r.getJSONString();
             } catch(...){
                     HTTWAN_INTERFACE_ERR_<<" Invalid JSON:"<<req.body();
-
+                    return;
             }
             if(r.hasKey("server")&&r.hasKey("api")){
+                HTTWAN_INTERFACE_DBG_<<"PROXING POST /proxy "<<r.getJSONString();
 
                 int ret=ServerMutexWrap::parent->post.post(r.getStringValue("server"),r.getStringValue("api"),req.body(),out);
                 res<<out.str();
