@@ -417,17 +417,14 @@ void DefaultPersistenceDriver::searchMetrics(const std::string&search_string,Cha
                 DataPackCommonKey::DPCK_DATASET_TYPE_INPUT};
             for(int cnt=0;cnt<sizeof(dt)/sizeof(int);cnt++){
                 std::string lkey=*i+chaos::datasetTypeToPostfix(dt[cnt]);
-                char *value = ioLiveDataDriver->retriveRawData(lkey,(size_t*)&value_len);
-                if(value){
-                    chaos::common::data::CDataWrapper *tmp = new CDataWrapper(value);
+                CDWUniquePtr value = ioLiveDataDriver->retrieveData(lkey);
+                if(value.get()){
                     ChaosStringVector ds;
-                    tmp->getAllKey(ds);
+                    value->getAllKey(ds);
                     for(ChaosStringVector::iterator ii=ds.begin();ds.end()!=ii;ii++){
                         std::string metric=*i+"/"+chaos::datasetTypeToHuman(dt[cnt])+"/"+*ii;
                         metrics.push_back(metric);
                     }
-                    free(value);
-                    delete(tmp);
                 }
             }
 
