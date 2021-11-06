@@ -96,17 +96,20 @@ void ChaosWANProxy::init(void *init_data)  throw(CException) {
 		if (signal((int) SIGQUIT, ChaosWANProxy::signalHanlder) == SIG_ERR) {
 			throw CException(-3, "Error registering SIG_ERR signal", __PRETTY_FUNCTION__);
 		}
+		if(NetworkBroker::getInstance()->getSharedDirectIOClientInstance()!=NULL){
+		//	persistence_driver.reset(new DefaultPersistenceDriver(NetworkBroker::getInstance()), "DefaultPresistenceDriver");
+	//		persistence_driver.init(NULL, __PRETTY_FUNCTION__);
+			//setting.list_cds_server.push_back(getGlobalConfigurationInstance()->getMetadataServerAddress());
+	//		persistence_driver->addServerList(setting.list_cds_server);
 
-		persistence_driver.reset(new DefaultPersistenceDriver(NetworkBroker::getInstance()), "DefaultPresistenceDriver");
-		persistence_driver.init(NULL, __PRETTY_FUNCTION__);
-		//setting.list_cds_server.push_back(getGlobalConfigurationInstance()->getMetadataServerAddress());
-		persistence_driver->addServerList(setting.list_cds_server);
-		
-		//Allcoate the handler
-		wan_interface_handler = new DefaultWANInterfaceHandler(persistence_driver.get());
-		if(!wan_interface_handler) throw CException(-5, "Error instantiating wan interface handler", __PRETTY_FUNCTION__);
+					//Allcoate the handler
 
-		((DefaultWANInterfaceHandler*)wan_interface_handler)->registerGroup();
+	//		wan_interface_handler = new DefaultWANInterfaceHandler(persistence_driver.get());
+	//		if(!wan_interface_handler) throw CException(-5, "Error instantiating wan interface handler", __PRETTY_FUNCTION__);
+
+	//		((DefaultWANInterfaceHandler*)wan_interface_handler)->registerGroup();
+		}
+	
 		
 		//start all proxy interface
 		for(SettingStringListIterator it = setting.list_wan_interface_to_enable.begin();
@@ -127,8 +130,10 @@ void ChaosWANProxy::init(void *init_data)  throw(CException) {
 												 (void*)setting.parameter_wan_interfaces.c_str(),
 												 tmp_interface_instance->getName(),
 												 __PRETTY_FUNCTION__);
+			if(NetworkBroker::getInstance()->getSharedDirectIOClientInstance()!=NULL){
 			//se the handler
-			tmp_interface_instance->setHandler(wan_interface_handler);
+				tmp_interface_instance->setHandler(wan_interface_handler);
+			}
 			
 			//add implemetnation to list
 			wan_active_interfaces.push_back(tmp_interface_instance);
@@ -155,30 +160,35 @@ void ChaosWANProxy::start()  throw(CException) {
     mds_message_channel = NetworkBroker::getInstance()->getMetadataserverMessageChannel();
 
 	ChaosUniquePtr<chaos::common::data::CDataWrapper> result(new chaos::common::data::CDataWrapper());
-	std::string uid="webui_"+chaos::GlobalConfiguration::getInstance()->getLocalServerAddressAnBasePort();
+	  std::string hostport;
+     NetworkBroker::getInstance()->getPublishedHostAndPort(hostport);
     result->addStringValue(NodeDefinitionKey::NODE_UNIQUE_ID,
-                           uid);
+                           nodeuid);
     result->addStringValue(chaos::NodeDefinitionKey::NODE_TYPE,
                            chaos::NodeType::NODE_TYPE_WAN_PROXY);
     result->addStringValue(NodeDefinitionKey::NODE_RPC_ADDR,
+                           hostport);
+	result->addStringValue(NodeDefinitionKey::NODE_IP_ADDR,
                            chaos::GlobalConfiguration::getInstance()->getLocalServerAddressAnBasePort());
+	result->addStringValue(NodeDefinitionKey::NODE_HOST_NAME,
+                           chaos::GlobalConfiguration::getInstance()->getHostname());					   
     result->addStringValue(NodeDefinitionKey::NODE_RPC_DOMAIN,
                            "webui");
     result->addInt64Value(NodeDefinitionKey::NODE_TIMESTAMP,
                           TimingUtil::getTimeStamp());
 	
 	result->addStringValue(NodeDefinitionKey::NODE_BUILD_INFO,
-                           getBuildInfo(chaos::common::data::CDWUniquePtr ())->getCompliantJSONString());
+    getBuildInfo(chaos::common::data::CDWUniquePtr ())->getCompliantJSONString());
 	//lock o monitor for waith the end
 	try {
-		LCND_LAPP << "Publishing as:"<<uid<<" registration:"<<result->getCompliantJSONString();
+		LCND_LAPP << "Publishing as:"<<nodeuid<<" registration:"<<result->getCompliantJSONString();
  		mds_message_channel->sendNodeRegistration(MOVE(result));
 		 		//start all wan interface
 		StartableService::startImplementation(HealtManagerDirect::getInstance(), "HealtManagerDirect", __PRETTY_FUNCTION__);
 
 
-		HealtManagerDirect::getInstance()->addNewNode(uid);
-		HealtManagerDirect::getInstance()->addNodeMetricValue(uid,
+		HealtManagerDirect::getInstance()->addNewNode(nodeuid);
+		HealtManagerDirect::getInstance()->addNodeMetricValue(nodeuid,
                                                         NodeHealtDefinitionKey::NODE_HEALT_STATUS,
                                                     NodeHealtDefinitionValue::NODE_HEALT_STATUS_START);
 		//HealtManagerDirect::getInstance()->publishNodeHealt(uid);
@@ -261,8 +271,9 @@ void ChaosWANProxy::deinit()   throw(CException) {
 		delete(wan_interface_handler);
 		wan_interface_handler = NULL;
 	}
-	
-	persistence_driver.deinit(__PRETTY_FUNCTION__);
+	if(NetworkBroker::getInstance()->getSharedDirectIOClientInstance()!=NULL){
+		persistence_driver.deinit(__PRETTY_FUNCTION__);
+	}
 }
 
 /*
