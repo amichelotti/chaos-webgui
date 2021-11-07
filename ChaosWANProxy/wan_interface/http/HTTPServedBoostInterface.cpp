@@ -797,6 +797,7 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
         res.set_status(served::status_4XX::EXPECTATION_FAILED);
     }
     {
+
         boost::mutex::scoped_lock lurl(devurl_mutex);
         execution_time_end = TimingUtil::getTimeStampInMicroseconds();
 
