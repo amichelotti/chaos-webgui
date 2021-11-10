@@ -141,6 +141,9 @@ void ChaosWANProxy::init(void *init_data)  throw(CException) {
 			LCND_LAPP << "Wan interface: " <<tmp_interface_instance->getName()<< " have been installed";
 
 		}
+		if(nodeuid.size()==0){
+        nodeuid="webui_"+chaos::GlobalConfiguration::getInstance()->getHostname();
+    }
 		// initialize ChaosManager from MDS
 //		chaos::service_common::ChaosManager::getInstance();
    
