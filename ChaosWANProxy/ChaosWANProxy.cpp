@@ -81,6 +81,14 @@ void ChaosWANProxy::init(istringstream &initStringStream) throw (CException) {
 void ChaosWANProxy::init(void *init_data)  throw(CException) {
 	std::string tmp_interface_name;
 	try {
+		if((!GlobalConfiguration::getInstance()->hasOption(InitOption::OPT_NODEUID))||(GlobalConfiguration::getInstance()->getConfiguration()->getStringValue(InitOption::OPT_NODEUID).size()==0)){
+			// change before NetworkBroker Initialization
+        	nodeuid="webui_"+chaos::GlobalConfiguration::getInstance()->getHostname();
+			LCND_LDBG << "'"<<InitOption::OPT_NODEUID <<"' not specified, setting uid to:"<<nodeuid;
+		
+			GlobalConfiguration::getInstance()->setNodeUID(nodeuid);
+    	}
+
 		ChaosCommon<ChaosWANProxy>::init(init_data);
        StartableService::initImplementation(HealtManagerDirect::getInstance(), NULL, "HealtManagerDirect", __PRETTY_FUNCTION__);
 
@@ -141,9 +149,7 @@ void ChaosWANProxy::init(void *init_data)  throw(CException) {
 			LCND_LAPP << "Wan interface: " <<tmp_interface_instance->getName()<< " have been installed";
 
 		}
-		if(nodeuid.size()==0){
-        nodeuid="webui_"+chaos::GlobalConfiguration::getInstance()->getHostname();
-    }
+		
 		// initialize ChaosManager from MDS
 //		chaos::service_common::ChaosManager::getInstance();
    
