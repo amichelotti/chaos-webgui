@@ -411,14 +411,13 @@ void DefaultPersistenceDriver::searchMetrics(const std::string&search_string,Cha
                                        node_tmp,
                                        5000)==0){
         for(ChaosStringVector::iterator i=node_tmp.begin();node_tmp.end()!=i;i++){
-            size_t value_len;
             const int dt[]={
                 DataPackCommonKey::DPCK_DATASET_TYPE_OUTPUT,
                 DataPackCommonKey::DPCK_DATASET_TYPE_INPUT};
             for(int cnt=0;cnt<sizeof(dt)/sizeof(int);cnt++){
                 std::string lkey=*i+chaos::datasetTypeToPostfix(dt[cnt]);
-                CDWUniquePtr value = ioLiveDataDriver->retrieveData(lkey);
-                if(value.get()){
+                CDWUniquePtr tmp = ioLiveDataDriver->retrieveData(lkey);
+                if(tmp.get()){
                     ChaosStringVector ds;
                     value->getAllKey(ds);
                     for(ChaosStringVector::iterator ii=ds.begin();ds.end()!=ii;ii++){

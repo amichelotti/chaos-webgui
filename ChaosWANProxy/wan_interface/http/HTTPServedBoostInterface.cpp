@@ -667,7 +667,6 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
     try
     {
         
-        boost::mutex::scoped_lock lurl(devurl_mutex);
             //remove the prefix and tokenize the url
         std::vector<std::string> devToRemove;
         std::string cmd, parm, dev_param;
@@ -716,7 +715,7 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
                 {
                     continue;
                 }
-                ChaosWriteLock l(devio_mutex);
+                //ChaosWriteLock l(devio_mutex);
 
                 if (devs.find(*idevname) == devs.end())
                 {
@@ -753,7 +752,7 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
                 {
                     continue;
                 }
-                ChaosReadLock l(devio_mutex);
+               // ChaosReadLock l(devio_mutex);
                 std::map<std::string, ::driver::misc::ChaosController *>::iterator dd = devs.find(*idevname);
                 if (dd != devs.end())
                 {
@@ -798,6 +797,7 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
         res.set_status(served::status_4XX::EXPECTATION_FAILED);
     }
     {
+
         boost::mutex::scoped_lock lurl(devurl_mutex);
         execution_time_end = TimingUtil::getTimeStampInMicroseconds();
 
