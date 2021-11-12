@@ -419,7 +419,7 @@ void DefaultPersistenceDriver::searchMetrics(const std::string&search_string,Cha
                 CDWUniquePtr tmp = ioLiveDataDriver->retrieveData(lkey);
                 if(tmp.get()){
                     ChaosStringVector ds;
-                    value->getAllKey(ds);
+                    tmp->getAllKey(ds);
                     for(ChaosStringVector::iterator ii=ds.begin();ds.end()!=ii;ii++){
                         std::string metric=*i+"/"+chaos::datasetTypeToHuman(dt[cnt])+"/"+*ii;
                         metrics.push_back(metric);
