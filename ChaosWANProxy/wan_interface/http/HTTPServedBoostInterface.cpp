@@ -723,7 +723,7 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
                     controller = new ::driver::misc::ChaosController();
                     if (controller)
                     {
-                        if (controller->init(*idevname, DEFAULT_TIMEOUT_FOR_CONTROLLER) != 0)
+                        if (controller->init(*idevname, chaos::RpcConfigurationKey::GlobalRPCTimeoutinMSec) != 0)
                         {
                             HTTWAN_INTERFACE_ERR_ << LOG_CONNECTION <<"cannot init controller for " << *idevname << "\"";
                             //  response << "{}";
