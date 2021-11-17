@@ -116,7 +116,6 @@ class ServerMutexWrap:public served::multiplexer{
                     static std::map<std::string,ConnectedClientInfo> clientInfo;
                      int process(served::response & res, const served::request & req);
                      int processRest(served::response & res, const served::request & req);
-                    chaos::common::http::HttpPost post;
 
                     #if CHAOS_PROMETHEUS
         //custom driver metrics

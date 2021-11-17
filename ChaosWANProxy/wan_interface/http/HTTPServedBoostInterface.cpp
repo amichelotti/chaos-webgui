@@ -460,8 +460,9 @@ mux.handle(API_PREFIX_V1)
             }
             if(r.hasKey("server")&&r.hasKey("api")){
                 HTTWAN_INTERFACE_DBG_<<"PROXING POST /proxy "<<r.getJSONString();
+                chaos::common::http::HttpPost client;
 
-                int ret=ServerMutexWrap::parent->post.post(r.getStringValue("server"),r.getStringValue("api"),req.body(),out);
+                int ret=client.post(r.getStringValue("server"),r.getStringValue("api"),req.body(),out);
                 res<<out.str();
                 res.set_header("Access-Control-Allow-Origin","*");
                 res.set_status(ret);
