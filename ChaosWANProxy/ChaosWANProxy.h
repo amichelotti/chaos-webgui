@@ -72,7 +72,7 @@ namespace chaos {
 			//gloabl applicaiton settin
 			settings setting;
 			
-			typedef boost::mutex::scoped_lock lock;
+			typedef ChaosLockGuard lock;
 			//! C and C++ attribute parser
 			/*!
 			 Specialized option for startup c and cpp program main options parameter

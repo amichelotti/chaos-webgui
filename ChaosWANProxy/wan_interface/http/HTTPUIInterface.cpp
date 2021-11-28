@@ -55,8 +55,8 @@ using namespace chaos::common::async_central;
 static const boost::regex REG_API_URL_FORMAT(API_PATH_REGEX_V1("((/[a-zA-Z0-9_]+))*")); //"/api/v1((/[a-zA-Z0-9_]+))*"
 
 std::map<std::string, ::driver::misc::ChaosController *> HTTPUIInterface::devs;
-ChaosSharedMutex HTTPUIInterface::devio_mutex;
-boost::mutex HTTPUIInterface::devurl_mutex;
+ChaosMutex HTTPUIInterface::devio_mutex;
+ChaosMutex HTTPUIInterface::devurl_mutex;
 
 uint64_t HTTPUIInterface::last_check_activity = 0;
 
@@ -328,7 +328,7 @@ static std::map<std::string, std::string> mappify(const std::string &s)
 int HTTPUIInterface::removeFromQueue(const std::string &devname)
 {
     int cntt = 0;
-    ChaosReadLock l(devio_mutex);
+    ChaosLockGuard l(devio_mutex);
 
     for (int cnt = 0; cnt < chaos_thread_number; cnt++)
     {
@@ -347,9 +347,9 @@ int HTTPUIInterface::removeDevice(const std::string &devname)
     if (i != devs.end())
     {
 
-        //        boost::mutex::scoped_lock l(devio_mutex);
+        //        ChaosLockGuard l(devio_mutex);
         HTTWAN_INTERFACE_DBG_ << "* removing \"" << devname << "\" from known devices";
-        ChaosWriteLock ll(devio_mutex);
+        ChaosLockGuard ll(devio_mutex);
         devs.erase(i);
         delete i->second;
 
@@ -376,7 +376,7 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
     try
     {
         {
-            boost::mutex::scoped_lock lurl(devurl_mutex);
+            ChaosLockGuard lurl(devurl_mutex);
             const std::string method = connection->request_method;
             const std::string url = connection->uri;
             //remove the prefix and tokenize the url
@@ -440,7 +440,7 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
         std::stringstream answer_multi;
         if (dev_param.size() == 0)
         {
-            ChaosWriteLock l(devio_mutex);
+            ChaosLockGuard l(devio_mutex);
             std::string ret;
             if (info->get(cmd, (char *)parm.c_str(), 0, atoi(cmd_prio.c_str()), atoi(cmd_schedule.c_str()), atoi(cmd_mode.c_str()), 0, ret) != ::driver::misc::ChaosController::CHAOS_DEV_OK)
             {
@@ -467,7 +467,7 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
                 {
                     continue;
                 }
-                ChaosWriteLock l(devio_mutex);
+                ChaosLockGuard l(devio_mutex);
 
                 if (devs.find(*idevname) == devs.end())
                 {
@@ -501,7 +501,7 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
                 {
                     continue;
                 }
-                ChaosReadLock l(devio_mutex);
+                ChaosLockGuard l(devio_mutex);
                 std::map<std::string, ::driver::misc::ChaosController *>::iterator dd = devs.find(*idevname);
                 if (dd != devs.end())
                 {
@@ -545,7 +545,7 @@ int HTTPUIInterface::process(mongoose::mg_connection *connection)
         response.setCode(400);
     }
     {
-        boost::mutex::scoped_lock lurl(devurl_mutex);
+        ChaosLockGuard lurl(devurl_mutex);
         flush_response(connection, &response);
         DEBUG_CODE(execution_time_end = TimingUtil::getTimeStampInMicroseconds();)
         DEBUG_CODE(uint64_t duration = execution_time_end - execution_time_start;)
@@ -577,7 +577,7 @@ void HTTPUIInterface::checkActivity()
     }*/
     std::map<std::string, ::driver::misc::ChaosController *>::iterator i;
     {
-        ChaosReadLock l(devio_mutex);
+        ChaosLockGuard l(devio_mutex);
         i = devs.begin();
     }
 
@@ -592,7 +592,7 @@ void HTTPUIInterface::checkActivity()
                 HTTWAN_INTERFACE_DBG_ << "* pruning \"" << i->first << "\" because elapsed " << ((1.0 * elapsed) / 1000000.0) << " s last time access:" << ((i->second)->lastAccess() / 1000000.0) << " s ago";
                 removeFromQueue(i->first);
 
-                ChaosWriteLock ll(devio_mutex);
+                ChaosLockGuard ll(devio_mutex);
 
                 HTTWAN_INTERFACE_DBG_ << "* removing \"" << i->first << "\" from known devices";
                 ::driver::misc::ChaosController *tmp = i->second;
