@@ -56,14 +56,14 @@ int HTTPServedBoostInterface::chaos_thread_number=1;
 int HTTPServedBoostInterface::sched_alloc=0;
 std::map<std::string, ::driver::misc::ChaosController *> HTTPServedBoostInterface::devs;
 //std::vector< ::common::misc::scheduler::Scheduler* > HTTPServedBoostInterface::sched_cu_v;
-ChaosSharedMutex HTTPServedBoostInterface::devio_mutex;
-boost::mutex HTTPServedBoostInterface::devurl_mutex;
+ChaosMutex HTTPServedBoostInterface::devio_mutex;
+ChaosMutex HTTPServedBoostInterface::devurl_mutex;
 ::driver::misc::ChaosController* HTTPServedBoostInterface::info=NULL;
 
 uint64_t HTTPServedBoostInterface::last_check_activity = 0;
 
 std::map<std::string,ConnectedClientInfo> HTTPServedBoostInterface::clientInfo;
- boost::mutex HTTPServedBoostInterface::clientMapMutex;
+ChaosMutex HTTPServedBoostInterface::clientMapMutex;
 HTTPServedBoostInterface* ServerMutexWrap::parent=NULL;
 /**
  * The handlers below are written in C to do the binding of the C mongoose with
@@ -225,7 +225,7 @@ void HTTPServedBoostInterface::timeout()
 
 void HTTPServedBoostInterface::updateClientInfoPre(const std::string& key,ConnectedClientInfo&src){
     {
-        boost::mutex::scoped_lock ll(clientMapMutex);
+        ChaosLockGuard ll(clientMapMutex);
     if(HTTPServedBoostInterface::clientInfo.find(key)!=HTTPServedBoostInterface::clientInfo.end()){
                 src=HTTPServedBoostInterface::clientInfo[key];
                 
@@ -243,7 +243,7 @@ void HTTPServedBoostInterface::updateClientInfoPost(const std::string& key,Conne
 
     src.avgTimeExec=(TimingUtil::getTimeStampInMicroseconds()-src.lastConnection)*1.0/src.ops;
     src.kbOps+=kb;
-    boost::mutex::scoped_lock ll(clientMapMutex);
+    ChaosLockGuard ll(clientMapMutex);
 
     HTTPServedBoostInterface::clientInfo[key]=src;
 }
@@ -399,7 +399,7 @@ mux.handle(API_PREFIX_V1)
             std::stringstream ss;
             ss<<"[";
             {
-                boost::mutex::scoped_lock ll(clientMapMutex);
+                ChaosLockGuard ll(clientMapMutex);
 
             for(auto i = clientInfo.begin();i!=clientInfo.end();){
                 ss<<i->second.getJson();
@@ -426,7 +426,7 @@ mux.handle(API_PREFIX_V1)
 
             ss<<"[";
             {
-                boost::mutex::scoped_lock ll(clientMapMutex);
+                ChaosLockGuard ll(clientMapMutex);
 
             for(auto i = clientInfo.begin();i!=clientInfo.end();){
                 ss<<i->second.getJson();
@@ -596,9 +596,9 @@ int HTTPServedBoostInterface::removeDevice(const std::string &devname)
     if (i != devs.end())
     {
 
-        //        boost::mutex::scoped_lock l(devio_mutex);
+        //        ChaosLockGuard l(devio_mutex);
         HTTWAN_INTERFACE_DBG_ << "* removing \"" << devname << "\" from known devices";
-        ChaosWriteLock ll(devio_mutex);
+        ChaosLockGuard ll(devio_mutex);
         devs.erase(i);
         delete i->second;
 
@@ -799,7 +799,7 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
     }
     {
 
-        boost::mutex::scoped_lock lurl(devurl_mutex);
+        ChaosLockGuard lurl(devurl_mutex);
         execution_time_end = TimingUtil::getTimeStampInMicroseconds();
 
         uint64_t duration = execution_time_end - execution_time_start;
@@ -845,7 +845,7 @@ void HTTPServedBoostInterface::checkActivity()
 
     */
       {
-        boost::mutex::scoped_lock ll(clientMapMutex);
+        ChaosLockGuard ll(clientMapMutex);
         for(auto i=clientInfo.begin();i!=clientInfo.end();){
             if(now - i->second.lastConnection > (1000*CHECK_ACTIVITY_CU )){
                 HTTWAN_INTERFACE_DBG_<< " * removing client \""<<i->second.src<<" from known clients";
@@ -861,7 +861,7 @@ void HTTPServedBoostInterface::checkActivity()
     *concurrent_clients_uptr=clientInfo.size();
     std::map<std::string, ::driver::misc::ChaosController *>::iterator i;
     {
-        ChaosReadLock l(devio_mutex);
+        ChaosLockGuard l(devio_mutex);
         i = devs.begin();
     }
     // remove not alive first;

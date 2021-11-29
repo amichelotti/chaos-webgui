@@ -101,14 +101,14 @@ class ServerMutexWrap:public served::multiplexer{
                     int removeDevice(const std::string&);
                     int removeFromQueue(const std::string&);
 
-                    static ChaosSharedMutex devio_mutex;
-                    static boost::mutex devurl_mutex;
+                    static ChaosMutex devio_mutex;
+                    static ChaosMutex devurl_mutex;
                     static uint64_t last_check_activity;
                     void updateClientInfoPre(const std::string& key,ConnectedClientInfo&src);
                     void updateClientInfoPost(const std::string& key,ConnectedClientInfo&src,double kb);
 
                     void checkActivity();
-                    static boost::mutex clientMapMutex;
+                    static ChaosMutex clientMapMutex;
                     boost::thread check_th;
                     bool check_enabled;
                     bool hasExited;
