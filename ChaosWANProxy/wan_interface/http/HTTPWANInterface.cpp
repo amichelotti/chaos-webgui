@@ -129,7 +129,7 @@ void HTTPWANInterface::init(void *init_data) throw(CException) {
 		
 		//configure server
 		HTTWAN_INTERFACE_APP_ << " Thread " << idx << " allocated";
-        std::string str_port = boost::lexical_cast<std::string>(service_port);
+        std::string str_port = ChaosToString(service_port);
         mg_set_option(http_server, "listening_port", str_port.c_str());
 		mg_set_option(http_server, "enable_keep_alive", "yes");
 		mg_set_option(http_server, "enable_directory_listing", "false");
