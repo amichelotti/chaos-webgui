@@ -844,7 +844,7 @@ void HTTPServedBoostInterface::checkActivity()
             }
 
     */
-      {
+  /*    {
         ChaosLockGuard ll(clientMapMutex);
         for(auto i=clientInfo.begin();i!=clientInfo.end();){
             if(now - i->second.lastConnection > (1000*CHECK_ACTIVITY_CU )){
@@ -860,7 +860,7 @@ void HTTPServedBoostInterface::checkActivity()
     }
     *concurrent_clients_uptr=clientInfo.size();
 
-  /*  std::map<std::string, ::driver::misc::ChaosController *>::iterator i;
+    std::map<std::string, ::driver::misc::ChaosController *>::iterator i;
     {
         ChaosLockGuard l(devio_mutex);
         i = devs.begin();
