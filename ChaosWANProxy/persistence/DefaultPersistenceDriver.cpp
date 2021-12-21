@@ -184,7 +184,7 @@ void* DefaultPersistenceDriver::serviceForURL(const common::network::URL& url, u
         //set this driver instance as event handler for connection
         clients_channel->connection->setEventHandler(this);
         //!put the index in the conenction so we can found it wen we receive event from it
-        clients_channel->connection->setCustomStringIdentification(boost::lexical_cast<std::string>(service_index));
+        clients_channel->connection->setCustomStringIdentification(ChaosToString(service_index));
     } else {
         DPD_LERR << "Error creating client connection for " << url.getURL();
     }
