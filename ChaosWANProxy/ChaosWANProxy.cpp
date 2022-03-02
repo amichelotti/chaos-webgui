@@ -178,7 +178,7 @@ void ChaosWANProxy::start()  throw(CException) {
     result->addStringValue(NodeDefinitionKey::NODE_RPC_ADDR,
                            hostport);
 	result->addStringValue(NodeDefinitionKey::NODE_IP_ADDR,
-                           chaos::GlobalConfiguration::getInstance()->getLocalServerAddressAnBasePort());
+                           chaos::GlobalConfiguration::getInstance()->getLocalServerAddress());
 	result->addStringValue(NodeDefinitionKey::NODE_HOST_NAME,
                            chaos::GlobalConfiguration::getInstance()->getHostname());					   
     result->addStringValue(NodeDefinitionKey::NODE_RPC_DOMAIN,
