@@ -83,7 +83,7 @@ void ChaosWANProxy::init(void *init_data)  throw(CException) {
 	try {
 		if((!GlobalConfiguration::getInstance()->hasOption(InitOption::OPT_NODEUID))||(GlobalConfiguration::getInstance()->getConfiguration()->getStringValue(InitOption::OPT_NODEUID).size()==0)){
 			// change before NetworkBroker Initialization
-        	nodeuid="webui_"+chaos::GlobalConfiguration::getInstance()->getHostname();
+        	nodeuid="cweb-"+chaos::GlobalConfiguration::getInstance()->getHostname();
 			LCND_LDBG << "'"<<InitOption::OPT_NODEUID <<"' not specified, setting uid to:"<<nodeuid;
 		
 			GlobalConfiguration::getInstance()->setNodeUID(nodeuid);
@@ -178,7 +178,7 @@ void ChaosWANProxy::start()  throw(CException) {
     result->addStringValue(NodeDefinitionKey::NODE_RPC_ADDR,
                            hostport);
 	result->addStringValue(NodeDefinitionKey::NODE_IP_ADDR,
-                           chaos::GlobalConfiguration::getInstance()->getLocalServerAddressAnBasePort());
+                           chaos::GlobalConfiguration::getInstance()->getLocalServerAddress());
 	result->addStringValue(NodeDefinitionKey::NODE_HOST_NAME,
                            chaos::GlobalConfiguration::getInstance()->getHostname());					   
     result->addStringValue(NodeDefinitionKey::NODE_RPC_DOMAIN,
