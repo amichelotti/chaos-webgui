@@ -90,6 +90,8 @@ void ChaosWANProxy::init(void *init_data)  throw(CException) {
     	}
 
 		ChaosCommon<ChaosWANProxy>::init(init_data);
+		InizializableService::initImplementation(SharedManagedDirecIoDataDriver::getInstance(), NULL, "SharedManagedDirecIoDataDriver", __PRETTY_FUNCTION__);
+
        StartableService::initImplementation(HealtManagerDirect::getInstance(), NULL, "HealtManagerDirect", __PRETTY_FUNCTION__);
 
 		if(!getGlobalConfigurationInstance()->hasOption(setting_options::OPT_INTERFACE_TO_ACTIVATE)) {
