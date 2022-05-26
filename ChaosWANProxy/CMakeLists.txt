@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.9)
 IF(NOT CHAOS_BUNDLE)
   MESSAGE(STATUS "Adding WAN interface dependencies")
   
