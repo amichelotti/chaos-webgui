@@ -225,7 +225,7 @@ void HTTPServedBoostInterface::timeout()
 
 void HTTPServedBoostInterface::updateClientInfoPre(const std::string& key,ConnectedClientInfo&src){
     {
-        ChaosLockGuard ll(clientMapMutex);
+      //  ChaosLockGuard ll(clientMapMutex);
     if(HTTPServedBoostInterface::clientInfo.find(key)!=HTTPServedBoostInterface::clientInfo.end()){
                 src=HTTPServedBoostInterface::clientInfo[key];
                 
@@ -243,7 +243,7 @@ void HTTPServedBoostInterface::updateClientInfoPost(const std::string& key,Conne
 
     src.avgTimeExec=(TimingUtil::getTimeStampInMicroseconds()-src.lastConnection)*1.0/src.ops;
     src.kbOps+=kb;
-    ChaosLockGuard ll(clientMapMutex);
+   // ChaosLockGuard ll(clientMapMutex);
 
     HTTPServedBoostInterface::clientInfo[key]=src;
 }
@@ -399,7 +399,7 @@ mux.handle(API_PREFIX_V1)
             std::stringstream ss;
             ss<<"[";
             {
-                ChaosLockGuard ll(clientMapMutex);
+               // ChaosLockGuard ll(clientMapMutex);
 
             for(auto i = clientInfo.begin();i!=clientInfo.end();){
                 ss<<i->second.getJson();
@@ -426,7 +426,7 @@ mux.handle(API_PREFIX_V1)
 
             ss<<"[";
             {
-                ChaosLockGuard ll(clientMapMutex);
+              //  ChaosLockGuard ll(clientMapMutex);
 
             for(auto i = clientInfo.begin();i!=clientInfo.end();){
                 ss<<i->second.getJson();
@@ -596,7 +596,7 @@ int HTTPServedBoostInterface::removeDevice(const std::string &devname)
     if (i != devs.end())
     {
 
-        //        ChaosLockGuard l(devio_mutex);
+
         HTTWAN_INTERFACE_DBG_ << "* removing \"" << devname << "\" from known devices";
         ChaosLockGuard ll(devio_mutex);
         devs.erase(i);
@@ -799,7 +799,7 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
     }
     {
 
-        ChaosLockGuard lurl(devurl_mutex);
+       // ChaosLockGuard lurl(devurl_mutex);
         execution_time_end = TimingUtil::getTimeStampInMicroseconds();
 
         uint64_t duration = execution_time_end - execution_time_start;
@@ -821,7 +821,7 @@ void HTTPServedBoostInterface::checkActivity()
     HTTWAN_INTERFACE_DBG_<<" checking activity after:"<<(1.0*(now-last_check_activity)/1000000.0)<<" s";
     last_check_activity = now;
     */
-    HTTWAN_INTERFACE_APP_ << "checkActivity - STARTS";
+  //  HTTWAN_INTERFACE_APP_ << "checkActivity - STARTS";
     /*
     for (std::map<std::string, ::driver::misc::ChaosController *>::iterator i = devs.begin(); i != devs.end(); i++)
     {
