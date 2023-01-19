@@ -93,7 +93,7 @@ thread_number(0) {}
 HTTPWANInterface::~HTTPWANInterface() {}
 
 //inherited method
-void HTTPWANInterface::init(void *init_data) throw(CException) {
+void HTTPWANInterface::init(void *init_data) 
 	//! forward message to superclass
 	AbstractWANInterface::init(init_data);
 	
@@ -148,7 +148,7 @@ void HTTPWANInterface::init(void *init_data) throw(CException) {
 }
 
 //inherited method
-void HTTPWANInterface::start() throw(CException) {
+void HTTPWANInterface::start() 
 	
 	run = true;
 	thread_index = 0;
@@ -161,13 +161,13 @@ void HTTPWANInterface::start() throw(CException) {
 }
 
 //inherited method
-void HTTPWANInterface::stop() throw(CException) {
+void HTTPWANInterface::stop() 
 	run = false;
 	http_server_thread.join_all();
 }
 
 //inherited method
-void HTTPWANInterface::deinit() throw(CException) {
+void HTTPWANInterface::deinit() 
 	for(ServerListIterator it = http_server_list.begin();
 		it != http_server_list.end();
 		it++) {

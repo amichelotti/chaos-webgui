@@ -63,14 +63,14 @@ ChaosWANProxy::~ChaosWANProxy() {
 /*!
  Specialized option for startup c and cpp program main options parameter
  */
-void ChaosWANProxy::init(int argc, const char* argv[]) throw (CException) {
+void ChaosWANProxy::init(int argc, const char* argv[])  {
 	ChaosCommon<ChaosWANProxy>::init(argc, argv);
 }
 //!stringbuffer parser
 /*
  specialized option for string stream buffer with boost semantics
  */
-void ChaosWANProxy::init(istringstream &initStringStream) throw (CException) {
+void ChaosWANProxy::init(istringstream &initStringStream)  {
 	ChaosCommon<ChaosWANProxy>::init(initStringStream);
 
 }
@@ -78,7 +78,7 @@ void ChaosWANProxy::init(istringstream &initStringStream) throw (CException) {
 /*
  *
  */
-void ChaosWANProxy::init(void *init_data)  throw(CException) {
+void ChaosWANProxy::init(void *init_data)  {
 	std::string tmp_interface_name;
 	try {
 		if((!GlobalConfiguration::getInstance()->hasOption(InitOption::OPT_NODEUID))||(GlobalConfiguration::getInstance()->getConfiguration()->getStringValue(InitOption::OPT_NODEUID).size()==0)){
@@ -166,7 +166,7 @@ void ChaosWANProxy::init(void *init_data)  throw(CException) {
 /*
  *
  */
-void ChaosWANProxy::start()  throw(CException) {
+void ChaosWANProxy::start()  {
 	common::message::MDSMessageChannel                              *mds_message_channel;
     mds_message_channel = NetworkBroker::getInstance()->getMetadataserverMessageChannel();
 
@@ -239,7 +239,7 @@ void ChaosWANProxy::start()  throw(CException) {
 /*
  Stop the toolkit execution
  */
-void ChaosWANProxy::stop()   throw(CException) {
+void ChaosWANProxy::stop(){
 	
 	//start all wan interface
 	for(WanInterfaceListIterator it = wan_active_interfaces.begin();
@@ -260,7 +260,7 @@ void ChaosWANProxy::stop()   throw(CException) {
 /*
  Deiniti all the manager
  */
-void ChaosWANProxy::deinit()   throw(CException) {
+void ChaosWANProxy::deinit()  { 
 	//deinit all wan interface
     CHAOS_NOT_THROW(StartableService::deinitImplementation(HealtManagerDirect::getInstance(), "HealtManagerDirect", __PRETTY_FUNCTION__););
 

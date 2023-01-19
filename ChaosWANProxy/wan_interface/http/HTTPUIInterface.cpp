@@ -128,7 +128,7 @@ void HTTPUIInterface::timeout()
 }
 
 //inherited method
-void HTTPUIInterface::init(void *init_data) throw(CException)
+void HTTPUIInterface::init(void *init_data) 
 {
     signal(SIGPIPE, SIG_IGN);
     //! forward message to superclass
@@ -217,7 +217,7 @@ void HTTPUIInterface::init(void *init_data) throw(CException)
 }
 
 //inherited method
-void HTTPUIInterface::start() throw(CException)
+void HTTPUIInterface::start() 
 {
 
     run = true;
@@ -238,7 +238,7 @@ void HTTPUIInterface::start() throw(CException)
 }
 
 //inherited method
-void HTTPUIInterface::stop() throw(CException)
+void HTTPUIInterface::stop() 
 {
     run = false;
     http_server_thread.join_all();
@@ -249,7 +249,7 @@ void HTTPUIInterface::stop() throw(CException)
 }
 
 //inherited method
-void HTTPUIInterface::deinit() throw(CException)
+void HTTPUIInterface::deinit() 
 {
     AsyncCentralManager::getInstance()->removeTimer(this);
 
