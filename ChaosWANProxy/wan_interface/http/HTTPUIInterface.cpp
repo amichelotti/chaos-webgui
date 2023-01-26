@@ -26,7 +26,7 @@
 #include <chaos/common/async_central/async_central.h>
 #include <chaos/common/utility/TimingUtil.h>
 
-#include <boost/regex.hpp>
+#include <regex>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -52,7 +52,7 @@ using namespace chaos::common::async_central;
 #define HTTWAN_INTERFACE_APP_ INFO_LOG(HTTPUIInterface)
 #define HTTWAN_INTERFACE_DBG_ DBG_LOG(HTTPUIInterface)
 #define HTTWAN_INTERFACE_ERR_ ERR_LOG(HTTPUIInterface)
-static const boost::regex REG_API_URL_FORMAT(API_PATH_REGEX_V1("((/[a-zA-Z0-9_]+))*")); //"/api/v1((/[a-zA-Z0-9_]+))*"
+static const std::regex REG_API_URL_FORMAT(API_PATH_REGEX_V1("((/[a-zA-Z0-9_]+))*")); //"/api/v1((/[a-zA-Z0-9_]+))*"
 
 std::map<std::string, ::driver::misc::ChaosController *> HTTPUIInterface::devs;
 ChaosMutex HTTPUIInterface::devio_mutex;
@@ -296,7 +296,7 @@ static std::map<std::string, std::string> mappify(const std::string &s)
 {
     std::map<std::string, std::string> m;
     std::vector<std::string> api_token_list0;
-    boost::regex regx("([a-zA-Z_]+)=(.+)");
+    std::regex regx("([a-zA-Z_]+)=(.+)");
     try
     {
         /*
@@ -308,17 +308,17 @@ static std::map<std::string, std::string> mappify(const std::string &s)
 
         for (std::vector<std::string>::iterator i = api_token_list0.begin(); i != api_token_list0.end(); i++)
         {
-            boost::match_results<std::string::const_iterator> what;
+            std::match_results<std::string::const_iterator> what;
             std::string::const_iterator startPos = (*i).begin();
             std::string::const_iterator endPos = (*i).end();
-            while (boost::regex_search(startPos, endPos, what, regx))
+            while (std::regex_search(startPos, endPos, what, regx))
             {
                 m[what[1]] = what[2];
                 startPos = what[0].second;
             }
         }
     }
-    catch (boost::bad_expression &ex)
+    catch (const std::regex_error &ex)
     {
         LERR_ << ex.what();
     }
@@ -614,7 +614,7 @@ void HTTPUIInterface::checkActivity()
 bool HTTPUIInterface::handle(struct mg_connection *connection)
 {
     bool accepted = false;
-    if (!(accepted = regex_match(connection->uri, REG_API_URL_FORMAT)))
+    if (!(accepted = std::regex_match(connection->uri, REG_API_URL_FORMAT)))
     {
         //HTTWAN_INTERFACE_ERR_ << "URI:" << connection->uri << ", not accepted";
     }

@@ -24,9 +24,7 @@
 
 #include <chaos/common/utility/TimingUtil.h>
 
-#include <boost/regex.hpp>
-#include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
+#include <regex>
 #include <boost/algorithm/string.hpp>
 
 #include <json/json.h>
@@ -46,7 +44,6 @@ using namespace chaos::wan_proxy::wan_interface::http;
 #define HTTWAN_INTERFACE_APP_ INFO_LOG(HTTPWANInterface)
 #define HTTWAN_INTERFACE_DBG_ DBG_LOG(HTTPWANInterface)
 #define HTTWAN_INTERFACE_ERR_ ERR_LOG(HTTPWANInterface)
-#include <regex>
 static const std::regex REG_API_URL_FORMAT(API_PATH_REGEX_V1("((/[a-zA-Z0-9_]+))*")); //"/api/v1((/[a-zA-Z0-9_]+))*"
 
 
