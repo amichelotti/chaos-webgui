@@ -220,7 +220,7 @@ int ProducerRegisterDatasetApi::scanDatasetElement(const Json::Value& dataset_js
 							   chaos::DataType::TYPE_STRING);
 	}else if(type.compare("cluster") == 0) {
 		element->addInt32Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_ATTRIBUTE_TYPE,
-							   chaos::DataType::TYPE_CLUSTER);
+							   chaos::DataType::TYPE_JSON);
 	} else if(type.compare("binary") == 0) {
 		element->addInt32Value(chaos::ControlUnitNodeDefinitionKey::CONTROL_UNIT_DATASET_ATTRIBUTE_TYPE,
 							   chaos::DataType::TYPE_BYTEARRAY);
