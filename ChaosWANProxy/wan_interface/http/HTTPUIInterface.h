@@ -99,16 +99,16 @@ namespace chaos {
                 protected:
                     void timeout();
                     //inherited method
-                    void init(void*) throw(CException);
+                    void init(void*) ;
                     
                     //inherited method
-                    void start() throw(CException);
+                    void start() ;
                     
                     //inherited method
-                    void stop() throw(CException);
+                    void stop() ;
                     
                     //inherited method
-                    void deinit() throw(CException);
+                    void deinit() ;
                 };
             }
         }

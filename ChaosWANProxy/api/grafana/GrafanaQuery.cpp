@@ -84,7 +84,7 @@ int GrafanaQuery::execute(std::vector<std::string>& api_tokens,
         PID_LDBG << "PROCESSING:"<<json_writer.write(input_data).c_str();
 
         std::map<std::string,std::vector<std::string> > accesses;
-        boost::regex expr("(.*)/(.*)$");
+        std::regex expr("(.*)/(.*)$");
         std::string start=input_data["range"]["from"].asString();
         std::string end=input_data["range"]["to"].asString();
         const Json::Value targets = input_data["targets"];

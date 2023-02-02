@@ -33,7 +33,7 @@ AbstractWANInterface::~AbstractWANInterface() {}
 void AbstractWANInterface::init(void *init_data){
     std::string param_str = (char*)init_data;
     if(!json_reader.parse(param_str, wan_interface_parameter)) {
-        throw chaos::CException(-1, "Error reading json parameter", __PRETTY_FUNCTION__);
+        throw chaos::CException(-1, "Error reading json parameter:"+param_str, __PRETTY_FUNCTION__);
     }
 }
 

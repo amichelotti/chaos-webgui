@@ -26,7 +26,7 @@
 #include <chaos/common/network/URL.h>
 #include <chaos/common/chaos_constants.h>
 
-
+#include <regex>
 #define DPD_LAPP INFO_LOG(DefaultPersistenceDriver)
 #define DPD_LDBG DBG_LOG(DefaultPersistenceDriver)
 #define DPD_LERR ERR_LOG(DefaultPersistenceDriver)
@@ -608,7 +608,7 @@ void allocateMetrics(uint64_t ts,chaos::common::data::CDWShrdPtr ds,std::map<std
 }
 int DefaultPersistenceDriver::queryMetrics(const std::string& start,const std::string& end,const std::vector<std::string>& metrics_name,metrics_results_t& res,int limit){
     int ret=0;
-    boost::regex expr("(.*)/(.*)$");
+    std::regex expr("(.*)/(.*)$");
     uint64_t start_t=chaos::common::utility::TimingUtil::getTimestampFromString(start);
     uint64_t end_t=chaos::common::utility::TimingUtil::getTimestampFromString(end);
     std::map<std::string,std::vector<std::string> > accesses;
@@ -617,8 +617,8 @@ int DefaultPersistenceDriver::queryMetrics(const std::string& start,const std::s
         std::string tname=metrics_name[index];
         DPD_LDBG << "Target:"<<tname;
 
-        boost::cmatch what;
-        if(regex_match(tname.c_str(), what, expr)){
+        std::cmatch what;
+        if(std::regex_match(tname.c_str(), what, expr)){
             std::map<std::string,std::vector<std::string> >::iterator i=accesses.find(what[1]);
             if(i!=accesses.end()){
                 DPD_LDBG << " variable:"<<what[2]<< " adding to access:"<<i->first;
@@ -633,9 +633,9 @@ int DefaultPersistenceDriver::queryMetrics(const std::string& start,const std::s
 
     // perform queries
     for(std::map<std::string,std::vector<std::string> >::iterator i=accesses.begin();i!=accesses.end();i++){
-        boost::cmatch what;
+        std::cmatch what;
 
-        if(regex_match(i->first.c_str(), what, expr)){
+        if(std::regex_match(i->first.c_str(), what, expr)){
             std::string cuname=what[1];
             std::string dir=what[2];
             DPD_LDBG << " access CU:"<<cuname<<" channel:"<<dir<< " # vars:"<<i->second.size();

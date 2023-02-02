@@ -25,13 +25,12 @@
 #include <vector>
 #include <chaos/common/async_central/async_central.h>
 #include <chaos/common/utility/TimingUtil.h>
-#include <boost/regex.hpp>
+#include <regex>
 #include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
-
+#include <json/writer.h>
 #include <json/json.h>
 #if CHAOS_PROMETHEUS
 using namespace chaos::common::metric;
@@ -74,30 +73,45 @@ ChaosSharedMutex http_mutex;
 static std::map<std::string, std::string> mappify(const std::string &s)
 {
     std::map<std::string, std::string> m;
-    std::vector<std::string> api_token_list0;
-    boost::regex regx("([a-zA-Z_]+)=(.+)");
+    std::regex regx("([a-zA-Z_]+)=(.+)");
     try
     {
+        std::smatch mres;
+        if(std::regex_search(s,mres,std::regex("^cmd=(.+)&parm=(.+)"),std::regex_constants::match_any)){
+            if(s.size()>20000){
+                HTTWAN_INTERFACE_DBG_<<" match 1"<<mres[1]<<" 2:"<<mres[2];
+
+            }
+            m["cmd"]=mres[1];
+            m["parm"]=mres[2];
+            return m;
+        } else if(std::regex_search(s,mres,std::regex("^dev=(.+)&cmd=(.+)&parm=(.+)"))){
+            m["dev"]=mres[1];
+            m["cmd"]=mres[2];
+            m["parm"]=mres[3];
+            return m;
+        }
         /*
         std::istringstream iss(s);
         std::vector<std::string> api_token_list0((std::istream_iterator<WordDelimitedBy<'&'>>(iss)),
                                  std::istream_iterator<WordDelimitedBy<'&'>>());
                                  */          
+        std::vector<std::string> api_token_list0;
         boost::split(api_token_list0, s, boost::is_any_of("&"));
 
         for (std::vector<std::string>::iterator i = api_token_list0.begin(); i != api_token_list0.end(); i++)
         {
-            boost::match_results<std::string::const_iterator> what;
+            std::match_results<std::string::const_iterator> what;
             std::string::const_iterator startPos = (*i).begin();
             std::string::const_iterator endPos = (*i).end();
-            while (boost::regex_search(startPos, endPos, what, regx))
+            while (std::regex_search(startPos, endPos, what, regx))
             {
                 m[what[1]] = what[2];
                 startPos = what[0].second;
             }
         }
     }
-    catch (boost::bad_expression &ex)
+    catch (const std::regex_error &ex)
     {
         LERR_ << ex.what();
     }
@@ -340,8 +354,12 @@ mux.handle(API_PREFIX_V1)
     mux.handle("/CU").post([](served::response & res, const served::request & req) {
             ConnectedClientInfo tmp;
             ServerMutexWrap::parent->updateClientInfoPre(req.source(),tmp);
-
-            HTTWAN_INTERFACE_DBG_<<" POST /CU"<<req.body();
+            if(req.body().size()<1024){
+                HTTWAN_INTERFACE_DBG_<<" POST /CU "<<req.body();
+            } else {
+                HTTWAN_INTERFACE_DBG_<<" POST /CU "<<req.body().substr(0,1024)<<".... "<<req.body().size();
+            }
+            
             (*ServerMutexWrap::parent->counter_post_uptr)++;
 
             ServerMutexWrap::parent->process(res,req);
@@ -351,7 +369,7 @@ mux.handle(API_PREFIX_V1)
 		}).get([](served::response & res, const served::request & req) {
             ConnectedClientInfo tmp;
 
-            HTTWAN_INTERFACE_DBG_<<" GET /CU"<<req.body();
+            HTTWAN_INTERFACE_DBG_<<" GET /CU "<<req.body();
             (*ServerMutexWrap::parent->counter_get_uptr)++;
             ServerMutexWrap::parent->updateClientInfoPre(req.source(),tmp);
 
@@ -364,8 +382,11 @@ mux.handle(API_PREFIX_V1)
     mux.handle("/MDS")
 		.post([](served::response & res, const served::request & req) {
             ConnectedClientInfo tmp;
-
-            HTTWAN_INTERFACE_DBG_<<" POST /MDS"<<req.body();
+            if(req.body().size()<1024){
+                HTTWAN_INTERFACE_DBG_<<" POST /MDS "<<req.body();
+            } else {
+                HTTWAN_INTERFACE_DBG_<<" POST /MDS "<<req.body().substr(0,1024)<<".... "<<req.body().size();;
+            }
             (*ServerMutexWrap::parent->counter_mds_post_uptr)++;
             ServerMutexWrap::parent->updateClientInfoPre(req.source(),tmp);
 
@@ -628,31 +649,115 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
     int err = 0;
     uint64_t execution_time_start = TimingUtil::getTimeStampInMicroseconds();
     uint64_t execution_time_end = 0;
+    std::string cmd, parm, dev_param;
+    std::vector<std::string> dev_v;
+
   //  HTTPWANInterfaceStringResponse response("text/html");
     //response.addHeaderKeyValue("Access-Control-Allow-Origin", "*");
     std::stringstream ss;
     served::method method=request.method();
     std::map<std::string, std::string> request_param;
+    int cmd_schedule=0,cmd_prio=0,cmd_mode=0 ;
     std::string query;
+
     if (method == served::method::GET ){
         query=decode(request.url().query());
 
         request_param=mappify(query);
+        if(request_param.size()==0){
+                HTTWAN_INTERFACE_ERR_  << "Malformed Query:" << query;
+                res.set_status(served::status_4XX::BAD_REQUEST);
+                return 1;
+
+        }
+        if(request_param.count("dev")){
+            dev_param = request_param["dev"];
+            boost::split(dev_v, dev_param, boost::is_any_of(","));
+
+        }
+        if(request_param.count("cmd")){
+            cmd = request_param["cmd"];
+        }
+        if(request_param.count("parm")){
+            parm = request_param["parm"];
+        }
+        if(request_param.count("sched")){
+            cmd_schedule=atoi( request_param["sched"].c_str());
+
+        }
+        if(request_param.count("prio")){
+            cmd_prio = atoi(request_param["prio"].c_str());
+
+        }
+        if(request_param.count("mode")){
+            cmd_mode = atoi(request_param["mode"].c_str());
+
+        }
+
+        
     } else if(method == served::method::POST){
+        Json::Reader json_reader;
+        Json::Value json_parameter;
+
         query=request.body();
-        request_param=mappify(query);
+        if (!json_reader.parse(query, json_parameter)) {
+                HTTWAN_INTERFACE_ERR_  << "BAD JSON QUERY:" << json_parameter;
+                HTTWAN_INTERFACE_ERR_  << "Malformed Query:" << query;
+                res.set_status(served::status_4XX::BAD_REQUEST);
+                return 1;
+               
+        }
+        if(!json_parameter["dev"].isNull()){
+            if(json_parameter["dev"].isArray()){
+            for (Json::ValueIterator it = json_parameter["dev"].begin();it != json_parameter["dev"].end(); ++it) {
+                if (it->isString()) {
+                    dev_v.push_back(it->asString());
+                } else {
+                    HTTWAN_INTERFACE_ERR_  << "'dev' field must be an array of strings, json:" << json_parameter;
+                    res.set_status(served::status_4XX::BAD_REQUEST);
+                    return 1;
+                }
+               
+            }
+            } else if(json_parameter["dev"].isString()){
+                dev_v.push_back(json_parameter["dev"].asString());
+
+            }
+        } 
+
+        
+        if(json_parameter["cmd"].isString()){
+            cmd = json_parameter["cmd"].asString();
+        }
+        if(!json_parameter["parm"].isNull()){
+            //Json::StreamWriterBuilder wbuilder("");
+            Json::FastWriter json_writer;
+            parm=json_writer.write(json_parameter["parm"]);
+            //qwbuilder["indentation"] = "";       // Optional
+           // parm =Json::writeString(wbuilder,json_parameter["parm"]);//json_parameter["parm"].toStyledString();
+        }
+        if(json_parameter["sched"].isInt()){
+            cmd_schedule=json_parameter["sched"].asInt();
+
+        }
+         if(json_parameter["prio"].isInt()){
+            cmd_prio=json_parameter["prio"].asInt();
+
+        }
+         if(json_parameter["mode"].isInt()){
+            cmd_mode=json_parameter["mode"].asInt();
+
+        }
+       
+
+
 
     } else {
                 HTTWAN_INTERFACE_ERR_  << "UNSUPPORTED METHOD:" << method_to_string(method);
                 res.set_status(served::status_4XX::METHOD_NOT_ALLOWED);
                 return 1;
     }
-    if(request_param.size()==0){
-                HTTWAN_INTERFACE_ERR_  << "Malformed Query:" << query;
-                res.set_status(served::status_4XX::BAD_REQUEST);
-                return 1;
-
-    }
+    
     res.set_header("Access-Control-Allow-Origin","*");
    /* for ( const auto & query_param : request.query ){
 				ss << "Key: " << query_param.first << ", Value: " << query_param.second << "\n";
@@ -661,35 +766,25 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
     */
     ::driver::misc::ChaosController *controller = NULL;
 
-    //scsan for content type request
-
-    //	const std::string api_uri = url.substr(strlen(API_PREFIX_V1)+1);
-    //const bool        json    = checkForContentType(connection,"application/json");
+    
     try
     {
         
             //remove the prefix and tokenize the url
         std::vector<std::string> devToRemove;
-        std::string cmd, parm, dev_param;
-        dev_param = request_param["dev"];
-        cmd = request_param["cmd"];
-        parm = request_param["parm"];
-        std::string cmd_schedule = request_param["sched"];
-        std::string cmd_prio = request_param["prio"];
-        std::string cmd_mode = request_param["mode"];
+        
+        
         bool always_vector = true;
         if (cmd.find("query") != std::string::npos)
         {
             always_vector = false;
         }
-        std::vector<std::string> dev_v;
-        boost::split(dev_v, dev_param, boost::is_any_of(","));
         std::stringstream answer_multi;
-        if (dev_param.size() == 0)
+        if (dev_v.size() == 0)
         {
            // ChaosReadLock l(devio_mutex);
             std::string ret;
-            if (info->get(cmd, (char *)parm.c_str(), 0, atoi(cmd_prio.c_str()), atoi(cmd_schedule.c_str()), atoi(cmd_mode.c_str()), 0, ret) != ::driver::misc::ChaosController::CHAOS_DEV_OK)
+            if (info->get(cmd, (char *)parm.c_str(), 0, cmd_prio, cmd_schedule, cmd_mode, 0, ret) != ::driver::misc::ChaosController::CHAOS_DEV_OK)
             {
                 HTTWAN_INTERFACE_ERR_  << LOG_CONNECTION <<"An error occurred during get without dev:" << info->getJsonState();
                // response.setCode(400);
@@ -758,7 +853,7 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
                 if (dd != devs.end())
                 {
                     controller = dd->second;
-                    if (controller->get(cmd, (char *)parm.c_str(), 0, atoi(cmd_prio.c_str()), atoi(cmd_schedule.c_str()), atoi(cmd_mode.c_str()), 0, ret) != ::driver::misc::ChaosController::CHAOS_DEV_OK)
+                    if (controller->get(cmd, (char *)parm.c_str(), 0, cmd_prio,cmd_schedule, cmd_mode, 0, ret) != ::driver::misc::ChaosController::CHAOS_DEV_OK)
                     {
                         HTTWAN_INTERFACE_ERR_  << LOG_CONNECTION <<"An error occurred during get of:\"" << *idevname << "\"";
                         res.set_status(400);
