@@ -29,7 +29,8 @@
 #include <boost/format.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <sstream>
-#include <boost/algorithm/string.hpp>
+//#include <boost/algorithm/string.hpp>
+#include <chaos/common/ChaosCommon.h>
 #include <json/writer.h>
 #include <json/json.h>
 #if CHAOS_PROMETHEUS
@@ -97,8 +98,8 @@ static std::map<std::string, std::string> mappify(const std::string &s)
                                  std::istream_iterator<WordDelimitedBy<'&'>>());
                                  */          
         std::vector<std::string> api_token_list0;
-        boost::split(api_token_list0, s, boost::is_any_of("&"));
-
+        //boost::split(api_token_list0, s, boost::is_any_of("&"));
+        api_token_list0=chaos::split(s,"&");
         for (std::vector<std::string>::iterator i = api_token_list0.begin(); i != api_token_list0.end(); i++)
         {
             std::match_results<std::string::const_iterator> what;
@@ -672,8 +673,8 @@ int HTTPServedBoostInterface::process(served::response & res, const served::requ
         }
         if(request_param.count("dev")){
             dev_param = request_param["dev"];
-            boost::split(dev_v, dev_param, boost::is_any_of(","));
-
+           // boost::split(dev_v, dev_param, boost::is_any_of(","));
+            dev_v=chaos::split(dev_param,":");
         }
         if(request_param.count("cmd")){
             cmd = request_param["cmd"];
@@ -1045,18 +1046,21 @@ int HTTPServedBoostInterface::processRest(served::response & res, const served::
 
             if (query.size())
             {
-                boost::algorithm::split(api_token_list,
+                /*boost::algorithm::split(api_token_list,
                                         query,
                                         boost::algorithm::is_any_of("&"),
-                                        boost::algorithm::token_compress_on);
+                                        boost::algorithm::token_compress_on);*/
+                api_token_list=chaos::split(query,"&");
                 HTTWAN_INTERFACE_DBG_ << "GET api:" <<api_uri<< " query:" << query;
             }
             else
             {
-                boost::algorithm::split(api_token_list,
+               /* boost::algorithm::split(api_token_list,
                                         api_uri,
                                         boost::algorithm::is_any_of("/"),
-                                        boost::algorithm::token_compress_on);
+                                        boost::algorithm::token_compress_on);*/
+                api_token_list=chaos::split(api_uri,"/");
+
                 HTTWAN_INTERFACE_DBG_ << "GET api:" << api_uri << " content:" << query << " EMPTY QUERY";
             }
             if ((err = handler->handleCall(1, api_token_list, json_request,
@@ -1082,11 +1086,12 @@ int HTTPServedBoostInterface::processRest(served::response & res, const served::
 	      *answer_ms_uptr=duration * 1.0 / 1000.0;
             return 1; //
         }
-        boost::algorithm::split(api_token_list,
+       /* boost::algorithm::split(api_token_list,
                                 api_uri,
                                 boost::algorithm::is_any_of("/"),
                                 boost::algorithm::token_compress_on);
-
+                                */
+        api_token_list=chaos::split(api_uri,"/");
         //check if we havethe domain and api name in the uri and the content is json
         if (api_token_list.size() >= 2 &&
             json)
