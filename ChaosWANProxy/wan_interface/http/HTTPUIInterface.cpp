@@ -304,8 +304,8 @@ static std::map<std::string, std::string> mappify(const std::string &s)
         std::vector<std::string> api_token_list0((std::istream_iterator<WordDelimitedBy<'&'>>(iss)),
                                  std::istream_iterator<WordDelimitedBy<'&'>>());
                                  */          
-        boost::split(api_token_list0, s, boost::is_any_of("&"));
-
+    //    boost::split(api_token_list0, s, boost::is_any_of("&"));
+        api_token_list0= chaos::split(s,"&");
         for (std::vector<std::string>::iterator i = api_token_list0.begin(); i != api_token_list0.end(); i++)
         {
             std::match_results<std::string::const_iterator> what;
